@@ -166,6 +166,12 @@ fun AddSet(exercise: Exercise, onDone: () -> Unit) {
             ) {
                 Text(text = stringResource(R.string.label_plus_int, 1))
             }
+            TextButton(
+                modifier = incrementButtonModifier,
+                onClick = { viewModel.addSetCount(2) },
+            ) {
+                Text(text = stringResource(R.string.label_plus_int, 2))
+            }
         }
         Spacer(modifier = Modifier.height(24.dp))
         SwipeableTextField(
