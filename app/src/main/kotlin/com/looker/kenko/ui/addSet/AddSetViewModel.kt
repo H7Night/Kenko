@@ -46,6 +46,7 @@ class AddSetViewModel @AssistedInject constructor(
 
     val reps: TextFieldState = TextFieldState("12")
     val weights: TextFieldState = TextFieldState("20.0")
+    val setsCount: TextFieldState = TextFieldState("2")
 
     var selectedSetType by mutableStateOf(SetType.Standard)
         private set
@@ -62,6 +63,10 @@ class AddSetViewModel @AssistedInject constructor(
         weights.setTextAndPlaceCursorAtEnd((weightFloat + value).toString())
     }
 
+    fun addSetCount(value: Int) {
+        setsCount.setTextAndPlaceCursorAtEnd((setsInt + value).coerceAtLeast(1).toString())
+    }
+
     val repsBoundReached = BoundReached { direction ->
         when (direction) {
             Direction.Left -> addRep(-1)
@@ -76,17 +81,26 @@ class AddSetViewModel @AssistedInject constructor(
         }
     }
 
+    val setsBoundReached = BoundReached { direction ->
+        when (direction) {
+            Direction.Left -> addSetCount(-1)
+            Direction.Right -> addSetCount(1)
+        }
+    }
+
     fun addSet() {
         viewModelScope.launch {
             val sessionId = sessionRepo.getSessionIdOrCreate(localDate)
-            sessionRepo.addSet(
-                sessionId = sessionId,
-                exerciseId = id,
-                weight = weightFloat,
-                reps = repInt,
-                setType = selectedSetType,
-                rir = RepsInReserve(2),
-            )
+            repeat(setsInt) {
+                sessionRepo.addSet(
+                    sessionId = sessionId,
+                    exerciseId = id,
+                    weight = weightFloat,
+                    reps = repInt,
+                    setType = selectedSetType,
+                    rir = RepsInReserve(2),
+                )
+            }
         }
     }
 
@@ -95,6 +109,9 @@ class AddSetViewModel @AssistedInject constructor(
 
     private inline val weightFloat: Float
         get() = weights.text.toString().toFloatOrNull() ?: 0F
+
+    private inline val setsInt: Int
+        get() = setsCount.text.toString().toIntOrNull() ?: 2
 
     @AssistedFactory
     interface AddSetViewModelFactory {

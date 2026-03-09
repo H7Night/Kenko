@@ -148,6 +148,31 @@ fun AddSet(exercise: Exercise, onDone: () -> Unit) {
         ) {
             TextButton(
                 modifier = incrementButtonModifier,
+                onClick = { viewModel.addSetCount(-1) },
+            ) {
+                Text(text = stringResource(R.string.label_minus_int, 1))
+            }
+            val sets = rememberDraggableTextFieldState(viewModel.setsBoundReached)
+            DraggableTextField(
+                dragState = sets,
+                textFieldState = viewModel.setsCount,
+                supportingText = stringResource(R.string.label_sets),
+                inputTransformation = IntTransformation,
+                modifier = zIndexModifier,
+            )
+            TextButton(
+                modifier = incrementButtonModifier,
+                onClick = { viewModel.addSetCount(1) },
+            ) {
+                Text(text = stringResource(R.string.label_plus_int, 1))
+            }
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        SwipeableTextField(
+            modifier = Modifier.align(CenterHorizontally),
+        ) {
+            TextButton(
+                modifier = incrementButtonModifier,
                 onClick = { viewModel.addWeight(-1F) },
             ) {
                 Text(text = stringResource(R.string.label_minus_int, 1F))

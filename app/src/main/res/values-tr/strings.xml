@@ -95,6 +95,7 @@
     <string name="label_reps">.tekrar</string>
     <string name="label_duration">.süre</string>
     <string name="label_weight">.ağırlık</string>
+    <string name="label_sets">.set</string>
     <string name="label_coming_soon">Yakında Geliyor</string>
 
     <!--Navigasyon-->

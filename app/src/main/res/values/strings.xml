@@ -104,6 +104,7 @@
     <string name="label_reps">.reps</string>
     <string name="label_duration">.duration</string>
     <string name="label_weight">.weight</string>
+    <string name="label_sets">.sets</string>
     <string name="label_coming_soon">Coming Soon</string>
 
     <!--Navigation-->
