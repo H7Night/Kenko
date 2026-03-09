@@ -55,6 +55,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SingleChoiceSegmentedButtonRowScope
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -106,6 +107,7 @@ fun Settings(
         state = state,
         onSelectTheme = viewModel::updateTheme,
         onSelectColorPalette = viewModel::updateColorPalette,
+        onSelectCapitalize = viewModel::updateCapitalizeExerciseName,
         onSelectBackupLocation = viewModel::setBackupLocation,
         onSelectBackupInterval = viewModel::setBackupInterval,
         onBackupNow = viewModel::backupNow,
@@ -121,6 +123,7 @@ private fun Settings(
     state: SettingsUiData,
     onSelectTheme: (Theme) -> Unit,
     onSelectColorPalette: (ColorPalettes) -> Unit,
+    onSelectCapitalize: (Boolean) -> Unit,
     onSelectBackupLocation: (Uri) -> Unit,
     onSelectBackupInterval: (BackupInterval) -> Unit,
     onBackupNow: () -> Unit,
@@ -180,6 +183,12 @@ private fun Settings(
                 selectedColorPalette = state.selectedColorPalette,
                 selectedTheme = state.selectedTheme,
                 onClickPalette = onSelectColorPalette,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            PreferenceSwitchRow(
+                title = stringResource(R.string.label_capitalize_exercise_name),
+                checked = state.capitalizeExerciseName,
+                onCheckedChange = onSelectCapitalize,
             )
             Spacer(modifier = Modifier.height(24.dp))
             CategoryHeader(title = stringResource(R.string.label_backup))
@@ -654,6 +663,31 @@ private fun RestoreConfirmationDialog(
     )
 }
 
+@Composable
+private fun PreferenceSwitchRow(
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+        )
+    }
+}
+
 private fun extractFolderName(uri: String): String {
     return try {
         uri.toUri().lastPathSegment?.substringAfterLast('/') ?: uri
@@ -707,9 +741,11 @@ private fun SettingsPreview() {
                 isBackingUp = false,
                 isRestoring = false,
                 backupMessage = null,
+                capitalizeExerciseName = true,
             ),
             onSelectTheme = {},
             onSelectColorPalette = {},
+            onSelectCapitalize = {},
             onSelectBackupLocation = {},
             onSelectBackupInterval = {},
             onBackupNow = {},

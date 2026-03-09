@@ -131,6 +131,8 @@
     <string name="label_theme_light">Light</string>
     <string name="label_theme_dark">Dark</string>
 
+    <string name="label_capitalize_exercise_name">Capitalize Exercise Name</string>
+
     <!--Color Schemes-->
     <string name="label_color_palettes">Color Palettes</string>
     <string name="label_color_scheme_default">Default</string>

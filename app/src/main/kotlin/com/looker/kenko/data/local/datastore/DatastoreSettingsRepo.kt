@@ -94,6 +94,10 @@ class DatastoreSettingsRepo @Inject constructor(
         }
     }
 
+    override suspend fun setCapitalizeExerciseName(enabled: Boolean) {
+        CAPITALIZE_EXERCISE_NAME.update(enabled)
+    }
+
     private suspend inline fun <T> Preferences.Key<T>.update(value: T) {
         dataStore.edit { preference ->
             preference[this] = value
@@ -108,6 +112,7 @@ class DatastoreSettingsRepo @Inject constructor(
         val backupUri = preferences[BACKUP_URI]
         val backupInterval = preferences[BACKUP_INTERVAL] ?: BackupInterval.Off.name
         val lastBackupTime = preferences[LAST_BACKUP_TIME_SECONDS]
+        val capitalizeExerciseName = preferences[CAPITALIZE_EXERCISE_NAME] ?: true
         return Settings(
             isOnboardingDone = isOnboardingDone,
             theme = Theme.valueOf(theme),
@@ -116,6 +121,7 @@ class DatastoreSettingsRepo @Inject constructor(
             backupUri = backupUri,
             backupInterval = BackupInterval.valueOf(backupInterval),
             lastBackupTime = lastBackupTime?.let { Instant.fromEpochSeconds(it) },
+            capitalizeExerciseName = capitalizeExerciseName,
         )
     }
 
@@ -129,5 +135,7 @@ class DatastoreSettingsRepo @Inject constructor(
         val BACKUP_INTERVAL: Preferences.Key<String> = stringPreferencesKey("backup_interval")
         val LAST_BACKUP_TIME_SECONDS: Preferences.Key<Long> =
             longPreferencesKey("last_backup_time_seconds")
+        val CAPITALIZE_EXERCISE_NAME: Preferences.Key<Boolean> =
+            booleanPreferencesKey("capitalize_exercise_name")
     }
 }

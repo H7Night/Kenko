@@ -41,4 +41,6 @@ interface SettingsRepo {
 
     suspend fun setLastBackupTime(instant: Instant?)
 
+    suspend fun setCapitalizeExerciseName(enabled: Boolean)
+
 }

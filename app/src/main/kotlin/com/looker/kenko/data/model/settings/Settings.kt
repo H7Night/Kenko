@@ -24,4 +24,5 @@ data class Settings(
     val backupUri: String?,
     val backupInterval: BackupInterval,
     val lastBackupTime: Instant?,
+    val capitalizeExerciseName: Boolean,
 )

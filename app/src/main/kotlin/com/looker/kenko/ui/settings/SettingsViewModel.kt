@@ -57,6 +57,7 @@ class SettingsViewModel @Inject constructor(
             isBackingUp = backupState.isBackingUp,
             isRestoring = backupState.isRestoring,
             backupMessage = backupState.message,
+            capitalizeExerciseName = settings.capitalizeExerciseName,
         )
     }.asStateFlow(
         SettingsUiData(
@@ -68,6 +69,7 @@ class SettingsViewModel @Inject constructor(
             isBackingUp = false,
             isRestoring = false,
             backupMessage = null,
+            capitalizeExerciseName = true,
         ),
     )
 
@@ -80,6 +82,12 @@ class SettingsViewModel @Inject constructor(
     fun updateColorPalette(colorPalette: ColorPalettes) {
         viewModelScope.launch {
             repo.setColorPalette(colorPalette)
+        }
+    }
+
+    fun updateCapitalizeExerciseName(enabled: Boolean) {
+        viewModelScope.launch {
+            repo.setCapitalizeExerciseName(enabled)
         }
     }
 
@@ -173,4 +181,5 @@ data class SettingsUiData(
     val isBackingUp: Boolean,
     val isRestoring: Boolean,
     val backupMessage: BackupMessage?,
+    val capitalizeExerciseName: Boolean,
 )

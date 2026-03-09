@@ -122,6 +122,8 @@
     <string name="label_theme_light">Açık</string>
     <string name="label_theme_dark">Koyu</string>
 
+    <string name="label_capitalize_exercise_name">Egzersiz Adını Büyük Harfle Başlat</string>
+
     <!--Renk Şemaları-->
     <string name="label_color_palettes">Renk Paletleri</string>
     <string name="label_color_scheme_default">Varsayılan</string>

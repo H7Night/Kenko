@@ -29,10 +29,12 @@ import com.looker.kenko.data.StringHandler
 import com.looker.kenko.data.model.Exercise
 import com.looker.kenko.data.model.MuscleGroups
 import com.looker.kenko.data.repository.ExerciseRepo
+import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.ui.addEditExercise.navigation.AddEditExerciseRoute
 import com.looker.kenko.utils.asStateFlow
 import com.looker.kenko.utils.isValidUrl
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,6 +42,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
@@ -49,6 +52,7 @@ import kotlinx.coroutines.launch
 class AddEditExerciseViewModel @Inject constructor(
     private val repo: ExerciseRepo,
     private val stringHandler: StringHandler,
+    private val settingsRepo: SettingsRepo,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -134,9 +138,14 @@ class AddEditExerciseViewModel @Inject constructor(
                 snackbarState.showSnackbar(stringHandler.getString(R.string.error_invalid_reference_format))
                 return@launch
             }
+            val name = if (settingsRepo.stream.first().capitalizeExerciseName) {
+                exerciseName.titleCase()
+            } else {
+                exerciseName
+            }
             repo.upsert(
                 Exercise(
-                    name = exerciseName,
+                    name = name,
                     target = targetMuscle.value,
                     reference = reference.ifBlank { null },
                     isIsometric = isIsometric.value,
@@ -146,6 +155,12 @@ class AddEditExerciseViewModel @Inject constructor(
             onDone()
         }
     }
+
+    private fun String.titleCase(): String =
+        trim()
+            .split(" ")
+            .filter { it.isNotEmpty() }
+            .joinToString(" ") { it.replaceFirstChar { char -> char.titlecase(Locale.getDefault()) } }
 
     init {
         viewModelScope.launch {
