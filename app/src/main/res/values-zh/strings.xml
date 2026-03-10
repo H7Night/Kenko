@@ -120,7 +120,7 @@
 
     <!--Themes-->
     <string name="label_theme">主题</string>
-    <string name="label_theme_system">系统默认</string>
+    <string name="label_theme_system">默认</string>
     <string name="label_theme_light">浅色</string>
     <string name="label_theme_dark">深色</string>
 
