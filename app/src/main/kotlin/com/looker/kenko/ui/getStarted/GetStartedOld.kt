@@ -56,7 +56,6 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.looker.kenko.R
-import com.looker.kenko.ui.components.HealthQuotes
 import com.looker.kenko.ui.components.TypingText
 import com.looker.kenko.ui.extensions.PHI
 import com.looker.kenko.ui.extensions.vertical
@@ -169,9 +168,7 @@ private fun GetStarted(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                HealthQuotes()
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

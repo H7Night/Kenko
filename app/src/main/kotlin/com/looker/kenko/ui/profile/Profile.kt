@@ -64,7 +64,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.data.model.PlanStat
 import com.looker.kenko.ui.components.BackButton
-import com.looker.kenko.ui.components.HealthQuotes
 import com.looker.kenko.ui.components.KenkoBorderWidth
 import com.looker.kenko.ui.components.OutlineBorder
 import com.looker.kenko.ui.components.SecondaryBorder
@@ -157,8 +156,6 @@ private fun Profile(
                 Spacer(modifier = Modifier.height(12.dp))
                 LiftsCard(state.totalLifts)
             }
-            Spacer(modifier = Modifier.weight(1F))
-            HealthQuotes(Modifier.align(Alignment.CenterHorizontally))
         }
     }
 }

@@ -53,7 +53,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
-import com.looker.kenko.ui.components.HealthQuotes
 import com.looker.kenko.ui.components.TickerText
 import com.looker.kenko.ui.components.TypingText
 import com.looker.kenko.ui.theme.KenkoIcons
@@ -193,10 +192,7 @@ private fun GetStarted(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = stringResource(R.string.label_lets_go))
                 }
-                HealthQuotes(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    color = MaterialTheme.colorScheme.outline,
-                )
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

@@ -164,22 +164,6 @@
         <item>Hızlı Geri Bildirim</item>
     </string-array>
 
-    <string-array name="label_health_quotes">
-        <item>yapabilirsin</item>
-        <item>sağlık senin elinde</item>
-        <item>sağlık zenginliktir</item>
-        <item>antrenman benim de terapi</item>
-        <item>antrenman benim de terapi</item>
-    </string-array>
-
-    <string-array name="label_lifting_quotes">
-        <item>evet dostum… hafif ağırlık</item>
-        <item>hafif ağırlık</item>
-        <item>yapmaktan başka çare yok</item>
-        <item>mesele hafif olmak değil</item>
-        <item>harika değil mi?</item>
-    </string-array>
-
     <string-array name="kenko_day_of_week">
         <item>.pzt</item>
         <item>.sal</item>

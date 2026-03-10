@@ -69,7 +69,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.ui.components.KenkoBorderWidth
-import com.looker.kenko.ui.components.LiftingQuotes
 import com.looker.kenko.ui.components.TertiaryKenkoButton
 import com.looker.kenko.ui.components.TickerText
 import com.looker.kenko.ui.theme.KenkoIcons
@@ -209,7 +208,6 @@ private fun Home(
             } else {
                 SelectPlan(onSelectPlanClick = onSelectPlanClick)
             }
-            LiftingQuotes(Modifier.align(CenterHorizontally))
         }
     }
 }

@@ -143,9 +143,9 @@ dependencies {
     implementation(libs.bundles.room)
     ksp(libs.room.compiler)
 
-    testImplementation(kotlin("test-junit5"))
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:${libs.versions.kotlin.get()}")
 
-    androidTestImplementation(kotlin("test-junit5"))
+    androidTestImplementation("org.jetbrains.kotlin:kotlin-test-junit5:${libs.versions.kotlin.get()}")
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.bundles.instrumented.test)
     androidTestImplementation(libs.room.test)
@@ -154,8 +154,6 @@ dependencies {
 
     kspAndroidTest(libs.hilt.test)
 }
-
-fun DependencyHandlerScope.kotlin(name: String): Any = kotlin(name, libs.versions.kotlin.get())
 
 fun versionCodeFor(version: String?): Int? {
     if (version == null) return null
