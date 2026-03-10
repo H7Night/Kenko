@@ -16,10 +16,8 @@ package com.looker.kenko.ui.home
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,11 +25,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -42,26 +40,18 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
-import androidx.compose.ui.Alignment.Companion.TopEnd
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.tooling.preview.Preview
@@ -71,6 +61,7 @@ import com.looker.kenko.R
 import com.looker.kenko.ui.components.KenkoBorderWidth
 import com.looker.kenko.ui.components.TertiaryKenkoButton
 import com.looker.kenko.ui.components.TickerText
+import com.looker.kenko.ui.home.components.TrainingHeatmap
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.ui.theme.header
@@ -80,9 +71,7 @@ fun Home(
     viewModel: HomeViewModel,
     onProfileClick: () -> Unit,
     onSelectPlanClick: () -> Unit,
-    onAddExerciseClick: () -> Unit,
     onExploreSessionsClick: () -> Unit,
-    onExploreExercisesClick: () -> Unit,
     onStartSessionClick: () -> Unit,
     onCurrentPlanClick: (Int) -> Unit,
 ) {
@@ -91,9 +80,7 @@ fun Home(
         state = state,
         onProfileClick = onProfileClick,
         onSelectPlanClick = onSelectPlanClick,
-        onAddExerciseClick = onAddExerciseClick,
         onExploreSessionsClick = onExploreSessionsClick,
-        onExploreExercisesClick = onExploreExercisesClick,
         onStartSessionClick = onStartSessionClick,
         onCurrentPlanClick = onCurrentPlanClick,
     )
@@ -105,9 +92,7 @@ private fun Home(
     state: HomeUiData,
     onProfileClick: () -> Unit = {},
     onSelectPlanClick: () -> Unit = {},
-    onAddExerciseClick: () -> Unit = {},
     onExploreSessionsClick: () -> Unit = {},
-    onExploreExercisesClick: () -> Unit = {},
     onStartSessionClick: () -> Unit = {},
     onCurrentPlanClick: (Int) -> Unit = {},
 ) {
@@ -128,32 +113,26 @@ private fun Home(
         ) {
             HorizontalDivider(thickness = KenkoBorderWidth)
             AnimatedContent(
-                modifier = Modifier.align(CenterHorizontally),
                 targetState = state.isPlanSelected,
-                label = "",
+                label = "plan_status",
             ) { isPlanActive ->
                 if (isPlanActive) {
-                    Row(
+                    TrainingHeatmap(
+                        sessionDates = state.sessionDates,
+                        onClick = onExploreSessionsClick,
+                    )
+                } else {
+                    Box(
                         modifier = Modifier
-                            .widthIn(240.dp, 420.dp)
-                            .height(120.dp),
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        ExploreExerciseCard(
-                            onClick = onExploreExercisesClick,
-                            onLongClick = onAddExerciseClick,
-                            modifier = Modifier.weight(1F),
-                        )
-                        VerticalDivider()
-                        SessionHistoryCard(
-                            onClick = onExploreSessionsClick,
-                            modifier = Modifier.weight(1F),
+                        TickerText(
+                            text = stringResource(R.string.label_select_a_plan),
+                            color = MaterialTheme.colorScheme.outline,
                         )
                     }
-                } else {
-                    TickerText(
-                        text = stringResource(R.string.label_select_a_plan),
-                        color = MaterialTheme.colorScheme.outline,
-                    )
                 }
             }
             HorizontalDivider(thickness = KenkoBorderWidth)
@@ -272,45 +251,6 @@ private fun ColumnScope.SelectPlan(
     }
 }
 
-@Composable
-private fun ExploreExerciseCard(
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    HelperCards(
-        onClick = onClick,
-        onLongClick = onLongClick,
-        modifier = modifier,
-    ) {
-        Text(text = stringResource(R.string.label_explore_exercises))
-        Icon(
-            painter = KenkoIcons.ArrowOutward,
-            contentDescription = null,
-            modifier = Modifier
-                .padding(16.dp)
-                .align(TopEnd),
-        )
-    }
-}
-
-@Composable
-private fun SessionHistoryCard(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    HelperCards(onClick = onClick, modifier = modifier) {
-        Text(text = stringResource(R.string.label_session_history_home))
-        Icon(
-            painter = KenkoIcons.History,
-            contentDescription = null,
-            modifier = Modifier
-                .padding(16.dp)
-                .align(TopEnd),
-        )
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun KenkoTopBar(
@@ -339,33 +279,6 @@ private fun KenkoTopBar(
     )
 }
 
-@Composable
-private fun HelperCards(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    onLongClick: () -> Unit = {},
-    shape: Shape = RectangleShape,
-    color: Color = MaterialTheme.colorScheme.surface,
-    textStyle: TextStyle = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-    content: @Composable BoxScope.() -> Unit,
-) {
-    Surface(
-        shape = shape,
-        color = color,
-        modifier = modifier.combinedClickable(
-            onClick = onClick,
-            onLongClick = onLongClick,
-        ),
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            ProvideTextStyle(textStyle) { content() }
-        }
-    }
-}
-
 @Preview
 @Composable
 private fun HomePreview() {
@@ -377,6 +290,7 @@ private fun HomePreview() {
                 isTodayEmpty = false,
                 isFirstSession = false,
                 currentPlanId = null,
+                sessionDates = emptySet(),
             ),
         )
     }
@@ -393,6 +307,7 @@ private fun StartTodayPreview() {
                 isTodayEmpty = false,
                 isFirstSession = false,
                 currentPlanId = null,
+                sessionDates = emptySet(),
             ),
         )
     }
@@ -409,6 +324,7 @@ private fun TodayEmptyPreview() {
                 isTodayEmpty = true,
                 isFirstSession = false,
                 currentPlanId = null,
+                sessionDates = emptySet(),
             ),
         )
     }
@@ -425,6 +341,7 @@ private fun FirstStartHomePreview() {
                 isTodayEmpty = false,
                 isFirstSession = true,
                 currentPlanId = null,
+                sessionDates = emptySet(),
             ),
         )
     }

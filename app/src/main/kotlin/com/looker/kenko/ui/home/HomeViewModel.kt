@@ -23,6 +23,7 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.combine
+import kotlinx.datetime.LocalDate
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -51,6 +52,7 @@ class HomeViewModel @Inject constructor(
             isTodayEmpty = planItems.isEmpty(),
             isFirstSession = isFirstSession,
             currentPlanId = currentPlan?.id,
+            sessionDates = sessions.map { it.date }.toSet(),
         )
     }.asStateFlow(
         HomeUiData(
@@ -59,6 +61,7 @@ class HomeViewModel @Inject constructor(
             isTodayEmpty = false,
             isFirstSession = false,
             currentPlanId = null,
+            sessionDates = emptySet(),
         ),
     )
 }
@@ -70,4 +73,5 @@ data class HomeUiData(
     val isTodayEmpty: Boolean,
     val isFirstSession: Boolean,
     val currentPlanId: Int?,
+    val sessionDates: Set<LocalDate>,
 )

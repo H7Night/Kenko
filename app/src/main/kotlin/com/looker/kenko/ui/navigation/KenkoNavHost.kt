@@ -76,14 +76,8 @@ fun KenkoNavHost(
             onSelectPlanClick = {
                 navController.navigateToPlans(navOptions = singleTopNavOptions)
             },
-            onAddExerciseClick = {
-                navController.navigateToAddEditExercise(navOptions = singleTopNavOptions)
-            },
             onExploreSessionsClick = {
                 navController.navigateToSessions(navOptions = singleTopNavOptions)
-            },
-            onExploreExercisesClick = {
-                navController.navigateToExercises(navOptions = singleTopNavOptions)
             },
             onStartSessionClick = {
                 navController.navigateToSessionDetail(date = null, navOptions = singleTopNavOptions)

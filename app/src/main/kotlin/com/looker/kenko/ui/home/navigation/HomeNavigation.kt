@@ -20,6 +20,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.looker.kenko.ui.home.Home
+import com.looker.kenko.ui.home.HomeViewModel
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -32,9 +33,7 @@ fun NavController.navigateToHome(navOptions: NavOptions? = null) {
 fun NavGraphBuilder.home(
     onSelectPlanClick: () -> Unit,
     onProfileClick: () -> Unit,
-    onAddExerciseClick: () -> Unit,
     onExploreSessionsClick: () -> Unit,
-    onExploreExercisesClick: () -> Unit,
     onStartSessionClick: () -> Unit,
     onCurrentPlanClick: (Int) -> Unit,
 ) {
@@ -42,12 +41,10 @@ fun NavGraphBuilder.home(
         Home(
             onProfileClick = onProfileClick,
             onSelectPlanClick = onSelectPlanClick,
-            onAddExerciseClick = onAddExerciseClick,
             onExploreSessionsClick = onExploreSessionsClick,
-            onExploreExercisesClick = onExploreExercisesClick,
             onStartSessionClick = onStartSessionClick,
             onCurrentPlanClick = onCurrentPlanClick,
-            viewModel = hiltViewModel(),
+            viewModel = hiltViewModel<HomeViewModel>(),
         )
     }
 }
