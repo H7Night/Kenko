@@ -8,7 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Training heatmap on Home screen with monthly calendar view
+- Language selection and Simplified Chinese support
+- Setting to toggle exercise name capitalization
+- +2 increment button to AddSet screen
+- Draggable sets input and improved set count management in ViewModel
 - Backup and restore for whole data
+
+### Changed
+- Updated Chinese translation for system theme label
+
+### Removed
+- Turkish (`values-tr`) support
+- Unnecessary quotes and fixed gradle warnings
 
 ## [1.3.2] - 2025-11-13
 
