@@ -14,16 +14,11 @@
 
 package com.looker.kenko.data.model.settings
 
-import kotlin.time.Instant
+import androidx.annotation.StringRes
+import com.looker.kenko.R
 
-data class Settings(
-    val isOnboardingDone: Boolean,
-    val theme: Theme,
-    val colorPalette: ColorPalettes,
-    val lastSetTime: Instant?,
-    val backupUri: String?,
-    val backupInterval: BackupInterval,
-    val lastBackupTime: Instant?,
-    val capitalizeExerciseName: Boolean,
-    val language: Language,
-)
+enum class Language(val code: String?, @StringRes val labelRes: Int) {
+    System(null, R.string.label_theme_system),
+    English("en", R.string.label_language_en),
+    Chinese("zh", R.string.label_language_zh),
+}

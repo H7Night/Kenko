@@ -15,18 +15,21 @@
 package com.looker.kenko.ui
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.looker.kenko.ui.getStarted.navigation.GetStartedRoute
@@ -35,7 +38,7 @@ import com.looker.kenko.ui.theme.KenkoTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -45,6 +48,17 @@ class MainActivity : ComponentActivity() {
         setContent {
             val theme by viewModel.theme.collectAsStateWithLifecycle()
             val colorScheme by viewModel.colorScheme.collectAsStateWithLifecycle()
+            val language by viewModel.language.collectAsStateWithLifecycle()
+
+            LaunchedEffect(language) {
+                val appLocale: LocaleListCompat = if (language.code != null) {
+                    LocaleListCompat.forLanguageTags(language.code)
+                } else {
+                    LocaleListCompat.getEmptyLocaleList()
+                }
+                AppCompatDelegate.setApplicationLocales(appLocale)
+            }
+
             KenkoTheme(
                 theme = theme,
                 colorSchemes = colorScheme,

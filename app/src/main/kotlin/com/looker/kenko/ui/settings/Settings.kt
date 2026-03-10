@@ -82,6 +82,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.data.model.settings.BackupInterval
 import com.looker.kenko.data.model.settings.ColorPalettes
+import com.looker.kenko.data.model.settings.Language
 import com.looker.kenko.data.model.settings.Theme
 import com.looker.kenko.ui.components.BackButton
 import com.looker.kenko.ui.components.KenkoBorderWidth
@@ -104,6 +105,7 @@ fun Settings(
     val state by viewModel.state.collectAsStateWithLifecycle()
     Settings(
         state = state,
+        onSelectLanguage = viewModel::updateLanguage,
         onSelectTheme = viewModel::updateTheme,
         onSelectColorPalette = viewModel::updateColorPalette,
         onSelectCapitalize = viewModel::updateCapitalizeExerciseName,
@@ -120,6 +122,7 @@ fun Settings(
 @Composable
 private fun Settings(
     state: SettingsUiData,
+    onSelectLanguage: (Language) -> Unit,
     onSelectTheme: (Theme) -> Unit,
     onSelectColorPalette: (ColorPalettes) -> Unit,
     onSelectCapitalize: (Boolean) -> Unit,
@@ -167,6 +170,14 @@ private fun Settings(
                 .verticalScroll(rememberScrollState()),
         ) {
             HorizontalDivider(thickness = KenkoBorderWidth)
+            Spacer(modifier = Modifier.height(16.dp))
+            CategoryHeader(title = stringResource(R.string.label_language))
+            Spacer(modifier = Modifier.height(8.dp))
+            LanguageSelector(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                selectedLanguage = state.language,
+                onSelectLanguage = onSelectLanguage,
+            )
             Spacer(modifier = Modifier.height(16.dp))
             CategoryHeader(title = stringResource(R.string.label_theme))
             Spacer(modifier = Modifier.height(4.dp))
@@ -350,6 +361,35 @@ private fun ColorPaletteSample(
                 .align(Alignment.BottomStart)
                 .background(MaterialTheme.colorScheme.tertiary, RoundedCornerShape(4.dp)),
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LanguageSelector(
+    selectedLanguage: Language,
+    onSelectLanguage: (Language) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
+        Language.entries.forEachIndexed { index, language ->
+            SegmentedButton(
+                selected = selectedLanguage == language,
+                onClick = { onSelectLanguage(language) },
+                shape = when (index) {
+                    0 -> CircleShape.end(4.dp)
+                    Language.entries.lastIndex -> CircleShape.start(4.dp)
+                    else -> RoundedCornerShape(4.dp)
+                },
+                colors = themeButtonColors,
+                modifier = Modifier.padding(2.dp),
+            ) {
+                Text(
+                    text = stringResource(language.labelRes),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
+        }
     }
 }
 
@@ -739,7 +779,9 @@ private fun SettingsPreview() {
                 isRestoring = false,
                 backupMessage = null,
                 capitalizeExerciseName = true,
+                language = Language.System,
             ),
+            onSelectLanguage = {},
             onSelectTheme = {},
             onSelectColorPalette = {},
             onSelectCapitalize = {},

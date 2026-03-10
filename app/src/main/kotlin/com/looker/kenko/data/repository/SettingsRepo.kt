@@ -16,6 +16,7 @@ package com.looker.kenko.data.repository
 
 import com.looker.kenko.data.model.settings.BackupInterval
 import com.looker.kenko.data.model.settings.ColorPalettes
+import com.looker.kenko.data.model.settings.Language
 import com.looker.kenko.data.model.settings.Settings
 import com.looker.kenko.data.model.settings.Theme
 import kotlin.time.Instant
@@ -42,5 +43,7 @@ interface SettingsRepo {
     suspend fun setLastBackupTime(instant: Instant?)
 
     suspend fun setCapitalizeExerciseName(enabled: Boolean)
+
+    suspend fun setLanguage(language: Language)
 
 }

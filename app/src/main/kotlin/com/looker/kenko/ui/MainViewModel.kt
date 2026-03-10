@@ -17,6 +17,7 @@ package com.looker.kenko.ui
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.looker.kenko.data.model.settings.Language
 import com.looker.kenko.data.model.settings.Theme
 import com.looker.kenko.data.repository.PerformanceRepo
 import com.looker.kenko.data.repository.SettingsRepo
@@ -45,6 +46,9 @@ class MainViewModel @Inject constructor(
     val colorScheme: StateFlow<ColorSchemes> = repo.stream
         .map { it.colorPalette.scheme ?: dynamicColorSchemes(context) ?: zestfulColorSchemes }
         .asStateFlow(zestfulColorSchemes)
+
+    val language: StateFlow<Language> = repo.get { language }
+        .asStateFlow(Language.System)
 
     val isOnboardingDone: Boolean = runBlocking { repo.stream.first().isOnboardingDone }
 

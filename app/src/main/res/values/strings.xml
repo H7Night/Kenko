@@ -131,6 +131,10 @@
     <string name="label_theme_light">Light</string>
     <string name="label_theme_dark">Dark</string>
 
+    <string name="label_language">Language</string>
+    <string name="label_language_en">English</string>
+    <string name="label_language_zh">中文</string>
+
     <string name="label_capitalize_exercise_name">Capitalize Exercise Name</string>
 
     <!--Color Schemes-->

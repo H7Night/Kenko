@@ -23,6 +23,7 @@ import com.looker.kenko.data.backup.BackupManager
 import com.looker.kenko.data.backup.BackupResult
 import com.looker.kenko.data.model.settings.BackupInterval
 import com.looker.kenko.data.model.settings.ColorPalettes
+import com.looker.kenko.data.model.settings.Language
 import com.looker.kenko.data.model.settings.Theme
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.utils.asStateFlow
@@ -58,6 +59,7 @@ class SettingsViewModel @Inject constructor(
             isRestoring = backupState.isRestoring,
             backupMessage = backupState.message,
             capitalizeExerciseName = settings.capitalizeExerciseName,
+            language = settings.language,
         )
     }.asStateFlow(
         SettingsUiData(
@@ -70,6 +72,7 @@ class SettingsViewModel @Inject constructor(
             isRestoring = false,
             backupMessage = null,
             capitalizeExerciseName = true,
+            language = Language.System,
         ),
     )
 
@@ -88,6 +91,12 @@ class SettingsViewModel @Inject constructor(
     fun updateCapitalizeExerciseName(enabled: Boolean) {
         viewModelScope.launch {
             repo.setCapitalizeExerciseName(enabled)
+        }
+    }
+
+    fun updateLanguage(language: Language) {
+        viewModelScope.launch {
+            repo.setLanguage(language)
         }
     }
 
@@ -182,4 +191,5 @@ data class SettingsUiData(
     val isRestoring: Boolean,
     val backupMessage: BackupMessage?,
     val capitalizeExerciseName: Boolean,
+    val language: Language,
 )

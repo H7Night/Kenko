@@ -1,5 +1,6 @@
 [versions]
 activity = "1.11.0"
+appcompat = "1.7.0"
 documentfile = "1.0.1"
 agp = "8.13.2"
 coil = "2.7.0"
@@ -28,6 +29,7 @@ work = "2.10.1"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
+appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "core" }
 datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }
