@@ -138,19 +138,13 @@ private fun Home(
             HorizontalDivider(thickness = KenkoBorderWidth)
             if (state.isPlanSelected) {
                 StartSession(
-                    onStartSessionClick = {
-                        if (state.isTodayEmpty) {
-                            onCurrentPlanClick(state.currentPlanId!!)
-                        } else {
-                            onStartSessionClick()
-                        }
-                    },
+                    onStartSessionClick = onStartSessionClick,
                     content = {
                         val heading = remember(state.isSessionStarted, state.isTodayEmpty) {
-                            if (state.isTodayEmpty) {
-                                R.string.label_nothing_today
-                            } else if (state.isSessionStarted) {
+                            if (state.isSessionStarted) {
                                 R.string.label_continue_session_heading
+                            } else if (state.isTodayEmpty) {
+                                R.string.label_rest_day_heading
                             } else {
                                 if (state.isFirstSession) {
                                     R.string.label_start_first_session
@@ -172,10 +166,8 @@ private fun Home(
                         )
                     },
                     buttonText = {
-                        val stringRes = remember(state.isSessionStarted, state.isTodayEmpty) {
-                            if (state.isTodayEmpty) {
-                                R.string.label_edit_plan
-                            } else if (state.isSessionStarted) {
+                        val stringRes = remember(state.isSessionStarted) {
+                            if (state.isSessionStarted) {
                                 R.string.label_continue_session
                             } else {
                                 R.string.label_start_session

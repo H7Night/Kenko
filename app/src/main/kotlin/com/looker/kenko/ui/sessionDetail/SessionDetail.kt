@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -34,10 +35,13 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonShapes
@@ -64,10 +68,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.looker.kenko.R
 import com.looker.kenko.data.model.Exercise
 import com.looker.kenko.data.model.Set
 import com.looker.kenko.ui.addSet.AddSet
 import com.looker.kenko.ui.components.BackButton
+import com.looker.kenko.ui.components.KenkoBorderWidth
 import com.looker.kenko.ui.components.SwipeToDeleteBox
 import com.looker.kenko.ui.components.TypingText
 import com.looker.kenko.ui.extensions.normalizeInt
@@ -85,6 +91,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 
 @Composable
@@ -102,6 +109,8 @@ fun SessionDetails(
         onReferenceClick = viewModel::openReference,
         onSelectBottomSheet = viewModel::showBottomSheet,
         onHistoryClick = { onHistoryClick(viewModel.previousSessionDate) },
+        onImportDay = viewModel::importPlanFromDay,
+        onEditToggle = viewModel::toggleEditMode,
     )
     val exercise by viewModel.current.collectAsStateWithLifecycle()
     if (exercise != null) {
@@ -123,9 +132,11 @@ private fun SessionDetail(
     onReferenceClick: (String) -> Unit = {},
     onSelectBottomSheet: (Exercise) -> Unit = {},
     onHistoryClick: () -> Unit = {},
+    onImportDay: (List<Exercise>) -> Unit = {},
+    onEditToggle: () -> Unit = {},
 ) {
     when (state) {
-        is SessionDetailState.Error -> {
+        is SessionDetailState.Error.InvalidSession -> {
             Column(Modifier.statusBarsPadding()) {
                 TopAppBar(
                     navigationIcon = {
@@ -138,6 +149,72 @@ private fun SessionDetail(
                     message = stringResource(state.errorMessage),
                     modifier = Modifier.fillMaxSize(),
                 )
+            }
+        }
+
+        is SessionDetailState.Error.EmptyPlan -> {
+            var showImportList by remember { mutableStateOf(false) }
+            Column(Modifier.statusBarsPadding()) {
+                TopAppBar(
+                    navigationIcon = {
+                        BackButton(onClick = onBackPress)
+                    },
+                    title = {},
+                )
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    SessionError(
+                        title = stringResource(state.title),
+                        message = stringResource(state.errorMessage),
+                    )
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    if (!showImportList) {
+                        FilledTonalButton(
+                            onClick = { showImportList = true },
+                            shape = MaterialTheme.shapes.large,
+                            contentPadding = PaddingValues(horizontal = 32.dp, vertical = 16.dp)
+                        ) {
+                            Text(text = stringResource(R.string.label_train_anyway))
+                        }
+                        Spacer(modifier = Modifier.weight(1.5f))
+                    } else if (state.availablePlanDays.isNotEmpty()) {
+                        HorizontalDivider(
+                            thickness = KenkoBorderWidth,
+                            modifier = Modifier.padding(horizontal = 32.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.label_import_from_other_day),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(top = 24.dp, bottom = 16.dp)
+                        )
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            contentPadding = PaddingValues(horizontal = 32.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.weight(3f)
+                        ) {
+                            state.availablePlanDays.toSortedMap().forEach { (day, exercises) ->
+                                item {
+                                    Button(
+                                        onClick = { onImportDay(exercises) },
+                                        shape = MaterialTheme.shapes.large,
+                                        contentPadding = PaddingValues(vertical = 12.dp)
+                                    ) {
+                                        Text(text = dayName(day))
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.weight(1.5f))
+                    }
+                }
             }
         }
 
@@ -164,7 +241,8 @@ private fun SessionDetail(
                 date = data.date,
                 exerciseSets = data.sets,
                 lastSetTime = data.lastSetTime,
-                isEditable = data.isToday,
+                isToday = data.isToday,
+                isEditMode = data.isEditMode,
                 hasPreviousSession = data.hasPreviousSession,
                 onBackPress = onBackPress,
                 onTimerClick = onTimerClick,
@@ -172,6 +250,7 @@ private fun SessionDetail(
                 onReferenceClick = onReferenceClick,
                 onSelectBottomSheet = onSelectBottomSheet,
                 onHistoryClick = onHistoryClick,
+                onEditToggle = onEditToggle,
             )
         }
     }
@@ -183,7 +262,8 @@ private fun SetsList(
     date: LocalDate,
     exerciseSets: Map<Exercise, List<Set>>,
     lastSetTime: Instant?,
-    isEditable: Boolean,
+    isToday: Boolean,
+    isEditMode: Boolean,
     hasPreviousSession: Boolean,
     onBackPress: () -> Unit,
     onTimerClick: () -> Unit,
@@ -191,6 +271,7 @@ private fun SetsList(
     onReferenceClick: (String) -> Unit,
     onSelectBottomSheet: (Exercise) -> Unit,
     onHistoryClick: () -> Unit,
+    onEditToggle: () -> Unit,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(360.dp),
@@ -220,6 +301,15 @@ private fun SetsList(
                             onTimerClick = onTimerClick
                         )
                     }
+
+                    if (!isToday) {
+                        IconButton(onClick = onEditToggle) {
+                            Icon(
+                                painter = if (isEditMode) KenkoIcons.Done else KenkoIcons.Rename,
+                                contentDescription = null,
+                            )
+                        }
+                    }
                 },
             )
         }
@@ -233,7 +323,7 @@ private fun SetsList(
                             Icon(painter = KenkoIcons.Lightbulb, contentDescription = null)
                         }
                     }
-                    if (isEditable) {
+                    if (isEditMode) {
                         FilledTonalIconButton(
                             shapes = IconButtonShapes(
                                 shape = MaterialShapes.Circle.toShape(),
@@ -247,10 +337,7 @@ private fun SetsList(
                 }
             }
             itemsIndexed(items = sets) { index, set ->
-                SwipeToDeleteBox(
-                    modifier = Modifier.animateItem(),
-                    onDismiss = { onRemoveSet(set.id) },
-                ) {
+                val setItem = @Composable {
                     SetItem(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                         set = set,
@@ -258,6 +345,15 @@ private fun SetsList(
                             Text(normalizeInt(index + 1))
                         },
                     )
+                }
+                if (isEditMode) {
+                    SwipeToDeleteBox(
+                        modifier = Modifier.animateItem(),
+                        onDismiss = { onRemoveSet(set.id) },
+                        content = setItem
+                    )
+                } else {
+                    setItem()
                 }
             }
         }
@@ -381,7 +477,7 @@ private fun SessionError(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.error,
+                color = MaterialTheme.colorScheme.primary,
             )
             Text(
                 text = message,
@@ -443,6 +539,21 @@ private fun SessionErrorPreview() {
     KenkoTheme {
         val data = remember {
             SessionDetailState.Error.InvalidSession
+        }
+        Surface(modifier = Modifier.fillMaxSize()) {
+            SessionDetail(state = data)
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SessionEmptyPreview() {
+    KenkoTheme {
+        val data = remember {
+            SessionDetailState.Error.EmptyPlan(
+                mapOf(DayOfWeek.MONDAY to emptyList())
+            )
         }
         Surface(modifier = Modifier.fillMaxSize()) {
             SessionDetail(state = data)
