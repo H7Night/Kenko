@@ -24,7 +24,7 @@
 
     <!--Home-->
     <string name="label_continue_session">Continue</string>
-    <string name="label_start_session">Start</string>
+    <string name="label_start_session">Start Plan</string>
     <string name="label_explore_sessions">Explore\nSessions</string>
     <string name="label_explore_exercises">Explore\nExercises</string>
     <string name="label_add_new_exercises_home">Add\nExercise</string>
@@ -33,10 +33,17 @@
 
     <!--Sessions-->
     <string name="label_sessions_title">Sessions</string>
+    <string name="label_delete_session_title">Delete Session?</string>
+    <string name="label_delete_session_message">This will permanently delete this session and all its sets.</string>
+    <string name="label_confirm">Confirm</string>
+    <string name="label_cancel">Cancel</string>
 
     <!--Session Details-->
     <string name="label_nothing_today">Nothing today</string>
+    <string name="label_rest_day_heading">Today is a rest day</string>
+    <string name="label_train_anyway">Train anyway</string>
     <string name="label_missed_day">Did you miss the day?</string>
+    <string name="label_import_from_other_day">Or import from another day:</string>
 
     <!--Plans-->
     <string name="label_plans_title">Plans</string>

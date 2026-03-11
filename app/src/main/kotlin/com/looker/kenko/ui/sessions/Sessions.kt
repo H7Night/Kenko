@@ -27,7 +27,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -50,7 +49,6 @@ import com.looker.kenko.R
 import com.looker.kenko.data.model.Session
 import com.looker.kenko.ui.components.BackButton
 import com.looker.kenko.ui.components.EmptyPage
-import com.looker.kenko.ui.components.TertiaryKenkoButton
 import com.looker.kenko.ui.extensions.plus
 import com.looker.kenko.ui.planEdit.components.dayName
 import com.looker.kenko.ui.theme.KenkoIcons
@@ -59,6 +57,13 @@ import com.looker.kenko.utils.DateFormat
 import com.looker.kenko.utils.formatDate
 import com.looker.kenko.utils.isToday
 import kotlinx.datetime.LocalDate
+
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.looker.kenko.ui.components.SwipeToDeleteBox
 
 @Composable
 fun Sessions(
@@ -70,6 +75,7 @@ fun Sessions(
     Sessions(
         state = state,
         onSessionClick = onSessionClick,
+        onRemoveSession = viewModel::removeSession,
         onBackPress = onBackPress,
     )
 }
@@ -79,9 +85,35 @@ fun Sessions(
 private fun Sessions(
     state: SessionsUiData,
     onSessionClick: (LocalDate?) -> Unit,
+    onRemoveSession: (Session) -> Unit,
     onBackPress: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var sessionToDelete by remember { mutableStateOf<Session?>(null) }
+
+    if (sessionToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { sessionToDelete = null },
+            title = { Text(text = stringResource(R.string.label_delete_session_title)) },
+            text = { Text(text = stringResource(R.string.label_delete_session_message)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onRemoveSession(sessionToDelete!!)
+                        sessionToDelete = null
+                    },
+                ) {
+                    Text(text = stringResource(R.string.label_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { sessionToDelete = null }) {
+                    Text(text = stringResource(R.string.label_cancel))
+                }
+            },
+        )
+    }
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -94,30 +126,6 @@ private fun Sessions(
                 },
             )
         },
-        floatingActionButton = {
-            TertiaryKenkoButton(
-                onClick = { onSessionClick(null) },
-                label = {
-                    val isCurrentSessionActive = state.isCurrentSessionActive
-                    val text = remember(isCurrentSessionActive) {
-                        if (isCurrentSessionActive) {
-                            R.string.label_continue_session
-                        } else {
-                            R.string.label_start_session
-                        }
-                    }
-                    Text(text = stringResource(id = text))
-                },
-                icon = {
-                    Icon(
-                        modifier = Modifier.size(18.dp),
-                        painter = KenkoIcons.ArrowOutward,
-                        contentDescription = null,
-                    )
-                },
-            )
-        },
-        floatingActionButtonPosition = FabPosition.Center,
         containerColor = MaterialTheme.colorScheme.surface,
     ) { padding ->
         if (state.sessions.isEmpty()) {
@@ -132,11 +140,15 @@ private fun Sessions(
                     items = state.sessions,
                     key = { it.id!! },
                 ) { session ->
-                    SessionCard(
+                    SwipeToDeleteBox(
                         modifier = Modifier.padding(horizontal = 14.dp),
-                        session = session,
-                        onClick = { onSessionClick(session.date) },
-                    )
+                        onDismiss = { sessionToDelete = session },
+                    ) {
+                        SessionCard(
+                            session = session,
+                            onClick = { onSessionClick(session.date) },
+                        )
+                    }
                 }
             }
         }
@@ -223,6 +235,7 @@ private fun SessionsPreview() {
             state = SessionsUiData(listOf(Session(1, emptyList())), false),
             onBackPress = {},
             onSessionClick = {},
+            onRemoveSession = {},
         )
     }
 }

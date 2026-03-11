@@ -22,14 +22,16 @@ import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class SessionsViewModel @Inject constructor(
-    repo: SessionRepo,
+    private val repo: SessionRepo,
 ) : ViewModel() {
     private val sessionsStream: Flow<List<Session>> = repo.stream
 
@@ -44,6 +46,12 @@ class SessionsViewModel @Inject constructor(
             isCurrentSessionActive = isCurrentSessionActive,
         )
     }.asStateFlow(SessionsUiData(emptyList(), false))
+
+    fun removeSession(session: Session) {
+        viewModelScope.launch {
+            repo.deleteSession(session)
+        }
+    }
 }
 
 @Stable

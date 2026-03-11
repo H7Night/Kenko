@@ -104,4 +104,12 @@ interface SetsDao {
         """,
     )
     suspend fun delete(setId: Int)
+
+    @Query(
+        """
+        DELETE FROM sets
+        WHERE sessionId = :sessionId
+        """,
+    )
+    suspend fun deleteBySessionId(sessionId: Int)
 }

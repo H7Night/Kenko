@@ -108,6 +108,12 @@ class LocalSessionRepo @Inject constructor(
     override suspend fun getSets(sessionId: Int): List<Set> =
         setsDao.getSetsBySessionId(sessionId).toExternal()
 
+    override suspend fun deleteSession(session: Session) {
+        val sessionId = session.id ?: return
+        setsDao.deleteBySessionId(sessionId)
+        dao.delete(sessionId)
+    }
+
     private suspend fun List<SetEntity>.toExternal(): List<Set> = mapNotNull {
         val exercise = exerciseDao.get(it.exerciseId) ?: return@mapNotNull null
         it.toExternal(exercise.toExternal())

@@ -95,4 +95,12 @@ interface SessionDao {
         """,
     )
     suspend fun getSession(date: EpochDays): SessionEntity?
+
+    @Query(
+        """
+        DELETE FROM sessions
+        WHERE id = :sessionId
+        """,
+    )
+    suspend fun delete(sessionId: Int)
 }

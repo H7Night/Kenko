@@ -20,18 +20,25 @@
 
     <!--Home-->
     <string name="label_continue_session">继续</string>
-    <string name="label_start_session">开始</string>
+    <string name="label_start_session">开始计划</string>
     <string name="label_explore_sessions">查看\n训练</string>
     <string name="label_explore_exercises">查看\n动作</string>
     <string name="label_add_new_exercises_home">添加\n动作</string>
     <string name="label_current_plan_home">当前\n计划</string>
 
     <!--Sessions-->
-    <string name="label_sessions_title">训练</string>
+    <string name="label_sessions_title">训练记录</string>
+    <string name="label_delete_session_title">删除记录？</string>
+    <string name="label_delete_session_message">这将永久删除此条训练记录及其所有组数信息。</string>
+    <string name="label_confirm">确定</string>
+    <string name="label_cancel">取消</string>
 
     <!--Session Details-->
     <string name="label_nothing_today">今日无训练</string>
+    <string name="label_rest_day_heading">今天休息</string>
+    <string name="label_train_anyway">还是要练</string>
     <string name="label_missed_day">你错过今天了吗？</string>
+    <string name="label_import_from_other_day">从其他计划日导入：</string>
 
     <!--Plans-->
     <string name="label_plans_title">计划</string>

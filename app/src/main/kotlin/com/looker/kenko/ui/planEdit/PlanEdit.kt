@@ -112,7 +112,6 @@ fun PlanEdit(
             )
         },
         onBackPress = { viewModel.onBackPress(pageStage, onBackPress) },
-        onDebugMockClick = viewModel::debugFillMockData,
     ) { stage ->
         when (stage) {
             PlanEditStage.NameEdit -> {
@@ -151,7 +150,6 @@ private fun FullEdit(
     stage: PlanEditStage,
     fab: @Composable () -> Unit,
     onBackPress: () -> Unit,
-    onDebugMockClick: (() -> Unit)? = null,
     ui: @Composable (stage: PlanEditStage) -> Unit,
 ) {
     Scaffold(
@@ -166,13 +164,6 @@ private fun FullEdit(
             TopAppBar(
                 title = {},
                 navigationIcon = { BackButton(onBackPress) },
-                actions = {
-                    if (BuildConfig.DEBUG && stage == PlanEditStage.PlanEdit) {
-                        IconButton(onClick = { onDebugMockClick?.invoke() }) {
-                            Icon(painter = KenkoIcons.Add, contentDescription = "Mock data")
-                        }
-                    }
-                },
             )
         },
     ) { innerPadding ->
