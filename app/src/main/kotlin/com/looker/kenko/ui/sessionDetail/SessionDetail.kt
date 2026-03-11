@@ -104,7 +104,6 @@ fun SessionDetails(
     SessionDetail(
         state = state,
         onBackPress = onBackPress,
-        onTimerClick = viewModel::resetRestTimer,
         onRemoveSet = viewModel::removeSet,
         onReferenceClick = viewModel::openReference,
         onSelectBottomSheet = viewModel::showBottomSheet,
@@ -117,7 +116,6 @@ fun SessionDetails(
         AddSetSheet(
             exercise = exercise!!,
             onDismiss = viewModel::hideSheet,
-            onAddSet = viewModel::startRestTimer,
         )
     }
 }
@@ -127,7 +125,6 @@ fun SessionDetails(
 private fun SessionDetail(
     state: SessionDetailState,
     onBackPress: () -> Unit = {},
-    onTimerClick: () -> Unit = {},
     onRemoveSet: (Int?) -> Unit = {},
     onReferenceClick: (String) -> Unit = {},
     onSelectBottomSheet: (Exercise) -> Unit = {},
@@ -240,12 +237,10 @@ private fun SessionDetail(
             SetsList(
                 date = data.date,
                 exerciseSets = data.sets,
-                lastSetTime = data.lastSetTime,
                 isToday = data.isToday,
                 isEditMode = data.isEditMode,
                 hasPreviousSession = data.hasPreviousSession,
                 onBackPress = onBackPress,
-                onTimerClick = onTimerClick,
                 onRemoveSet = onRemoveSet,
                 onReferenceClick = onReferenceClick,
                 onSelectBottomSheet = onSelectBottomSheet,
@@ -261,12 +256,10 @@ private fun SessionDetail(
 private fun SetsList(
     date: LocalDate,
     exerciseSets: Map<Exercise, List<Set>>,
-    lastSetTime: Instant?,
     isToday: Boolean,
     isEditMode: Boolean,
     hasPreviousSession: Boolean,
     onBackPress: () -> Unit,
-    onTimerClick: () -> Unit,
     onRemoveSet: (Int?) -> Unit,
     onReferenceClick: (String) -> Unit,
     onSelectBottomSheet: (Exercise) -> Unit,
@@ -293,13 +286,6 @@ private fun SetsList(
                                 contentDescription = null,
                             )
                         }
-                    }
-
-                    if (lastSetTime != null && lastSetTime - Clock.System.now() < 1.hours) {
-                        TimerBox(
-                            lastSetTime = lastSetTime,
-                            onTimerClick = onTimerClick
-                        )
                     }
 
                     if (!isToday) {
@@ -402,43 +388,6 @@ private fun Header(
 }
 
 @Composable
-fun TimerBox(
-    lastSetTime: Instant,
-    onTimerClick: () -> Unit,
-) {
-    var restTimeInSeconds by remember { mutableLongStateOf(0L) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            restTimeInSeconds = (Clock.System.now() - lastSetTime).inWholeSeconds
-            delay(1000)
-        }
-    }
-
-    Surface(
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        onClick = onTimerClick,
-        shape = CircleShape,
-    ) {
-        Text(
-            text = formatTime(restTimeInSeconds),
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.padding(
-                horizontal = 12.dp,
-                vertical = 6.dp,
-            ),
-        )
-    }
-}
-
-@Composable
-private fun formatTime(seconds: Long): String = remember(seconds) {
-    val minutes = seconds % 3600 / 60
-    val secs = seconds % 60
-    String.format(Locale.getDefault(), "%02d:%02d", minutes, secs)
-}
-
-@Composable
 private fun StickyHeader(
     name: String,
     actions: (@Composable RowScope.() -> Unit)? = null,
@@ -493,7 +442,6 @@ private fun SessionError(
 private fun AddSetSheet(
     exercise: Exercise,
     onDismiss: () -> Unit,
-    onAddSet: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -505,7 +453,6 @@ private fun AddSetSheet(
         AddSet(
             exercise = exercise,
             onDone = {
-                onAddSet()
                 scope.launch { state.hide() }.invokeOnCompletion {
                     if (!state.isVisible) onDismiss()
                 }

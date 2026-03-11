@@ -136,8 +136,6 @@ class SessionDetailViewModel @Inject constructor(
             }
         }
 
-    private val lastSetTimeStream = settingsRepo.get { lastSetTime }
-
     private val _isEditMode: MutableStateFlow<Boolean> = MutableStateFlow(isTodaySession)
     val isEditMode: StateFlow<Boolean> = _isEditMode
 
@@ -148,17 +146,15 @@ class SessionDetailViewModel @Inject constructor(
         combine(
             sessionStream,
             exercisesToday,
-            lastSetTimeStream,
             previousSessionExists,
             availablePlanItems,
             _isEditMode,
         ) { flows ->
             val session = flows[0] as Session?
             val exercises = flows[1] as List<Exercise>
-            val lastSetTime = flows[2] as Instant?
-            val previousSession = flows[3] as Boolean
-            val available = flows[4] as Map<DayOfWeek, List<Exercise>>
-            val isEditMode = flows[5] as Boolean
+            val previousSession = flows[2] as Boolean
+            val available = flows[3] as Map<DayOfWeek, List<Exercise>>
+            val isEditMode = flows[4] as Boolean
 
             if (session == null && epochDays != null) {
                 return@combine SessionDetailState.Error.InvalidSession
@@ -185,7 +181,6 @@ class SessionDetailViewModel @Inject constructor(
                     sets = exerciseMap,
                     isToday = isTodaySession,
                     isEditMode = isEditMode,
-                    lastSetTime = lastSetTime,
                     hasPreviousSession = previousSession,
                 ),
             )
@@ -198,18 +193,6 @@ class SessionDetailViewModel @Inject constructor(
 
     fun importPlanFromDay(exercises: List<Exercise>) {
         savedStateHandle["_temporary_exercise_ids"] = exercises.mapNotNull { it.id }
-    }
-
-    fun startRestTimer() {
-        viewModelScope.launch {
-            settingsRepo.setLastSetTime(Clock.System.now())
-        }
-    }
-
-    fun resetRestTimer() {
-        viewModelScope.launch {
-            settingsRepo.setLastSetTime(null)
-        }
     }
 
     fun removeSet(setId: Int?) {
@@ -249,7 +232,6 @@ data class SessionUiData(
     val sets: Map<Exercise, List<Set>>,
     val isToday: Boolean = false,
     val isEditMode: Boolean = false,
-    val lastSetTime: Instant? = null,
     val hasPreviousSession: Boolean = false,
 )
 
