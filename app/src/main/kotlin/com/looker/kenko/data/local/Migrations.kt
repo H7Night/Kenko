@@ -299,3 +299,16 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL("ALTER TABLE sets ADD COLUMN rir INTEGER NOT NULL DEFAULT 2")
     }
 }
+
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `weights` (
+            `date` INTEGER NOT NULL,
+            `value` REAL NOT NULL,
+            `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT)
+            """.trimIndent(),
+        )
+    }
+}

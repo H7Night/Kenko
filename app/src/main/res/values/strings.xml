@@ -65,6 +65,13 @@
     <string name="label_select_plan_one">Select Plan</string>
     <string name="label_current_plan">Current Plan</string>
     <string name="label_lifts">Lifts</string>
+    <string name="label_body_weight">Weight</string>
+    <string name="label_body_weight_history">Weight History</string>
+    <string name="label_add_body_weight">Add Weight</string>
+    <string name="label_edit_body_weight">Edit Weight</string>
+    <string name="label_weight_unit">kg</string>
+    <string name="label_delete_weight_title">Delete Weight Record?</string>
+    <string name="label_delete_weight_message">This will permanently delete this weight record.</string>
     <string name="label_plan_description">
         <ul>%1$s exercises</ul>\n
         <ul>%2$s days</ul>\n

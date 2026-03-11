@@ -49,8 +49,41 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import com.looker.kenko.data.model.Weight
+import com.looker.kenko.ui.components.WeightLineChart
+import com.looker.kenko.utils.DateFormat
+import com.looker.kenko.utils.formatDate
+import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.TopAppBar
+import com.looker.kenko.ui.components.SwipeToDeleteBox
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -94,6 +127,9 @@ fun Profile(
         onPlanClick = onPlanClick,
         onAddExerciseClick = onAddExerciseClick,
         onExercisesClick = onExercisesClick,
+        onAddWeight = viewModel::addWeight,
+        onUpdateWeight = viewModel::updateWeight,
+        onDeleteWeight = viewModel::deleteWeight,
     )
 }
 
@@ -106,8 +142,50 @@ private fun Profile(
     onPlanClick: () -> Unit,
     onAddExerciseClick: () -> Unit,
     onExercisesClick: () -> Unit,
+    onAddWeight: (Float) -> Unit,
+    onUpdateWeight: (Weight) -> Unit,
+    onDeleteWeight: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var showWeightDialog by remember { mutableStateOf(false) }
+    var weightToEdit by remember { mutableStateOf<Weight?>(null) }
+    var showWeightHistory by remember { mutableStateOf(false) }
+
+    if (showWeightDialog || weightToEdit != null) {
+        val initialWeight = weightToEdit?.value
+            ?: state.weights.lastOrNull()?.value
+            ?: 60f
+        WeightDialog(
+            initialWeight = initialWeight,
+            isEdit = weightToEdit != null,
+            onDismiss = {
+                showWeightDialog = false
+                weightToEdit = null
+            },
+            onConfirm = { value ->
+                if (weightToEdit != null) {
+                    onUpdateWeight(weightToEdit!!.copy(value = value))
+                } else {
+                    onAddWeight(value)
+                }
+                showWeightDialog = false
+                weightToEdit = null
+            }
+        )
+    }
+
+    if (showWeightHistory) {
+        WeightHistorySheet(
+            weights = state.weights,
+            onDismiss = { showWeightHistory = false },
+            onEdit = { 
+                weightToEdit = it
+                showWeightHistory = false
+            },
+            onDelete = onDeleteWeight
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -152,10 +230,12 @@ private fun Profile(
                 onAddClick = onAddExerciseClick,
                 onExercisesClick = onExercisesClick,
             )
-            if (state.totalLifts > 0) {
-                Spacer(modifier = Modifier.height(12.dp))
-                LiftsCard(state.totalLifts)
-            }
+            Spacer(modifier = Modifier.height(12.dp))
+            WeightCard(
+                weights = state.weights,
+                onAddClick = { showWeightDialog = true },
+                onHistoryClick = { showWeightHistory = true }
+            )
         }
     }
 }
@@ -323,35 +403,266 @@ private fun ExerciseCard(
 }
 
 @Composable
-private fun LiftsCard(setsPerformed: Int) {
+private fun WeightCard(
+    weights: List<Weight>,
+    onAddClick: () -> Unit,
+    onHistoryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onAddClick),
         shape = MaterialTheme.shapes.extraLarge,
         border = SecondaryBorder,
     ) {
-        Row(
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.label_body_weight),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = onHistoryClick,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        painter = KenkoIcons.Rename,
+                        contentDescription = stringResource(R.string.label_body_weight_history),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+
+            if (weights.size >= 2) {
+                WeightLineChart(
+                    weights = weights,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = weights.lastOrNull()?.let { "${it.value} ${stringResource(R.string.label_weight_unit)}" }
+                            ?: stringResource(R.string.label_add_body_weight),
+                        style = MaterialTheme.typography.displaySmall.numbers()
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeightDialog(
+    initialWeight: Float,
+    isEdit: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (Float) -> Unit,
+) {
+    var selectedWeight by remember { mutableStateOf(initialWeight) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = if (isEdit) stringResource(R.string.label_edit_body_weight)
+                else stringResource(R.string.label_add_body_weight)
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                WeightPicker(
+                    value = selectedWeight,
+                    onValueChange = { selectedWeight = it }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.label_weight_unit),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(selectedWeight) }
+            ) {
+                Text(stringResource(R.string.label_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.label_cancel))
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun WeightPicker(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    range: ClosedFloatingPointRange<Float> = 30f..200f
+) {
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val itemHeight = 48.dp
+    val itemHeightPx = with(density) { itemHeight.toPx() }
+    
+    val weights = remember(range) {
+        generateSequence(range.start) { it + 0.5f }
+            .takeWhile { it <= range.endInclusive }
+            .toList()
+    }
+    
+    val initialIndex = remember(value) {
+        weights.indexOfFirst { it >= value }.coerceAtLeast(0)
+    }
+    
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+    val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
+
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (!listState.isScrollInProgress) {
+            val centerIndex = listState.firstVisibleItemIndex
+            if (centerIndex in weights.indices) {
+                onValueChange(weights[centerIndex])
+            }
+        }
+    }
+
+    val indicatorColor = MaterialTheme.colorScheme.outlineVariant
+    Box(
+        modifier = modifier
+            .width(120.dp)
+            .height(itemHeight * 3)
+            .drawWithContent {
+                drawContent()
+                clipRect {
+                    drawLine(
+                        color = indicatorColor,
+                        start = androidx.compose.ui.geometry.Offset(0f, itemHeightPx),
+                        end = androidx.compose.ui.geometry.Offset(size.width, itemHeightPx),
+                        strokeWidth = 1.dp.toPx()
+                    )
+                    drawLine(
+                        color = indicatorColor,
+                        start = androidx.compose.ui.geometry.Offset(0f, itemHeightPx * 2),
+                        end = androidx.compose.ui.geometry.Offset(size.width, itemHeightPx * 2),
+                        strokeWidth = 1.dp.toPx()
+                    )
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        LazyColumn(
+            state = listState,
+            flingBehavior = snapFlingBehavior,
+            contentPadding = PaddingValues(vertical = itemHeight),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(weights.size) { index ->
+                val weight = weights[index]
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(itemHeight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "%.1f".format(weight),
+                        style = if (index == listState.firstVisibleItemIndex) 
+                            MaterialTheme.typography.headlineMedium.numbers() 
+                            else MaterialTheme.typography.titleMedium.numbers(),
+                        color = if (index == listState.firstVisibleItemIndex)
+                            MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.outline
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WeightHistorySheet(
+    weights: List<Weight>,
+    onDismiss: () -> Unit,
+    onEdit: (Weight) -> Unit,
+    onDelete: (Int) -> Unit,
+) {
+    val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = state,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(bottom = 32.dp)
         ) {
             Text(
-                modifier = Modifier.vertical(false),
-                text = stringResource(R.string.label_lifts),
-                style = MaterialTheme.typography.titleMedium,
+                text = stringResource(R.string.label_body_weight_history),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(16.dp)
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = setsPerformed.toString(),
-                style = MaterialTheme.typography.displayLarge.numbers(),
-            )
-            Spacer(modifier = Modifier.weight(1F))
-            Icon(
-                imageVector = KenkoIcons.Reveal,
-                tint = MaterialTheme.colorScheme.surfaceContainerHigh,
-                contentDescription = null,
-                modifier = Modifier.offset(x = 30.dp),
-            )
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(weights.reversed()) { weight ->
+                    SwipeToDeleteBox(
+                        onDismiss = { onDelete(weight.id) },
+                        showIcon = true
+                    ) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceContainer,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onEdit(weight) }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = formatDate(weight.date, DateFormat.SessionLabel),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Spacer(modifier = Modifier.weight(1f))
+                                Text(
+                                    text = "${weight.value} ${stringResource(R.string.label_weight_unit)}",
+                                    style = MaterialTheme.typography.titleMedium.numbers()
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -399,12 +710,15 @@ private fun ExerciseCardPreview() {
 private fun ProfileNoPlanPreview() {
     KenkoTheme {
         Profile(
-            state = ProfileUiState(12, false, "Push-Pull-Leg", 2, PlanStat(12, 5)),
+            state = ProfileUiState(12, false, "Push-Pull-Leg", emptyList(), PlanStat(12, 5)),
             onBackPress = { },
             onSettingsClick = { },
             onPlanClick = { },
             onAddExerciseClick = { },
             onExercisesClick = { },
+            onAddWeight = {},
+            onUpdateWeight = {},
+            onDeleteWeight = {},
         )
     }
 }
@@ -414,12 +728,15 @@ private fun ProfileNoPlanPreview() {
 private fun ProfilePreview() {
     KenkoTheme {
         Profile(
-            state = ProfileUiState(12, true, "Push-Pull-Leg", 2, PlanStat(12, 5)),
+            state = ProfileUiState(12, true, "Push-Pull-Leg", emptyList(), PlanStat(12, 5)),
             onBackPress = { },
             onSettingsClick = { },
             onPlanClick = { },
             onAddExerciseClick = { },
             onExercisesClick = { },
+            onAddWeight = {},
+            onUpdateWeight = {},
+            onDeleteWeight = {},
         )
     }
 }

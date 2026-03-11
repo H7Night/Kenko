@@ -22,6 +22,7 @@ import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.dao.PlanHistoryDao
 import com.looker.kenko.data.local.dao.SessionDao
 import com.looker.kenko.data.local.dao.SetsDao
+import com.looker.kenko.data.local.dao.WeightDao
 import com.looker.kenko.data.local.kenkoDatabase
 import dagger.Module
 import dagger.Provides
@@ -75,4 +76,10 @@ object DatabaseModule {
     fun providePerformanceDao(
         database: KenkoDatabase,
     ): PerformanceDao = database.performanceDao()
+
+    @Provides
+    @Singleton
+    fun provideWeightDao(
+        database: KenkoDatabase,
+    ): WeightDao = database.weightDao()
 }

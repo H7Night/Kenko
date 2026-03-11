@@ -20,10 +20,12 @@ import com.looker.kenko.data.repository.PerformanceRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo
+import com.looker.kenko.data.repository.WeightRepo
 import com.looker.kenko.data.repository.local.LocalExerciseRepo
 import com.looker.kenko.data.repository.local.LocalPerformanceRepo
 import com.looker.kenko.data.repository.local.LocalPlanRepo
 import com.looker.kenko.data.repository.local.LocalSessionRepo
+import com.looker.kenko.data.repository.local.LocalWeightRepo
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -57,4 +59,9 @@ abstract class RepositoryModule {
     abstract fun bindSettingsRepo(
         repo: DatastoreSettingsRepo,
     ): SettingsRepo
+
+    @Binds
+    abstract fun bindWeightRepo(
+        repo: LocalWeightRepo,
+    ): WeightRepo
 }

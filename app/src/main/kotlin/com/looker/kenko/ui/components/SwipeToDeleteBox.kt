@@ -55,6 +55,7 @@ import kotlin.math.roundToInt
 fun SwipeToDeleteBox(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    showIcon: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val density = LocalDensity.current
@@ -103,14 +104,16 @@ fun SwipeToDeleteBox(
                 },
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                modifier = Modifier
-                    .requiredWidth(actionWidth)
-                    .align(Alignment.CenterEnd),
-                painter = KenkoIcons.Delete,
-                tint = MaterialTheme.colorScheme.onErrorContainer,
-                contentDescription = null,
-            )
+            if (showIcon) {
+                Icon(
+                    modifier = Modifier
+                        .requiredWidth(actionWidth)
+                        .align(Alignment.CenterEnd),
+                    painter = KenkoIcons.Delete,
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                    contentDescription = null,
+                )
+            }
         }
         Box(
             modifier = Modifier

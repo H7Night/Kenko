@@ -24,6 +24,7 @@ import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.dao.PlanHistoryDao
 import com.looker.kenko.data.local.dao.SessionDao
 import com.looker.kenko.data.local.dao.SetsDao
+import com.looker.kenko.data.local.dao.WeightDao
 import com.looker.kenko.data.local.model.ExerciseEntity
 import com.looker.kenko.data.local.model.PlanDayEntity
 import com.looker.kenko.data.local.model.PlanEntity
@@ -31,9 +32,10 @@ import com.looker.kenko.data.local.model.PlanHistoryEntity
 import com.looker.kenko.data.local.model.SessionDataEntity
 import com.looker.kenko.data.local.model.SetEntity
 import com.looker.kenko.data.local.model.SetTypeEntity
+import com.looker.kenko.data.local.model.WeightEntity
 
 @Database(
-    version = 3,
+    version = 4,
     entities = [
         SessionDataEntity::class,
         ExerciseEntity::class,
@@ -42,6 +44,7 @@ import com.looker.kenko.data.local.model.SetTypeEntity
         PlanDayEntity::class,
         SetEntity::class,
         SetTypeEntity::class,
+        WeightEntity::class,
     ],
 )
 abstract class KenkoDatabase : RoomDatabase() {
@@ -51,6 +54,7 @@ abstract class KenkoDatabase : RoomDatabase() {
     abstract fun setsDao(): SetsDao
     abstract fun historyDao(): PlanHistoryDao
     abstract fun performanceDao(): PerformanceDao
+    abstract fun weightDao(): WeightDao
 }
 
 fun kenkoDatabase(context: Context) = Room
@@ -63,5 +67,6 @@ fun kenkoDatabase(context: Context) = Room
     .addMigrations(
         MIGRATION_1_2,
         MIGRATION_2_3,
+        MIGRATION_3_4,
     )
     .build()

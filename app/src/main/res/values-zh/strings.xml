@@ -57,7 +57,15 @@
     <string name="label_select_plan">选择计划</string>
     <string name="label_select_plan_one">选择计划</string>
     <string name="label_current_plan">当前计划</string>
-    <string name="label_lifts">累计组数</string>
+    <string name="label_lifts">动作记录</string>
+    <string name="label_body_weight">体重记录</string>
+    <string name="label_body_weight_history">体重历史</string>
+    <string name="label_add_body_weight">添加体重</string>
+    <string name="label_edit_body_weight">编辑体重</string>
+    <string name="label_weight_unit">kg</string>
+    <string name="label_delete_weight_title">删除体重记录？</string>
+    <string name="label_delete_weight_message">这将永久删除该条体重记录。</string>
+
     <string name="label_plan_description">
         <ul>%1$s 个动作</ul>\n
         <ul>%2$s 天训练</ul>\n

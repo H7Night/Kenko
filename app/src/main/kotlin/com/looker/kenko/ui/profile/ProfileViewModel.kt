@@ -16,22 +16,26 @@ package com.looker.kenko.ui.profile
 
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.model.Plan
 import com.looker.kenko.data.model.PlanStat
+import com.looker.kenko.data.model.Weight
+import com.looker.kenko.data.model.localDate
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
-import com.looker.kenko.data.repository.SessionRepo
+import com.looker.kenko.data.repository.WeightRepo
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     planRepo: PlanRepo,
-    sessionRepo: SessionRepo,
+    private val weightRepo: WeightRepo,
     exerciseRepo: ExerciseRepo,
 ) : ViewModel() {
 
@@ -39,17 +43,35 @@ class ProfileViewModel @Inject constructor(
 
     val state: StateFlow<ProfileUiState> = combine(
         currentPlan,
-        sessionRepo.setsCount,
+        weightRepo.weights,
         exerciseRepo.numberOfExercise,
-    ) { plan, sets, number ->
+    ) { plan, weights, number ->
         ProfileUiState(
             numberOfExercises = number,
-            totalLifts = sets,
+            weights = weights,
             isPlanAvailable = plan != null,
             planName = plan?.name ?: "",
             planStat = plan?.stat,
         )
     }.asStateFlow(ProfileUiState())
+
+    fun addWeight(value: Float) {
+        viewModelScope.launch {
+            weightRepo.addWeight(Weight(localDate, value))
+        }
+    }
+
+    fun updateWeight(weight: Weight) {
+        viewModelScope.launch {
+            weightRepo.updateWeight(weight)
+        }
+    }
+
+    fun deleteWeight(id: Int) {
+        viewModelScope.launch {
+            weightRepo.deleteWeight(id)
+        }
+    }
 }
 
 @Stable
@@ -57,6 +79,6 @@ data class ProfileUiState(
     val numberOfExercises: Int = 0,
     val isPlanAvailable: Boolean = false,
     val planName: String = "",
-    val totalLifts: Int = 0,
+    val weights: List<Weight> = emptyList(),
     val planStat: PlanStat? = null,
 )
