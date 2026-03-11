@@ -14,26 +14,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - +2 increment button to AddSet screen
 - Draggable sets input and improved set count management in ViewModel
 - Backup and restore for whole data
-- **Edit mode toggle for past sessions in Session Detail**
-- **Persistence for imported exercises using SavedStateHandle**
-- **Delete functionality for sessions in Session History with confirmation dialog**
-- **Support for importing plans from other days on rest days**
-- **Body weight tracking with custom line chart and history management**
-- **Interactive vertical scroll picker for weight selection**
+- Edit mode toggle for past sessions in Session Detail
+- Persistence for imported exercises using SavedStateHandle
+- Delete functionality for sessions in Session History with confirmation dialog
+- Support for importing plans from other days on rest days
+- Body weight tracking with custom line chart and history management
+- Interactive vertical scroll picker for weight selection
 
 ### Changed
 - Updated Chinese translation for system theme label
-- **Optimized Home screen headings and session start/continue logic**
-- **Removed debug mock data button from Plan Edit screen**
-- **Removed redundant Floating Action Button from Sessions screen**
-- **Replaced "Lifts" card with "Weight" card in Profile screen**
+- Optimized Home screen headings and session start/continue logic
+- Removed debug mock data button from Plan Edit screen
+- Removed redundant Floating Action Button from Sessions screen
+- Replaced "Lifts" card with "Weight" card in Profile screen
 
 ### Fixed
-- **Issue where imported exercises would disappear after app restart on rest days**
-- **Automatic recovery of imported plans by matching performed exercises**
-- **Incorrect "Today" logic for historical session views**
-- **Hardcoded rest day heading in Session Detail**
-- **Overlapping delete icon in swipe-to-delete lists**
+- Issue where imported exercises would disappear after app restart on rest days
+- Automatic recovery of imported plans by matching performed exercises
+- Incorrect "Today" logic for historical session views
+- Hardcoded rest day heading in Session Detail
+- Overlapping delete icon in swipe-to-delete lists
 
 - Turkish (`values-tr`) support
 - Unnecessary quotes and fixed gradle warnings
