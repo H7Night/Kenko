@@ -68,6 +68,7 @@ import com.looker.kenko.ui.theme.start
 fun SelectExercise(
     onDone: (Exercise) -> Unit,
     onRequestNewExercise: (name: String?, target: MuscleGroups?) -> Unit,
+    title: String? = null,
 ) {
     val viewModel: SelectExerciseViewModel = hiltViewModel()
 
@@ -79,7 +80,10 @@ fun SelectExercise(
         val target by viewModel.targetMuscle.collectAsStateWithLifecycle()
         val searchResult by viewModel.searchResult.collectAsStateWithLifecycle()
 
-        AddExerciseHeader(modifier = Modifier.padding(horizontal = 16.dp))
+        AddExerciseHeader(
+            title = title,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
         ExerciseSearchField(
             modifier = Modifier.padding(horizontal = 16.dp),
             name = viewModel.searchQuery,
@@ -199,11 +203,12 @@ private fun ExerciseSearchField(
 
 @Composable
 private fun AddExerciseHeader(
+    title: String?,
     modifier: Modifier = Modifier,
 ) {
     Text(
         modifier = modifier,
-        text = stringResource(R.string.label_add_exercise_header),
+        text = title?.ifBlank { null } ?: stringResource(R.string.label_add_exercise_header),
         style = MaterialTheme.typography.displayMedium,
         color = MaterialTheme.colorScheme.tertiary
     )

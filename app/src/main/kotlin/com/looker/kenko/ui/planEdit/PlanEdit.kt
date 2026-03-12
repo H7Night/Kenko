@@ -25,14 +25,18 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledTonalIconButton
@@ -75,6 +79,7 @@ import com.looker.kenko.ui.extensions.normalizeInt
 import com.looker.kenko.ui.extensions.plus
 import com.looker.kenko.ui.planEdit.components.DaySwitcher
 import com.looker.kenko.ui.planEdit.components.ExerciseItem
+import com.looker.kenko.ui.planEdit.components.dayName
 import com.looker.kenko.ui.planEdit.components.kenkoDayName
 import com.looker.kenko.ui.selectExercise.SelectExercise
 import com.looker.kenko.ui.theme.KenkoIcons
@@ -129,13 +134,16 @@ fun PlanEdit(
                     onSelectDay = viewModel::setCurrentDay,
                     onRemoveExerciseClick = viewModel::removeExercise,
                     onFullDaySelection = viewModel::openFullDaySelection,
+                    onDayTitleChange = viewModel::setDayTitle,
                 )
             }
         }
     }
 
     if (state.exerciseSheetVisible) {
+        val name = dayName(state.currentDay)
         AddExerciseSheet(
+            title = state.dayTitle.ifBlank { name },
             onDismiss = viewModel::closeSheet,
             onDone = viewModel::addExercise,
             onAddNewExerciseClick = onAddNewExerciseClick,
@@ -279,13 +287,37 @@ private fun PlanEdit(
     onSelectDay: (DayOfWeek) -> Unit,
     onRemoveExerciseClick: (Exercise) -> Unit,
     onFullDaySelection: () -> Unit,
+    onDayTitleChange: (String) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     val isCurrentDayBlank by remember(state.exercises) { derivedStateOf { state.exercises.isEmpty() } }
     PlanExercise(
         modifier = Modifier.fillMaxSize(),
         header = {
+            val name = dayName(state.currentDay)
             Header(
+                title = {
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = state.dayTitle,
+                        onValueChange = onDayTitleChange,
+                        modifier = Modifier.fillMaxWidth(),
+                        textStyle = MaterialTheme.typography.displayMedium.copy(
+                            color = MaterialTheme.colorScheme.secondary,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Start
+                        ),
+                        cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.secondary),
+                        decorationBox = { innerTextField ->
+                            if (state.dayTitle.isEmpty()) {
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.displayMedium,
+                                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
+                                )
+                            }
+                            innerTextField()
+                        }
+                    )
+                },
                 isExpandedView = state.selectionMode,
                 daySelector = {
                     HorizontalDaySelector(
@@ -294,7 +326,7 @@ private fun PlanEdit(
                                 selected = dayOfWeek == state.currentDay,
                                 onClick = { onSelectDay(dayOfWeek) },
                             ) {
-                                Text(kenkoDayName(dayOfWeek))
+                                Text(dayName(dayOfWeek))
                             }
                         },
                     )
@@ -370,6 +402,7 @@ private fun ExerciseItemActions(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddExerciseSheet(
+    title: String?,
     onDismiss: () -> Unit,
     onDone: (Exercise) -> Unit,
     onAddNewExerciseClick: (name: String?, target: MuscleGroups?) -> Unit,
@@ -378,6 +411,7 @@ private fun AddExerciseSheet(
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(sheetState = state, onDismissRequest = onDismiss) {
         SelectExercise(
+            title = title,
             onRequestNewExercise = onAddNewExerciseClick,
             onDone = { exercise ->
                 scope.launch {

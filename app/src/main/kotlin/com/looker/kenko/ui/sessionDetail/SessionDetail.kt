@@ -203,7 +203,8 @@ private fun SessionDetail(
                                         shape = MaterialTheme.shapes.large,
                                         contentPadding = PaddingValues(vertical = 12.dp)
                                     ) {
-                                        Text(text = dayName(day))
+                                        val title = state.dayTitles[day]
+                                        Text(text = if (title.isNullOrBlank()) dayName(day) else title)
                                     }
                                 }
                             }
@@ -240,6 +241,7 @@ private fun SessionDetail(
                 isToday = data.isToday,
                 isEditMode = data.isEditMode,
                 hasPreviousSession = data.hasPreviousSession,
+                dayTitle = data.dayTitle,
                 onBackPress = onBackPress,
                 onRemoveSet = onRemoveSet,
                 onReferenceClick = onReferenceClick,
@@ -259,6 +261,7 @@ private fun SetsList(
     isToday: Boolean,
     isEditMode: Boolean,
     hasPreviousSession: Boolean,
+    dayTitle: String?,
     onBackPress: () -> Unit,
     onRemoveSet: (Int?) -> Unit,
     onReferenceClick: (String) -> Unit,
@@ -277,6 +280,7 @@ private fun SetsList(
         ) {
             Header(
                 performedOn = date,
+                dayTitle = dayTitle,
                 onBackPress = onBackPress,
                 actions = {
                     if (hasPreviousSession) {
@@ -350,12 +354,17 @@ private fun SetsList(
 @Composable
 private fun Header(
     performedOn: LocalDate,
+    dayTitle: String?,
     onBackPress: () -> Unit,
     modifier: Modifier = Modifier,
     actions: @Composable (RowScope.() -> Unit),
 ) {
     val date = remember {
         formatDate(performedOn, DateFormat.SessionLabel)
+    }
+    val name = dayName(performedOn.dayOfWeek)
+    val dayText = remember(dayTitle, name) {
+        if (dayTitle.isNullOrBlank()) name else "$dayTitle ($name)"
     }
     TopAppBar(
         modifier = modifier,
@@ -369,7 +378,7 @@ private fun Header(
                     mutableStateOf(false)
                 }
                 TypingText(
-                    text = dayName(performedOn.dayOfWeek),
+                    text = dayText,
                     onCompleteListener = {
                         startAnimatingDate = true
                     },

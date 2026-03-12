@@ -104,10 +104,11 @@ fun DaySwitcher(
                     },
                 ) { day ->
                     Text(
-                        text = kenkoDayName(dayOfWeek = day),
+                        text = dayName(dayOfWeek = day),
                         style = MaterialTheme.typography.labelLarge,
                     )
                 }
+
             },
         )
         Spacer(modifier = Modifier.width(6.dp))

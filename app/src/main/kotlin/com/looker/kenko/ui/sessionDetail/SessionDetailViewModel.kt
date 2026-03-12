@@ -31,6 +31,7 @@ import com.looker.kenko.data.model.week
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo
+import com.looker.kenko.data.model.titlesMap
 import com.looker.kenko.ui.sessionDetail.navigation.SessionDetailRoute
 import com.looker.kenko.utils.asStateFlow
 import com.looker.kenko.utils.isToday
@@ -149,22 +150,27 @@ class SessionDetailViewModel @Inject constructor(
             previousSessionExists,
             availablePlanItems,
             _isEditMode,
+            planRepo.plans,
         ) { flows ->
             val session = flows[0] as Session?
             val exercises = flows[1] as List<Exercise>
             val previousSession = flows[2] as Boolean
             val available = flows[3] as Map<DayOfWeek, List<Exercise>>
             val isEditMode = flows[4] as Boolean
+            val plans = flows[5] as List<com.looker.kenko.data.model.Plan>
 
             if (session == null && epochDays != null) {
                 return@combine SessionDetailState.Error.InvalidSession
             }
 
             if (exercises.isEmpty() && sessionDate.isToday) {
-                return@combine SessionDetailState.Error.EmptyPlan(available)
+                val currentPlanTitles = plans.find { it.isActive }?.titlesMap ?: emptyMap()
+                return@combine SessionDetailState.Error.EmptyPlan(available, currentPlanTitles)
             }
 
             val currentSession = session ?: Session(-1, emptyList())
+            val dayTitle = plans.find { it.id == currentSession.planId }
+                ?.titlesMap?.get(currentSession.date.dayOfWeek)
 
             val exerciseMap = when {
                 sessionDate.isToday || exercises.isNotEmpty() -> exercises.associateWith { exercise ->
@@ -181,6 +187,7 @@ class SessionDetailViewModel @Inject constructor(
                     sets = exerciseMap,
                     isToday = isTodaySession,
                     isEditMode = isEditMode,
+                    dayTitle = dayTitle,
                     hasPreviousSession = previousSession,
                 ),
             )
@@ -232,6 +239,7 @@ data class SessionUiData(
     val sets: Map<Exercise, List<Set>>,
     val isToday: Boolean = false,
     val isEditMode: Boolean = false,
+    val dayTitle: String? = null,
     val hasPreviousSession: Boolean = false,
 )
 
@@ -251,7 +259,8 @@ sealed interface SessionDetailState {
         )
 
         data class EmptyPlan(
-            val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap()
+            val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),
+            val dayTitles: Map<DayOfWeek, String> = emptyMap()
         ) : Error(
             title = R.string.label_nothing_today,
             errorMessage = R.string.label_no_exercise_today,

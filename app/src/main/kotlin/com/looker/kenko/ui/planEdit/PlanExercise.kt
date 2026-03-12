@@ -57,17 +57,14 @@ fun PlanExercise(
 
 @Composable
 fun Header(
+    title: @Composable () -> Unit,
     isExpandedView: Boolean,
     modifier: Modifier = Modifier,
     daySelector: @Composable () -> Unit,
     daySwitcher: @Composable () -> Unit,
 ) {
     Column {
-        Text(
-            text = stringResource(R.string.heading_select_plan_items),
-            style = MaterialTheme.typography.displayMedium,
-            color = MaterialTheme.colorScheme.secondary,
-        )
+        title()
         Spacer(Modifier.height(8.dp))
         AnimatedContent(
             modifier = modifier.background(MaterialTheme.colorScheme.surface),

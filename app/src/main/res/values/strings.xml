@@ -69,6 +69,7 @@
     <string name="label_body_weight_history">Weight History</string>
     <string name="label_add_body_weight">Add Weight</string>
     <string name="label_edit_body_weight">Edit Weight</string>
+    <string name="placeholder_set_day_title">Set title (e.g. Chest)</string>
     <string name="label_weight_unit">kg</string>
     <string name="label_delete_weight_title">Delete Weight Record?</string>
     <string name="label_delete_weight_message">This will permanently delete this weight record.</string>

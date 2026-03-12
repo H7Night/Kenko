@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for importing plans from other days on rest days
 - Body weight tracking with custom line chart and history management
 - Interactive vertical scroll picker for weight selection
+- Custom day titles for training plans
+- Full day names instead of abbreviations across the app
 
 ### Changed
 - Updated Chinese translation for system theme label
@@ -27,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed debug mock data button from Plan Edit screen
 - Removed redundant Floating Action Button from Sessions screen
 - Replaced "Lifts" card with "Weight" card in Profile screen
+- Show custom titles in plan editing, exercise selection, and import lists
+- Format training header as "Title (Day)"
 
 ### Fixed
 - Issue where imported exercises would disappear after app restart on rest days

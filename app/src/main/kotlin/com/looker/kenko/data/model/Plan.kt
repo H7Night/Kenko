@@ -24,7 +24,10 @@ import kotlin.time.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @Immutable
 data class Plan(
@@ -36,6 +39,7 @@ data class Plan(
     val time: Time?,
     val isActive: Boolean,
     val stat: PlanStat = PlanStat(0, 0),
+    val dayTitles: String? = null,
     val id: Int? = null,
 )
 
@@ -46,6 +50,32 @@ data class PlanItem(
     val planId: Int,
     val id: Long? = null,
 )
+
+val Plan.titlesMap: Map<DayOfWeek, String>
+    get() = try {
+        if (dayTitles.isNullOrBlank()) emptyMap()
+        else {
+            val map = Json.decodeFromString<Map<Int, String>>(dayTitles)
+            map.mapKeys { DayOfWeek(it.key) }
+        }
+    } catch (e: Exception) {
+        emptyMap()
+    }
+
+fun Plan.withDayTitle(dayOfWeek: DayOfWeek, title: String?): Plan {
+    val currentMap = titlesMap.toMutableMap()
+    if (title.isNullOrBlank()) {
+        currentMap.remove(dayOfWeek)
+    } else {
+        currentMap[dayOfWeek] = title
+    }
+    val newDayTitles = if (currentMap.isEmpty()) null
+    else {
+        val jsonMap = currentMap.mapKeys { it.key.isoDayNumber }
+        Json.encodeToString(jsonMap)
+    }
+    return copy(dayTitles = newDayTitles)
+}
 
 val localDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 

@@ -44,6 +44,8 @@ data class PlanEntity(
     val equipment: Equipment?,
     @ColumnInfo(defaultValue = "NULL")
     val time: Time?,
+    @ColumnInfo(defaultValue = "NULL")
+    val dayTitles: String? = null,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 )
@@ -86,6 +88,7 @@ fun PlanEntity.toExternal(isActive: Boolean, stat: PlanStat) = Plan(
     time = time,
     stat = stat,
     isActive = isActive,
+    dayTitles = dayTitles,
 )
 
 fun Plan.toEntity(): PlanEntity = PlanEntity(
@@ -96,6 +99,7 @@ fun Plan.toEntity(): PlanEntity = PlanEntity(
     focus = focus,
     equipment = equipment,
     time = time,
+    dayTitles = dayTitles,
 )
 
 fun PlanItem.toEntity() = PlanDayEntity(

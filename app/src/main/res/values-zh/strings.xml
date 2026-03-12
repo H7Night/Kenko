@@ -62,6 +62,7 @@
     <string name="label_body_weight_history">体重历史</string>
     <string name="label_add_body_weight">添加体重</string>
     <string name="label_edit_body_weight">编辑体重</string>
+    <string name="placeholder_set_day_title">设置标题（如：胸部训练）</string>
     <string name="label_weight_unit">kg</string>
     <string name="label_delete_weight_title">删除体重记录？</string>
     <string name="label_delete_weight_message">这将永久删除该条体重记录。</string>

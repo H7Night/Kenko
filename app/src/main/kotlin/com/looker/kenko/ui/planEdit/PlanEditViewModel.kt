@@ -30,6 +30,8 @@ import com.looker.kenko.data.model.PlanItem
 import com.looker.kenko.data.model.RepsInReserve
 import com.looker.kenko.data.model.localDate
 import com.looker.kenko.data.repository.PlanRepo
+import com.looker.kenko.data.model.titlesMap
+import com.looker.kenko.data.model.withDayTitle
 import com.looker.kenko.ui.planEdit.navigation.PlanEditRoute
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -70,6 +72,11 @@ class PlanEditViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val _planItemsStream = planIdStream.flatMapLatest { repo.planItems(it) }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val _planStream = planIdStream.flatMapLatest { id ->
+        repo.plans.map { plans -> plans.find { it.id == id } }
+    }
+
     private val _dayOfWeek: MutableStateFlow<DayOfWeek> = MutableStateFlow(localDate.dayOfWeek)
 
     private val _isSheetVisible: MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -87,15 +94,17 @@ class PlanEditViewModel @Inject constructor(
     }.asStateFlow(PlanEditStage.NameEdit)
 
     val state: StateFlow<PlanEditState> = combine(
+        _planStream,
         _planItemsStream,
         _dayOfWeek,
         _fullDaySelection,
         _isSheetVisible,
-    ) { items, day, daySelection, sheetVisible ->
+    ) { plan, items, day, daySelection, sheetVisible ->
         PlanEditState(
             currentDay = day,
             selectionMode = daySelection,
             exerciseSheetVisible = sheetVisible,
+            dayTitle = plan?.titlesMap?.get(day) ?: "",
             exercises = items.filter { it.dayOfWeek == day }.map(PlanItem::exercise),
         )
     }.asStateFlow(
@@ -103,9 +112,17 @@ class PlanEditViewModel @Inject constructor(
             currentDay = localDate.dayOfWeek,
             selectionMode = false,
             exerciseSheetVisible = false,
+            dayTitle = "",
             exercises = emptyList(),
         ),
     )
+
+    fun setDayTitle(title: String) {
+        viewModelScope.launch {
+            val currentPlan = repo.plan(planIdStream.value) ?: return@launch
+            repo.updatePlan(currentPlan.withDayTitle(_dayOfWeek.value, title))
+        }
+    }
 
     fun saveName() {
         viewModelScope.launch {
@@ -199,5 +216,6 @@ data class PlanEditState(
     val currentDay: DayOfWeek,
     val selectionMode: Boolean,
     val exerciseSheetVisible: Boolean,
+    val dayTitle: String,
     val exercises: List<Exercise>,
 )
