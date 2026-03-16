@@ -111,6 +111,7 @@ fun SessionDetails(
         state = state,
         onBackPress = onBackPress,
         onRemoveSet = viewModel::removeSet,
+        onUpdateSet = viewModel::updateSet,
         onReferenceClick = viewModel::openReference,
         onSelectBottomSheet = viewModel::showBottomSheet,
         onHistoryClick = { onHistoryClick(viewModel.previousSessionDate) },
@@ -133,6 +134,7 @@ private fun SessionDetail(
     state: SessionDetailState,
     onBackPress: () -> Unit = {},
     onRemoveSet: (Int?) -> Unit = {},
+    onUpdateSet: (Int?, Int, Float) -> Unit = { _, _, _ -> },
     onReferenceClick: (String) -> Unit = {},
     onSelectBottomSheet: (Exercise) -> Unit = {},
     onHistoryClick: () -> Unit = {},
@@ -251,6 +253,7 @@ private fun SessionDetail(
                 dayTitle = data.dayTitle,
                 onBackPress = onBackPress,
                 onRemoveSet = onRemoveSet,
+                onUpdateSet = onUpdateSet,
                 onReferenceClick = onReferenceClick,
                 onSelectBottomSheet = onSelectBottomSheet,
                 onHistoryClick = onHistoryClick,
@@ -271,6 +274,7 @@ private fun SetsList(
     dayTitle: String?,
     onBackPress: () -> Unit,
     onRemoveSet: (Int?) -> Unit,
+    onUpdateSet: (Int?, Int, Float) -> Unit,
     onReferenceClick: (String) -> Unit,
     onSelectBottomSheet: (Exercise) -> Unit,
     onHistoryClick: () -> Unit,
@@ -352,6 +356,9 @@ private fun SetsList(
                         SetItem(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                             set = set,
+                            isEditMode = isEditMode,
+                            onRepsUpdate = { onUpdateSet(set.id, it, set.weight) },
+                            onWeightUpdate = { onUpdateSet(set.id, set.repsOrDuration, it) },
                             title = {
                                 Text(normalizeInt(index + 1))
                             },

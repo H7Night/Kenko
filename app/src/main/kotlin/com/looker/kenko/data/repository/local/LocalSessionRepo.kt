@@ -79,6 +79,10 @@ class LocalSessionRepo @Inject constructor(
         )
     }
 
+    override suspend fun updateSet(setId: Int, reps: Int, weight: Float) {
+        setsDao.update(setId, reps, weight)
+    }
+
     override suspend fun removeSet(setId: Int) {
         setsDao.delete(setId)
     }

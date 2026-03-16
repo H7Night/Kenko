@@ -17,6 +17,7 @@ package com.looker.kenko.data.local.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import com.looker.kenko.data.local.model.SetEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -95,6 +96,18 @@ interface SetsDao {
 
     @Insert
     suspend fun insert(set: SetEntity)
+
+    @Update
+    suspend fun update(set: SetEntity)
+
+    @Query(
+        """
+        UPDATE sets
+        SET reps = :reps, weight = :weight
+        WHERE id = :setId
+        """,
+    )
+    suspend fun update(setId: Int, reps: Int, weight: Float)
 
     @Query(
         """

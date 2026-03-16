@@ -209,6 +209,13 @@ class SessionDetailViewModel @Inject constructor(
         }
     }
 
+    fun updateSet(setId: Int?, reps: Int, weight: Float) {
+        if (setId == null) return
+        viewModelScope.launch {
+            repo.updateSet(setId, reps, weight)
+        }
+    }
+
     fun showBottomSheet(exercise: Exercise) {
         if (!isEditMode.value) return
         viewModelScope.launch {

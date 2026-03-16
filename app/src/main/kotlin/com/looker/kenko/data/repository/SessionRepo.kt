@@ -38,6 +38,8 @@ interface SessionRepo {
         rir: RepsInReserve,
     )
 
+    suspend fun updateSet(setId: Int, reps: Int, weight: Float)
+
     suspend fun removeSet(setId: Int)
 
     suspend fun getSessionIdOrCreate(date: LocalDate): Int
