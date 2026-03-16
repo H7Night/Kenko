@@ -26,7 +26,6 @@ import com.looker.kenko.data.local.model.toExternal
 import com.looker.kenko.data.model.RepsInReserve
 import com.looker.kenko.data.model.Session
 import com.looker.kenko.data.model.Set
-import com.looker.kenko.data.model.localDate
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.utils.toLocalEpochDays
 import javax.inject.Inject
@@ -81,9 +80,6 @@ class LocalSessionRepo @Inject constructor(
     }
 
     override suspend fun removeSet(setId: Int) {
-        if (!dao.sessionExistsOn(localDate.toLocalEpochDays())) {
-            error("Session does not exist so set cannot be removed")
-        }
         setsDao.delete(setId)
     }
 

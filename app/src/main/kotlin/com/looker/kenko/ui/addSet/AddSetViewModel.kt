@@ -37,11 +37,13 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 @HiltViewModel(assistedFactory = AddSetViewModel.AddSetViewModelFactory::class)
 class AddSetViewModel @AssistedInject constructor(
     private val sessionRepo: SessionRepo,
-    @Assisted private val id: Int,
+    @Assisted("id") private val id: Int,
+    @Assisted("date") private val date: LocalDate?,
 ) : ViewModel() {
 
     val reps: TextFieldState = TextFieldState("12")
@@ -90,7 +92,7 @@ class AddSetViewModel @AssistedInject constructor(
 
     fun addSet() {
         viewModelScope.launch {
-            val sessionId = sessionRepo.getSessionIdOrCreate(localDate)
+            val sessionId = sessionRepo.getSessionIdOrCreate(date ?: localDate)
             repeat(setsInt) {
                 sessionRepo.addSet(
                     sessionId = sessionId,
@@ -115,7 +117,10 @@ class AddSetViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface AddSetViewModelFactory {
-        fun create(id: Int): AddSetViewModel
+        fun create(
+            @Assisted("id") id: Int,
+            @Assisted("date") date: LocalDate? = null,
+        ): AddSetViewModel
     }
 
     object IntTransformation : InputTransformation {

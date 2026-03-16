@@ -75,6 +75,8 @@ import com.looker.kenko.ui.addSet.components.rememberDraggableTextFieldState
 import com.looker.kenko.ui.theme.KenkoIcons
 import kotlinx.coroutines.launch
 
+import kotlinx.datetime.LocalDate
+
 private val incrementButtonModifier = Modifier
     .height(48.dp)
     .zIndex(0f)
@@ -82,10 +84,10 @@ private val incrementButtonModifier = Modifier
 private val zIndexModifier = Modifier.zIndex(1F)
 
 @Composable
-fun AddSet(exercise: Exercise, onDone: () -> Unit) {
+fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
     val viewModel: AddSetViewModel =
         hiltViewModel<AddSetViewModel, AddSetViewModel.AddSetViewModelFactory>(key = exercise.name) {
-            it.create(exercise.id!!)
+            it.create(exercise.id!!, date)
         }
     Column(
         modifier = Modifier

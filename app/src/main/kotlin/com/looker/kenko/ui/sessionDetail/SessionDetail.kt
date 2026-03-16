@@ -121,6 +121,7 @@ fun SessionDetails(
     if (exercise != null) {
         AddSetSheet(
             exercise = exercise!!,
+            date = (state as? SessionDetailState.Success)?.data?.date,
             onDismiss = viewModel::hideSheet,
         )
     }
@@ -494,6 +495,7 @@ private fun SessionError(
 @Composable
 private fun AddSetSheet(
     exercise: Exercise,
+    date: LocalDate?,
     onDismiss: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -505,6 +507,7 @@ private fun AddSetSheet(
     ) {
         AddSet(
             exercise = exercise,
+            date = date,
             onDone = {
                 scope.launch { state.hide() }.invokeOnCompletion {
                     if (!state.isVisible) onDismiss()
