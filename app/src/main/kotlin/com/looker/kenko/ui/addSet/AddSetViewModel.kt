@@ -47,7 +47,10 @@ class AddSetViewModel @AssistedInject constructor(
 ) : ViewModel() {
 
     val reps: TextFieldState = TextFieldState("12")
-    val weights: TextFieldState = TextFieldState("20.0")
+    val weightHundreds: TextFieldState = TextFieldState("0")
+    val weightTens: TextFieldState = TextFieldState("2")
+    val weightOnes: TextFieldState = TextFieldState("0")
+    val weightDecimal: TextFieldState = TextFieldState("0")
     val setsCount: TextFieldState = TextFieldState("2")
 
     var selectedSetType by mutableStateOf(SetType.Standard)
@@ -61,9 +64,18 @@ class AddSetViewModel @AssistedInject constructor(
         reps.setTextAndPlaceCursorAtEnd((repInt + value).toString())
     }
 
-    fun addWeight(value: Float) {
-        weights.setTextAndPlaceCursorAtEnd((weightFloat + value).toString())
+    private fun updateDigit(state: TextFieldState, delta: Int) {
+        val current = state.text.toString().toIntOrNull() ?: 0
+        val next = (current + delta).normalizeDigit()
+        state.setTextAndPlaceCursorAtEnd(next.toString())
     }
+
+    fun addWeightHundreds(delta: Int) = updateDigit(weightHundreds, delta)
+    fun addWeightTens(delta: Int) = updateDigit(weightTens, delta)
+    fun addWeightOnes(delta: Int) = updateDigit(weightOnes, delta)
+    fun addWeightDecimal(delta: Int) = updateDigit(weightDecimal, delta)
+
+    private fun Int.normalizeDigit(): Int = (this % 10 + 10) % 10
 
     fun addSetCount(value: Int) {
         setsCount.setTextAndPlaceCursorAtEnd((setsInt + value).coerceAtLeast(1).toString())
@@ -76,10 +88,31 @@ class AddSetViewModel @AssistedInject constructor(
         }
     }
 
-    val weightsBoundReached = BoundReached { direction ->
+    val weightHundredsBoundReached = BoundReached { direction ->
         when (direction) {
-            Direction.Left -> addWeight(-1F)
-            Direction.Right -> addWeight(1F)
+            Direction.Left -> addWeightHundreds(-1)
+            Direction.Right -> addWeightHundreds(1)
+        }
+    }
+
+    val weightTensBoundReached = BoundReached { direction ->
+        when (direction) {
+            Direction.Left -> addWeightTens(-1)
+            Direction.Right -> addWeightTens(1)
+        }
+    }
+
+    val weightOnesBoundReached = BoundReached { direction ->
+        when (direction) {
+            Direction.Left -> addWeightOnes(-1)
+            Direction.Right -> addWeightOnes(1)
+        }
+    }
+
+    val weightDecimalBoundReached = BoundReached { direction ->
+        when (direction) {
+            Direction.Left -> addWeightDecimal(-1)
+            Direction.Right -> addWeightDecimal(1)
         }
     }
 
@@ -110,7 +143,13 @@ class AddSetViewModel @AssistedInject constructor(
         get() = reps.text.toString().toIntOrNull() ?: 0
 
     private inline val weightFloat: Float
-        get() = weights.text.toString().toFloatOrNull() ?: 0F
+        get() {
+            val h = weightHundreds.text.toString().toIntOrNull() ?: 0
+            val t = weightTens.text.toString().toIntOrNull() ?: 0
+            val o = weightOnes.text.toString().toIntOrNull() ?: 0
+            val d = weightDecimal.text.toString().toIntOrNull() ?: 0
+            return (h * 100 + t * 10 + o + d * 0.1F)
+        }
 
     private inline val setsInt: Int
         get() = setsCount.text.toString().toIntOrNull() ?: 2

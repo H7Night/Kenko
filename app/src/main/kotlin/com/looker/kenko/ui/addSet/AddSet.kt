@@ -179,32 +179,44 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
         SwipeableTextField(
             modifier = Modifier.align(CenterHorizontally),
         ) {
-            TextButton(
-                modifier = incrementButtonModifier,
-                onClick = { viewModel.addWeight(-1F) },
-            ) {
-                Text(text = stringResource(R.string.label_minus_int, 1F))
-            }
-            val weights = rememberDraggableTextFieldState(viewModel.weightsBoundReached)
+            val hundreds = rememberDraggableTextFieldState(viewModel.weightHundredsBoundReached)
             DraggableTextField(
-                dragState = weights,
-                textFieldState = viewModel.weights,
+                dragState = hundreds,
+                textFieldState = viewModel.weightHundreds,
                 supportingText = stringResource(R.string.label_weight),
-                inputTransformation = FloatTransformation,
+                inputTransformation = IntTransformation,
                 modifier = zIndexModifier,
             )
-            TextButton(
-                modifier = incrementButtonModifier,
-                onClick = { viewModel.addWeight(1F) },
-            ) {
-                Text(text = stringResource(R.string.label_plus_int, 1F))
-            }
-            TextButton(
-                modifier = incrementButtonModifier,
-                onClick = { viewModel.addWeight(5F) },
-            ) {
-                Text(text = stringResource(R.string.label_plus_int, 5F))
-            }
+            val tens = rememberDraggableTextFieldState(viewModel.weightTensBoundReached)
+            DraggableTextField(
+                dragState = tens,
+                textFieldState = viewModel.weightTens,
+                supportingText = "",
+                inputTransformation = IntTransformation,
+                modifier = zIndexModifier,
+            )
+            val ones = rememberDraggableTextFieldState(viewModel.weightOnesBoundReached)
+            DraggableTextField(
+                dragState = ones,
+                textFieldState = viewModel.weightOnes,
+                supportingText = "",
+                inputTransformation = IntTransformation,
+                modifier = zIndexModifier,
+            )
+            Text(
+                text = ".",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.padding(top = 10.dp)
+            )
+            val decimal = rememberDraggableTextFieldState(viewModel.weightDecimalBoundReached)
+            DraggableTextField(
+                dragState = decimal,
+                textFieldState = viewModel.weightDecimal,
+                supportingText = "",
+                inputTransformation = IntTransformation,
+                modifier = zIndexModifier,
+            )
         }
         Spacer(modifier = Modifier.height(36.dp))
     }
