@@ -14,6 +14,12 @@
 
 package com.looker.kenko.ui.sessionDetail
 
+import androidx.compose.ui.draw.rotate
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.width
+import com.looker.kenko.ui.theme.numbers
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -269,6 +275,7 @@ private fun SetsList(
     onHistoryClick: () -> Unit,
     onEditToggle: () -> Unit,
 ) {
+    var collapsedExercises by rememberSaveable { mutableStateOf(emptySet<Int>()) }
     LazyVerticalGrid(
         columns = GridCells.Adaptive(360.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -304,10 +311,22 @@ private fun SetsList(
             )
         }
         exerciseSets.forEach { (exercise, sets) ->
+            val isCollapsed = exercise.id in collapsedExercises
             item(
                 span = { GridItemSpan(maxLineSpan) },
             ) {
-                StickyHeader(name = exercise.name) {
+                StickyHeader(
+                    name = exercise.name,
+                    setCount = sets.size,
+                    isCollapsed = isCollapsed,
+                    onCollapseToggle = {
+                        collapsedExercises = if (isCollapsed) {
+                            collapsedExercises - exercise.id!!
+                        } else {
+                            collapsedExercises + exercise.id!!
+                        }
+                    }
+                ) {
                     if (!exercise.reference.isNullOrBlank()) {
                         FilledTonalIconButton(onClick = { onReferenceClick(exercise.reference) }) {
                             Icon(painter = KenkoIcons.Lightbulb, contentDescription = null)
@@ -326,24 +345,26 @@ private fun SetsList(
                     }
                 }
             }
-            itemsIndexed(items = sets) { index, set ->
-                val setItem = @Composable {
-                    SetItem(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                        set = set,
-                        title = {
-                            Text(normalizeInt(index + 1))
-                        },
-                    )
-                }
-                if (isEditMode) {
-                    SwipeToDeleteBox(
-                        modifier = Modifier.animateItem(),
-                        onDismiss = { onRemoveSet(set.id) },
-                        content = setItem
-                    )
-                } else {
-                    setItem()
+            if (!isCollapsed) {
+                itemsIndexed(items = sets) { index, set ->
+                    val setItem = @Composable {
+                        SetItem(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                            set = set,
+                            title = {
+                                Text(normalizeInt(index + 1))
+                            },
+                        )
+                    }
+                    if (isEditMode) {
+                        SwipeToDeleteBox(
+                            modifier = Modifier.animateItem(),
+                            onDismiss = { onRemoveSet(set.id) },
+                            content = setItem
+                        )
+                    } else {
+                        setItem()
+                    }
                 }
             }
         }
@@ -399,6 +420,9 @@ private fun Header(
 @Composable
 private fun StickyHeader(
     name: String,
+    setCount: Int = 0,
+    isCollapsed: Boolean = false,
+    onCollapseToggle: () -> Unit = {},
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
     Surface(
@@ -411,12 +435,32 @@ private fun StickyHeader(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = name,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Spacer(modifier = Modifier.weight(1F))
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(onClick = onCollapseToggle),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                if (setCount > 0) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = normalizeInt(setCount),
+                        style = MaterialTheme.typography.titleMedium.numbers(),
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                    Icon(
+                        modifier = Modifier.rotate(if (isCollapsed) 180F else 90F),
+                        painter = KenkoIcons.KeyboardArrowRight,
+                        tint = MaterialTheme.colorScheme.outline,
+                        contentDescription = null,
+                    )
+                }
+            }
             if (actions != null) {
                 actions()
             }
