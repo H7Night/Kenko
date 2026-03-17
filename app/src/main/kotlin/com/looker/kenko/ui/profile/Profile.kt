@@ -518,72 +518,90 @@ private fun WeightDialog(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun WeightPicker(
     value: Float,
     onValueChange: (Float) -> Unit,
     modifier: Modifier = Modifier,
-    range: ClosedFloatingPointRange<Float> = 30f..200f
+) {
+    val tens = (value / 10).toInt()
+    val ones = (value % 10).toInt()
+    val decimal = ((value * 10) % 10).toInt()
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        DigitPicker(
+            value = tens,
+            onValueChange = { onValueChange((it * 10 + ones + decimal * 0.1f)) },
+            range = 0..15 // Support up to 159.9 kg or similar if needed, or just 0..9 for tens
+        )
+        DigitPicker(
+            value = ones,
+            onValueChange = { onValueChange((tens * 10 + it + decimal * 0.1f)) }
+        )
+        Text(
+            text = ".",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
+        DigitPicker(
+            value = decimal,
+            onValueChange = { onValueChange((tens * 10 + ones + it * 0.1f)) }
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DigitPicker(
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    range: IntRange = 0..9
 ) {
     val density = androidx.compose.ui.platform.LocalDensity.current
     val itemHeight = 48.dp
     val itemHeightPx = with(density) { itemHeight.toPx() }
     
-    val weights = remember(range) {
-        generateSequence(range.start) { it + 0.5f }
-            .takeWhile { it <= range.endInclusive }
-            .toList()
-    }
-    
-    val initialIndex = remember(value) {
-        weights.indexOfFirst { it >= value }.coerceAtLeast(0)
-    }
-    
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+    val digits = remember(range) { range.toList() }
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = digits.indexOf(value).coerceAtLeast(0))
     val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
 
     LaunchedEffect(listState.isScrollInProgress) {
         if (!listState.isScrollInProgress) {
             val centerIndex = listState.firstVisibleItemIndex
-            if (centerIndex in weights.indices) {
-                onValueChange(weights[centerIndex])
+            if (centerIndex in digits.indices) {
+                onValueChange(digits[centerIndex])
             }
         }
     }
 
-    val indicatorColor = MaterialTheme.colorScheme.outlineVariant
     Box(
         modifier = modifier
-            .width(120.dp)
-            .height(itemHeight * 3)
-            .drawWithContent {
-                drawContent()
-                clipRect {
-                    drawLine(
-                        color = indicatorColor,
-                        start = androidx.compose.ui.geometry.Offset(0f, itemHeightPx),
-                        end = androidx.compose.ui.geometry.Offset(size.width, itemHeightPx),
-                        strokeWidth = 1.dp.toPx()
-                    )
-                    drawLine(
-                        color = indicatorColor,
-                        start = androidx.compose.ui.geometry.Offset(0f, itemHeightPx * 2),
-                        end = androidx.compose.ui.geometry.Offset(size.width, itemHeightPx * 2),
-                        strokeWidth = 1.dp.toPx()
-                    )
-                }
-            },
+            .width(40.dp)
+            .height(itemHeight * 3),
         contentAlignment = Alignment.Center
     ) {
+        // Selection indicator lines
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(itemHeight)
+                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+                .align(Alignment.Center)
+        )
+        
         LazyColumn(
             state = listState,
             flingBehavior = snapFlingBehavior,
             contentPadding = PaddingValues(vertical = itemHeight),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(weights.size) { index ->
-                val weight = weights[index]
+            items(digits.size) { index ->
+                val digit = digits[index]
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -591,7 +609,7 @@ private fun WeightPicker(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "%.1f".format(weight),
+                        text = digit.toString(),
                         style = if (index == listState.firstVisibleItemIndex) 
                             MaterialTheme.typography.headlineMedium.numbers() 
                             else MaterialTheme.typography.titleMedium.numbers(),
