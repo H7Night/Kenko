@@ -9,6 +9,15 @@ thought-out plans
 
 <div align="left">
 
+## Features
+- **Workout Journal**: Track your training sessions with ease.
+- **Custom Plans**: Create and manage your own workout plans with custom day titles.
+- **Progressive Overload**: Monitor your progress over time.
+- **Body Weight Tracking**: Record your body weight and view progress on interactive charts.
+- **Session History**: Detailed history of all your past workouts with collapsible sections and easy editing.
+- **Backup & Restore**: Keep your data safe with local backup and restore.
+- **Multi-language**: Support for English, Chinese, and Turkish.
+
 ## Screenshots
 
 <img src="metadata/en-US/images/phoneScreenshots/1.png" width="25%" /><img src="metadata/en-US/images/phoneScreenshots/2.png" width="25%" /><img src="metadata/en-US/images/phoneScreenshots/3.png" width="25%" /><img src="metadata/en-US/images/phoneScreenshots/4.png" width="25%" />

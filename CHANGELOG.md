@@ -19,7 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Delete functionality for sessions in Session History with confirmation dialog
 - Support for importing plans from other days on rest days
 - Body weight tracking with custom line chart and history management
-- Interactive vertical scroll picker for weight selection
+- Interactive multi-digit scrolling selection for body weight (tens, ones, decimal)
+- Enhanced body weight chart with X (date) and Y (value) axis labels
+- Collapsible exercise sections in Session Detail
+- Double-click to edit reps and weight in Session Detail (edit mode)
 - Custom day titles for training plans
 - Full day names instead of abbreviations across the app
 
@@ -33,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Format training header as "Title (Day)"
 
 ### Fixed
+- Issue where editing history sessions would create today's session instead
+- Overlapping points and labels in body weight chart by increasing spacing
 - Issue where imported exercises would disappear after app restart on rest days
 - Automatic recovery of imported plans by matching performed exercises
 - Incorrect "Today" logic for historical session views
