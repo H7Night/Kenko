@@ -71,12 +71,14 @@ fun PlanItem(
     }
 
     Surface(
+        modifier = modifier.padding(horizontal = 12.dp, vertical = 6.dp),
         onClick = onClick,
         color = background,
         contentColor = contentColor,
+        shape = MaterialTheme.shapes.large,
     ) {
         Column(
-            modifier = modifier.padding(16.dp),
+            modifier = Modifier.padding(16.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

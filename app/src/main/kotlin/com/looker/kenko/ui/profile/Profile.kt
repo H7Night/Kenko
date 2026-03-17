@@ -590,7 +590,10 @@ private fun DigitPicker(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(itemHeight)
-                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+                .background(
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                    shape = MaterialTheme.shapes.small
+                )
                 .align(Alignment.Center)
         )
         
@@ -652,11 +655,13 @@ private fun WeightHistorySheet(
             ) {
                 items(weights.reversed()) { weight ->
                     SwipeToDeleteBox(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                         onDismiss = { onDelete(weight.id) },
                         showIcon = true
                     ) {
                         Surface(
                             color = MaterialTheme.colorScheme.surfaceContainer,
+                            shape = MaterialTheme.shapes.medium,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { onEdit(weight) }

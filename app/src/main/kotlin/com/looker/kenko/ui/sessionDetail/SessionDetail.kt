@@ -434,7 +434,9 @@ private fun StickyHeader(
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
     Surface(
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = MaterialTheme.shapes.medium,
     ) {
         Row(
             modifier = Modifier

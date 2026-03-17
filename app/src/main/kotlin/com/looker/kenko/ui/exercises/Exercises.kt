@@ -197,7 +197,6 @@ private fun Header(
                 text = stringResource(it.string),
             )
         }
-        HorizontalDivider(thickness = KenkoBorderWidth)
     }
 }
 
@@ -211,8 +210,10 @@ private fun ExerciseItem(
     @StringRes
     val targetName: Int = remember { exercise.target.stringRes }
     Surface(
-        modifier = modifier,
+        modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
         onClick = onClick,
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Row(
             modifier = Modifier

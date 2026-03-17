@@ -32,6 +32,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -72,45 +73,49 @@ fun SetItem(
     onWeightUpdate: (Float) -> Unit = {},
     title: @Composable () -> Unit,
 ) {
-    Row(
+    Surface(
         modifier = Modifier
-            .heightIn(64.dp)
             .widthIn(240.dp, 420.dp)
-            .background(MaterialTheme.colorScheme.surface)
             .then(modifier),
-        verticalAlignment = Alignment.CenterVertically,
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surface,
     ) {
-        CompositionLocalProvider(
-            LocalContentColor provides MaterialTheme.colorScheme.outline,
-            LocalTextStyle provides MaterialTheme.typography.displayMedium.numbers(),
-        ) {
-            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                title()
-            }
-        }
-        Spacer(modifier = Modifier.width(12.dp))
         Row(
-            modifier = Modifier
-                .weight(1F)
-                .clip(MaterialTheme.shapes.large)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .padding(vertical = 16.dp, horizontal = 24.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.heightIn(64.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            PerformedItem(
-                title = stringResource(set.exercise.repDurationStringRes),
-                performance = "${set.repsOrDuration}",
-                isEditMode = isEditMode,
-                keyboardType = KeyboardType.Number,
-                onValueUpdate = { onRepsUpdate(it.toIntOrNull() ?: set.repsOrDuration) },
-            )
-            PerformedItem(
-                title = stringResource(R.string.label_weight),
-                performance = "${set.weight} KG",
-                isEditMode = isEditMode,
-                keyboardType = KeyboardType.Decimal,
-                onValueUpdate = { onWeightUpdate(it.toFloatOrNull() ?: set.weight) },
-            )
+            CompositionLocalProvider(
+                LocalContentColor provides MaterialTheme.colorScheme.outline,
+                LocalTextStyle provides MaterialTheme.typography.displayMedium.numbers(),
+            ) {
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    title()
+                }
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Row(
+                modifier = Modifier
+                    .weight(1F)
+                    .clip(MaterialTheme.shapes.large)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .padding(vertical = 16.dp, horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                PerformedItem(
+                    title = stringResource(set.exercise.repDurationStringRes),
+                    performance = "${set.repsOrDuration}",
+                    isEditMode = isEditMode,
+                    keyboardType = KeyboardType.Number,
+                    onValueUpdate = { onRepsUpdate(it.toIntOrNull() ?: set.repsOrDuration) },
+                )
+                PerformedItem(
+                    title = stringResource(R.string.label_weight),
+                    performance = "${set.weight} KG",
+                    isEditMode = isEditMode,
+                    keyboardType = KeyboardType.Decimal,
+                    onValueUpdate = { onWeightUpdate(it.toFloatOrNull() ?: set.weight) },
+                )
+            }
         }
     }
 }

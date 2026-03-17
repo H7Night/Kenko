@@ -15,6 +15,7 @@
 package com.looker.kenko.ui.plans
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
@@ -47,6 +48,7 @@ import com.looker.kenko.ui.components.BackButton
 import com.looker.kenko.ui.components.KenkoBorderWidth
 import com.looker.kenko.ui.components.SwipeToDeleteBox
 import com.looker.kenko.ui.components.endItem
+import com.looker.kenko.ui.extensions.plus
 import com.looker.kenko.ui.planEdit.components.KenkoAddButton
 import com.looker.kenko.ui.plans.components.PlanItem
 import com.looker.kenko.ui.theme.KenkoIcons
@@ -123,16 +125,13 @@ private fun Plan(
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         LazyColumn(
-            contentPadding = it,
-            verticalArrangement = Arrangement.spacedBy(1.dp),
+            contentPadding = it + PaddingValues(vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             items(
                 items = plans,
                 key = { plan -> plan.id!! },
             ) { plan ->
-                val isLast = remember(plan) {
-                    plans.last() == plan
-                }
                 SwipeToDeleteBox(
                     modifier = Modifier.animateItem(),
                     onDismiss = { onRemove(plan.id!!) },
@@ -143,7 +142,6 @@ private fun Plan(
                         onActiveChange = { onSelectPlan(plan) },
                     )
                 }
-                if (!isLast) HorizontalDivider(thickness = KenkoBorderWidth)
             }
             endItem()
         }

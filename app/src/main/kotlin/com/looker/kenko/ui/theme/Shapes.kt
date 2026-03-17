@@ -22,21 +22,21 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 val Shapes = Shapes(
-    extraSmall = RoundedCornerShape(4.dp),
-    small = RoundedCornerShape(8.dp),
-    medium = RoundedCornerShape(14.dp),
-    large = RoundedCornerShape(20.dp),
-    extraLarge = RoundedCornerShape(28.dp),
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(24.dp),
+    extraLarge = RoundedCornerShape(32.dp),
 )
 
 fun CornerBasedShape.end(
-    bottomEnd: Dp = 0.dp,
+    bottomEnd: Dp = 4.dp,
     topEnd: Dp = bottomEnd,
 ): CornerBasedShape =
     copy(bottomEnd = CornerSize(bottomEnd), topEnd = CornerSize(topEnd))
 
 fun CornerBasedShape.start(
-    bottomStart: Dp = 0.dp,
+    bottomStart: Dp = 4.dp,
     topStart: Dp = bottomStart,
 ): CornerBasedShape =
     copy(bottomStart = CornerSize(bottomStart), topStart = CornerSize(topStart))

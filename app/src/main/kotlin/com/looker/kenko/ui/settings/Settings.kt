@@ -377,9 +377,9 @@ private fun LanguageSelector(
                 selected = selectedLanguage == language,
                 onClick = { onSelectLanguage(language) },
                 shape = when (index) {
-                    0 -> CircleShape.end(4.dp)
-                    Language.entries.lastIndex -> CircleShape.start(4.dp)
-                    else -> RoundedCornerShape(4.dp)
+                    0 -> CircleShape.end(8.dp)
+                    Language.entries.lastIndex -> CircleShape.start(8.dp)
+                    else -> RoundedCornerShape(8.dp)
                 },
                 colors = themeButtonColors,
                 modifier = Modifier.padding(2.dp),
@@ -420,7 +420,7 @@ private fun SingleChoiceSegmentedButtonRowScope.SystemButton(
     SegmentedButton(
         selected = isSelected,
         onClick = { onClick(theme) },
-        shape = CircleShape.end(4.dp),
+        shape = CircleShape.end(8.dp),
         colors = themeButtonColors,
         modifier = Modifier.padding(2.dp),
     ) {
@@ -438,7 +438,7 @@ private fun SingleChoiceSegmentedButtonRowScope.LightButton(
     SegmentedButton(
         selected = isSelected,
         onClick = { onClick(theme) },
-        shape = RoundedCornerShape(4.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = themeButtonColors,
         modifier = Modifier.padding(2.dp),
     ) {
@@ -456,7 +456,7 @@ private fun SingleChoiceSegmentedButtonRowScope.DarkButton(
     SegmentedButton(
         selected = isSelected,
         onClick = { onClick(theme) },
-        shape = CircleShape.start(4.dp),
+        shape = CircleShape.start(8.dp),
         colors = themeButtonColors,
         modifier = Modifier.padding(2.dp),
     ) {
@@ -662,9 +662,9 @@ private fun BackupIntervalSelector(
                 onClick = { onSelectInterval(interval) },
                 enabled = enabled,
                 shape = when (index) {
-                    0 -> CircleShape.end(4.dp)
-                    BackupInterval.entries.lastIndex -> CircleShape.start(4.dp)
-                    else -> RoundedCornerShape(4.dp)
+                    0 -> CircleShape.end(8.dp)
+                    BackupInterval.entries.lastIndex -> CircleShape.start(8.dp)
+                    else -> RoundedCornerShape(8.dp)
                 },
                 colors = themeButtonColors,
                 modifier = Modifier.padding(2.dp),

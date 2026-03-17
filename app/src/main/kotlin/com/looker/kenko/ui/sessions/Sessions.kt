@@ -134,7 +134,7 @@ private fun Sessions(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = padding + PaddingValues(bottom = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(
                     items = state.sessions,

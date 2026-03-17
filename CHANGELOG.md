@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Fully rounded Material Design 3 styling across all screens
+- Rounded card layouts for sessions, plans, and exercises
+- Rounded backgrounds for swipe-to-delete actions and heatmaps
+- Improved spacing and eliminated sharp corners in all UI components
 - Training heatmap on Home screen with monthly calendar view
 - Language selection and Simplified Chinese support
 - Setting to toggle exercise name capitalization

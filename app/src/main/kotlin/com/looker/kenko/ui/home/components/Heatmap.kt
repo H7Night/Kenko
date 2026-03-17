@@ -76,6 +76,9 @@ fun TrainingHeatmap(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .padding(12.dp)
+            .clip(MaterialTheme.shapes.large)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .clickable(onClick = onClick)
             .padding(vertical = 24.dp, horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

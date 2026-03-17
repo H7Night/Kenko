@@ -16,6 +16,7 @@ package com.looker.kenko.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
 import androidx.compose.foundation.gestures.AnchoredDraggableState
@@ -39,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -90,7 +92,8 @@ fun SwipeToDeleteBox(
     Box(
         modifier = modifier
             .height(IntrinsicSize.Min)
-            .drawBehind { drawRect(background) },
+            .clip(MaterialTheme.shapes.extraLarge)
+            .background(background),
     ) {
         Box(
             modifier = Modifier

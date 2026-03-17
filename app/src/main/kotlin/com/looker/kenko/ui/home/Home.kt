@@ -111,7 +111,6 @@ private fun Home(
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding),
         ) {
-            HorizontalDivider(thickness = KenkoBorderWidth)
             AnimatedContent(
                 targetState = state.isPlanSelected,
                 label = "plan_status",
@@ -135,7 +134,6 @@ private fun Home(
                     }
                 }
             }
-            HorizontalDivider(thickness = KenkoBorderWidth)
             if (state.isPlanSelected) {
                 StartSession(
                     onStartSessionClick = onStartSessionClick,
