@@ -68,17 +68,28 @@ import com.looker.kenko.ui.theme.numbers
 fun SetItem(
     set: Set,
     modifier: Modifier = Modifier,
+    isToday: Boolean = true,
     isEditMode: Boolean = false,
     onRepsUpdate: (Int) -> Unit = {},
     onWeightUpdate: (Float) -> Unit = {},
     title: @Composable () -> Unit,
 ) {
+    val containerColor = if (isToday) {
+        MaterialTheme.colorScheme.secondaryContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerLow
+    }
+    val containerShape = if (isToday) {
+        androidx.compose.foundation.shape.CircleShape
+    } else {
+        MaterialTheme.shapes.extraLarge
+    }
     Surface(
         modifier = Modifier
             .widthIn(240.dp, 420.dp)
             .then(modifier),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = containerShape,
+        color = containerColor,
     ) {
         Row(
             modifier = Modifier

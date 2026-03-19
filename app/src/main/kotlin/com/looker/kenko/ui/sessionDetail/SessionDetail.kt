@@ -356,6 +356,7 @@ private fun SetsList(
                         SetItem(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                             set = set,
+                            isToday = isToday,
                             isEditMode = isEditMode,
                             onRepsUpdate = { onUpdateSet(set.id, it, set.weight) },
                             onWeightUpdate = { onUpdateSet(set.id, set.repsOrDuration, it) },
