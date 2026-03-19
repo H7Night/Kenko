@@ -210,9 +210,9 @@ private fun ExerciseItem(
     @StringRes
     val targetName: Int = remember { exercise.target.stringRes }
     Surface(
-        modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+        modifier = modifier.padding(horizontal = 14.dp, vertical = 6.dp),
         onClick = onClick,
-        shape = MaterialTheme.shapes.medium,
+        shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Row(
