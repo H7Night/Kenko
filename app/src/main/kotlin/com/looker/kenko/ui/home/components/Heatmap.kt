@@ -78,11 +78,11 @@ fun TrainingHeatmap(
             .fillMaxWidth()
             .padding(12.dp)
             .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .clickable(onClick = onClick)
-            .padding(vertical = 24.dp, horizontal = 16.dp),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
             text = monthLabel,
@@ -92,13 +92,13 @@ fun TrainingHeatmap(
         )
 
         Column(
-            modifier = Modifier.widthIn(max = 280.dp), // Limit width to make it smaller
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier.widthIn(max = 300.dp), // Slightly increased max width
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             gridItems.chunked(7).forEach { week ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     week.forEach { day ->
                         if (day != null) {
@@ -106,8 +106,8 @@ fun TrainingHeatmap(
                             val isToday = day == today
                             val color = when {
                                 isTrained -> MaterialTheme.colorScheme.primary
-                                isToday -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                                else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                isToday -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                                else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                             }
                             Box(
                                 modifier = Modifier
