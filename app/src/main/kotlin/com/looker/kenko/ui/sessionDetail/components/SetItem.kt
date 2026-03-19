@@ -77,29 +77,26 @@ fun SetItem(
         modifier = Modifier
             .widthIn(240.dp, 420.dp)
             .then(modifier),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Row(
-            modifier = Modifier.heightIn(64.dp),
+            modifier = Modifier
+                .heightIn(64.dp)
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CompositionLocalProvider(
                 LocalContentColor provides MaterialTheme.colorScheme.outline,
                 LocalTextStyle provides MaterialTheme.typography.displayMedium.numbers(),
             ) {
-                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Box(modifier = Modifier.padding(end = 16.dp)) {
                     title()
                 }
             }
-            Spacer(modifier = Modifier.width(12.dp))
             Row(
-                modifier = Modifier
-                    .weight(1F)
-                    .clip(MaterialTheme.shapes.large)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .padding(vertical = 16.dp, horizontal = 24.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.weight(1F),
+                horizontalArrangement = Arrangement.SpaceAround,
             ) {
                 PerformedItem(
                     title = stringResource(set.exercise.repDurationStringRes),
