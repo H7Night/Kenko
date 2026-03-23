@@ -122,6 +122,8 @@ dependencies {
     implementation(libs.bundles.lifecycle)
     implementation(libs.activity.compose)
     implementation(libs.navigation.compose)
+    implementation("androidx.compose.material:material-icons-core")
+    implementation("androidx.compose.material:material-icons-extended")
 
     implementation(libs.savedstate)
 

@@ -163,8 +163,10 @@ class SessionDetailViewModel @Inject constructor(
                 return@combine SessionDetailState.Error.InvalidSession
             }
 
+            val currentPlan = plans.find { it.isActive }
+            val currentPlanTitles = currentPlan?.titlesMap ?: emptyMap()
+
             if (exercises.isEmpty() && sessionDate.isToday) {
-                val currentPlanTitles = plans.find { it.isActive }?.titlesMap ?: emptyMap()
                 return@combine SessionDetailState.Error.EmptyPlan(available, currentPlanTitles)
             }
 
@@ -189,6 +191,8 @@ class SessionDetailViewModel @Inject constructor(
                     isEditMode = isEditMode,
                     dayTitle = dayTitle,
                     hasPreviousSession = previousSession,
+                    availablePlanDays = available,
+                    dayTitles = currentPlanTitles,
                 ),
             )
         }.onStart { emit(SessionDetailState.Loading) }
@@ -200,6 +204,12 @@ class SessionDetailViewModel @Inject constructor(
 
     fun importPlanFromDay(exercises: List<Exercise>) {
         savedStateHandle["_temporary_exercise_ids"] = exercises.mapNotNull { it.id }
+    }
+
+    fun clearTodaySets() {
+        viewModelScope.launch {
+            repo.clearSets(sessionDate)
+        }
     }
 
     fun removeSet(setId: Int?) {
@@ -248,6 +258,8 @@ data class SessionUiData(
     val isEditMode: Boolean = false,
     val dayTitle: String? = null,
     val hasPreviousSession: Boolean = false,
+    val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),
+    val dayTitles: Map<DayOfWeek, String> = emptyMap(),
 )
 
 sealed interface SessionDetailState {

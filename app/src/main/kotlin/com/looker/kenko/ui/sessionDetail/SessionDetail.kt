@@ -41,6 +41,9 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.SwapHoriz
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,6 +59,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.toShape
@@ -117,6 +121,7 @@ fun SessionDetails(
         onHistoryClick = { onHistoryClick(viewModel.previousSessionDate) },
         onImportDay = viewModel::importPlanFromDay,
         onEditToggle = viewModel::toggleEditMode,
+        onClearSets = viewModel::clearTodaySets,
     )
     val exercise by viewModel.current.collectAsStateWithLifecycle()
     if (exercise != null) {
@@ -140,6 +145,7 @@ private fun SessionDetail(
     onHistoryClick: () -> Unit = {},
     onImportDay: (List<Exercise>) -> Unit = {},
     onEditToggle: () -> Unit = {},
+    onClearSets: () -> Unit = {},
 ) {
     when (state) {
         is SessionDetailState.Error.InvalidSession -> {
@@ -251,6 +257,8 @@ private fun SessionDetail(
                 isEditMode = data.isEditMode,
                 hasPreviousSession = data.hasPreviousSession,
                 dayTitle = data.dayTitle,
+                availablePlanDays = data.availablePlanDays,
+                dayTitles = data.dayTitles,
                 onBackPress = onBackPress,
                 onRemoveSet = onRemoveSet,
                 onUpdateSet = onUpdateSet,
@@ -258,12 +266,14 @@ private fun SessionDetail(
                 onSelectBottomSheet = onSelectBottomSheet,
                 onHistoryClick = onHistoryClick,
                 onEditToggle = onEditToggle,
+                onImportDay = onImportDay,
+                onClearSets = onClearSets,
             )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun SetsList(
     date: LocalDate,
@@ -272,6 +282,8 @@ private fun SetsList(
     isEditMode: Boolean,
     hasPreviousSession: Boolean,
     dayTitle: String?,
+    availablePlanDays: Map<DayOfWeek, List<Exercise>>,
+    dayTitles: Map<DayOfWeek, String>,
     onBackPress: () -> Unit,
     onRemoveSet: (Int?) -> Unit,
     onUpdateSet: (Int?, Int, Float) -> Unit,
@@ -279,8 +291,73 @@ private fun SetsList(
     onSelectBottomSheet: (Exercise) -> Unit,
     onHistoryClick: () -> Unit,
     onEditToggle: () -> Unit,
+    onImportDay: (List<Exercise>) -> Unit,
+    onClearSets: () -> Unit,
 ) {
     var collapsedExercises by rememberSaveable { mutableStateOf(emptySet<Int>()) }
+    var showImportDialog by remember { mutableStateOf(false) }
+    var showImportSheet by remember { mutableStateOf(false) }
+
+    if (showImportDialog) {
+        AlertDialog(
+            onDismissRequest = { showImportDialog = false },
+            title = { Text(text = stringResource(R.string.label_modify_plan)) },
+            text = { Text(text = stringResource(R.string.label_modify_plan_message)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onClearSets()
+                        showImportDialog = false
+                        showImportSheet = true
+                    },
+                ) {
+                    Text(text = stringResource(R.string.label_yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImportDialog = false }) {
+                    Text(text = stringResource(R.string.label_no))
+                }
+            }
+        )
+    }
+
+    if (showImportSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showImportSheet = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ) {
+            Text(
+                text = stringResource(R.string.label_import_plan),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(16.dp)
+            )
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(bottom = 32.dp)
+            ) {
+                availablePlanDays.toSortedMap().forEach { (day, exercises) ->
+                    item {
+                        Button(
+                            onClick = {
+                                onImportDay(exercises)
+                                showImportSheet = false
+                            },
+                            shape = MaterialTheme.shapes.large,
+                            contentPadding = PaddingValues(vertical = 12.dp)
+                        ) {
+                            val title = dayTitles[day]
+                            Text(text = if (title.isNullOrBlank()) dayName(day) else title)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     LazyVerticalGrid(
         columns = GridCells.Adaptive(360.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -295,6 +372,15 @@ private fun SetsList(
                 dayTitle = dayTitle,
                 onBackPress = onBackPress,
                 actions = {
+                    if (isToday) {
+                        IconButton(onClick = { showImportDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Rounded.SwapHoriz,
+                                contentDescription = null,
+                            )
+                        }
+                    }
+
                     if (hasPreviousSession) {
                         IconButton(onClick = onHistoryClick) {
                             Icon(

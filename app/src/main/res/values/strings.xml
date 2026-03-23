@@ -44,6 +44,9 @@
     <string name="label_train_anyway">Train anyway</string>
     <string name="label_missed_day">Did you miss the day?</string>
     <string name="label_import_from_other_day">Or import from another day:</string>
+    <string name="label_modify_plan">Modify Today\'s Plan</string>
+    <string name="label_modify_plan_message">Do you want to modify today\'s training plan? This will clear all existing sets for today.</string>
+    <string name="label_import_plan">Import Plan</string>
 
     <!--Plans-->
     <string name="label_plans_title">Plans</string>

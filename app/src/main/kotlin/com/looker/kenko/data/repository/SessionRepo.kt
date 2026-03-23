@@ -42,6 +42,8 @@ interface SessionRepo {
 
     suspend fun removeSet(setId: Int)
 
+    suspend fun clearSets(date: LocalDate)
+
     suspend fun getSessionIdOrCreate(date: LocalDate): Int
 
     fun streamByDate(date: LocalDate): Flow<Session?>

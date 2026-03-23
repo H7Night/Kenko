@@ -87,6 +87,11 @@ class LocalSessionRepo @Inject constructor(
         setsDao.delete(setId)
     }
 
+    override suspend fun clearSets(date: LocalDate) {
+        val sessionId = dao.getSessionId(date.toLocalEpochDays()) ?: return
+        setsDao.deleteBySessionId(sessionId)
+    }
+
     override suspend fun getSessionIdOrCreate(date: LocalDate): Int {
         val currentPlanId = requireNotNull(historyDao.getCurrentId()) { "No plan active" }
         val existingId = dao.getSessionId(date.toLocalEpochDays())
