@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Infinite horizontal swiping and month/year navigation for Training Heatmap
+- Bottom navigation bar with Home, Exercise (active sessions only), and Profile tabs
+- Direct entry to Home screen, bypassing the onboarding flow
 - Fully rounded Material Design 3 styling across all screens
 - Rounded card layouts for sessions, plans, and exercises
 - Unified and simplified SetItem styling to match SessionCard
@@ -32,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Full day names instead of abbreviations across the app
 
 ### Changed
+- Redesigned Home screen: removed top bar and profile icon for a cleaner look
+- Compact bottom navigation styling with icon-only mode and enlarged icons
+- Reduced header font size and optimized layout for better vertical visibility
+- Hidden bottom navigation on sub-pages (history, settings, etc.) for focused navigation
 - Updated Chinese translation for system theme label
 - Optimized Home screen headings and session start/continue logic
 - Removed debug mock data button from Plan Edit screen
@@ -41,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Format training header as "Title (Day)"
 
 ### Fixed
+- Selection indicator clipping on compact bottom navigation bar
+- Deprecated `monthNumber` property in heatmap implementation
 - Issue where editing history sessions would create today's session instead
 - Overlapping points and labels in body weight chart by increasing spacing
 - Issue where imported exercises would disappear after app restart on rest days
