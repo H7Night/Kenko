@@ -66,6 +66,15 @@ interface SessionDao {
     )
     suspend fun getSessionId(date: EpochDays): Int?
 
+    @Query(
+        """
+        UPDATE sessions
+        SET planDayOverride = :day
+        WHERE date = :date
+        """,
+    )
+    suspend fun updatePlanDayOverride(date: EpochDays, day: Int)
+
     @Transaction
     @Query(
         """

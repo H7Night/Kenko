@@ -85,55 +85,50 @@ class SessionDetailViewModel @Inject constructor(
                 .mapValues { entry -> entry.value.map { it.exercise } }
         }
 
-    private val _temporaryExerciseIds: StateFlow<List<Int>> =
-        savedStateHandle.getStateFlow("_temporary_exercise_ids", emptyList())
-
     @OptIn(ExperimentalCoroutinesApi::class)
     private val exercisesToday: Flow<List<Exercise>> =
         combine(
             sessionStream,
-            _temporaryExerciseIds,
             availablePlanItems
-        ) { session, temporaryIds, available ->
-            Triple(session, temporaryIds, available)
-        }.flatMapLatest { (session, temporaryIds, available) ->
-            val temporaryExercises = if (temporaryIds.isNotEmpty()) {
-                val allExercises = available.values.flatten().distinctBy { it.id }
-                temporaryIds.mapNotNull { id -> allExercises.find { it.id == id } }
-            } else {
-                emptyList()
+        ) { session, available ->
+            session to available
+        }.flatMapLatest { (session, available) ->
+            val plannedFlow = when {
+                session?.planDayOverride != null -> {
+                    val pid = session.planId
+                    if (pid != null) {
+                        planRepo.planItems(pid, session.planDayOverride)
+                            .map { it.map(PlanItem::exercise) }
+                    } else {
+                        planRepo.activeExercises(session.planDayOverride)
+                    }
+                }
+
+                sessionDate.isToday -> planRepo.activeExercises(sessionDate.dayOfWeek)
+                session?.planId != null -> planRepo.planItems(session.planId, sessionDate.dayOfWeek)
+                    .map { it.map(PlanItem::exercise) }
+
+                else -> flowOf(emptyList())
             }
 
-            if (temporaryExercises.isNotEmpty()) {
-                flowOf(temporaryExercises)
-            } else {
-                val plannedFlow = when {
-                    sessionDate.isToday -> planRepo.activeExercises(sessionDate.dayOfWeek)
-                    session?.planId != null -> planRepo.planItems(session.planId, sessionDate.dayOfWeek)
-                        .map { it.map(PlanItem::exercise) }
+            plannedFlow.map { planned ->
+                val performed = session?.performExercises ?: emptyList()
+                val result = (planned + performed).toMutableList()
 
-                    else -> flowOf(emptyList())
-                }
-
-                plannedFlow.map { planned ->
-                    val performed = session?.performExercises ?: emptyList()
-                    val result = (planned + performed).toMutableList()
-
-                    // If we have performed exercises but they are not in the current planned list
-                    // (e.g. imported plan on a rest day), try to find the best matching day
-                    // from the current plan to show remaining exercises from that day.
-                    if (sessionDate.isToday && performed.isNotEmpty() && planned.isEmpty()) {
-                        val performedIds = performed.map { it.id }.toSet()
-                        val matchingDayExercises = available.values.firstOrNull { dayExercises ->
-                            dayExercises.any { it.id in performedIds }
-                        }
-                        if (matchingDayExercises != null) {
-                            result.addAll(matchingDayExercises)
-                        }
+                // If we have performed exercises but they are not in the current planned list
+                // (e.g. imported plan on a rest day), try to find the best matching day
+                // from the current plan to show remaining exercises from that day.
+                if (sessionDate.isToday && performed.isNotEmpty() && planned.isEmpty()) {
+                    val performedIds = performed.map { it.id }.toSet()
+                    val matchingDayExercises = available.values.firstOrNull { dayExercises ->
+                        dayExercises.any { it.id in performedIds }
                     }
-
-                    result.distinctBy { it.id }
+                    if (matchingDayExercises != null) {
+                        result.addAll(matchingDayExercises)
+                    }
                 }
+
+                result.distinctBy { it.id }
             }
         }
 
@@ -172,7 +167,7 @@ class SessionDetailViewModel @Inject constructor(
 
             val currentSession = session ?: Session(-1, emptyList())
             val dayTitle = plans.find { it.id == currentSession.planId }
-                ?.titlesMap?.get(currentSession.date.dayOfWeek)
+                ?.titlesMap?.get(currentSession.planDayOverride ?: currentSession.date.dayOfWeek)
 
             val exerciseMap = when {
                 sessionDate.isToday || exercises.isNotEmpty() -> exercises.associateWith { exercise ->
@@ -202,8 +197,10 @@ class SessionDetailViewModel @Inject constructor(
         _isEditMode.value = !_isEditMode.value
     }
 
-    fun importPlanFromDay(exercises: List<Exercise>) {
-        savedStateHandle["_temporary_exercise_ids"] = exercises.mapNotNull { it.id }
+    fun importPlanFromDay(day: DayOfWeek) {
+        viewModelScope.launch {
+            repo.updatePlanDay(sessionDate, day)
+        }
     }
 
     fun clearTodaySets() {

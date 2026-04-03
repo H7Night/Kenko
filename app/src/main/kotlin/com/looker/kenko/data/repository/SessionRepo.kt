@@ -19,6 +19,7 @@ import com.looker.kenko.data.model.RepsInReserve
 import com.looker.kenko.data.model.Session
 import com.looker.kenko.data.model.Set
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 
 interface SessionRepo {
@@ -43,6 +44,8 @@ interface SessionRepo {
     suspend fun removeSet(setId: Int)
 
     suspend fun clearSets(date: LocalDate)
+
+    suspend fun updatePlanDay(date: LocalDate, day: DayOfWeek)
 
     suspend fun getSessionIdOrCreate(date: LocalDate): Int
 

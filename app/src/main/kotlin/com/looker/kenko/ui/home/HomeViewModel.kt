@@ -37,7 +37,13 @@ class HomeViewModel @Inject constructor(
 
     private val sessionsStream = sessionRepo.stream
 
-    private val planItemStream = planRepo.planItems(localDate.dayOfWeek)
+    private val planItemStream = combine(
+        sessionStream,
+        planRepo.planItems
+    ) { session, planItems ->
+        val day = session?.planDayOverride ?: localDate.dayOfWeek
+        planItems.filter { it.dayOfWeek == day }
+    }
 
     val state = combine(
         planStream,

@@ -31,7 +31,9 @@ import com.looker.kenko.utils.toLocalEpochDays
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.isoDayNumber
 
 class LocalSessionRepo @Inject constructor(
     private val dao: SessionDao,
@@ -90,6 +92,11 @@ class LocalSessionRepo @Inject constructor(
     override suspend fun clearSets(date: LocalDate) {
         val sessionId = dao.getSessionId(date.toLocalEpochDays()) ?: return
         setsDao.deleteBySessionId(sessionId)
+    }
+
+    override suspend fun updatePlanDay(date: LocalDate, day: DayOfWeek) {
+        getSessionIdOrCreate(date)
+        dao.updatePlanDayOverride(date.toLocalEpochDays(), day.isoDayNumber)
     }
 
     override suspend fun getSessionIdOrCreate(date: LocalDate): Int {

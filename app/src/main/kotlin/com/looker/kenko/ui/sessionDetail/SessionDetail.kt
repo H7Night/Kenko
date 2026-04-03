@@ -143,7 +143,7 @@ private fun SessionDetail(
     onReferenceClick: (String) -> Unit = {},
     onSelectBottomSheet: (Exercise) -> Unit = {},
     onHistoryClick: () -> Unit = {},
-    onImportDay: (List<Exercise>) -> Unit = {},
+    onImportDay: (DayOfWeek) -> Unit = {},
     onEditToggle: () -> Unit = {},
     onClearSets: () -> Unit = {},
 ) {
@@ -214,7 +214,7 @@ private fun SessionDetail(
                             state.availablePlanDays.toSortedMap().forEach { (day, exercises) ->
                                 item {
                                     Button(
-                                        onClick = { onImportDay(exercises) },
+                                        onClick = { onImportDay(day) },
                                         shape = MaterialTheme.shapes.large,
                                         contentPadding = PaddingValues(vertical = 12.dp)
                                     ) {
@@ -291,7 +291,7 @@ private fun SetsList(
     onSelectBottomSheet: (Exercise) -> Unit,
     onHistoryClick: () -> Unit,
     onEditToggle: () -> Unit,
-    onImportDay: (List<Exercise>) -> Unit,
+    onImportDay: (DayOfWeek) -> Unit,
     onClearSets: () -> Unit,
 ) {
     var collapsedExercises by rememberSaveable { mutableStateOf(emptySet<Int>()) }
@@ -343,7 +343,7 @@ private fun SetsList(
                     item {
                         Button(
                             onClick = {
-                                onImportDay(exercises)
+                                onImportDay(day)
                                 showImportSheet = false
                             },
                             shape = MaterialTheme.shapes.large,

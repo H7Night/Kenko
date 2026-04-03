@@ -36,8 +36,8 @@ val bodyFont = FontFamily(
 )
 
 fun Typography.header() = displayLarge.copy(
-    fontSize = 78.sp,
-    lineHeight = 70.sp,
+    fontSize = 64.sp,
+    lineHeight = 56.sp,
 )
 
 fun TextStyle.numbers() = copy(fontFamily = FontFamily.Numbers)

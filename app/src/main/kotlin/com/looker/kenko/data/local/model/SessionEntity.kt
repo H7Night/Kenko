@@ -23,7 +23,9 @@ import androidx.room.Relation
 import com.looker.kenko.data.model.Session
 import com.looker.kenko.data.model.Set
 import com.looker.kenko.utils.EpochDays
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.isoDayNumber
 
 data class SessionEntity(
     @Embedded
@@ -50,6 +52,7 @@ data class SessionDataEntity(
     val date: EpochDays,
     @ColumnInfo(index = true)
     val planId: Int?,
+    val planDayOverride: Int? = null,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 )
@@ -57,6 +60,7 @@ data class SessionDataEntity(
 fun Session.data(): SessionDataEntity = SessionDataEntity(
     date = EpochDays(date.toEpochDays().toInt()),
     planId = planId,
+    planDayOverride = planDayOverride?.isoDayNumber,
     id = id ?: 0,
 )
 
@@ -68,5 +72,6 @@ fun SessionEntity.toExternal(
     planId = data.planId,
     date = LocalDate.fromEpochDays(data.date.value),
     sets = setsMap,
+    planDayOverride = data.planDayOverride?.let { DayOfWeek(it) },
     id = data.id,
 )

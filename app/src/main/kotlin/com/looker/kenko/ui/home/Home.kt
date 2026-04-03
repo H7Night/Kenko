@@ -187,11 +187,19 @@ private fun ColumnScope.StartSession(
     content: @Composable () -> Unit,
     buttonText: @Composable () -> Unit,
 ) {
-    Spacer(modifier = Modifier.weight(1F))
-    content()
-    Spacer(modifier = Modifier.weight(1F))
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f),
+        horizontalAlignment = CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        content()
+    }
     TertiaryKenkoButton(
-        modifier = Modifier.align(CenterHorizontally),
+        modifier = Modifier
+            .align(CenterHorizontally)
+            .padding(bottom = 16.dp),
         onClick = onStartSessionClick,
         label = buttonText,
         icon = {
