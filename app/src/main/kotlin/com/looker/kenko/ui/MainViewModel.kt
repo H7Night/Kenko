@@ -28,10 +28,8 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -49,8 +47,6 @@ class MainViewModel @Inject constructor(
 
     val language: StateFlow<Language> = repo.get { language }
         .asStateFlow(Language.System)
-
-    val isOnboardingDone: Boolean = runBlocking { repo.stream.first().isOnboardingDone }
 
     init {
         viewModelScope.launch {

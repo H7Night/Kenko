@@ -25,10 +25,8 @@ import com.looker.kenko.ui.addEditExercise.navigation.addEditExercise
 import com.looker.kenko.ui.addEditExercise.navigation.navigateToAddEditExercise
 import com.looker.kenko.ui.exercises.navigation.exercises
 import com.looker.kenko.ui.exercises.navigation.navigateToExercises
-import com.looker.kenko.ui.getStarted.navigation.GetStartedRoute
-import com.looker.kenko.ui.getStarted.navigation.getStarted
+import com.looker.kenko.ui.home.navigation.HomeRoute
 import com.looker.kenko.ui.home.navigation.home
-import com.looker.kenko.ui.home.navigation.navigateToHome
 import com.looker.kenko.ui.performance.navigation.performance
 import com.looker.kenko.ui.planEdit.navigation.navigateToPlanEdit
 import com.looker.kenko.ui.planEdit.navigation.planEdit
@@ -47,28 +45,17 @@ private val singleTopNavOptions = navOptions {
     launchSingleTop = true
 }
 
-private val splashNavOptions = navOptions {
-    launchSingleTop = true
-    popUpTo<GetStartedRoute> {
-        inclusive = true
-    }
-}
-
 @Composable
 fun KenkoNavHost(
     navController: NavController,
     modifier: Modifier = Modifier,
-    startDestination: Any = GetStartedRoute,
+    startDestination: Any = HomeRoute,
 ) {
     NavHost(
         modifier = modifier,
         navController = navController as NavHostController,
         startDestination = startDestination,
     ) {
-        getStarted {
-            navController.navigateToHome(splashNavOptions)
-        }
-
         home(
             onProfileClick = {
                 navController.navigateToProfile(navOptions = singleTopNavOptions)

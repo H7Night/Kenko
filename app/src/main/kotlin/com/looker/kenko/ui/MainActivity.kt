@@ -32,7 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
-import com.looker.kenko.ui.getStarted.navigation.GetStartedRoute
+import com.looker.kenko.ui.home.navigation.HomeRoute
 import com.looker.kenko.ui.navigation.KenkoNavHost
 import com.looker.kenko.ui.theme.KenkoTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
                 Kenko {
                     KenkoNavHost(
                         navController = rememberNavController(),
-                        startDestination = GetStartedRoute(viewModel.isOnboardingDone),
+                        startDestination = HomeRoute,
                     )
                 }
             }
