@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.looker.kenko.ui.sessionDetail.SessionDetails
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
@@ -26,10 +27,15 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SessionDetailRoute(
     val epochDays: Int,
+    val showBackButton: Boolean = true,
 )
 
-fun NavController.navigateToSessionDetail(date: LocalDate?, navOptions: NavOptions? = null) {
-    navigate(SessionDetailRoute(date?.toEpochDays()?.toInt() ?: -1), navOptions)
+fun NavController.navigateToSessionDetail(
+    date: LocalDate?,
+    navOptions: NavOptions? = null,
+    showBackButton: Boolean = true,
+) {
+    navigate(SessionDetailRoute(date?.toEpochDays()?.toInt() ?: -1, showBackButton), navOptions)
 }
 
 fun NavGraphBuilder.sessionDetail(
@@ -37,9 +43,11 @@ fun NavGraphBuilder.sessionDetail(
     onHistoryClick: (LocalDate) -> Unit,
 ) {
     composable<SessionDetailRoute> {
+        val route: SessionDetailRoute = it.toRoute()
         SessionDetails(
             onBackPress = onBackPress,
             onHistoryClick = onHistoryClick,
+            showBackButton = route.showBackButton,
             viewModel = hiltViewModel(),
         )
     }

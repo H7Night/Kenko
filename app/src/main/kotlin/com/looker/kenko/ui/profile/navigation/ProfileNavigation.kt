@@ -19,14 +19,18 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.looker.kenko.ui.profile.Profile
 import kotlinx.serialization.Serializable
 
 @Serializable
-object ProfileRoute
+data class ProfileRoute(val showBackButton: Boolean = true)
 
-fun NavController.navigateToProfile(navOptions: NavOptions? = null) {
-    navigate(ProfileRoute, navOptions)
+fun NavController.navigateToProfile(
+    showBackButton: Boolean = true,
+    navOptions: NavOptions? = null,
+) {
+    navigate(ProfileRoute(showBackButton), navOptions)
 }
 
 fun NavGraphBuilder.profile(
@@ -37,13 +41,15 @@ fun NavGraphBuilder.profile(
     onSettingsClick: () -> Unit,
 ) {
     composable<ProfileRoute> {
+        val route: ProfileRoute = it.toRoute()
         Profile(
+            viewModel = hiltViewModel(),
             onBackPress = onBackPress,
             onExercisesClick = onExercisesClick,
             onAddExerciseClick = onAddExerciseClick,
             onPlanClick = onPlanClick,
             onSettingsClick = onSettingsClick,
-            viewModel = hiltViewModel(),
+            showBackButton = route.showBackButton,
         )
     }
 }

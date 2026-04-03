@@ -109,6 +109,7 @@ fun SessionDetails(
     viewModel: SessionDetailViewModel,
     onBackPress: () -> Unit,
     onHistoryClick: (LocalDate) -> Unit,
+    showBackButton: Boolean = true,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     SessionDetail(
@@ -122,6 +123,7 @@ fun SessionDetails(
         onImportDay = viewModel::importPlanFromDay,
         onEditToggle = viewModel::toggleEditMode,
         onClearSets = viewModel::clearTodaySets,
+        showBackButton = showBackButton,
     )
     val exercise by viewModel.current.collectAsStateWithLifecycle()
     if (exercise != null) {
@@ -146,13 +148,14 @@ private fun SessionDetail(
     onImportDay: (DayOfWeek) -> Unit = {},
     onEditToggle: () -> Unit = {},
     onClearSets: () -> Unit = {},
+    showBackButton: Boolean = true,
 ) {
     when (state) {
         is SessionDetailState.Error.InvalidSession -> {
             Column(Modifier.statusBarsPadding()) {
                 TopAppBar(
                     navigationIcon = {
-                        BackButton(onClick = onBackPress)
+                        if (showBackButton) BackButton(onClick = onBackPress)
                     },
                     title = {},
                 )
@@ -169,7 +172,7 @@ private fun SessionDetail(
             Column(Modifier.statusBarsPadding()) {
                 TopAppBar(
                     navigationIcon = {
-                        BackButton(onClick = onBackPress)
+                        if (showBackButton) BackButton(onClick = onBackPress)
                     },
                     title = {},
                 )
@@ -235,7 +238,7 @@ private fun SessionDetail(
             Column(Modifier.statusBarsPadding()) {
                 TopAppBar(
                     navigationIcon = {
-                        BackButton(onClick = onBackPress)
+                        if (showBackButton) BackButton(onClick = onBackPress)
                     },
                     title = {},
                 )
@@ -268,6 +271,7 @@ private fun SessionDetail(
                 onEditToggle = onEditToggle,
                 onImportDay = onImportDay,
                 onClearSets = onClearSets,
+                showBackButton = showBackButton,
             )
         }
     }
@@ -293,6 +297,7 @@ private fun SetsList(
     onEditToggle: () -> Unit,
     onImportDay: (DayOfWeek) -> Unit,
     onClearSets: () -> Unit,
+    showBackButton: Boolean = true,
 ) {
     var collapsedExercises by rememberSaveable { mutableStateOf(emptySet<Int>()) }
     var showImportDialog by remember { mutableStateOf(false) }
@@ -371,6 +376,7 @@ private fun SetsList(
                 performedOn = date,
                 dayTitle = dayTitle,
                 onBackPress = onBackPress,
+                showBackButton = showBackButton,
                 actions = {
                     if (isToday) {
                         IconButton(onClick = { showImportDialog = true }) {
@@ -473,6 +479,7 @@ private fun Header(
     dayTitle: String?,
     onBackPress: () -> Unit,
     modifier: Modifier = Modifier,
+    showBackButton: Boolean = true,
     actions: @Composable (RowScope.() -> Unit),
 ) {
     val date = remember {
@@ -485,7 +492,7 @@ private fun Header(
     TopAppBar(
         modifier = modifier,
         actions = actions,
-        navigationIcon = { BackButton(onClick = onBackPress) },
+        navigationIcon = { if (showBackButton) BackButton(onClick = onBackPress) },
         title = {
             Column(
                 verticalArrangement = Arrangement.Center,

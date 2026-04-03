@@ -96,15 +96,7 @@ private fun Home(
     onStartSessionClick: () -> Unit = {},
     onCurrentPlanClick: (Int) -> Unit = {},
 ) {
-    Scaffold(
-        topBar = {
-            KenkoTopBar {
-                FilledTonalIconButton(onClick = onProfileClick) {
-                    Icon(painter = KenkoIcons.Person, contentDescription = null)
-                }
-            }
-        },
-    ) { innerPadding ->
+    Scaffold { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()

@@ -19,7 +19,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.model.settings.Language
 import com.looker.kenko.data.model.settings.Theme
+import com.looker.kenko.data.model.localDate
 import com.looker.kenko.data.repository.PerformanceRepo
+import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.ui.theme.colorSchemes.ColorSchemes
 import com.looker.kenko.ui.theme.colorSchemes.zestfulColorSchemes
@@ -28,12 +30,14 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     repo: SettingsRepo,
+    sessionRepo: SessionRepo,
     performanceRepo: PerformanceRepo,
     context: Context,
 ) : ViewModel() {
@@ -47,6 +51,10 @@ class MainViewModel @Inject constructor(
 
     val language: StateFlow<Language> = repo.get { language }
         .asStateFlow(Language.System)
+
+    val isExerciseVisible: StateFlow<Boolean> = sessionRepo.streamByDate(localDate)
+        .map { it != null && it.sets.isNotEmpty() }
+        .asStateFlow(false)
 
     init {
         viewModelScope.launch {
