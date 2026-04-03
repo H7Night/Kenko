@@ -76,17 +76,22 @@ class MainActivity : AppCompatActivity() {
                 val navController = rememberNavController()
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = backStackEntry?.destination?.route
+                val currentRouteName = currentRoute?.substringBefore("?")?.substringBefore("/")
 
-                val isTopLevelRoute = currentRoute == HomeRoute::class.qualifiedName ||
-                        currentRoute == ProfileRoute::class.qualifiedName ||
-                        (currentRoute == SessionDetailRoute::class.qualifiedName && 
+                val homeRouteName = HomeRoute::class.qualifiedName
+                val profileRouteName = ProfileRoute::class.qualifiedName
+                val sessionDetailRouteName = SessionDetailRoute::class.qualifiedName
+
+                val isTopLevelRoute = currentRouteName == homeRouteName ||
+                        currentRouteName == profileRouteName ||
+                        (currentRouteName == sessionDetailRouteName && 
                          backStackEntry?.arguments?.getBoolean("showBackButton") == false)
 
                 Kenko(
                     bottomBar = {
                         if (isTopLevelRoute) {
                             KenkoBottomBar(
-                                currentRoute = currentRoute,
+                                currentRouteName = currentRouteName,
                                 isExerciseVisible = isExerciseVisible,
                                 onHomeClick = {
                                     navController.navigateToHome(
