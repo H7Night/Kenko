@@ -112,6 +112,7 @@ fun SessionDetails(
     showBackButton: Boolean = true,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val previousSessionDate = (state as? SessionDetailState.Success)?.data?.previousSessionDate
     SessionDetail(
         state = state,
         onBackPress = onBackPress,
@@ -119,7 +120,7 @@ fun SessionDetails(
         onUpdateSet = viewModel::updateSet,
         onReferenceClick = viewModel::openReference,
         onSelectBottomSheet = viewModel::showBottomSheet,
-        onHistoryClick = { onHistoryClick(viewModel.previousSessionDate) },
+        onHistoryClick = { previousSessionDate?.let(onHistoryClick) },
         onImportDay = viewModel::importPlanFromDay,
         onEditToggle = viewModel::toggleEditMode,
         onClearSets = viewModel::clearTodaySets,
@@ -258,7 +259,7 @@ private fun SessionDetail(
                 exerciseSets = data.sets,
                 isToday = data.isToday,
                 isEditMode = data.isEditMode,
-                hasPreviousSession = data.hasPreviousSession,
+                previousSessionDate = data.previousSessionDate,
                 dayTitle = data.dayTitle,
                 availablePlanDays = data.availablePlanDays,
                 dayTitles = data.dayTitles,
@@ -284,7 +285,7 @@ private fun SetsList(
     exerciseSets: Map<Exercise, List<Set>>,
     isToday: Boolean,
     isEditMode: Boolean,
-    hasPreviousSession: Boolean,
+    previousSessionDate: LocalDate?,
     dayTitle: String?,
     availablePlanDays: Map<DayOfWeek, List<Exercise>>,
     dayTitles: Map<DayOfWeek, String>,
@@ -387,7 +388,7 @@ private fun SetsList(
                         }
                     }
 
-                    if (hasPreviousSession) {
+                    if (previousSessionDate != null) {
                         IconButton(onClick = onHistoryClick) {
                             Icon(
                                 painter = KenkoIcons.History,

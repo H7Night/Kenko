@@ -107,6 +107,19 @@ interface SessionDao {
 
     @Query(
         """
+        SELECT date
+        FROM sessions
+        WHERE (planId = :planId OR :planId IS NULL)
+        AND (COALESCE(planDayOverride, (date + 3) % 7 + 1) = :day)
+        AND date < :date
+        ORDER BY date DESC
+        LIMIT 1
+        """
+    )
+    fun getPreviousSessionDate(date: Int, planId: Int?, day: Int): Flow<Int?>
+
+    @Query(
+        """
         DELETE FROM sessions
         WHERE id = :sessionId
         """,

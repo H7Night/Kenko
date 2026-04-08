@@ -117,6 +117,11 @@ class LocalSessionRepo @Inject constructor(
             }
     }
 
+    override fun previousSessionDate(date: LocalDate, planId: Int?, day: DayOfWeek): Flow<LocalDate?> {
+        return dao.getPreviousSessionDate(date.toLocalEpochDays().value, planId, day.isoDayNumber)
+            .map { it?.let(LocalDate::fromEpochDays) }
+    }
+
     override suspend fun getSets(sessionId: Int): List<Set> =
         setsDao.getSetsBySessionId(sessionId).toExternal()
 
