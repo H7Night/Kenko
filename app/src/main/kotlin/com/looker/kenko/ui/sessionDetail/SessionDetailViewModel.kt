@@ -72,12 +72,17 @@ class SessionDetailViewModel @Inject constructor(
 
     private val isTodaySession = epochDays == null
 
-    val previousSessionDate = sessionDate - week
-
-    private val previousSessionExists: Flow<Boolean> = repo.streamByDate(previousSessionDate)
-        .map { it != null }
-
     private val sessionStream: Flow<Session?> = repo.streamByDate(sessionDate)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val previousSessionDateStream: Flow<LocalDate?> =
+        combine(sessionStream, planRepo.plans) { session, plans ->
+            session to plans
+        }.flatMapLatest { (session, plans) ->
+            val planId = session?.planId ?: plans.find { it.isActive }?.id
+            val day = session?.planDayOverride ?: sessionDate.dayOfWeek
+            repo.previousSessionDate(sessionDate, planId, day)
+        }
 
     private val availablePlanItems: Flow<Map<DayOfWeek, List<Exercise>>> = planRepo.planItems
         .map { items ->
@@ -142,14 +147,14 @@ class SessionDetailViewModel @Inject constructor(
         combine(
             sessionStream,
             exercisesToday,
-            previousSessionExists,
+            previousSessionDateStream,
             availablePlanItems,
             _isEditMode,
             planRepo.plans,
         ) { flows ->
             val session = flows[0] as Session?
             val exercises = flows[1] as List<Exercise>
-            val previousSession = flows[2] as Boolean
+            val previousSessionDate = flows[2] as LocalDate?
             val available = flows[3] as Map<DayOfWeek, List<Exercise>>
             val isEditMode = flows[4] as Boolean
             val plans = flows[5] as List<com.looker.kenko.data.model.Plan>
@@ -185,7 +190,7 @@ class SessionDetailViewModel @Inject constructor(
                     isToday = isTodaySession,
                     isEditMode = isEditMode,
                     dayTitle = dayTitle,
-                    hasPreviousSession = previousSession,
+                    previousSessionDate = previousSessionDate,
                     availablePlanDays = available,
                     dayTitles = currentPlanTitles,
                 ),
@@ -254,7 +259,7 @@ data class SessionUiData(
     val isToday: Boolean = false,
     val isEditMode: Boolean = false,
     val dayTitle: String? = null,
-    val hasPreviousSession: Boolean = false,
+    val previousSessionDate: LocalDate? = null,
     val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),
     val dayTitles: Map<DayOfWeek, String> = emptyMap(),
 )

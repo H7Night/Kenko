@@ -32,7 +32,16 @@ import androidx.compose.ui.Modifier
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.foundation.layout.padding
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navOptions
+import com.looker.kenko.ui.components.KenkoBottomBar
 import com.looker.kenko.ui.home.navigation.HomeRoute
+import com.looker.kenko.ui.home.navigation.navigateToHome
+import com.looker.kenko.ui.profile.navigation.ProfileRoute
+import com.looker.kenko.ui.profile.navigation.navigateToProfile
+import com.looker.kenko.ui.sessionDetail.navigation.SessionDetailRoute
+import com.looker.kenko.ui.sessionDetail.navigation.navigateToSessionDetail
 import com.looker.kenko.ui.navigation.KenkoNavHost
 import com.looker.kenko.ui.theme.KenkoTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -49,6 +58,7 @@ class MainActivity : AppCompatActivity() {
             val theme by viewModel.theme.collectAsStateWithLifecycle()
             val colorScheme by viewModel.colorScheme.collectAsStateWithLifecycle()
             val language by viewModel.language.collectAsStateWithLifecycle()
+            val isExerciseVisible by viewModel.isExerciseVisible.collectAsStateWithLifecycle()
 
             LaunchedEffect(language) {
                 val appLocale: LocaleListCompat = if (language.code != null) {
@@ -63,10 +73,64 @@ class MainActivity : AppCompatActivity() {
                 theme = theme,
                 colorSchemes = colorScheme,
             ) {
-                Kenko {
+                val navController = rememberNavController()
+                val backStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = backStackEntry?.destination?.route
+                val currentRouteName = currentRoute?.substringBefore("?")?.substringBefore("/")
+
+                val homeRouteName = HomeRoute::class.qualifiedName
+                val profileRouteName = ProfileRoute::class.qualifiedName
+                val sessionDetailRouteName = SessionDetailRoute::class.qualifiedName
+
+                val isTopLevelRoute = currentRouteName == homeRouteName ||
+                        currentRouteName == profileRouteName ||
+                        (currentRouteName == sessionDetailRouteName && 
+                         backStackEntry?.arguments?.getBoolean("showBackButton") == false)
+
+                Kenko(
+                    bottomBar = {
+                        if (isTopLevelRoute) {
+                            KenkoBottomBar(
+                                currentRouteName = currentRouteName,
+                                isExerciseVisible = isExerciseVisible,
+                                onHomeClick = {
+                                    navController.navigateToHome(
+                                        navOptions = navOptions {
+                                            popUpTo(HomeRoute) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    )
+                                },
+                                onExerciseClick = {
+                                    navController.navigateToSessionDetail(
+                                        date = null,
+                                        showBackButton = false,
+                                        navOptions = navOptions {
+                                            popUpTo(HomeRoute) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    )
+                                },
+                                onProfileClick = {
+                                    navController.navigateToProfile(
+                                        showBackButton = false,
+                                        navOptions = navOptions {
+                                            popUpTo(HomeRoute) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    )
+                                }
+                            )
+                        }
+                    }
+                ) { innerPadding ->
                     KenkoNavHost(
-                        navController = rememberNavController(),
+                        navController = navController,
                         startDestination = HomeRoute,
+                        modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
@@ -76,12 +140,14 @@ class MainActivity : AppCompatActivity() {
 
 @Composable
 fun Kenko(
+    bottomBar: @Composable () -> Unit = {},
     content: @Composable (innerPadding: PaddingValues) -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = WindowInsets(0),
+        bottomBar = bottomBar,
         content = content,
     )
 }

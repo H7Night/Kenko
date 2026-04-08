@@ -67,7 +67,11 @@ fun KenkoNavHost(
                 navController.navigateToSessions(navOptions = singleTopNavOptions)
             },
             onStartSessionClick = {
-                navController.navigateToSessionDetail(date = null, navOptions = singleTopNavOptions)
+                navController.navigateToSessionDetail(
+                    date = null,
+                    showBackButton = false,
+                    navOptions = singleTopNavOptions
+                )
             },
             onCurrentPlanClick = {
                 navController.navigateToPlanEdit(id = it, navOptions = singleTopNavOptions)
@@ -97,6 +101,7 @@ fun KenkoNavHost(
         settings(navController::popBackStackOnResume)
 
         profile(
+            onBackPress = navController::popBackStackOnResume,
             onAddExerciseClick = {
                 navController.navigateToAddEditExercise(navOptions = singleTopNavOptions)
             },
@@ -109,7 +114,6 @@ fun KenkoNavHost(
             onSettingsClick = {
                 navController.navigateToSettings(navOptions = singleTopNavOptions)
             },
-            onBackPress = navController::popBackStackOnResume,
         )
 
         exercises(

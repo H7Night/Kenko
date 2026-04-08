@@ -51,6 +51,8 @@ interface SessionRepo {
 
     fun streamByDate(date: LocalDate): Flow<Session?>
 
+    fun previousSessionDate(date: LocalDate, planId: Int?, day: DayOfWeek): Flow<LocalDate?>
+
     suspend fun getSets(sessionId: Int): List<Set>
 
     suspend fun deleteSession(session: Session)

@@ -66,6 +66,13 @@ fun TrainingHeatmap(
         initialDate.plus(offset, DateTimeUnit.MONTH)
     }
 
+    val showPreviousYear = remember(sessionDates, displayedDate) {
+        sessionDates.any { it.year < displayedDate.year }
+    }
+    val showNextYear = remember(sessionDates, displayedDate) {
+        sessionDates.any { it.year > displayedDate.year }
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -98,7 +105,9 @@ fun TrainingHeatmap(
                 coroutineScope.launch {
                     pagerState.animateScrollToPage(pagerState.currentPage + 12)
                 }
-            }
+            },
+            showPreviousYear = showPreviousYear,
+            showNextYear = showNextYear
         )
 
         HorizontalPager(
@@ -124,6 +133,8 @@ private fun HeatmapHeader(
     onNextMonth: () -> Unit,
     onPreviousYear: () -> Unit,
     onNextYear: () -> Unit,
+    showPreviousYear: Boolean,
+    showNextYear: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val monthLabel = remember(displayedDate) {
@@ -139,12 +150,14 @@ private fun HeatmapHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row {
-            IconButton(onClick = onPreviousYear) {
-                Icon(
-                    painter = KenkoIcons.ArrowBack,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.outline
-                )
+            if (showPreviousYear) {
+                IconButton(onClick = onPreviousYear) {
+                    Icon(
+                        painter = KenkoIcons.ArrowBack,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.outline
+                    )
+                }
             }
             IconButton(onClick = onPreviousMonth) {
                 Icon(
@@ -170,12 +183,14 @@ private fun HeatmapHeader(
                     tint = MaterialTheme.colorScheme.outline
                 )
             }
-            IconButton(onClick = onNextYear) {
-                Icon(
-                    painter = KenkoIcons.ArrowForward,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.outline
-                )
+            if (showNextYear) {
+                IconButton(onClick = onNextYear) {
+                    Icon(
+                        painter = KenkoIcons.ArrowForward,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.outline
+                    )
+                }
             }
         }
     }

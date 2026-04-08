@@ -118,6 +118,7 @@ fun Profile(
     onAddExerciseClick: () -> Unit,
     onPlanClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    showBackButton: Boolean = false,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     Profile(
@@ -130,6 +131,7 @@ fun Profile(
         onAddWeight = viewModel::addWeight,
         onUpdateWeight = viewModel::updateWeight,
         onDeleteWeight = viewModel::deleteWeight,
+        showBackButton = showBackButton,
     )
 }
 
@@ -146,6 +148,7 @@ private fun Profile(
     onUpdateWeight: (Weight) -> Unit,
     onDeleteWeight: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    showBackButton: Boolean = false,
 ) {
     var showWeightDialog by remember { mutableStateOf(false) }
     var weightToEdit by remember { mutableStateOf<Weight?>(null) }
@@ -190,7 +193,7 @@ private fun Profile(
         topBar = {
             TopAppBar(
                 title = { Text(text = stringResource(R.string.label_profile)) },
-                navigationIcon = { BackButton(onBackPress) },
+                navigationIcon = { if (showBackButton) BackButton(onBackPress) },
                 actions = {
                     IconButton(onClick = onSettingsClick) {
                         Icon(painter = KenkoIcons.Settings, contentDescription = null)
