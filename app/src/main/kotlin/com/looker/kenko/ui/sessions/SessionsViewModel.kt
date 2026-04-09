@@ -23,6 +23,9 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
+import com.looker.kenko.utils.DateFormat
+import com.looker.kenko.utils.formatDate
+import kotlinx.datetime.LocalDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -50,6 +53,26 @@ class SessionsViewModel @Inject constructor(
     fun removeSession(session: Session) {
         viewModelScope.launch {
             repo.deleteSession(session)
+        }
+    }
+
+    fun generateMarkdown(startDate: LocalDate, endDate: LocalDate): String {
+        val filteredSessions = state.value.sessions
+            .filter { it.date in startDate..endDate }
+            .sortedBy { it.date }
+
+        return buildString {
+            filteredSessions.forEach { session ->
+                append("# ${formatDate(session.date, DateFormat.SessionLabel)}\n\n")
+                val exerciseSets = session.sets.groupBy { it.exercise }
+                exerciseSets.entries.forEachIndexed { index, (exercise, sets) ->
+                    append("${index + 1}. ${exercise.name}\n")
+                    sets.forEach { set ->
+                        append("    - ${set.weight}kg x ${set.repsOrDuration}\n")
+                    }
+                }
+                append("\n")
+            }
         }
     }
 }

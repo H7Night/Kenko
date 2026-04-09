@@ -30,6 +30,11 @@
     <string name="label_sessions_title">训练记录</string>
     <string name="label_delete_session_title">删除记录？</string>
     <string name="label_delete_session_message">这将永久删除此条训练记录及其所有组数信息。</string>
+    <string name="label_export">导出</string>
+    <string name="label_select_date_range">选择日期范围</string>
+    <string name="label_start_date">开始日期</string>
+    <string name="label_end_date">结束日期</string>
+    <string name="label_export_markdown">导出为 Markdown</string>
     <string name="label_confirm">确定</string>
     <string name="label_cancel">取消</string>
 
