@@ -42,6 +42,9 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -381,10 +384,19 @@ private fun PlanEdit(
                     items = localExercises,
                     key = { _, exercise -> exercise.id!! }
                 ) { index, exercise ->
+                    val isDragged = draggedItemIndex == index
+                    val scale by animateFloatAsState(if (isDragged) 1.05f else 1f, label = "scale")
+                    val elevation by animateFloatAsState(if (isDragged) 8f else 0f, label = "elevation")
+
                     ExerciseItem(
                         modifier = Modifier
                             .animateItem()
-                            .zIndex(if (draggedItemIndex == index) 1f else 0f)
+                            .zIndex(if (isDragged) 1f else 0f)
+                            .graphicsLayer {
+                                scaleX = scale
+                                scaleY = scale
+                                shadowElevation = elevation
+                            }
                             .pointerInput(localExercises) {
                                 detectDragGesturesAfterLongPress(
                                     onDragStart = { offset ->
@@ -434,6 +446,7 @@ private fun PlanEdit(
                                 )
                             },
                         exercise = exercise,
+                        containerColor = if (isDragged) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
                     ) {
                         ExerciseItemActions(
                             index = index,

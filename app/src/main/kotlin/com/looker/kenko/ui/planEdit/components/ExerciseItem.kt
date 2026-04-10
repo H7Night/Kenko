@@ -51,12 +51,13 @@ import com.looker.kenko.ui.theme.KenkoTheme
 fun ExerciseItem(
     exercise: Exercise,
     modifier: Modifier = Modifier,
+    containerColor: Color = Color.Transparent,
     onClick: () -> Unit = {},
     content: @Composable () -> Unit = {},
 ) {
     Surface(
         modifier = modifier,
-        color = Color.Transparent,
+        color = containerColor,
         onClick = onClick,
         shape = MaterialTheme.shapes.large,
     ) {
