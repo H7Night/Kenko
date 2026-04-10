@@ -176,4 +176,20 @@ class LocalPlanRepo @Inject constructor(
     override suspend fun removeItemById(exerciseId: Int) {
         dao.deleteItemByExercise(exerciseId)
     }
+
+    override suspend fun reorder(planId: Int, day: DayOfWeek, from: Int, to: Int) {
+        val items = getPlanItems(planId, day)
+        if (from !in items.indices || to !in items.indices) return
+
+        val fromItem = items[from]
+        val toItem = items[to]
+
+        // Swap exercise contents between the two items
+        // Since we order by ID ASC in DAO, swapping content effectively reorders them
+        val newFromItem = fromItem.copy(exercise = toItem.exercise)
+        val newToItem = toItem.copy(exercise = fromItem.exercise)
+
+        dao.insertPlanItem(newFromItem.toEntity())
+        dao.insertPlanItem(newToItem.toEntity())
+    }
 }

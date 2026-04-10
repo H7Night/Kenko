@@ -55,8 +55,12 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -135,6 +139,7 @@ fun PlanEdit(
                     onSelectDay = viewModel::setCurrentDay,
                     onRemoveExerciseClick = viewModel::removeExercise,
                     onFullDaySelection = viewModel::openFullDaySelection,
+                    onReorder = viewModel::moveExercise,
                 )
             }
         }
@@ -281,6 +286,13 @@ private fun NameEdit(
     )
 }
 
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.zIndex
+
 @Composable
 private fun PlanEdit(
     state: PlanEditState,
@@ -288,11 +300,18 @@ private fun PlanEdit(
     onSelectDay: (DayOfWeek) -> Unit,
     onRemoveExerciseClick: (Exercise) -> Unit,
     onFullDaySelection: () -> Unit,
+    onReorder: (Int, Int) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     val isCurrentDayBlank by remember(state.exercises) { derivedStateOf { state.exercises.isEmpty() } }
+    val lazyListState = rememberLazyListState()
+
+    var draggedItemIndex by remember { mutableIntStateOf(-1) }
+    var dragOffset by remember { mutableFloatStateOf(0f) }
+
     PlanExercise(
         modifier = Modifier.fillMaxSize(),
+        state = lazyListState,
         header = {
             val name = dayName(state.currentDay)
             Header(
@@ -357,7 +376,43 @@ private fun PlanEdit(
             } else {
                 itemsIndexed(state.exercises) { index, exercise ->
                     ExerciseItem(
-                        modifier = Modifier.animateItem(),
+                        modifier = Modifier
+                            .animateItem()
+                            .zIndex(if (draggedItemIndex == index) 1f else 0f)
+                            .pointerInput(Unit) {
+                                detectDragGesturesAfterLongPress(
+                                    onDragStart = { offset ->
+                                        draggedItemIndex = index
+                                    },
+                                    onDrag = { change, dragAmount ->
+                                        change.consume()
+                                        dragOffset += dragAmount.y
+
+                                        val currentItem =
+                                            lazyListState.layoutInfo.visibleItemsInfo.find { it.index == index + 1 }
+                                        if (currentItem != null) {
+                                            val threshold = currentItem.size / 2
+                                            if (dragOffset > threshold && index < state.exercises.size - 1) {
+                                                onReorder(index, index + 1)
+                                                draggedItemIndex = index + 1
+                                                dragOffset -= currentItem.size
+                                            } else if (dragOffset < -threshold && index > 0) {
+                                                onReorder(index, index - 1)
+                                                draggedItemIndex = index - 1
+                                                dragOffset += currentItem.size
+                                            }
+                                        }
+                                    },
+                                    onDragEnd = {
+                                        draggedItemIndex = -1
+                                        dragOffset = 0f
+                                    },
+                                    onDragCancel = {
+                                        draggedItemIndex = -1
+                                        dragOffset = 0f
+                                    }
+                                )
+                            },
                         exercise = exercise,
                     ) {
                         ExerciseItemActions(

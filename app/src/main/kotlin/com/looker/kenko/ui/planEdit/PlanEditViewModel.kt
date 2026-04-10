@@ -203,6 +203,12 @@ class PlanEditViewModel @Inject constructor(
         }
     }
 
+    fun moveExercise(from: Int, to: Int) {
+        viewModelScope.launch {
+            repo.reorder(planIdStream.value, _dayOfWeek.value, from, to)
+        }
+    }
+
     fun onBackPress(stage: PlanEditStage, onBackPress: () -> Unit) {
         viewModelScope.launch {
             if (stage == PlanEditStage.NameEdit) {

@@ -70,4 +70,6 @@ interface PlanRepo {
     suspend fun removeItem(id: Long)
 
     suspend fun removeItemById(exerciseId: Int)
+
+    suspend fun reorder(planId: Int, day: DayOfWeek, from: Int, to: Int)
 }
