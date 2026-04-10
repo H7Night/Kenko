@@ -387,6 +387,7 @@ private fun PlanEdit(
                     val isDragged = draggedItemIndex == index
                     val scale by animateFloatAsState(if (isDragged) 1.05f else 1f, label = "scale")
                     val elevation by animateFloatAsState(if (isDragged) 8f else 0f, label = "elevation")
+                    val itemShape = MaterialTheme.shapes.large
 
                     ExerciseItem(
                         modifier = Modifier
@@ -396,6 +397,8 @@ private fun PlanEdit(
                                 scaleX = scale
                                 scaleY = scale
                                 shadowElevation = elevation
+                                shape = itemShape
+                                clip = true
                             }
                             .pointerInput(localExercises) {
                                 detectDragGesturesAfterLongPress(
