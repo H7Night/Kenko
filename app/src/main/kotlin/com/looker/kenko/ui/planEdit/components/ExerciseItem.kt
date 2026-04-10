@@ -47,17 +47,22 @@ import com.looker.kenko.data.model.ExercisesPreviewParameter
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+
 @Composable
 fun ExerciseItem(
     exercise: Exercise,
     modifier: Modifier = Modifier,
     containerColor: Color = Color.Transparent,
+    shadowElevation: Dp = 0.dp,
     onClick: () -> Unit = {},
     content: @Composable () -> Unit = {},
 ) {
     Surface(
         modifier = modifier,
         color = containerColor,
+        shadowElevation = shadowElevation,
         onClick = onClick,
         shape = MaterialTheme.shapes.large,
     ) {

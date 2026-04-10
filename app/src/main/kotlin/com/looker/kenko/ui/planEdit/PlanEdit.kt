@@ -42,9 +42,11 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -387,18 +389,18 @@ private fun PlanEdit(
                     val isDragged = draggedItemIndex == index
                     val scale by animateFloatAsState(if (isDragged) 1.05f else 1f, label = "scale")
                     val elevation by animateFloatAsState(if (isDragged) 8f else 0f, label = "elevation")
-                    val itemShape = MaterialTheme.shapes.large
+                    val animatedContainerColor by animateColorAsState(
+                        if (isDragged) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
+                        label = "color"
+                    )
 
                     ExerciseItem(
                         modifier = Modifier
                             .animateItem()
-                            .zIndex(if (isDragged) 1f else 0f)
+                            .zIndex(if (isDragged || elevation > 0.01f) 1f else 0f)
                             .graphicsLayer {
                                 scaleX = scale
                                 scaleY = scale
-                                shadowElevation = elevation
-                                shape = itemShape
-                                clip = true
                             }
                             .pointerInput(localExercises) {
                                 detectDragGesturesAfterLongPress(
@@ -449,7 +451,8 @@ private fun PlanEdit(
                                 )
                             },
                         exercise = exercise,
-                        containerColor = if (isDragged) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
+                        containerColor = animatedContainerColor,
+                        shadowElevation = elevation.dp,
                     ) {
                         ExerciseItemActions(
                             index = index,
