@@ -93,7 +93,7 @@ fun WeightLineChart(
             )
 
             // Draw Y label (Weight)
-            val yLabel = weight.value.toInt().toString()
+            val yLabel = "%.1f".format(weight.value)
             val yTextLayout = textMeasurer.measure(yLabel, textStyle)
             drawText(
                 textLayoutResult = yTextLayout,
