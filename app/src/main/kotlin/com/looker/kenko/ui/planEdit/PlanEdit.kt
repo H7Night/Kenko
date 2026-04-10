@@ -131,10 +131,10 @@ fun PlanEdit(
             PlanEditStage.PlanEdit -> {
                 PlanEdit(
                     state = state,
+                    dayTitleState = viewModel.dayTitleState,
                     onSelectDay = viewModel::setCurrentDay,
                     onRemoveExerciseClick = viewModel::removeExercise,
                     onFullDaySelection = viewModel::openFullDaySelection,
-                    onDayTitleChange = viewModel::setDayTitle,
                 )
             }
         }
@@ -143,7 +143,7 @@ fun PlanEdit(
     if (state.exerciseSheetVisible) {
         val name = dayName(state.currentDay)
         AddExerciseSheet(
-            title = state.dayTitle.ifBlank { name },
+            title = viewModel.dayTitleState.text.ifBlank { name }.toString(),
             onDismiss = viewModel::closeSheet,
             onDone = viewModel::addExercise,
             onAddNewExerciseClick = onAddNewExerciseClick,
@@ -284,10 +284,10 @@ private fun NameEdit(
 @Composable
 private fun PlanEdit(
     state: PlanEditState,
+    dayTitleState: TextFieldState,
     onSelectDay: (DayOfWeek) -> Unit,
     onRemoveExerciseClick: (Exercise) -> Unit,
     onFullDaySelection: () -> Unit,
-    onDayTitleChange: (String) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     val isCurrentDayBlank by remember(state.exercises) { derivedStateOf { state.exercises.isEmpty() } }
@@ -298,16 +298,15 @@ private fun PlanEdit(
             Header(
                 title = {
                     androidx.compose.foundation.text.BasicTextField(
-                        value = state.dayTitle,
-                        onValueChange = onDayTitleChange,
+                        state = dayTitleState,
                         modifier = Modifier.fillMaxWidth(),
                         textStyle = MaterialTheme.typography.displayMedium.copy(
                             color = MaterialTheme.colorScheme.secondary,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Start
                         ),
                         cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.secondary),
-                        decorationBox = { innerTextField ->
-                            if (state.dayTitle.isEmpty()) {
+                        decorator = { innerTextField ->
+                            if (dayTitleState.text.isEmpty()) {
                                 Text(
                                     text = name,
                                     style = MaterialTheme.typography.displayMedium,
