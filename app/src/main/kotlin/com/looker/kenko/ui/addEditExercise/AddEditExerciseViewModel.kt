@@ -64,8 +64,6 @@ class AddEditExerciseViewModel @Inject constructor(
 
     private val targetMuscle = MutableStateFlow(MuscleGroups.Chest)
 
-    private val isIsometric = MutableStateFlow(false)
-
     private val isReadOnly: Boolean = exerciseId != null
 
     val snackbarState = SnackbarHostState()
@@ -73,47 +71,30 @@ class AddEditExerciseViewModel @Inject constructor(
     var exerciseName: String by mutableStateOf("")
         private set
 
-    var reference: String by mutableStateOf("")
-        private set
-
-    private val isReferenceInvalid = snapshotFlow { reference }
-        .debounce(200.milliseconds)
-        .mapLatest { it.isValidUrl() && it.isNotBlank() }
-
     private val exerciseAlreadyExistError = snapshotFlow { exerciseName }
         .debounce(200.milliseconds)
         .mapLatest { repo.isExerciseAvailable(it) && !isReadOnly }
 
     val state = combine(
         targetMuscle,
-        isIsometric,
         flowOf(isReadOnly),
         exerciseAlreadyExistError,
-        isReferenceInvalid,
-    ) { target, isometric, readOnly, alreadyExist, referenceInvalid ->
+    ) { target, readOnly, alreadyExist ->
         AddEditExerciseUiState(
             targetMuscle = target,
-            isIsometric = isometric,
             isReadOnly = readOnly,
             isError = alreadyExist,
-            isReferenceInvalid = referenceInvalid,
         )
     }.asStateFlow(
         AddEditExerciseUiState(
             targetMuscle = MuscleGroups.Chest,
-            isIsometric = false,
             isError = false,
             isReadOnly = false,
-            isReferenceInvalid = false,
         ),
     )
 
     fun setName(value: String) {
         exerciseName = value
-    }
-
-    fun addReference(value: String) {
-        reference = value
     }
 
     fun setTargetMuscle(value: MuscleGroups) {
@@ -122,20 +103,10 @@ class AddEditExerciseViewModel @Inject constructor(
         }
     }
 
-    fun setIsometric(value: Boolean) {
-        viewModelScope.launch {
-            isIsometric.emit(value)
-        }
-    }
-
     fun addNewExercise(onDone: () -> Unit) {
         viewModelScope.launch {
             if (exerciseName.isBlank()) {
                 snackbarState.showSnackbar(stringHandler.getString(R.string.error_exercise_name_empty))
-                return@launch
-            }
-            if (state.value.isReferenceInvalid) {
-                snackbarState.showSnackbar(stringHandler.getString(R.string.error_invalid_reference_format))
                 return@launch
             }
             val name = if (settingsRepo.stream.first().capitalizeExerciseName) {
@@ -147,8 +118,6 @@ class AddEditExerciseViewModel @Inject constructor(
                 Exercise(
                     name = name,
                     target = targetMuscle.value,
-                    reference = reference.ifBlank { null },
-                    isIsometric = isIsometric.value,
                     id = exerciseId,
                 ),
             )
@@ -168,8 +137,6 @@ class AddEditExerciseViewModel @Inject constructor(
                 val exercise = repo.get(exerciseId)
                 exercise?.let {
                     setName(it.name)
-                    addReference(it.reference ?: "")
-                    setIsometric(it.isIsometric)
                     setTargetMuscle(it.target)
                 }
             } else {
@@ -183,8 +150,6 @@ class AddEditExerciseViewModel @Inject constructor(
 @Stable
 data class AddEditExerciseUiState(
     val targetMuscle: MuscleGroups,
-    val isIsometric: Boolean,
     val isError: Boolean,
     val isReadOnly: Boolean,
-    val isReferenceInvalid: Boolean,
 )

@@ -156,17 +156,6 @@ private fun ExercisesList(
                 ExerciseItem(
                     exercise = exercise,
                     onClick = { onExerciseClick(exerciseId) },
-                    referenceButton = {
-                        if (exercise.reference != null) {
-                            FilledTonalIconButton(
-                                modifier = Modifier.size(56.dp),
-                                shape = MaterialTheme.shapes.extraLarge,
-                                onClick = { onReferenceClick(exercise.reference) }
-                            ) {
-                                Icon(painter = KenkoIcons.Lightbulb, contentDescription = null)
-                            }
-                        }
-                    }
                 )
             }
         }
@@ -204,7 +193,6 @@ private fun Header(
 private fun ExerciseItem(
     exercise: Exercise,
     onClick: () -> Unit,
-    referenceButton: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     @StringRes
@@ -218,7 +206,7 @@ private fun ExerciseItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
+                .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -234,9 +222,6 @@ private fun ExerciseItem(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline,
                 )
-            }
-            Box(modifier = Modifier.size(56.dp)) {
-                referenceButton()
             }
         }
     }

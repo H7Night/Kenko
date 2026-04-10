@@ -118,7 +118,6 @@ fun SessionDetails(
         onBackPress = onBackPress,
         onRemoveSet = viewModel::removeSet,
         onUpdateSet = viewModel::updateSet,
-        onReferenceClick = viewModel::openReference,
         onSelectBottomSheet = viewModel::showBottomSheet,
         onHistoryClick = { previousSessionDate?.let(onHistoryClick) },
         onImportDay = viewModel::importPlanFromDay,
@@ -143,7 +142,6 @@ private fun SessionDetail(
     onBackPress: () -> Unit = {},
     onRemoveSet: (Int?) -> Unit = {},
     onUpdateSet: (Int?, Int, Float) -> Unit = { _, _, _ -> },
-    onReferenceClick: (String) -> Unit = {},
     onSelectBottomSheet: (Exercise) -> Unit = {},
     onHistoryClick: () -> Unit = {},
     onImportDay: (DayOfWeek) -> Unit = {},
@@ -266,7 +264,6 @@ private fun SessionDetail(
                 onBackPress = onBackPress,
                 onRemoveSet = onRemoveSet,
                 onUpdateSet = onUpdateSet,
-                onReferenceClick = onReferenceClick,
                 onSelectBottomSheet = onSelectBottomSheet,
                 onHistoryClick = onHistoryClick,
                 onEditToggle = onEditToggle,
@@ -292,7 +289,6 @@ private fun SetsList(
     onBackPress: () -> Unit,
     onRemoveSet: (Int?) -> Unit,
     onUpdateSet: (Int?, Int, Float) -> Unit,
-    onReferenceClick: (String) -> Unit,
     onSelectBottomSheet: (Exercise) -> Unit,
     onHistoryClick: () -> Unit,
     onEditToggle: () -> Unit,
@@ -425,11 +421,6 @@ private fun SetsList(
                         }
                     }
                 ) {
-                    if (!exercise.reference.isNullOrBlank()) {
-                        FilledTonalIconButton(onClick = { onReferenceClick(exercise.reference) }) {
-                            Icon(painter = KenkoIcons.Lightbulb, contentDescription = null)
-                        }
-                    }
                     if (isEditMode) {
                         FilledTonalIconButton(
                             shapes = IconButtonShapes(
