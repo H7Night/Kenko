@@ -24,6 +24,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,9 +35,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.zIndex
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledTonalIconButton
@@ -139,7 +148,7 @@ fun PlanEdit(
                     onSelectDay = viewModel::setCurrentDay,
                     onRemoveExerciseClick = viewModel::removeExercise,
                     onFullDaySelection = viewModel::openFullDaySelection,
-                    onReorder = viewModel::moveExercise,
+                    onReorder = viewModel::updateOrder,
                 )
             }
         }
@@ -286,13 +295,6 @@ private fun NameEdit(
     )
 }
 
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.zIndex
-
 @Composable
 private fun PlanEdit(
     state: PlanEditState,
@@ -300,12 +302,13 @@ private fun PlanEdit(
     onSelectDay: (DayOfWeek) -> Unit,
     onRemoveExerciseClick: (Exercise) -> Unit,
     onFullDaySelection: () -> Unit,
-    onReorder: (Int, Int) -> Unit,
+    onReorder: (List<Exercise>) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     val isCurrentDayBlank by remember(state.exercises) { derivedStateOf { state.exercises.isEmpty() } }
     val lazyListState = rememberLazyListState()
 
+    val localExercises = remember(state.exercises) { state.exercises.toMutableStateList() }
     var draggedItemIndex by remember { mutableIntStateOf(-1) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
 
@@ -374,36 +377,53 @@ private fun PlanEdit(
                     }
                 }
             } else {
-                itemsIndexed(state.exercises) { index, exercise ->
+                itemsIndexed(
+                    items = localExercises,
+                    key = { _, exercise -> exercise.id!! }
+                ) { index, exercise ->
                     ExerciseItem(
                         modifier = Modifier
                             .animateItem()
                             .zIndex(if (draggedItemIndex == index) 1f else 0f)
-                            .pointerInput(Unit) {
+                            .pointerInput(localExercises) {
                                 detectDragGesturesAfterLongPress(
                                     onDragStart = { offset ->
                                         draggedItemIndex = index
+                                        dragOffset = 0f
                                     },
                                     onDrag = { change, dragAmount ->
                                         change.consume()
                                         dragOffset += dragAmount.y
 
-                                        val currentItem =
-                                            lazyListState.layoutInfo.visibleItemsInfo.find { it.index == index + 1 }
-                                        if (currentItem != null) {
-                                            val threshold = currentItem.size / 2
-                                            if (dragOffset > threshold && index < state.exercises.size - 1) {
-                                                onReorder(index, index + 1)
-                                                draggedItemIndex = index + 1
-                                                dragOffset -= currentItem.size
-                                            } else if (dragOffset < -threshold && index > 0) {
-                                                onReorder(index, index - 1)
-                                                draggedItemIndex = index - 1
-                                                dragOffset += currentItem.size
+                                        val currentDraggedIndex = draggedItemIndex
+                                        if (currentDraggedIndex != -1) {
+                                            val layoutInfo = lazyListState.layoutInfo
+                                            // The item indices in layoutInfo are index+1 because of header
+                                            val draggedItemInfo = layoutInfo.visibleItemsInfo
+                                                .find { it.index == currentDraggedIndex + 1 }
+
+                                            if (draggedItemInfo != null) {
+                                                val threshold = draggedItemInfo.size / 2
+                                                if (dragOffset > threshold && currentDraggedIndex < localExercises.size - 1) {
+                                                    // Move down
+                                                    localExercises.apply {
+                                                        add(currentDraggedIndex + 1, removeAt(currentDraggedIndex))
+                                                    }
+                                                    draggedItemIndex = currentDraggedIndex + 1
+                                                    dragOffset -= draggedItemInfo.size
+                                                } else if (dragOffset < -threshold && currentDraggedIndex > 0) {
+                                                    // Move up
+                                                    localExercises.apply {
+                                                        add(currentDraggedIndex - 1, removeAt(currentDraggedIndex))
+                                                    }
+                                                    draggedItemIndex = currentDraggedIndex - 1
+                                                    dragOffset += draggedItemInfo.size
+                                                }
                                             }
                                         }
                                     },
                                     onDragEnd = {
+                                        onReorder(localExercises.toList())
                                         draggedItemIndex = -1
                                         dragOffset = 0f
                                     },

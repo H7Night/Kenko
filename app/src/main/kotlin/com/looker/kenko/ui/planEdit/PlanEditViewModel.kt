@@ -203,9 +203,9 @@ class PlanEditViewModel @Inject constructor(
         }
     }
 
-    fun moveExercise(from: Int, to: Int) {
+    fun updateOrder(exercises: List<Exercise>) {
         viewModelScope.launch {
-            repo.reorder(planIdStream.value, _dayOfWeek.value, from, to)
+            repo.updateOrder(planIdStream.value, _dayOfWeek.value, exercises)
         }
     }
 

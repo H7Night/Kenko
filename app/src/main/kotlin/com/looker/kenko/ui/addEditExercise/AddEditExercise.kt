@@ -230,7 +230,7 @@ private fun AddEditPreview() {
     KenkoTheme {
         AddEditExercise(
             exerciseName = "BenchPress",
-            state = AddEditExerciseUiState(MuscleGroups.Chest, false, false, false, false),
+            state = AddEditExerciseUiState(MuscleGroups.Chest, false, false),
             snackbarState = SnackbarHostState(),
             onSelectTarget = {},
             onNameChange = {},
