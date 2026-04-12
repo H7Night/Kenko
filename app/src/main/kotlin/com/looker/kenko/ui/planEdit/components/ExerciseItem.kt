@@ -40,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
 import com.looker.kenko.data.model.Exercise
@@ -51,12 +52,15 @@ import com.looker.kenko.ui.theme.KenkoTheme
 fun ExerciseItem(
     exercise: Exercise,
     modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    shadowElevation: Dp = 0.dp,
     onClick: () -> Unit = {},
     content: @Composable () -> Unit = {},
 ) {
     Surface(
         modifier = modifier,
-        color = Color.Transparent,
+        color = containerColor,
+        shadowElevation = shadowElevation,
         onClick = onClick,
         shape = MaterialTheme.shapes.large,
     ) {

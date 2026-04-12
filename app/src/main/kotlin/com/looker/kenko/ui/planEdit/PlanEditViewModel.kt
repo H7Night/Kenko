@@ -79,6 +79,34 @@ class PlanEditViewModel @Inject constructor(
 
     private val _dayOfWeek: MutableStateFlow<DayOfWeek> = MutableStateFlow(localDate.dayOfWeek)
 
+    val dayTitleState: TextFieldState = TextFieldState("")
+
+    init {
+        viewModelScope.launch {
+            combine(_planStream, _dayOfWeek) { plan, day ->
+                plan?.titlesMap?.get(day) ?: ""
+            }.collect { title ->
+                if (dayTitleState.text.toString() != title) {
+                    dayTitleState.edit {
+                        replace(0, length, title)
+                    }
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            snapshotFlow { dayTitleState.text.toString() }
+                .debounce(200.milliseconds)
+                .collect { title ->
+                    val currentPlan = repo.plan(planIdStream.value) ?: return@collect
+                    val day = _dayOfWeek.value
+                    if (currentPlan.titlesMap[day] != title) {
+                        repo.updatePlan(currentPlan.withDayTitle(day, title))
+                    }
+                }
+        }
+    }
+
     private val _isSheetVisible: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     private val _fullDaySelection: MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -104,7 +132,6 @@ class PlanEditViewModel @Inject constructor(
             currentDay = day,
             selectionMode = daySelection,
             exerciseSheetVisible = sheetVisible,
-            dayTitle = plan?.titlesMap?.get(day) ?: "",
             exercises = items.filter { it.dayOfWeek == day }.map(PlanItem::exercise),
         )
     }.asStateFlow(
@@ -112,17 +139,9 @@ class PlanEditViewModel @Inject constructor(
             currentDay = localDate.dayOfWeek,
             selectionMode = false,
             exerciseSheetVisible = false,
-            dayTitle = "",
             exercises = emptyList(),
         ),
     )
-
-    fun setDayTitle(title: String) {
-        viewModelScope.launch {
-            val currentPlan = repo.plan(planIdStream.value) ?: return@launch
-            repo.updatePlan(currentPlan.withDayTitle(_dayOfWeek.value, title))
-        }
-    }
 
     fun saveName() {
         viewModelScope.launch {
@@ -184,6 +203,12 @@ class PlanEditViewModel @Inject constructor(
         }
     }
 
+    fun updateOrder(exercises: List<Exercise>) {
+        viewModelScope.launch {
+            repo.updateOrder(planIdStream.value, _dayOfWeek.value, exercises)
+        }
+    }
+
     fun onBackPress(stage: PlanEditStage, onBackPress: () -> Unit) {
         viewModelScope.launch {
             if (stage == PlanEditStage.NameEdit) {
@@ -216,6 +241,5 @@ data class PlanEditState(
     val currentDay: DayOfWeek,
     val selectionMode: Boolean,
     val exerciseSheetVisible: Boolean,
-    val dayTitle: String,
     val exercises: List<Exercise>,
 )

@@ -67,6 +67,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.looker.kenko.R
 import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.data.model.Exercise
+import com.looker.kenko.data.model.MuscleGroups
 import com.looker.kenko.data.model.repDurationStringRes
 import com.looker.kenko.ui.addSet.AddSetViewModel.FloatTransformation
 import com.looker.kenko.ui.addSet.AddSetViewModel.IntTransformation
@@ -85,6 +86,7 @@ private val zIndexModifier = Modifier.zIndex(1F)
 
 @Composable
 fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
+    val isCardio = exercise.target == MuscleGroups.Cardio
     val viewModel: AddSetViewModel =
         hiltViewModel<AddSetViewModel, AddSetViewModel.AddSetViewModelFactory>(key = exercise.name) {
             it.create(exercise.id!!, date)
@@ -104,13 +106,15 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
             },
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        if (!isCardio) {
+            Spacer(modifier = Modifier.height(16.dp))
 
-        SetTypeSelector(
-            modifier = Modifier.align(CenterHorizontally),
-            selected = viewModel.selectedSetType,
-            onSelect = viewModel::setSetType,
-        )
+            SetTypeSelector(
+                modifier = Modifier.align(CenterHorizontally),
+                selected = viewModel.selectedSetType,
+                onSelect = viewModel::setSetType,
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -119,9 +123,17 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
         ) {
             TextButton(
                 modifier = incrementButtonModifier,
-                onClick = { viewModel.addRep(-1) },
+                onClick = { viewModel.addRep(-10) },
             ) {
-                Text(text = stringResource(R.string.label_minus_int, 1))
+                Text(text = stringResource(R.string.label_minus_int, 10))
+            }
+            if (!isCardio) {
+                TextButton(
+                    modifier = incrementButtonModifier,
+                    onClick = { viewModel.addRep(-1) },
+                ) {
+                    Text(text = stringResource(R.string.label_minus_int, 1))
+                }
             }
             val reps = rememberDraggableTextFieldState(viewModel.repsBoundReached)
             DraggableTextField(
@@ -131,17 +143,25 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                 supportingText = stringResource(exercise.repDurationStringRes),
                 modifier = zIndexModifier,
             )
-            TextButton(
-                modifier = incrementButtonModifier,
-                onClick = { viewModel.addRep(1) },
-            ) {
-                Text(text = stringResource(R.string.label_plus_int, 1))
+            if (!isCardio) {
+                TextButton(
+                    modifier = incrementButtonModifier,
+                    onClick = { viewModel.addRep(1) },
+                ) {
+                    Text(text = stringResource(R.string.label_plus_int, 1))
+                }
             }
             TextButton(
                 modifier = incrementButtonModifier,
-                onClick = { viewModel.addRep(5) },
+                onClick = { viewModel.addRep(10) },
             ) {
-                Text(text = stringResource(R.string.label_plus_int, 5))
+                Text(text = stringResource(R.string.label_plus_int, 10))
+            }
+            TextButton(
+                modifier = incrementButtonModifier,
+                onClick = { viewModel.addRep(20) },
+            ) {
+                Text(text = stringResource(R.string.label_plus_int, 20))
             }
         }
         Spacer(modifier = Modifier.height(24.dp))
@@ -175,35 +195,37 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                 Text(text = stringResource(R.string.label_plus_int, 2))
             }
         }
-        Spacer(modifier = Modifier.height(24.dp))
-        SwipeableTextField(
-            modifier = Modifier.align(CenterHorizontally),
-        ) {
-            TextButton(
-                modifier = incrementButtonModifier,
-                onClick = { viewModel.addWeight(-1F) },
+        if (!isCardio) {
+            Spacer(modifier = Modifier.height(24.dp))
+            SwipeableTextField(
+                modifier = Modifier.align(CenterHorizontally),
             ) {
-                Text(text = stringResource(R.string.label_minus_int, 1F))
-            }
-            val weights = rememberDraggableTextFieldState(viewModel.weightsBoundReached)
-            DraggableTextField(
-                dragState = weights,
-                textFieldState = viewModel.weights,
-                supportingText = stringResource(R.string.label_weight),
-                inputTransformation = FloatTransformation,
-                modifier = zIndexModifier,
-            )
-            TextButton(
-                modifier = incrementButtonModifier,
-                onClick = { viewModel.addWeight(1F) },
-            ) {
-                Text(text = stringResource(R.string.label_plus_int, 1F))
-            }
-            TextButton(
-                modifier = incrementButtonModifier,
-                onClick = { viewModel.addWeight(5F) },
-            ) {
-                Text(text = stringResource(R.string.label_plus_int, 5F))
+                TextButton(
+                    modifier = incrementButtonModifier,
+                    onClick = { viewModel.addWeight(-1F) },
+                ) {
+                    Text(text = stringResource(R.string.label_minus_int, 1F))
+                }
+                val weights = rememberDraggableTextFieldState(viewModel.weightsBoundReached)
+                DraggableTextField(
+                    dragState = weights,
+                    textFieldState = viewModel.weights,
+                    supportingText = stringResource(R.string.label_weight),
+                    inputTransformation = FloatTransformation,
+                    modifier = zIndexModifier,
+                )
+                TextButton(
+                    modifier = incrementButtonModifier,
+                    onClick = { viewModel.addWeight(1F) },
+                ) {
+                    Text(text = stringResource(R.string.label_plus_int, 1F))
+                }
+                TextButton(
+                    modifier = incrementButtonModifier,
+                    onClick = { viewModel.addWeight(5F) },
+                ) {
+                    Text(text = stringResource(R.string.label_plus_int, 5F))
+                }
             }
         }
         Spacer(modifier = Modifier.height(36.dp))

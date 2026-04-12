@@ -176,4 +176,13 @@ class LocalPlanRepo @Inject constructor(
     override suspend fun removeItemById(exerciseId: Int) {
         dao.deleteItemByExercise(exerciseId)
     }
+
+    override suspend fun updateOrder(planId: Int, day: DayOfWeek, exercises: List<Exercise>) {
+        val items = getPlanItems(planId, day)
+        if (items.size != exercises.size) return
+
+        items.zip(exercises).forEach { (item, exercise) ->
+            dao.insertPlanItem(item.copy(exercise = exercise).toEntity())
+        }
+    }
 }

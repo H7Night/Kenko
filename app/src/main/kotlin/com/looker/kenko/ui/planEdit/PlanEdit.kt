@@ -24,6 +24,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,9 +35,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.zIndex
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledTonalIconButton
@@ -55,15 +70,18 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.BuildConfig
 import com.looker.kenko.R
@@ -131,10 +149,12 @@ fun PlanEdit(
             PlanEditStage.PlanEdit -> {
                 PlanEdit(
                     state = state,
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    dayTitleState = viewModel.dayTitleState,
                     onSelectDay = viewModel::setCurrentDay,
                     onRemoveExerciseClick = viewModel::removeExercise,
                     onFullDaySelection = viewModel::openFullDaySelection,
-                    onDayTitleChange = viewModel::setDayTitle,
+                    onReorder = viewModel::updateOrder,
                 )
             }
         }
@@ -143,7 +163,7 @@ fun PlanEdit(
     if (state.exerciseSheetVisible) {
         val name = dayName(state.currentDay)
         AddExerciseSheet(
-            title = state.dayTitle.ifBlank { name },
+            title = viewModel.dayTitleState.text.ifBlank { name }.toString(),
             onDismiss = viewModel::closeSheet,
             onDone = viewModel::addExercise,
             onAddNewExerciseClick = onAddNewExerciseClick,
@@ -176,7 +196,7 @@ private fun FullEdit(
         },
     ) { innerPadding ->
         AnimatedContent(
-            modifier = Modifier.padding(innerPadding + PaddingValues(horizontal = 16.dp)),
+            modifier = Modifier.padding(innerPadding),
             targetState = stage,
             label = "Plan edit stage",
             transitionSpec = {
@@ -284,30 +304,39 @@ private fun NameEdit(
 @Composable
 private fun PlanEdit(
     state: PlanEditState,
+    dayTitleState: TextFieldState,
     onSelectDay: (DayOfWeek) -> Unit,
     onRemoveExerciseClick: (Exercise) -> Unit,
     onFullDaySelection: () -> Unit,
-    onDayTitleChange: (String) -> Unit,
+    onReorder: (List<Exercise>) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val focusManager = LocalFocusManager.current
     val isCurrentDayBlank by remember(state.exercises) { derivedStateOf { state.exercises.isEmpty() } }
+    val lazyListState = rememberLazyListState()
+
+    val localExercises = remember(state.exercises) { state.exercises.toMutableStateList() }
+    var draggedItemIndex by remember { mutableIntStateOf(-1) }
+    var dragOffset by remember { mutableFloatStateOf(0f) }
+
     PlanExercise(
         modifier = Modifier.fillMaxSize(),
+        state = lazyListState,
+        contentPadding = contentPadding,
         header = {
             val name = dayName(state.currentDay)
             Header(
                 title = {
                     androidx.compose.foundation.text.BasicTextField(
-                        value = state.dayTitle,
-                        onValueChange = onDayTitleChange,
+                        state = dayTitleState,
                         modifier = Modifier.fillMaxWidth(),
                         textStyle = MaterialTheme.typography.displayMedium.copy(
                             color = MaterialTheme.colorScheme.secondary,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Start
                         ),
                         cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.secondary),
-                        decorationBox = { innerTextField ->
-                            if (state.dayTitle.isEmpty()) {
+                        decorator = { innerTextField ->
+                            if (dayTitleState.text.isEmpty()) {
                                 Text(
                                     text = name,
                                     style = MaterialTheme.typography.displayMedium,
@@ -356,10 +385,78 @@ private fun PlanEdit(
                     }
                 }
             } else {
-                itemsIndexed(state.exercises) { index, exercise ->
+                itemsIndexed(
+                    items = localExercises,
+                    key = { _, exercise -> exercise.id!! }
+                ) { index, exercise ->
+                    val isDragged = draggedItemIndex == index
+                    val scale by animateFloatAsState(if (isDragged) 1.05f else 1f, label = "scale")
+                    val elevation by animateFloatAsState(
+                        targetValue = if (isDragged) 6f else 0f,
+                        animationSpec = tween(150),
+                        label = "elevation"
+                    )
+                    val animatedContainerColor by animateColorAsState(
+                        if (isDragged) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface,
+                        label = "color"
+                    )
+
                     ExerciseItem(
-                        modifier = Modifier.animateItem(),
+                        modifier = Modifier
+                            .animateItem()
+                            .zIndex(if (isDragged || elevation > 0.01f) 1f else 0f)
+                            .scale(scale)
+                            .pointerInput(localExercises) {
+                                detectDragGesturesAfterLongPress(
+                                    onDragStart = { offset ->
+                                        draggedItemIndex = index
+                                        dragOffset = 0f
+                                    },
+                                    onDrag = { change, dragAmount ->
+                                        change.consume()
+                                        dragOffset += dragAmount.y
+
+                                        val currentDraggedIndex = draggedItemIndex
+                                        if (currentDraggedIndex != -1) {
+                                            val layoutInfo = lazyListState.layoutInfo
+                                            // The item indices in layoutInfo are index+1 because of header
+                                            val draggedItemInfo = layoutInfo.visibleItemsInfo
+                                                .find { it.index == currentDraggedIndex + 1 }
+
+                                            if (draggedItemInfo != null) {
+                                                val threshold = draggedItemInfo.size / 2
+                                                if (dragOffset > threshold && currentDraggedIndex < localExercises.size - 1) {
+                                                    // Move down
+                                                    localExercises.apply {
+                                                        add(currentDraggedIndex + 1, removeAt(currentDraggedIndex))
+                                                    }
+                                                    draggedItemIndex = currentDraggedIndex + 1
+                                                    dragOffset -= draggedItemInfo.size
+                                                } else if (dragOffset < -threshold && currentDraggedIndex > 0) {
+                                                    // Move up
+                                                    localExercises.apply {
+                                                        add(currentDraggedIndex - 1, removeAt(currentDraggedIndex))
+                                                    }
+                                                    draggedItemIndex = currentDraggedIndex - 1
+                                                    dragOffset += draggedItemInfo.size
+                                                }
+                                            }
+                                        }
+                                    },
+                                    onDragEnd = {
+                                        onReorder(localExercises.toList())
+                                        draggedItemIndex = -1
+                                        dragOffset = 0f
+                                    },
+                                    onDragCancel = {
+                                        draggedItemIndex = -1
+                                        dragOffset = 0f
+                                    }
+                                )
+                            },
                         exercise = exercise,
+                        containerColor = animatedContainerColor,
+                        shadowElevation = elevation.dp,
                     ) {
                         ExerciseItemActions(
                             index = index,

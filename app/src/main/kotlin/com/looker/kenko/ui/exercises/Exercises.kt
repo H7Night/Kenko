@@ -145,7 +145,8 @@ private fun ExercisesList(
     onReferenceClick: (String) -> Unit,
 ) {
     LazyColumn(
-        contentPadding = contentPadding,
+        contentPadding = contentPadding + PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(exercises, key = { it.id!! }) { exercise ->
             val exerciseId by rememberUpdatedState(exercise.id)
@@ -156,17 +157,6 @@ private fun ExercisesList(
                 ExerciseItem(
                     exercise = exercise,
                     onClick = { onExerciseClick(exerciseId) },
-                    referenceButton = {
-                        if (exercise.reference != null) {
-                            FilledTonalIconButton(
-                                modifier = Modifier.size(56.dp),
-                                shape = MaterialTheme.shapes.extraLarge,
-                                onClick = { onReferenceClick(exercise.reference) }
-                            ) {
-                                Icon(painter = KenkoIcons.Lightbulb, contentDescription = null)
-                            }
-                        }
-                    }
                 )
             }
         }
@@ -204,13 +194,12 @@ private fun Header(
 private fun ExerciseItem(
     exercise: Exercise,
     onClick: () -> Unit,
-    referenceButton: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     @StringRes
     val targetName: Int = remember { exercise.target.stringRes }
     Surface(
-        modifier = modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+        modifier = modifier,
         onClick = onClick,
         shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -218,7 +207,7 @@ private fun ExerciseItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
+                .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -234,9 +223,6 @@ private fun ExerciseItem(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline,
                 )
-            }
-            Box(modifier = Modifier.size(56.dp)) {
-                referenceButton()
             }
         }
     }

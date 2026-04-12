@@ -27,8 +27,10 @@ import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.local.model.SetType
+import com.looker.kenko.data.model.MuscleGroups
 import com.looker.kenko.data.model.RepsInReserve
 import com.looker.kenko.data.model.localDate
+import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.ui.addSet.components.BoundReached
 import com.looker.kenko.ui.addSet.components.Direction
@@ -36,12 +38,14 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
 @HiltViewModel(assistedFactory = AddSetViewModel.AddSetViewModelFactory::class)
 class AddSetViewModel @AssistedInject constructor(
     private val sessionRepo: SessionRepo,
+    private val exerciseRepo: ExerciseRepo,
     @Assisted("id") private val id: Int,
     @Assisted("date") private val date: LocalDate?,
 ) : ViewModel() {
@@ -53,12 +57,24 @@ class AddSetViewModel @AssistedInject constructor(
     var selectedSetType by mutableStateOf(SetType.Standard)
         private set
 
+    private var isCardio by mutableStateOf(false)
+
+    init {
+        viewModelScope.launch {
+            val exercise = exerciseRepo.get(id)
+            isCardio = exercise?.target == MuscleGroups.Cardio
+            if (isCardio) {
+                reps.setTextAndPlaceCursorAtEnd("20")
+            }
+        }
+    }
+
     fun setSetType(type: SetType) {
         selectedSetType = type
     }
 
     fun addRep(value: Int) {
-        reps.setTextAndPlaceCursorAtEnd((repInt + value).toString())
+        reps.setTextAndPlaceCursorAtEnd((repInt + value).coerceAtLeast(0).toString())
     }
 
     fun addWeight(value: Float) {
@@ -71,12 +87,13 @@ class AddSetViewModel @AssistedInject constructor(
 
     val repsBoundReached = BoundReached { direction ->
         when (direction) {
-            Direction.Left -> addRep(-1)
-            Direction.Right -> addRep(1)
+            Direction.Left -> addRep(if (isCardio) -10 else -1)
+            Direction.Right -> addRep(if (isCardio) 10 else 1)
         }
     }
 
     val weightsBoundReached = BoundReached { direction ->
+        if (isCardio) return@BoundReached
         when (direction) {
             Direction.Left -> addWeight(-1F)
             Direction.Right -> addWeight(1F)

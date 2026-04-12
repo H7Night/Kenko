@@ -73,13 +73,10 @@ fun AddEditExercise(
 
     AddEditExercise(
         exerciseName = viewModel.exerciseName,
-        exerciseReference = viewModel.reference,
         state = state,
         snackbarState = viewModel.snackbarState,
         onSelectTarget = viewModel::setTargetMuscle,
-        onSelectIsometric = viewModel::setIsometric,
         onNameChange = viewModel::setName,
-        onReferenceChange = viewModel::addReference,
         onBackPress = onBackPress,
         onDone = { viewModel.addNewExercise(onDone) },
     )
@@ -89,13 +86,10 @@ fun AddEditExercise(
 @Composable
 private fun AddEditExercise(
     exerciseName: String,
-    exerciseReference: String,
     state: AddEditExerciseUiState,
     snackbarState: SnackbarHostState,
     onSelectTarget: (MuscleGroups) -> Unit,
-    onSelectIsometric: (Boolean) -> Unit,
     onNameChange: (String) -> Unit,
-    onReferenceChange: (String) -> Unit,
     onDone: () -> Unit,
     onBackPress: () -> Unit,
 ) {
@@ -147,15 +141,6 @@ private fun AddEditExercise(
                     text = stringResource(it.string),
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            IsIsometricButton(isIsometric = state.isIsometric, onChange = onSelectIsometric)
-            Spacer(modifier = Modifier.height(18.dp))
-            ReferenceTextField(
-                reference = exerciseReference,
-                onReferenceChange = onReferenceChange,
-                isError = state.isReferenceInvalid,
-                modifier = Modifier.fillMaxWidth()
-            )
             Spacer(modifier = Modifier.height(18.dp))
             KenkoButton(
                 modifier = Modifier
@@ -179,33 +164,6 @@ private fun AddEditExercise(
             )
         }
     }
-}
-
-@Composable
-private fun ReferenceTextField(
-    reference: String,
-    isError: Boolean,
-    onReferenceChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    TextField(
-        modifier = modifier,
-        value = reference,
-        onValueChange = onReferenceChange,
-        colors = kenkoTextFieldColor(),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-        shape = MaterialTheme.shapes.large,
-        supportingText = {
-            Text(text = stringResource(R.string.label_reference_optional))
-        },
-        label = {
-            Text(text = stringResource(R.string.label_reference))
-        },
-        isError = isError,
-        leadingIcon = {
-            Icon(painter = KenkoIcons.Lightbulb, contentDescription = null)
-        }
-    )
 }
 
 @Composable
@@ -236,51 +194,6 @@ private fun ExerciseTextField(
             }
         }
     )
-}
-
-@Composable
-private fun IsIsometricButton(isIsometric: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.clickable { onChange(!isIsometric) }
-    ) {
-        Column(modifier = Modifier.weight(1F)) {
-            Text(
-                text = stringResource(R.string.label_is_isometric),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            Text(
-                text = stringResource(R.string.label_is_isometric_DESC),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.outline,
-            )
-        }
-        Switch(checked = isIsometric, onCheckedChange = onChange)
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun ReferenceTextFieldPreview() {
-    KenkoTheme {
-        ReferenceTextField(
-            reference = "https://youtu.be",
-            onReferenceChange = {},
-            isError = false,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun IsIsometricButtonPreview() {
-    KenkoTheme {
-        var isIso by remember {
-            mutableStateOf(false)
-        }
-        IsIsometricButton(isIsometric = isIso, onChange = { isIso = !isIso })
-    }
 }
 
 @Preview(name = "Exercise Name Field")
@@ -317,13 +230,10 @@ private fun AddEditPreview() {
     KenkoTheme {
         AddEditExercise(
             exerciseName = "BenchPress",
-            exerciseReference = "yt.be",
-            state = AddEditExerciseUiState(MuscleGroups.Chest, false, false, false, false),
+            state = AddEditExerciseUiState(MuscleGroups.Chest, false, false),
             snackbarState = SnackbarHostState(),
             onSelectTarget = {},
-            onSelectIsometric = {},
             onNameChange = {},
-            onReferenceChange = {},
             onDone = {},
             onBackPress = {}
         )

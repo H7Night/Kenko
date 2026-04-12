@@ -32,9 +32,14 @@
     <string name="label_current_plan_home">Current\nPlan</string>
 
     <!--Sessions-->
-    <string name="label_sessions_title">Sessions</string>
+    <string name="label_sessions_title">History</string>
     <string name="label_delete_session_title">Delete Session?</string>
     <string name="label_delete_session_message">This will permanently delete this session and all its sets.</string>
+    <string name="label_export">Export</string>
+    <string name="label_select_date_range">Select Date Range</string>
+    <string name="label_start_date">Start Date</string>
+    <string name="label_end_date">End Date</string>
+    <string name="label_export_markdown">Export as Markdown</string>
     <string name="label_confirm">Confirm</string>
     <string name="label_cancel">Cancel</string>
 
@@ -199,6 +204,9 @@
     <string name="label_muscle_hamstrings">Hamstrings</string>
     <string name="label_muscle_quads">Quads</string>
     <string name="label_muscle_shoulders">Shoulders</string>
+    <string name="label_muscle_cardio">Cardio</string>
+
+    <string name="label_min">min</string>
 
     <!--Day of Week-->
     <string name="label_today">.today</string>
