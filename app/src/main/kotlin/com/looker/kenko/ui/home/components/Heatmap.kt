@@ -37,8 +37,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.looker.kenko.R
 import com.looker.kenko.data.model.localDate
 import com.looker.kenko.ui.theme.KenkoIcons
 import kotlinx.coroutines.launch
@@ -230,6 +233,8 @@ private fun HeatmapGrid(
         verticalArrangement = Arrangement.spacedBy(6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        DayOfWeekLabels(Modifier.fillMaxWidth())
+
         gridItems.chunked(7).forEach { week ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -262,6 +267,26 @@ private fun HeatmapGrid(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DayOfWeekLabels(modifier: Modifier = Modifier) {
+    val days = stringArrayResource(R.array.day_of_week_short)
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        days.forEach { day ->
+            Text(
+                modifier = Modifier.weight(1f),
+                text = day,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.outline,
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
         }
     }
 }
