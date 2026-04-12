@@ -145,7 +145,8 @@ private fun ExercisesList(
     onReferenceClick: (String) -> Unit,
 ) {
     LazyColumn(
-        contentPadding = contentPadding,
+        contentPadding = contentPadding + PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(exercises, key = { it.id!! }) { exercise ->
             val exerciseId by rememberUpdatedState(exercise.id)
@@ -198,7 +199,7 @@ private fun ExerciseItem(
     @StringRes
     val targetName: Int = remember { exercise.target.stringRes }
     Surface(
-        modifier = modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+        modifier = modifier,
         onClick = onClick,
         shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surfaceContainerLow,

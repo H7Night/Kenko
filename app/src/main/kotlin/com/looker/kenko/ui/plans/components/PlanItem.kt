@@ -71,7 +71,7 @@ fun PlanItem(
     }
 
     Surface(
-        modifier = modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+        modifier = modifier,
         onClick = onClick,
         color = background,
         contentColor = contentColor,

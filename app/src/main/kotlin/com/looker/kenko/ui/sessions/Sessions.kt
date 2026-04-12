@@ -194,7 +194,7 @@ private fun Sessions(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = padding + PaddingValues(bottom = 96.dp),
+                contentPadding = padding + PaddingValues(bottom = 96.dp, start = 14.dp, end = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(
@@ -202,7 +202,7 @@ private fun Sessions(
                     key = { it.id!! },
                 ) { session ->
                     SwipeToDeleteBox(
-                        modifier = Modifier.padding(horizontal = 14.dp),
+                        modifier = Modifier.animateItem(),
                         onDismiss = { sessionToDelete = session },
                     ) {
                         SessionCard(

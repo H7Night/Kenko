@@ -15,6 +15,7 @@
 package com.looker.kenko.ui.selectExercise
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -124,7 +125,11 @@ private fun SearchResult(
     searchResult: SearchResult.Success,
     onClick: (Exercise) -> Unit,
 ) {
-    LazyColumn(Modifier.fillMaxSize()) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         items(searchResult.exercises) { exercise ->
             ExerciseItem(
                 exercise = exercise,
