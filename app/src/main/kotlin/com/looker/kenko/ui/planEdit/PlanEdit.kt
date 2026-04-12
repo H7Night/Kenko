@@ -149,6 +149,7 @@ fun PlanEdit(
             PlanEditStage.PlanEdit -> {
                 PlanEdit(
                     state = state,
+                    contentPadding = PaddingValues(horizontal = 16.dp),
                     dayTitleState = viewModel.dayTitleState,
                     onSelectDay = viewModel::setCurrentDay,
                     onRemoveExerciseClick = viewModel::removeExercise,
@@ -195,7 +196,7 @@ private fun FullEdit(
         },
     ) { innerPadding ->
         AnimatedContent(
-            modifier = Modifier.padding(innerPadding + PaddingValues(horizontal = 16.dp)),
+            modifier = Modifier.padding(innerPadding),
             targetState = stage,
             label = "Plan edit stage",
             transitionSpec = {
@@ -308,6 +309,7 @@ private fun PlanEdit(
     onRemoveExerciseClick: (Exercise) -> Unit,
     onFullDaySelection: () -> Unit,
     onReorder: (List<Exercise>) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val focusManager = LocalFocusManager.current
     val isCurrentDayBlank by remember(state.exercises) { derivedStateOf { state.exercises.isEmpty() } }
@@ -320,6 +322,7 @@ private fun PlanEdit(
     PlanExercise(
         modifier = Modifier.fillMaxSize(),
         state = lazyListState,
+        contentPadding = contentPadding,
         header = {
             val name = dayName(state.currentDay)
             Header(
@@ -394,7 +397,7 @@ private fun PlanEdit(
                         label = "elevation"
                     )
                     val animatedContainerColor by animateColorAsState(
-                        if (isDragged) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
+                        if (isDragged) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface,
                         label = "color"
                     )
 
