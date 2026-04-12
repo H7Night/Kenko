@@ -58,6 +58,7 @@ import com.looker.kenko.R
 import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.data.model.Exercise
 import com.looker.kenko.data.model.ExercisesPreviewParameter
+import com.looker.kenko.data.model.MuscleGroups
 import com.looker.kenko.data.model.RepsInReserve
 import com.looker.kenko.data.model.Set
 import com.looker.kenko.data.model.repDurationStringRes
@@ -74,6 +75,7 @@ fun SetItem(
     onWeightUpdate: (Float) -> Unit = {},
     title: @Composable () -> Unit,
 ) {
+    val isCardio = set.exercise.target == MuscleGroups.Cardio
     val containerColor = if (isToday) {
         MaterialTheme.colorScheme.secondaryContainer
     } else {
@@ -111,18 +113,20 @@ fun SetItem(
             ) {
                 PerformedItem(
                     title = stringResource(set.exercise.repDurationStringRes),
-                    performance = "${set.repsOrDuration}",
+                    performance = if (isCardio) "${set.repsOrDuration} ${stringResource(R.string.label_min)}" else "${set.repsOrDuration}",
                     isEditMode = isEditMode,
                     keyboardType = KeyboardType.Number,
                     onValueUpdate = { onRepsUpdate(it.toIntOrNull() ?: set.repsOrDuration) },
                 )
-                PerformedItem(
-                    title = stringResource(R.string.label_weight),
-                    performance = "${set.weight} KG",
-                    isEditMode = isEditMode,
-                    keyboardType = KeyboardType.Decimal,
-                    onValueUpdate = { onWeightUpdate(it.toFloatOrNull() ?: set.weight) },
-                )
+                if (!isCardio) {
+                    PerformedItem(
+                        title = stringResource(R.string.label_weight),
+                        performance = "${set.weight} KG",
+                        isEditMode = isEditMode,
+                        keyboardType = KeyboardType.Decimal,
+                        onValueUpdate = { onWeightUpdate(it.toFloatOrNull() ?: set.weight) },
+                    )
+                }
             }
         }
     }

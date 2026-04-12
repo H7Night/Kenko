@@ -41,4 +41,7 @@ enum class MuscleGroups(@StringRes val stringRes: Int) {
     Traps(R.string.label_muscle_traps),
     Lats(R.string.label_muscle_lats),
     UpperBack(R.string.label_muscle_back),
+
+    // Special
+    Cardio(R.string.label_muscle_cardio),
 }

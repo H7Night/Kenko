@@ -48,7 +48,11 @@ data class Exercise(
 @Stable
 val Exercise.repDurationStringRes: Int
     @StringRes
-    get() = if (isIsometric) R.string.label_duration else R.string.label_reps
+    get() = when {
+        isIsometric -> R.string.label_duration
+        target == MuscleGroups.Cardio -> R.string.label_min
+        else -> R.string.label_reps
+    }
 
 class ExercisesPreviewParameter : PreviewParameterProvider<List<Exercise>> {
     override val values = sequenceOf(
@@ -103,6 +107,10 @@ class ExercisesPreviewParameter : PreviewParameterProvider<List<Exercise>> {
             Exercise("Bent-over Rows", UpperBack),
             Exercise("Chest-Supported Rows", UpperBack),
             Exercise("Rows", UpperBack),
+        ),
+        listOf(
+            Exercise("Treadmill", MuscleGroups.Cardio),
+            Exercise("Cycling", MuscleGroups.Cardio),
         ),
     )
 }

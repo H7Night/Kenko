@@ -44,8 +44,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.rememberUpdatedState
@@ -81,7 +82,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.BuildConfig
 import com.looker.kenko.R
@@ -388,7 +388,11 @@ private fun PlanEdit(
                 ) { index, exercise ->
                     val isDragged = draggedItemIndex == index
                     val scale by animateFloatAsState(if (isDragged) 1.05f else 1f, label = "scale")
-                    val elevation by animateFloatAsState(if (isDragged) 8f else 0f, label = "elevation")
+                    val elevation by animateFloatAsState(
+                        targetValue = if (isDragged) 6f else 0f,
+                        animationSpec = tween(150),
+                        label = "elevation"
+                    )
                     val animatedContainerColor by animateColorAsState(
                         if (isDragged) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
                         label = "color"
@@ -398,10 +402,7 @@ private fun PlanEdit(
                         modifier = Modifier
                             .animateItem()
                             .zIndex(if (isDragged || elevation > 0.01f) 1f else 0f)
-                            .graphicsLayer {
-                                scaleX = scale
-                                scaleY = scale
-                            }
+                            .scale(scale)
                             .pointerInput(localExercises) {
                                 detectDragGesturesAfterLongPress(
                                     onDragStart = { offset ->

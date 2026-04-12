@@ -195,6 +195,9 @@
     <string name="label_muscle_hamstrings">腘绳肌</string>
     <string name="label_muscle_quads">股四头肌</string>
     <string name="label_muscle_shoulders">肩部</string>
+    <string name="label_muscle_cardio">有氧</string>
+
+    <string name="label_min">分钟</string>
 
     <!--Day of Week-->
     <string name="label_today">.今天</string>

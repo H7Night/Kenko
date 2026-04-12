@@ -204,6 +204,9 @@
     <string name="label_muscle_hamstrings">Hamstrings</string>
     <string name="label_muscle_quads">Quads</string>
     <string name="label_muscle_shoulders">Shoulders</string>
+    <string name="label_muscle_cardio">Cardio</string>
+
+    <string name="label_min">min</string>
 
     <!--Day of Week-->
     <string name="label_today">.today</string>
