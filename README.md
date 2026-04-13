@@ -11,7 +11,7 @@ thought-out plans
 
 ## Features
 - **Workout Journal**: Track your training sessions with ease.
-- **Custom Plans**: Create and manage your own workout plans with custom day titles.
+- **Custom Plans**: Create and manage your own workout plans with custom name and day titles.
 - **Interactive Heatmap**: View your training consistency with a scrollable monthly/yearly heatmap.
 - **Progressive Overload**: Monitor your progress over time.
 - **Body Weight Tracking**: Record your body weight and view progress on interactive charts.

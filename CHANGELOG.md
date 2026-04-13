@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Allow editing plan name from TopAppBar in PlanEdit screen
 - Infinite horizontal swiping and month/year navigation for Training Heatmap
 - Bottom navigation bar with Home, Exercise (active sessions only), and Profile tabs
 - Direct entry to Home screen, bypassing the onboarding flow
