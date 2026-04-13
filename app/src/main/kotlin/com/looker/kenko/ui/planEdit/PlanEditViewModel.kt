@@ -48,6 +48,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DayOfWeek
 
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class PlanEditViewModel @Inject constructor(
     private val repo: PlanRepo,
@@ -69,10 +70,8 @@ class PlanEditViewModel @Inject constructor(
 
     private val _isBackAlreadyPressedOnce = MutableStateFlow(false)
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private val _planItemsStream = planIdStream.flatMapLatest { repo.planItems(it) }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private val _planStream = planIdStream.flatMapLatest { id ->
         repo.plans.map { plans -> plans.find { it.id == id } }
     }
@@ -95,6 +94,16 @@ class PlanEditViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
+            _planStream.collect { plan ->
+                if (plan != null && planNameState.text.toString() != plan.name) {
+                    planNameState.edit {
+                        replace(0, length, plan.name)
+                    }
+                }
+            }
+        }
+
+        viewModelScope.launch {
             snapshotFlow { dayTitleState.text.toString() }
                 .debounce(200.milliseconds)
                 .collect { title ->
@@ -105,16 +114,33 @@ class PlanEditViewModel @Inject constructor(
                     }
                 }
         }
+
+        viewModelScope.launch {
+            snapshotFlow { planNameState.text.toString() }
+                .debounce(500.milliseconds)
+                .collect { name ->
+                    val id = planIdStream.value
+                    if (id == -1 || name.isBlank() || isNameAlreadyUsed.value) return@collect
+                    val currentPlan = repo.plan(id) ?: return@collect
+                    if (currentPlan.name != name) {
+                        repo.updatePlan(currentPlan.copy(name = name))
+                    }
+                }
+        }
     }
 
     private val _isSheetVisible: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     private val _fullDaySelection: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
-    @OptIn(FlowPreview::class)
     val isNameAlreadyUsed = snapshotFlow { planNameState.text.trim().toString() }
         .debounce(200.milliseconds)
-        .map { repo.planNameExists(it) }
+        .flatMapLatest { name ->
+            _planStream.map { plan ->
+                if (name.isBlank() || plan?.name == name) false
+                else repo.planNameExists(name)
+            }
+        }
         .asStateFlow(false)
 
     val pageState: StateFlow<PlanEditStage> = planIdStream.map { id ->

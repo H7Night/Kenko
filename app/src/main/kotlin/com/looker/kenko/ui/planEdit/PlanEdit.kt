@@ -52,6 +52,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledTonalIconButton
@@ -119,9 +120,26 @@ fun PlanEdit(
     BackHandler {
         viewModel.onBackPress(pageStage, onBackPress)
     }
+    val isNameAlreadyUsed by viewModel.isNameAlreadyUsed.collectAsStateWithLifecycle()
     FullEdit(
         snackbarHostState = viewModel.snackbarState,
         stage = pageStage,
+        title = {
+            if (pageStage == PlanEditStage.PlanEdit) {
+                androidx.compose.foundation.text.BasicTextField(
+                    state = viewModel.planNameState,
+                    textStyle = MaterialTheme.typography.titleLarge.copy(
+                        color = if (isNameAlreadyUsed) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.onSurface,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    ),
+                    cursorBrush = androidx.compose.ui.graphics.SolidColor(
+                        if (isNameAlreadyUsed) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.onSurface
+                    )
+                )
+            }
+        },
         fab = {
             PlanEditFAB(
                 pageStage = pageStage,
@@ -138,7 +156,6 @@ fun PlanEdit(
     ) { stage ->
         when (stage) {
             PlanEditStage.NameEdit -> {
-                val isNameAlreadyUsed by viewModel.isNameAlreadyUsed.collectAsStateWithLifecycle()
                 NameEdit(
                     state = viewModel.planNameState,
                     isNameAlreadyUsed = isNameAlreadyUsed,
@@ -178,6 +195,7 @@ private fun FullEdit(
     stage: PlanEditStage,
     fab: @Composable () -> Unit,
     onBackPress: () -> Unit,
+    title: @Composable () -> Unit = {},
     ui: @Composable (stage: PlanEditStage) -> Unit,
 ) {
     Scaffold(
@@ -189,8 +207,8 @@ private fun FullEdit(
         },
         floatingActionButtonPosition = FabPosition.Center,
         topBar = {
-            TopAppBar(
-                title = {},
+            CenterAlignedTopAppBar(
+                title = title,
                 navigationIcon = { BackButton(onBackPress) },
             )
         },
