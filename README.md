@@ -10,7 +10,7 @@ thought-out plans
 <div align="left">
 
 ## Features
-- **Workout Journal**: Track your training sessions with ease.
+- **Workout Journal**: Track your training sessions (Resistance and Cardio) with ease.
 - **Custom Plans**: Create and manage your own workout plans with custom name and day titles.
 - **Interactive Heatmap**: View your training consistency with a scrollable monthly/yearly heatmap.
 - **Progressive Overload**: Monitor your progress over time.

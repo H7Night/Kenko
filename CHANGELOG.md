@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Allow editing plan name from TopAppBar in PlanEdit screen
+- Cardio exercise category with specific UI and tracking logic
+- Day of week labels to Training Heatmap with localization
+- Highlight and animation effects when dragging exercises to reorder plans
 - Infinite horizontal swiping and month/year navigation for Training Heatmap
 - Bottom navigation bar with Home, Exercise (active sessions only), and Profile tabs
 - Direct entry to Home screen, bypassing the onboarding flow
@@ -49,6 +52,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Format training header as "Title (Day)"
 
 ### Fixed
+- Ghosting artifacts and shadow clipping when dragging exercises
+- Inconsistent list styling across Exercises, Sessions, Plans, and Select Exercise screens
+- Smooth settle animation when releasing a dragged exercise
 - Selection indicator clipping on compact bottom navigation bar
 - Deprecated `monthNumber` property in heatmap implementation
 - Issue where editing history sessions would create today's session instead
