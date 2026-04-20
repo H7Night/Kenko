@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-04-20
+
 ### Added
 - Allow editing plan name from TopAppBar in PlanEdit screen
 - Cardio exercise category with specific UI and tracking logic
@@ -28,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Backup and restore for whole data
 - Edit mode toggle for past sessions in Session Detail
 - Persistence for imported exercises using SavedStateHandle
+
+### Fixed
+- Implemented modern SplashScreen API to fix startup flickering and ensure smooth transition
 - Delete functionality for sessions in Session History with confirmation dialog
 - Support for importing plans from other days on rest days
 - Body weight tracking with custom line chart and history management

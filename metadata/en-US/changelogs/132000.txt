@@ -1,0 +1,9 @@
+- Implemented modern SplashScreen API to fix startup flickering
+- Added day of week labels to Training Heatmap with localization
+- Infinite horizontal swiping and month/year navigation for Training Heatmap
+- Bottom navigation bar with Home, Exercise (active sessions only), and Profile tabs
+- Direct entry to Home screen, bypassing the onboarding flow
+- Fully rounded Material Design 3 styling across all screens
+- Language selection and Simplified Chinese support
+- Backup and restore for whole data
+- Improved body weight tracking with interactive charts

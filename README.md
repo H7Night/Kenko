@@ -12,11 +12,11 @@ thought-out plans
 ## Features
 - **Workout Journal**: Track your training sessions (Resistance and Cardio) with ease.
 - **Custom Plans**: Create and manage your own workout plans with custom name and day titles.
-- **Interactive Heatmap**: View your training consistency with a scrollable monthly/yearly heatmap.
-- **Progressive Overload**: Monitor your progress over time.
-- **Body Weight Tracking**: Record your body weight and view progress on interactive charts.
-- **Session History**: Detailed history of all your past workouts with collapsible sections and easy editing.
+- **Interactive Heatmap**: View your training consistency with a scrollable monthly/yearly heatmap and day-of-week labels.
+- **Progressive Overload**: Monitor your progress over time with detailed session history.
+- **Body Weight Tracking**: Record your body weight and view progress on interactive line charts.
 - **Modern Navigation**: Effortlessly switch between Home, Training, and Profile using the new bottom navigation bar.
+- **Material Design 3**: Fully rounded and unified UI components following the latest MD3 guidelines.
 - **Backup & Restore**: Keep your data safe with local backup and restore.
 - **Multi-language**: Support for English, Chinese, and Turkish.
 
