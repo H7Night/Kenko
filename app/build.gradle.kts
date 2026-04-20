@@ -115,6 +115,7 @@ android {
 
 dependencies {
     implementation(libs.core.ktx)
+    implementation(libs.core.splashscreen)
     implementation(libs.appcompat)
 
     implementation(platform(libs.compose.bom))

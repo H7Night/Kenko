@@ -25,12 +25,14 @@ room = "2.8.3"
 savedstate = "1.4.0"
 serialization = "1.9.0"
 shapes = "1.1.0"
+splashscreen = "1.0.1"
 work = "2.10.1"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "core" }
+core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "splashscreen" }
 datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso" }

@@ -30,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.os.LocaleListCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.padding
@@ -52,6 +53,9 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen().apply {
+            setKeepOnScreenCondition { !viewModel.isReady.value }
+        }
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
@@ -66,7 +70,9 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     LocaleListCompat.getEmptyLocaleList()
                 }
-                AppCompatDelegate.setApplicationLocales(appLocale)
+                if (AppCompatDelegate.getApplicationLocales() != appLocale) {
+                    AppCompatDelegate.setApplicationLocales(appLocale)
+                }
             }
 
             KenkoTheme(
