@@ -18,13 +18,13 @@ value class DateFormat(private val value: String) {
     }
 
     companion object {
-        val SessionLabel = DateFormat("dd-MMM")
-        val BackupName = DateFormat("dd_MM")
+        val BackupName = DateFormat("yyyy-MM-dd")
+        val YearMonthDay = DateFormat("yyyy-MM-dd")
     }
 }
 
 fun formatDate(
     date: LocalDate,
-    dateTimeFormat: DateFormat = DateFormat.SessionLabel,
+    dateTimeFormat: DateFormat = DateFormat.YearMonthDay,
     locale: Locale = Locale.getDefault(Locale.Category.FORMAT),
 ): String = dateTimeFormat.format(localDate = date, locale = locale)

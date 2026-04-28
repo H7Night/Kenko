@@ -475,7 +475,7 @@ private fun Header(
     actions: @Composable (RowScope.() -> Unit),
 ) {
     val date = remember {
-        formatDate(performedOn, DateFormat.SessionLabel)
+        formatDate(performedOn, DateFormat.YearMonthDay)
     }
     val name = dayName(performedOn.dayOfWeek)
     val dayText = remember(dayTitle, name) {

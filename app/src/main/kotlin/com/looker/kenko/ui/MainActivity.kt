@@ -43,6 +43,8 @@ import com.looker.kenko.ui.profile.navigation.ProfileRoute
 import com.looker.kenko.ui.profile.navigation.navigateToProfile
 import com.looker.kenko.ui.sessionDetail.navigation.SessionDetailRoute
 import com.looker.kenko.ui.sessionDetail.navigation.navigateToSessionDetail
+import com.looker.kenko.ui.sessions.navigation.SessionRoute
+import com.looker.kenko.ui.sessions.navigation.navigateToSessions
 import com.looker.kenko.ui.navigation.KenkoNavHost
 import com.looker.kenko.ui.theme.KenkoTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -87,9 +89,11 @@ class MainActivity : AppCompatActivity() {
                 val homeRouteName = HomeRoute::class.qualifiedName
                 val profileRouteName = ProfileRoute::class.qualifiedName
                 val sessionDetailRouteName = SessionDetailRoute::class.qualifiedName
+                val sessionRouteName = SessionRoute::class.qualifiedName
 
                 val isTopLevelRoute = currentRouteName == homeRouteName ||
                         currentRouteName == profileRouteName ||
+                        currentRouteName == sessionRouteName ||
                         (currentRouteName == sessionDetailRouteName && 
                          backStackEntry?.arguments?.getBoolean("showBackButton") == false)
 
@@ -112,6 +116,15 @@ class MainActivity : AppCompatActivity() {
                                     navController.navigateToSessionDetail(
                                         date = null,
                                         showBackButton = false,
+                                        navOptions = navOptions {
+                                            popUpTo(HomeRoute) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    )
+                                },
+                                onHistoryClick = {
+                                    navController.navigateToSessions(
                                         navOptions = navOptions {
                                             popUpTo(HomeRoute) { saveState = true }
                                             launchSingleTop = true

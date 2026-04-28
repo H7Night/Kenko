@@ -283,7 +283,7 @@ private fun DateSelectionRow(
             }
         ) {
             Text(
-                text = formatDate(date, DateFormat.SessionLabel),
+                text = formatDate(date, DateFormat.YearMonthDay),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -325,7 +325,7 @@ fun SessionCard(
             val string = remember(session.date, dayName) {
                 buildAnnotatedString {
                     withStyle(titleStyle.toSpanStyle().copy(fontWeight = FontWeight.Bold)) {
-                        append(formatDate(session.date, dateTimeFormat = DateFormat.SessionLabel))
+                        append(formatDate(session.date, dateTimeFormat = DateFormat.YearMonthDay))
                     }
                     append(" ${Typography.bullet} ")
                     withStyle(titleStyle.toSpanStyle().copy(color = secondaryEmphasis)) {

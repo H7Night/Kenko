@@ -63,7 +63,7 @@ class SessionsViewModel @Inject constructor(
 
         return buildString {
             filteredSessions.forEach { session ->
-                append("# ${formatDate(session.date, DateFormat.SessionLabel)}\n\n")
+                append("# ${formatDate(session.date, DateFormat.YearMonthDay)}\n\n")
                 val exerciseSets = session.sets.groupBy { it.exercise }
                 exerciseSets.entries.forEachIndexed { index, (exercise, sets) ->
                     append("${index + 1}. ${exercise.name}\n")

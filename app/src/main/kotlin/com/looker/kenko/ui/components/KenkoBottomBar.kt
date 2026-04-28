@@ -32,6 +32,7 @@ import com.looker.kenko.R
 import com.looker.kenko.ui.home.navigation.HomeRoute
 import com.looker.kenko.ui.profile.navigation.ProfileRoute
 import com.looker.kenko.ui.sessionDetail.navigation.SessionDetailRoute
+import com.looker.kenko.ui.sessions.navigation.SessionRoute
 import com.looker.kenko.ui.theme.KenkoIcons
 
 @Composable
@@ -40,6 +41,7 @@ fun KenkoBottomBar(
     isExerciseVisible: Boolean,
     onHomeClick: () -> Unit,
     onExerciseClick: () -> Unit,
+    onHistoryClick: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -79,6 +81,18 @@ fun KenkoBottomBar(
                 colors = itemColors
             )
         }
+        NavigationBarItem(
+            selected = currentRouteName == SessionRoute::class.qualifiedName,
+            onClick = onHistoryClick,
+            icon = {
+                Icon(
+                    painter = KenkoIcons.History,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp)
+                )
+            },
+            colors = itemColors
+        )
         NavigationBarItem(
             selected = currentRouteName == ProfileRoute::class.qualifiedName,
             onClick = onProfileClick,

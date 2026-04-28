@@ -676,7 +676,7 @@ private fun WeightHistorySheet(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = formatDate(weight.date, DateFormat.SessionLabel),
+                                    text = formatDate(weight.date, DateFormat.YearMonthDay),
                                     style = MaterialTheme.typography.bodyLarge
                                 )
                                 Spacer(modifier = Modifier.weight(1f))
