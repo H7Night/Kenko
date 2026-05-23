@@ -43,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -93,6 +94,7 @@ private fun AddEditExercise(
     onDone: () -> Unit,
     onBackPress: () -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -137,7 +139,10 @@ private fun AddEditExercise(
             FlowTargets {
                 TargetChip(
                     selected = state.targetMuscle == it,
-                    onClick = { onSelectTarget(it) },
+                    onClick = {
+                        focusManager.clearFocus()
+                        onSelectTarget(it)
+                    },
                     text = stringResource(it.string),
                 )
             }
@@ -146,7 +151,10 @@ private fun AddEditExercise(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .navigationBarsPadding(),
-                onClick = onDone,
+                onClick = {
+                    focusManager.clearFocus()
+                    onDone()
+                },
                 label = {
                     Icon(
                         painter = KenkoIcons.Save,
