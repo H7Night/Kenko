@@ -1,6 +1,6 @@
 @echo off
 echo Building and Installing Debug APK...
-call gradlew.bat installDebug
+call ..\gradlew.bat installDebug
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo Success! The app has been installed and is ready to run.
