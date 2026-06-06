@@ -44,6 +44,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -72,6 +73,7 @@ fun SelectExercise(
     title: String? = null,
 ) {
     val viewModel: SelectExerciseViewModel = hiltViewModel()
+    val focusManager = LocalFocusManager.current
 
     Column(
         modifier = Modifier
@@ -90,13 +92,17 @@ fun SelectExercise(
             name = viewModel.searchQuery,
             onNameChange = viewModel::setSearch,
             onAddClick = {
+                focusManager.clearFocus()
                 onRequestNewExercise(viewModel.searchQuery.ifBlank { null }, target)
             },
         )
         LazyTargets(contentPadding = PaddingValues(horizontal = 8.dp)) {
             TargetChip(
                 selected = target == it,
-                onClick = { viewModel.setTarget(it) },
+                onClick = {
+                    focusManager.clearFocus()
+                    viewModel.setTarget(it)
+                },
                 text = stringResource(it.string),
             )
         }
@@ -108,12 +114,18 @@ fun SelectExercise(
             when (searchResult) {
                 SearchResult.Loading -> ContainedLoadingIndicator()
                 SearchResult.NotFound -> SearchNotFound(
-                    onAddNewExercise = { onRequestNewExercise(viewModel.searchQuery, target) }
+                    onAddNewExercise = {
+                        focusManager.clearFocus()
+                        onRequestNewExercise(viewModel.searchQuery, target)
+                    }
                 )
 
                 is SearchResult.Success -> SearchResult(
                     searchResult = searchResult as SearchResult.Success,
-                    onClick = onDone
+                    onClick = { exercise ->
+                        focusManager.clearFocus()
+                        onDone(exercise)
+                    }
                 )
             }
         }
