@@ -37,6 +37,11 @@
     <string name="label_export_markdown">导出为 Markdown</string>
     <string name="label_confirm">确定</string>
     <string name="label_cancel">取消</string>
+    <string name="label_add_history">添加记录</string>
+    <string name="label_add_to_history">添加训练记录</string>
+    <string name="label_select_date">选择日期</string>
+    <string name="label_select_train_day">选择计划日</string>
+    <string name="error_no_active_plan_for_history">未找到启用的计划。请先启用一个计划。</string>
 
     <!--Session Details-->
     <string name="label_nothing_today">今日无训练</string>

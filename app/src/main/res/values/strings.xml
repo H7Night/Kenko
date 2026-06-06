@@ -42,6 +42,11 @@
     <string name="label_export_markdown">Export as Markdown</string>
     <string name="label_confirm">Confirm</string>
     <string name="label_cancel">Cancel</string>
+    <string name="label_add_history">Add to History</string>
+    <string name="label_add_to_history">Add Training History</string>
+    <string name="label_select_date">Select Date</string>
+    <string name="label_select_train_day">Select Plan Day</string>
+    <string name="error_no_active_plan_for_history">No active plan found. Please activate a plan first.</string>
 
     <!--Session Details-->
     <string name="label_nothing_today">Nothing today</string>

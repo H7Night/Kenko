@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.data.model.Session
+import com.looker.kenko.data.model.Exercise
 import com.looker.kenko.ui.components.BackButton
 import com.looker.kenko.ui.components.EmptyPage
 import com.looker.kenko.ui.extensions.plus
@@ -70,6 +71,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material3.HorizontalDivider
@@ -82,6 +88,7 @@ import com.looker.kenko.ui.components.KenkoBorderWidth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.DayOfWeek
 import java.io.OutputStreamWriter
 
 @Composable
@@ -95,6 +102,7 @@ fun Sessions(
     val scope = rememberCoroutineScope()
 
     var showExportDialog by remember { mutableStateOf(false) }
+    var showAddHistoryDialog by remember { mutableStateOf(false) }
     var exportData by remember { mutableStateOf<String?>(null) }
 
     val createDocumentLauncher = rememberLauncherForActivityResult(
@@ -123,12 +131,27 @@ fun Sessions(
         )
     }
 
+    if (showAddHistoryDialog) {
+        AddHistoryDialog(
+            availablePlanDays = state.availablePlanDays,
+            dayTitles = state.dayTitles,
+            onDismiss = { showAddHistoryDialog = false },
+            onConfirm = { date, day ->
+                viewModel.addSession(date, day) {
+                    onSessionClick(date)
+                }
+                showAddHistoryDialog = false
+            }
+        )
+    }
+
     Sessions(
         state = state,
         onSessionClick = onSessionClick,
         onRemoveSession = viewModel::removeSession,
         onBackPress = onBackPress,
-        onExportClick = { showExportDialog = true }
+        onExportClick = { showExportDialog = true },
+        onAddClick = { showAddHistoryDialog = true }
     )
 }
 
@@ -140,6 +163,7 @@ private fun Sessions(
     onRemoveSession: (Session) -> Unit,
     onBackPress: () -> Unit,
     onExportClick: () -> Unit,
+    onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var sessionToDelete by remember { mutableStateOf<Session?>(null) }
@@ -178,6 +202,12 @@ private fun Sessions(
                     Text(text = stringResource(id = R.string.label_sessions_title))
                 },
                 actions = {
+                    IconButton(onClick = onAddClick) {
+                        Icon(
+                            painter = KenkoIcons.Add,
+                            contentDescription = stringResource(R.string.label_add_history)
+                        )
+                    }
                     IconButton(onClick = onExportClick) {
                         Icon(
                             imageVector = Icons.Rounded.IosShare,
@@ -245,6 +275,94 @@ private fun ExportDialog(
         confirmButton = {
             TextButton(onClick = { onExportMarkdown(startDate, endDate) }) {
                 Text(text = stringResource(R.string.label_export_markdown))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.label_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun AddHistoryDialog(
+    availablePlanDays: Map<DayOfWeek, List<Exercise>>,
+    dayTitles: Map<DayOfWeek, String>,
+    onDismiss: () -> Unit,
+    onConfirm: (LocalDate, DayOfWeek) -> Unit,
+) {
+    var date by remember { mutableStateOf(com.looker.kenko.data.model.localDate) }
+    var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
+
+    LaunchedEffect(date) {
+        if (date.dayOfWeek in availablePlanDays) {
+            selectedDay = date.dayOfWeek
+        } else if (availablePlanDays.isNotEmpty()) {
+            selectedDay = availablePlanDays.keys.first()
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.label_add_to_history)) },
+        text = {
+            if (availablePlanDays.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.error_no_active_plan_for_history),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    DateSelectionRow(
+                        label = stringResource(R.string.label_select_date),
+                        date = date,
+                        onDateSelected = { date = it }
+                    )
+                    
+                    Text(
+                        text = stringResource(R.string.label_select_train_day),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.heightIn(max = 240.dp)
+                    ) {
+                        availablePlanDays.toSortedMap().forEach { (day, _) ->
+                            item {
+                                val title = dayTitles[day]
+                                val isSelected = selectedDay == day
+                                val text = if (title.isNullOrBlank()) dayName(day) else title
+                                val colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Button(
+                                    onClick = { selectedDay = day },
+                                    shape = MaterialTheme.shapes.large,
+                                    colors = colors,
+                                    contentPadding = PaddingValues(vertical = 8.dp)
+                                ) {
+                                    Text(text = text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    selectedDay?.let { onConfirm(date, it) }
+                },
+                enabled = selectedDay != null && availablePlanDays.isNotEmpty()
+            ) {
+                Text(text = stringResource(R.string.label_confirm))
             }
         },
         dismissButton = {
@@ -373,6 +491,7 @@ private fun SessionsPreview() {
             onSessionClick = {},
             onRemoveSession = {},
             onExportClick = {},
+            onAddClick = {},
         )
     }
 }

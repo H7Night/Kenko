@@ -19,6 +19,9 @@ import androidx.lifecycle.ViewModel
 import com.looker.kenko.data.model.Session
 import com.looker.kenko.data.model.localDate
 import com.looker.kenko.data.repository.SessionRepo
+import com.looker.kenko.data.repository.PlanRepo
+import com.looker.kenko.data.model.Exercise
+import com.looker.kenko.data.model.titlesMap
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -26,6 +29,7 @@ import androidx.lifecycle.viewModelScope
 import com.looker.kenko.utils.DateFormat
 import com.looker.kenko.utils.formatDate
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.DayOfWeek
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -35,20 +39,40 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class SessionsViewModel @Inject constructor(
     private val repo: SessionRepo,
+    private val planRepo: PlanRepo,
 ) : ViewModel() {
     private val sessionsStream: Flow<List<Session>> = repo.stream
 
     private val isCurrentSessionActive: Flow<Boolean> = repo.streamByDate(localDate).map { it != null }
 
+    private val availablePlanItems: Flow<Map<DayOfWeek, List<Exercise>>> = planRepo.planItems
+        .map { items ->
+            items.groupBy { it.dayOfWeek }
+                .mapValues { entry -> entry.value.map { it.exercise } }
+        }
+
     val state: StateFlow<SessionsUiData> = combine(
         sessionsStream,
         isCurrentSessionActive,
-    ) { sessions, isCurrentSessionActive ->
+        availablePlanItems,
+        planRepo.plans,
+    ) { sessions, isCurrentSessionActive, available, plans ->
+        val currentPlan = plans.find { it.isActive }
+        val currentPlanTitles = currentPlan?.titlesMap ?: emptyMap()
         SessionsUiData(
             sessions = sessions.filter { it.sets.isNotEmpty() },
             isCurrentSessionActive = isCurrentSessionActive,
+            availablePlanDays = available,
+            dayTitles = currentPlanTitles,
         )
     }.asStateFlow(SessionsUiData(emptyList(), false))
+
+    fun addSession(date: LocalDate, day: DayOfWeek, onComplete: () -> Unit) {
+        viewModelScope.launch {
+            repo.updatePlanDay(date, day)
+            onComplete()
+        }
+    }
 
     fun removeSession(session: Session) {
         viewModelScope.launch {
@@ -81,4 +105,6 @@ class SessionsViewModel @Inject constructor(
 data class SessionsUiData(
     val sessions: List<Session>,
     val isCurrentSessionActive: Boolean,
+    val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),
+    val dayTitles: Map<DayOfWeek, String> = emptyMap(),
 )
