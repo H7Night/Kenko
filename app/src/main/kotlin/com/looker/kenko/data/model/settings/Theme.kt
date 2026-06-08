@@ -19,7 +19,7 @@ import com.looker.kenko.R
 import com.looker.kenko.ui.theme.colorSchemes.ColorSchemes
 import com.looker.kenko.ui.theme.colorSchemes.defaultColorSchemes
 import com.looker.kenko.ui.theme.colorSchemes.sereneColorSchemes
-import com.looker.kenko.ui.theme.colorSchemes.twilightColorSchemes
+import com.looker.kenko.ui.theme.colorSchemes.catppuccinColorSchemes
 import com.looker.kenko.ui.theme.colorSchemes.zestfulColorSchemes
 
 enum class Theme(@StringRes val nameRes: Int) {
@@ -33,5 +33,5 @@ enum class ColorPalettes(val scheme: ColorSchemes?) {
     Default(defaultColorSchemes),
     Zestful(zestfulColorSchemes),
     Serene(sereneColorSchemes),
-    Twilight(twilightColorSchemes),
+    Catppuccin(catppuccinColorSchemes),
 }

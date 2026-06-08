@@ -162,7 +162,7 @@
     <string name="label_color_scheme_dynamic">动态颜色</string>
     <string name="label_color_scheme_serene">宁静</string>
     <string name="label_color_scheme_zestful">活力</string>
-    <string name="label_color_scheme_twilight">暮光</string>
+    <string name="label_color_scheme_catppuccin">Catppuccin</string>
 
     <!--Backup-->
     <string name="label_backup">备份与恢复</string>

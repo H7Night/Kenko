@@ -171,7 +171,7 @@
     <string name="label_color_scheme_dynamic">Dynamic</string>
     <string name="label_color_scheme_serene">Serene</string>
     <string name="label_color_scheme_zestful">Zestful</string>
-    <string name="label_color_scheme_twilight">Twilight</string>
+    <string name="label_color_scheme_catppuccin">Catppuccin</string>
 
     <!--Backup-->
     <string name="label_backup">Backup &amp; Restore</string>
