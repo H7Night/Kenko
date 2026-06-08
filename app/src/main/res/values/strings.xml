@@ -106,6 +106,8 @@
     <string name="label_is_isometric_DESC">Exercise requires static holds</string>
     <string name="label_reference_optional">optional*</string>
     <string name="label_exercise_exists">Exercise Already Exists</string>
+    <string name="label_rename_exercise">Rename Exercise</string>
+    <string name="label_rename_exercise_description">This exercise has training history. Renaming will also update the name in all past records. Continue?</string>
 
     <!--Select Exercises-->
     <string name="label_add_exercise_header">Add Exercise</string>

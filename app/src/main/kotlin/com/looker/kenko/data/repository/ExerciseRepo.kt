@@ -30,4 +30,6 @@ interface ExerciseRepo {
     suspend fun remove(id: Int)
 
     suspend fun isExerciseAvailable(name: String): Boolean
+
+    suspend fun hasHistory(id: Int): Boolean
 }

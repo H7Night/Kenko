@@ -32,7 +32,6 @@ import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.ui.addEditExercise.navigation.AddEditExerciseRoute
 import com.looker.kenko.utils.asStateFlow
-import com.looker.kenko.utils.isValidUrl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Locale
 import javax.inject.Inject
@@ -43,7 +42,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 
@@ -64,32 +62,32 @@ class AddEditExerciseViewModel @Inject constructor(
 
     private val targetMuscle = MutableStateFlow(MuscleGroups.Chest)
 
-    private val isReadOnly: Boolean = exerciseId != null
-
     val snackbarState = SnackbarHostState()
 
     var exerciseName: String by mutableStateOf("")
         private set
 
+    private var originalName: String = ""
+
+    var showRenameConfirmation: Boolean by mutableStateOf(false)
+        private set
+
     private val exerciseAlreadyExistError = snapshotFlow { exerciseName }
         .debounce(200.milliseconds)
-        .mapLatest { repo.isExerciseAvailable(it) && !isReadOnly }
+        .mapLatest { repo.isExerciseAvailable(it) && it != originalName }
 
     val state = combine(
         targetMuscle,
-        flowOf(isReadOnly),
         exerciseAlreadyExistError,
-    ) { target, readOnly, alreadyExist ->
+    ) { target, alreadyExist ->
         AddEditExerciseUiState(
             targetMuscle = target,
-            isReadOnly = readOnly,
             isError = alreadyExist,
         )
     }.asStateFlow(
         AddEditExerciseUiState(
             targetMuscle = MuscleGroups.Chest,
             isError = false,
-            isReadOnly = false,
         ),
     )
 
@@ -103,26 +101,45 @@ class AddEditExerciseViewModel @Inject constructor(
         }
     }
 
-    fun addNewExercise(onDone: () -> Unit) {
+    fun dismissRenameConfirmation() {
+        showRenameConfirmation = false
+    }
+
+    fun saveExercise(onDone: () -> Unit) {
         viewModelScope.launch {
             if (exerciseName.isBlank()) {
                 snackbarState.showSnackbar(stringHandler.getString(R.string.error_exercise_name_empty))
                 return@launch
             }
-            val name = if (settingsRepo.stream.first().capitalizeExerciseName) {
-                exerciseName.titleCase()
-            } else {
-                exerciseName
+            if (exerciseId != null && exerciseName != originalName && repo.hasHistory(exerciseId)) {
+                showRenameConfirmation = true
+                return@launch
             }
-            repo.upsert(
-                Exercise(
-                    name = name,
-                    target = targetMuscle.value,
-                    id = exerciseId,
-                ),
-            )
-            onDone()
+            commitRename(onDone)
         }
+    }
+
+    fun confirmRename(onDone: () -> Unit) {
+        viewModelScope.launch {
+            showRenameConfirmation = false
+            commitRename(onDone)
+        }
+    }
+
+    private suspend fun commitRename(onDone: () -> Unit) {
+        val name = if (settingsRepo.stream.first().capitalizeExerciseName) {
+            exerciseName.titleCase()
+        } else {
+            exerciseName
+        }
+        repo.upsert(
+            Exercise(
+                name = name,
+                target = targetMuscle.value,
+                id = exerciseId,
+            ),
+        )
+        onDone()
     }
 
     private fun String.titleCase(): String =
@@ -136,6 +153,7 @@ class AddEditExerciseViewModel @Inject constructor(
             if (exerciseId != null) {
                 val exercise = repo.get(exerciseId)
                 exercise?.let {
+                    originalName = it.name
                     setName(it.name)
                     setTargetMuscle(it.target)
                 }
@@ -151,5 +169,4 @@ class AddEditExerciseViewModel @Inject constructor(
 data class AddEditExerciseUiState(
     val targetMuscle: MuscleGroups,
     val isError: Boolean,
-    val isReadOnly: Boolean,
 )

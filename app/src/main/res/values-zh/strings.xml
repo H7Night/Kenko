@@ -97,6 +97,8 @@
     <string name="label_is_isometric_DESC">需要静态保持的动作</string>
     <string name="label_reference_optional">可选*</string>
     <string name="label_exercise_exists">动作已存在</string>
+    <string name="label_rename_exercise">重命名动作</string>
+    <string name="label_rename_exercise_description">该动作已有训练记录，重命名后所有历史记录中的名称也会随之更新。确认继续？</string>
 
     <!--Select Exercises-->
     <string name="label_add_exercise_header">添加动作</string>

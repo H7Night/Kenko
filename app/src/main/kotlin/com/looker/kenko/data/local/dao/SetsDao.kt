@@ -125,4 +125,13 @@ interface SetsDao {
         """,
     )
     suspend fun deleteBySessionId(sessionId: Int)
+
+    @Query(
+        """
+        SELECT COUNT(*) > 0
+        FROM sets
+        WHERE exerciseId = :exerciseId
+        """,
+    )
+    suspend fun hasSetsForExercise(exerciseId: Int): Boolean
 }

@@ -26,6 +26,7 @@ import javax.inject.Inject
 
 class LocalExerciseRepo @Inject constructor(
     private val dao: ExerciseDao,
+    private val setsDao: com.looker.kenko.data.local.dao.SetsDao,
 ) : ExerciseRepo {
 
     override val stream: Flow<List<Exercise>> =
@@ -46,4 +47,7 @@ class LocalExerciseRepo @Inject constructor(
 
     override suspend fun isExerciseAvailable(name: String): Boolean =
         dao.exists(name)
+
+    override suspend fun hasHistory(id: Int): Boolean =
+        setsDao.hasSetsForExercise(id)
 }
