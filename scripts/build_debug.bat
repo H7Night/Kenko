@@ -1,6 +1,6 @@
 @echo off
 echo Starting to build Debug APK...
-call ..\gradlew.bat assembleDebug
+call "%~dp0..\gradlew.bat" assembleDebug
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo Build Successful!
