@@ -51,8 +51,20 @@ android {
         includeInApk = false
     }
 
+    signingConfigs {
+        create("sharedDebug") {
+            storeFile = file("kenko-debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
-        debug { applicationIdSuffix = ".debug" }
+        debug {
+            applicationIdSuffix = ".debug"
+            signingConfig = signingConfigs.getByName("sharedDebug")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true

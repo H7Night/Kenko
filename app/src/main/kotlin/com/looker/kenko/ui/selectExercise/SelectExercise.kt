@@ -122,10 +122,7 @@ fun SelectExercise(
 
                 is SearchResult.Success -> SearchResult(
                     searchResult = searchResult as SearchResult.Success,
-                    onClick = { exercise ->
-                        focusManager.clearFocus()
-                        onDone(exercise)
-                    }
+                    onClick = onDone,
                 )
             }
         }
