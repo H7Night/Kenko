@@ -88,7 +88,7 @@ import com.looker.kenko.ui.components.BackButton
 import com.looker.kenko.ui.components.KenkoBorderWidth
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
-import com.looker.kenko.ui.theme.colorSchemes.sereneColorSchemes
+import com.looker.kenko.ui.theme.colorSchemes.tokyoNightColorSchemes
 import com.looker.kenko.ui.theme.dynamicColorSchemes
 import com.looker.kenko.ui.theme.end
 import com.looker.kenko.ui.theme.start
@@ -743,7 +743,7 @@ private fun formatBackupTime(instant: Instant): String {
 @Preview
 @Composable
 private fun ColorSelectionPreview() {
-    KenkoTheme(colorSchemes = sereneColorSchemes) {
+    KenkoTheme(colorSchemes = tokyoNightColorSchemes) {
         var isSelected by remember { mutableStateOf(false) }
         ColorPaletteItem(
             modifier = Modifier.clickable {
@@ -751,7 +751,7 @@ private fun ColorSelectionPreview() {
             },
             isSelected = isSelected,
             theme = Theme.System,
-            colorPalette = ColorPalettes.Serene,
+            colorPalette = ColorPalettes.TokyoNight,
         )
     }
 }

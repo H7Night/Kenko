@@ -31,13 +31,13 @@ import androidx.core.view.WindowCompat
 import com.looker.kenko.R
 import com.looker.kenko.data.model.settings.Theme
 import com.looker.kenko.ui.theme.colorSchemes.ColorSchemes
-import com.looker.kenko.ui.theme.colorSchemes.zestfulColorSchemes
+import com.looker.kenko.ui.theme.colorSchemes.tokyoNightColorSchemes
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun KenkoTheme(
     theme: Theme = Theme.System,
-    colorSchemes: ColorSchemes = zestfulColorSchemes,
+    colorSchemes: ColorSchemes = tokyoNightColorSchemes,
     content: @Composable () -> Unit,
 ) {
     val systemTheme = isSystemInDarkTheme()

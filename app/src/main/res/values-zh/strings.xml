@@ -162,8 +162,8 @@
     <string name="label_color_palettes">配色方案</string>
     <string name="label_color_scheme_default">默认</string>
     <string name="label_color_scheme_dynamic">动态颜色</string>
-    <string name="label_color_scheme_serene">宁静</string>
-    <string name="label_color_scheme_zestful">活力</string>
+    <string name="label_color_scheme_tokyo_night">Tokyo Night</string>
+    <string name="label_color_scheme_gruvbox">Gruvbox</string>
     <string name="label_color_scheme_catppuccin">Catppuccin</string>
 
     <!--Backup-->

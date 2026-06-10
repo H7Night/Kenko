@@ -24,7 +24,7 @@ import com.looker.kenko.data.repository.PerformanceRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.ui.theme.colorSchemes.ColorSchemes
-import com.looker.kenko.ui.theme.colorSchemes.zestfulColorSchemes
+import com.looker.kenko.ui.theme.colorSchemes.tokyoNightColorSchemes
 import com.looker.kenko.ui.theme.dynamicColorSchemes
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -56,8 +56,8 @@ class MainViewModel @Inject constructor(
         .asStateFlow(Theme.System)
 
     val colorScheme: StateFlow<ColorSchemes> = repo.stream
-        .map { it.colorPalette.scheme ?: dynamicColorSchemes(context) ?: zestfulColorSchemes }
-        .asStateFlow(zestfulColorSchemes)
+        .map { it.colorPalette.scheme ?: dynamicColorSchemes(context) ?: tokyoNightColorSchemes }
+        .asStateFlow(tokyoNightColorSchemes)
 
     val language: StateFlow<Language> = repo.get { language }
         .asStateFlow(Language.System)

@@ -171,8 +171,8 @@
     <string name="label_color_palettes">Color Palettes</string>
     <string name="label_color_scheme_default">Default</string>
     <string name="label_color_scheme_dynamic">Dynamic</string>
-    <string name="label_color_scheme_serene">Serene</string>
-    <string name="label_color_scheme_zestful">Zestful</string>
+    <string name="label_color_scheme_tokyo_night">Tokyo Night</string>
+    <string name="label_color_scheme_gruvbox">Gruvbox</string>
     <string name="label_color_scheme_catppuccin">Catppuccin</string>
 
     <!--Backup-->

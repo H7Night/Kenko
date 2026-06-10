@@ -112,7 +112,7 @@ class DatastoreSettingsRepo @Inject constructor(
     private fun mapSettings(preferences: Preferences): Settings {
         val isOnboardingDone = preferences[ONBOARDING_DONE] ?: false
         val theme = preferences[THEME] ?: Theme.System.name
-        val colorPalettes = preferences[COLOR_PALETTE] ?: ColorPalettes.Zestful.name
+        val colorPalettes = preferences[COLOR_PALETTE] ?: ColorPalettes.TokyoNight.name
         val lastSetTime = preferences[LAST_SET_TIME_SECONDS]
         val backupUri = preferences[BACKUP_URI]
         val backupInterval = preferences[BACKUP_INTERVAL] ?: BackupInterval.Off.name
