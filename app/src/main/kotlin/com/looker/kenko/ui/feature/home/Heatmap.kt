@@ -42,21 +42,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
+<<<<<<< HEAD:app/src/main/kotlin/com/looker/kenko/ui/feature/home/Heatmap.kt
 import com.looker.kenko.domain.model.localDate
+=======
+>>>>>>> e5c9102 (fix: heatmap edge padding, dynamic today date, and weight chart X-axis improvements):app/src/main/kotlin/com/looker/kenko/ui/home/components/Heatmap.kt
 import com.looker.kenko.ui.theme.KenkoIcons
+import kotlin.time.Clock
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 
 @Composable
 fun TrainingHeatmap(
     sessionDates: Set<LocalDate>,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    initialDate: LocalDate = localDate,
+    initialDate: LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
 ) {
     val pagerState = rememberPagerState(
         initialPage = Int.MAX_VALUE / 2,
@@ -205,7 +211,7 @@ private fun HeatmapGrid(
     sessionDates: Set<LocalDate>,
     modifier: Modifier = Modifier,
 ) {
-    val today = localDate
+    val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val gridItems = remember(displayedDate) {
         val firstDayOfMonth = LocalDate(displayedDate.year, displayedDate.month, 1)
 
@@ -229,7 +235,8 @@ private fun HeatmapGrid(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .widthIn(max = 300.dp),
+            .widthIn(max = 300.dp)
+            .padding(horizontal = 8.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

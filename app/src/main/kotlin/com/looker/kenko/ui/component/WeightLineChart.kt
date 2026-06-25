@@ -40,7 +40,7 @@ fun WeightLineChart(
     val textMeasurer = rememberTextMeasurer()
     val textStyle = MaterialTheme.typography.labelSmall.copy(
         color = labelColor,
-        fontSize = 10.sp
+        fontSize = 8.sp
     )
 
     Canvas(
@@ -103,16 +103,18 @@ fun WeightLineChart(
                 )
             )
 
-            // Draw X label (Date MM-DD)
-            val xLabel = "%02d-%02d".format(weight.date.monthNumber, weight.date.dayOfMonth)
-            val xTextLayout = textMeasurer.measure(xLabel, textStyle)
-            drawText(
-                textLayoutResult = xTextLayout,
-                topLeft = Offset(
-                    x = point.x - xTextLayout.size.width / 2,
-                    y = size.height - xTextLayout.size.height - 4.dp.toPx()
+            // Draw X label (Date MM-DD) — only if few enough records to avoid crowding
+            if (weights.size <= 6) {
+                val xLabel = "%02d-%02d".format(weight.date.month, weight.date.day)
+                val xTextLayout = textMeasurer.measure(xLabel, textStyle)
+                drawText(
+                    textLayoutResult = xTextLayout,
+                    topLeft = Offset(
+                        x = point.x - xTextLayout.size.width / 2,
+                        y = size.height - xTextLayout.size.height - 4.dp.toPx()
+                    )
                 )
-            )
+            }
         }
     }
 }
