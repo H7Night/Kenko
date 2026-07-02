@@ -202,9 +202,17 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
             ) {
                 TextButton(
                     modifier = incrementButtonModifier,
-                    onClick = { viewModel.addWeight(-1F) },
+                    onClick = { viewModel.setBodyweight() },
                 ) {
-                    Text(text = stringResource(R.string.label_minus_int, 1F))
+                    Text(text = stringResource(R.string.label_bodyweight))
+                }
+                if (!viewModel.isWeightZero) {
+                    TextButton(
+                        modifier = incrementButtonModifier,
+                        onClick = { viewModel.addWeight(-1F) },
+                    ) {
+                        Text(text = stringResource(R.string.label_minus_int, 1F))
+                    }
                 }
                 val weights = rememberDraggableTextFieldState(viewModel.weightsBoundReached)
                 DraggableTextField(
@@ -213,6 +221,7 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                     supportingText = stringResource(R.string.label_weight),
                     inputTransformation = FloatTransformation,
                     modifier = zIndexModifier,
+                    style = MaterialTheme.typography.labelLarge,
                 )
                 TextButton(
                     modifier = incrementButtonModifier,

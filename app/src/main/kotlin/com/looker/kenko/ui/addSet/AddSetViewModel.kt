@@ -50,7 +50,7 @@ class AddSetViewModel @AssistedInject constructor(
     @Assisted("date") private val date: LocalDate?,
 ) : ViewModel() {
 
-    val reps: TextFieldState = TextFieldState("12")
+    val reps: TextFieldState = TextFieldState("10")
     val weights: TextFieldState = TextFieldState("20.0")
     val setsCount: TextFieldState = TextFieldState("2")
 
@@ -77,9 +77,16 @@ class AddSetViewModel @AssistedInject constructor(
         reps.setTextAndPlaceCursorAtEnd((repInt + value).coerceAtLeast(0).toString())
     }
 
-    fun addWeight(value: Float) {
-        weights.setTextAndPlaceCursorAtEnd((weightFloat + value).toString())
+    fun setBodyweight() {
+        weights.setTextAndPlaceCursorAtEnd("0")
     }
+
+    fun addWeight(value: Float) {
+        weights.setTextAndPlaceCursorAtEnd((weightFloat + value).coerceAtLeast(0F).toString())
+    }
+
+    val isWeightZero: Boolean
+        get() = weightFloat == 0F
 
     fun addSetCount(value: Int) {
         setsCount.setTextAndPlaceCursorAtEnd((setsInt + value).coerceAtLeast(1).toString())
