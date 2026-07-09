@@ -135,6 +135,7 @@
     <string name="label_duration">.duration</string>
     <string name="label_weight">.weight</string>
     <string name="label_bodyweight">BW</string>
+    <string name="label_use_bodyweight">Use Body Weight</string>
     <string name="label_sets">.sets</string>
     <string name="label_coming_soon">Coming Soon</string>
 

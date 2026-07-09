@@ -67,6 +67,8 @@ class AddEditExerciseViewModel @Inject constructor(
     var exerciseName: String by mutableStateOf("")
         private set
 
+    val isBodyweightFlow = MutableStateFlow(false)
+
     private var originalName: String = ""
 
     var showRenameConfirmation: Boolean by mutableStateOf(false)
@@ -79,15 +81,18 @@ class AddEditExerciseViewModel @Inject constructor(
     val state = combine(
         targetMuscle,
         exerciseAlreadyExistError,
-    ) { target, alreadyExist ->
+        isBodyweightFlow,
+    ) { target, alreadyExist, bodyweight ->
         AddEditExerciseUiState(
             targetMuscle = target,
             isError = alreadyExist,
+            isBodyweight = bodyweight,
         )
     }.asStateFlow(
         AddEditExerciseUiState(
             targetMuscle = MuscleGroups.Chest,
             isError = false,
+            isBodyweight = false,
         ),
     )
 
@@ -136,6 +141,7 @@ class AddEditExerciseViewModel @Inject constructor(
             Exercise(
                 name = name,
                 target = targetMuscle.value,
+                isBodyweight = isBodyweightFlow.value,
                 id = exerciseId,
             ),
         )
@@ -156,6 +162,7 @@ class AddEditExerciseViewModel @Inject constructor(
                     originalName = it.name
                     setName(it.name)
                     setTargetMuscle(it.target)
+                    isBodyweightFlow.value = it.isBodyweight
                 }
             } else {
                 if (routeData.name != null) setName(routeData.name)
@@ -169,4 +176,5 @@ class AddEditExerciseViewModel @Inject constructor(
 data class AddEditExerciseUiState(
     val targetMuscle: MuscleGroups,
     val isError: Boolean,
+    val isBodyweight: Boolean,
 )

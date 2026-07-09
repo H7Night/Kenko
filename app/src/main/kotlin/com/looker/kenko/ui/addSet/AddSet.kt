@@ -200,11 +200,13 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
             SwipeableTextField(
                 modifier = Modifier.align(CenterHorizontally),
             ) {
-                TextButton(
-                    modifier = incrementButtonModifier,
-                    onClick = { viewModel.setBodyweight() },
-                ) {
-                    Text(text = stringResource(R.string.label_bodyweight))
+                if (exercise.isBodyweight) {
+                    TextButton(
+                        modifier = incrementButtonModifier,
+                        onClick = { viewModel.setBodyweight() },
+                    ) {
+                        Text(text = stringResource(R.string.label_bodyweight))
+                    }
                 }
                 if (!viewModel.isWeightZero) {
                     TextButton(

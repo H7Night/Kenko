@@ -29,6 +29,7 @@ data class ExerciseEntity(
     val target: MuscleGroups,
     val reference: String? = null,
     val isIsometric: Boolean = false,
+    val isBodyweight: Boolean = false,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0
 )
@@ -37,7 +38,8 @@ fun ExerciseEntity.toExternal(): Exercise = Exercise(
     name = name,
     target = target,
     reference = reference,
-    isIsometric = isIsometric
+    isIsometric = isIsometric,
+    isBodyweight = isBodyweight,
 )
 
 fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
@@ -45,5 +47,6 @@ fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
     name = name,
     target = target,
     reference = reference,
-    isIsometric = isIsometric
+    isIsometric = isIsometric,
+    isBodyweight = isBodyweight,
 )
