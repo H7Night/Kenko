@@ -14,8 +14,10 @@
 
 package com.looker.kenko.ui.addEditExercise
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -92,6 +95,7 @@ fun AddEditExercise(
         state = state,
         snackbarState = viewModel.snackbarState,
         onSelectTarget = viewModel::setTargetMuscle,
+        onBodyweightChange = { viewModel.isBodyweightFlow.value = it },
         onNameChange = viewModel::setName,
         onBackPress = onBackPress,
         onDone = { viewModel.saveExercise(onDone) },
@@ -105,6 +109,7 @@ private fun AddEditExercise(
     state: AddEditExerciseUiState,
     snackbarState: SnackbarHostState,
     onSelectTarget: (MuscleGroups) -> Unit,
+    onBodyweightChange: (Boolean) -> Unit,
     onNameChange: (String) -> Unit,
     onDone: () -> Unit,
     onBackPress: () -> Unit,
@@ -158,6 +163,22 @@ private fun AddEditExercise(
                         onSelectTarget(it)
                     },
                     text = stringResource(it.string),
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.label_use_bodyweight),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.outline,
+                )
+                Switch(
+                    checked = state.isBodyweight,
+                    onCheckedChange = onBodyweightChange,
                 )
             }
             Spacer(modifier = Modifier.height(18.dp))
@@ -248,9 +269,10 @@ private fun AddEditPreview() {
     KenkoTheme {
         AddEditExercise(
             exerciseName = "BenchPress",
-            state = AddEditExerciseUiState(MuscleGroups.Chest, false),
+            state = AddEditExerciseUiState(MuscleGroups.Chest, false, false),
             snackbarState = SnackbarHostState(),
             onSelectTarget = {},
+            onBodyweightChange = {},
             onNameChange = {},
             onDone = {},
             onBackPress = {}

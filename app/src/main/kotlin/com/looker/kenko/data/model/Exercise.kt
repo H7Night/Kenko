@@ -42,6 +42,7 @@ data class Exercise(
     val target: MuscleGroups,
     val reference: String? = null,
     val isIsometric: Boolean = false,
+    val isBodyweight: Boolean = false,
     val id: Int? = null,
 )
 
