@@ -112,31 +112,5 @@ object KenkoIcons {
         get() = painterResource(R.drawable.ic_keyboard_arrow_left)
 
     // Brutalist Icons
-    val AddLarge: ImageVector = com.looker.kenko.ui.component.icons.AddLarge
-
-    val ArrowOutwardLarge: ImageVector = com.looker.kenko.ui.component.icons.ArrowOutwardLarge
-
-    val Cloud: ImageVector = com.looker.kenko.ui.component.icons.Cloud
-
-    val Colony: ImageVector = com.looker.kenko.ui.component.icons.Colony
-
-    val Arrow1: ImageVector = com.looker.kenko.ui.component.icons.Arrow1
-
-    val Arrow2: ImageVector = com.looker.kenko.ui.component.icons.Arrow2
-
-    val Arrow3: ImageVector = com.looker.kenko.ui.component.icons.Arrow3
-
-    val Arrow4: ImageVector = com.looker.kenko.ui.component.icons.Arrow4
-
-    val Dawn: ImageVector = com.looker.kenko.ui.component.icons.Dawn
-
-    val ConcentricTriangles: ImageVector = com.looker.kenko.ui.component.icons.ConcentricTriangles
-
     val Stack: ImageVector = com.looker.kenko.ui.component.icons.Stack
-
-    val Reveal: ImageVector = com.looker.kenko.ui.component.icons.Reveal
-
-    val QuarterCircles: ImageVector = com.looker.kenko.ui.component.icons.QuarterCircles
-
-    val Wireframe: ImageVector = com.looker.kenko.ui.component.icons.Wireframe
 }

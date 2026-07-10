@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import com.looker.kenko.ui.feature.plan.Plan
 import kotlinx.serialization.Serializable
 
@@ -33,7 +34,9 @@ fun NavGraphBuilder.plans(
     onPlanClick: (Int) -> Unit,
     onBackPress: () -> Unit,
 ) {
-    composable<PlanRoute> {
+    composable<PlanRoute>(
+        deepLinks = listOf(navDeepLink { uriPattern = "kenko://plans" }),
+    ) {
         Plan(
             onPlanClick = onPlanClick,
             onBackPress = onBackPress,

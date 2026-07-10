@@ -42,6 +42,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
+/**
+ * ViewModel for the AddSet bottom sheet.
+ *
+ * Uses [AssistedInject] because parameters are passed directly by the
+ * composable caller, not via Navigation routes. Navigation-based ViewModels
+ * use [SavedStateHandle] instead.
+ */
 @HiltViewModel(assistedFactory = AddSetViewModel.AddSetViewModelFactory::class)
 class AddSetViewModel @AssistedInject constructor(
     private val sessionRepo: SessionRepo,

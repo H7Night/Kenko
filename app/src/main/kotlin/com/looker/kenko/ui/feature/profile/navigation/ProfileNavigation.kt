@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.looker.kenko.ui.feature.profile.Profile
 import kotlinx.serialization.Serializable
@@ -40,7 +41,9 @@ fun NavGraphBuilder.profile(
     onPlanClick: () -> Unit,
     onSettingsClick: () -> Unit,
 ) {
-    composable<ProfileRoute> {
+    composable<ProfileRoute>(
+        deepLinks = listOf(navDeepLink { uriPattern = "kenko://profile" }),
+    ) {
         val route: ProfileRoute = it.toRoute()
         Profile(
             viewModel = hiltViewModel(),

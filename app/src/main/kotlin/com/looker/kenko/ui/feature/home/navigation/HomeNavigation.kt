@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import com.looker.kenko.ui.feature.home.Home
 import com.looker.kenko.ui.feature.home.HomeViewModel
 import kotlinx.serialization.Serializable
@@ -37,7 +38,9 @@ fun NavGraphBuilder.home(
     onStartSessionClick: () -> Unit,
     onCurrentPlanClick: (Int) -> Unit,
 ) {
-    composable<HomeRoute> {
+    composable<HomeRoute>(
+        deepLinks = listOf(navDeepLink { uriPattern = "kenko://home" }),
+    ) {
         Home(
             onProfileClick = onProfileClick,
             onSelectPlanClick = onSelectPlanClick,

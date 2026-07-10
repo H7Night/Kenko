@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import com.looker.kenko.ui.feature.settings.Settings
 import kotlinx.serialization.Serializable
 
@@ -32,7 +33,9 @@ fun NavController.navigateToSettings(navOptions: NavOptions? = null) {
 fun NavGraphBuilder.settings(
     onBackPress: () -> Unit,
 ) {
-    composable<SettingsRoute> {
+    composable<SettingsRoute>(
+        deepLinks = listOf(navDeepLink { uriPattern = "kenko://settings" }),
+    ) {
         Settings(
             onBackPress = onBackPress,
             viewModel = hiltViewModel(),

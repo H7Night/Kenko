@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import com.looker.kenko.ui.feature.session.Sessions
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
@@ -34,7 +35,9 @@ fun NavGraphBuilder.sessions(
     onSessionClick: (LocalDate?) -> Unit,
     onBackPress: () -> Unit,
 ) {
-    composable<SessionRoute> {
+    composable<SessionRoute>(
+        deepLinks = listOf(navDeepLink { uriPattern = "kenko://sessions" }),
+    ) {
         Sessions(
             onSessionClick = onSessionClick,
             onBackPress = onBackPress,

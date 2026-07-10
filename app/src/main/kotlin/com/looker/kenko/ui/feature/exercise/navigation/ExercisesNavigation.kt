@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.ui.feature.exercise.Exercises
 import kotlinx.serialization.Serializable
@@ -35,7 +36,9 @@ fun NavGraphBuilder.exercises(
     onCreateClick: (target: MuscleGroups?) -> Unit,
     onBackPress: () -> Unit,
 ) {
-    composable<ExercisesRoute> {
+    composable<ExercisesRoute>(
+        deepLinks = listOf(navDeepLink { uriPattern = "kenko://exercises" }),
+    ) {
         Exercises(
             onExerciseClick = onExerciseClick,
             onCreateClick = onCreateClick,
