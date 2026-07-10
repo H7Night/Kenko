@@ -21,6 +21,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.looker.kenko.data.local.KenkoDatabase
 import com.looker.kenko.data.local.MIGRATION_1_2
+import com.looker.kenko.data.local.MIGRATION_2_3
+import com.looker.kenko.data.local.MIGRATION_3_4
+import com.looker.kenko.data.local.MIGRATION_4_5
+import com.looker.kenko.data.local.MIGRATION_5_6
+import com.looker.kenko.data.local.MIGRATION_6_7
 import com.looker.kenko.data.local.dao.ExerciseDao
 import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.model.ExerciseEntity
@@ -123,6 +128,41 @@ class RoomDatabaseTesting {
         assertTrue(exerciseDao.stream().first().isNotEmpty())
         val plan = plans.first()
         assertTrue(planDao.getPlanItemsByPlanId(plan.id).isNotEmpty())
+    }
+
+    @Test
+    fun schemaMigration2To3() = runTest {
+        val db = helper.createDatabase(DB_NAME, 2)
+        db.execSQL("INSERT INTO sets (reps, weight, type, ` + "`\"`" + @"order` + "`\"`" + @", sessionId, exerciseId) VALUES (10, 50.0, 'Standard', 0, 1, 1)")
+        helper.runMigrationsAndValidate(DB_NAME, 3, true, MIGRATION_2_3)
+    }
+
+    @Test
+    fun schemaMigration3To4() = runTest {
+        val db = helper.createDatabase(DB_NAME, 3)
+        db.execSQL("INSERT INTO sets (reps, weight, type, ` + "`\"`" + @"order` + "`\"`" + @", sessionId, exerciseId, rir) VALUES (10, 50.0, 'Standard', 0, 1, 1, 2)")
+        helper.runMigrationsAndValidate(DB_NAME, 4, true, MIGRATION_3_4)
+    }
+
+    @Test
+    fun schemaMigration4To5() = runTest {
+        val db = helper.createDatabase(DB_NAME, 4)
+        db.execSQL("INSERT INTO plans (name) VALUES ('Test Plan')")
+        helper.runMigrationsAndValidate(DB_NAME, 5, true, MIGRATION_4_5)
+    }
+
+    @Test
+    fun schemaMigration5To6() = runTest {
+        val db = helper.createDatabase(DB_NAME, 5)
+        db.execSQL("INSERT INTO sessions (date, planId) VALUES (20000, NULL)")
+        helper.runMigrationsAndValidate(DB_NAME, 6, true, MIGRATION_5_6)
+    }
+
+    @Test
+    fun schemaMigration6To7() = runTest {
+        val db = helper.createDatabase(DB_NAME, 6)
+        db.execSQL("INSERT INTO exercises (name, target, isIsometric) VALUES ('Pushups', 'Chest', 0)")
+        helper.runMigrationsAndValidate(DB_NAME, 7, true, MIGRATION_6_7)
     }
 
     private fun SupportSQLiteDatabase.addV1Data() = use { db ->

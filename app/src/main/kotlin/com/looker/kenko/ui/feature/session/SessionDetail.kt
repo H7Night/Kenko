@@ -14,12 +14,8 @@
 
 package com.looker.kenko.ui.feature.session
 
-import androidx.compose.ui.draw.rotate
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.width
-import com.looker.kenko.ui.theme.numbers
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +28,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -84,6 +79,7 @@ import com.looker.kenko.domain.model.Set
 import com.looker.kenko.ui.feature.session.AddSet
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.KenkoBorderWidth
+import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.SwipeToDeleteBox
 import com.looker.kenko.ui.component.TypingText
 import com.looker.kenko.ui.extension.normalizeInt
@@ -509,59 +505,6 @@ private fun Header(
         },
 
     )
-}
-
-@Composable
-private fun StickyHeader(
-    name: String,
-    setCount: Int = 0,
-    isCollapsed: Boolean = false,
-    onCollapseToggle: () -> Unit = {},
-    actions: (@Composable RowScope.() -> Unit)? = null,
-) {
-    Surface(
-        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = MaterialTheme.shapes.medium,
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(24.dp)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable(onClick = onCollapseToggle),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                if (setCount > 0) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = normalizeInt(setCount),
-                        style = MaterialTheme.typography.titleMedium.numbers(),
-                        color = MaterialTheme.colorScheme.outline,
-                    )
-                    Icon(
-                        modifier = Modifier.rotate(if (isCollapsed) 180F else 90F),
-                        painter = KenkoIcons.KeyboardArrowRight,
-                        tint = MaterialTheme.colorScheme.outline,
-                        contentDescription = null,
-                    )
-                }
-            }
-            if (actions != null) {
-                actions()
-            }
-        }
-    }
 }
 
 @Composable

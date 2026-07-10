@@ -20,9 +20,7 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
@@ -93,7 +91,6 @@ import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.DaySelectorChip
 import com.looker.kenko.ui.component.ErrorSnackbar
 import com.looker.kenko.ui.component.HorizontalDaySelector
-import com.looker.kenko.ui.component.KenkoButton
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.DaySwitcher
@@ -234,74 +231,6 @@ private fun FullEdit(
             ui(it)
         }
     }
-}
-
-@Composable
-private fun PlanEditFAB(
-    pageStage: PlanEditStage,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    KenkoButton(
-        modifier = modifier,
-        onClick = onClick,
-        label = {
-            AnimatedContent(
-                targetState = pageStage,
-                label = "FAB label",
-                transitionSpec = {
-                    when (targetState) {
-                        PlanEditStage.NameEdit -> {
-                            slideInVertically { it } + fadeIn() togetherWith
-                                    slideOutVertically { -it } + fadeOut()
-                        }
-
-                        PlanEditStage.PlanEdit -> {
-                            slideInVertically { -it } + fadeIn() togetherWith
-                                    slideOutVertically { it } + fadeOut()
-                        }
-                    } using SizeTransform(clip = false)
-                },
-            ) {
-                if (it == PlanEditStage.NameEdit) {
-                    Text(stringResource(R.string.label_next))
-                } else {
-                    Text(stringResource(R.string.label_add))
-                }
-            }
-        },
-        icon = {
-            AnimatedContent(
-                targetState = pageStage,
-                label = "FAB icon",
-                transitionSpec = {
-                    when (targetState) {
-                        PlanEditStage.NameEdit -> {
-                            slideInHorizontally { it * 2 } + fadeIn() togetherWith
-                                    slideOutHorizontally { -it * 2 } + fadeOut()
-                        }
-
-                        PlanEditStage.PlanEdit -> {
-                            slideInHorizontally { -it * 2 } + fadeIn() togetherWith
-                                    slideOutHorizontally { it * 2 } + fadeOut()
-                        }
-                    } using SizeTransform(clip = false)
-                },
-            ) {
-                if (it == PlanEditStage.NameEdit) {
-                    Icon(
-                        painter = KenkoIcons.ArrowForward,
-                        contentDescription = stringResource(R.string.label_next),
-                    )
-                } else {
-                    Icon(
-                        painter = KenkoIcons.Add,
-                        contentDescription = stringResource(R.string.label_add),
-                    )
-                }
-            }
-        },
-    )
 }
 
 @Composable

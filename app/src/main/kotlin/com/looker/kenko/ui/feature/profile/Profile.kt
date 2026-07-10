@@ -20,73 +20,31 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.paddingFromBaseline
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import com.looker.kenko.domain.model.Weight
-import com.looker.kenko.ui.component.WeightLineChart
-import com.looker.kenko.utils.DateFormat
-import com.looker.kenko.utils.formatDate
-import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.TopAppBar
-import com.looker.kenko.ui.component.SwipeToDeleteBox
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -96,14 +54,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.PlanStat
+import com.looker.kenko.domain.model.Weight
 import com.looker.kenko.ui.component.BackButton
-import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.OutlineBorder
 import com.looker.kenko.ui.component.SecondaryBorder
-import com.looker.kenko.ui.extension.PHI
+import com.looker.kenko.ui.component.WeightLineChart
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.extension.plus
-import com.looker.kenko.ui.extension.vertical
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.ui.theme.end
@@ -244,110 +201,6 @@ private fun Profile(
 }
 
 @Composable
-private fun CurrentPlanCard(
-    onPlanClick: () -> Unit,
-    name: String,
-    content: @Composable ColumnScope.() -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(PHI),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = MaterialTheme.shapes.extraLarge,
-        border = SecondaryBorder,
-        onClick = onPlanClick,
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 24.dp, top = 2.dp, end = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(painter = KenkoIcons.Plan, contentDescription = null)
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = stringResource(R.string.label_current_plan),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Spacer(modifier = Modifier.weight(1F))
-                FilledIconButton(onClick = onPlanClick) {
-                    Icon(painter = KenkoIcons.Rename, contentDescription = null)
-                }
-            }
-            HorizontalDivider(
-                thickness = KenkoBorderWidth,
-                color = MaterialTheme.colorScheme.secondary,
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(start = 24.dp, bottom = 16.dp),
-                ) {
-                    Text(
-                        text = name,
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    CompositionLocalProvider(
-                        LocalTextStyle provides MaterialTheme.typography.bodyLarge,
-                        LocalContentColor provides MaterialTheme.colorScheme.outline,
-                    ) {
-                        content()
-                    }
-                }
-                Icon(
-                    imageVector = KenkoIcons.Stack,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.offset(x = 0.dp),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun SelectPlanCard(
-    onSelectPlanClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onTertiaryContainer) {
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.tertiaryContainer)
-                .clickable(onClick = onSelectPlanClick)
-                .padding(vertical = 24.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.label_select_plan),
-                style = MaterialTheme.typography.headlineLarge,
-                modifier = Modifier.paddingFromBaseline(bottom = 16.dp)
-            )
-
-            Icon(
-                painter = KenkoIcons.ArrowOutward,
-                contentDescription = null,
-            )
-        }
-    }
-}
-
-@Composable
 private fun ExerciseCard(
     numberOfExercises: Int,
     onAddClick: () -> Unit,
@@ -466,260 +319,6 @@ private fun WeightCard(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun WeightDialog(
-    initialWeight: Float,
-    isEdit: Boolean,
-    onDismiss: () -> Unit,
-    onConfirm: (Float) -> Unit,
-) {
-    var selectedWeight by remember { mutableStateOf(initialWeight) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = if (isEdit) stringResource(R.string.label_edit_body_weight)
-                else stringResource(R.string.label_add_body_weight)
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                WeightPicker(
-                    value = selectedWeight,
-                    onValueChange = { selectedWeight = it }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.label_weight_unit),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.outline
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onConfirm(selectedWeight) }
-            ) {
-                Text(stringResource(R.string.label_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.label_cancel))
-            }
-        }
-    )
-}
-
-@Composable
-private fun WeightPicker(
-    value: Float,
-    onValueChange: (Float) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val tens = (value / 10).toInt()
-    val ones = (value % 10).toInt()
-    val decimal = ((value * 10) % 10).toInt()
-
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        DigitPicker(
-            value = tens,
-            onValueChange = { onValueChange((it * 10 + ones + decimal * 0.1f)) },
-            range = 0..15 // Support up to 159.9 kg or similar if needed, or just 0..9 for tens
-        )
-        DigitPicker(
-            value = ones,
-            onValueChange = { onValueChange((tens * 10 + it + decimal * 0.1f)) }
-        )
-        Text(
-            text = ".",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(horizontal = 4.dp)
-        )
-        DigitPicker(
-            value = decimal,
-            onValueChange = { onValueChange((tens * 10 + ones + it * 0.1f)) }
-        )
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun DigitPicker(
-    value: Int,
-    onValueChange: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-    range: IntRange = 0..9
-) {
-    val density = androidx.compose.ui.platform.LocalDensity.current
-    val itemHeight = 48.dp
-    val itemHeightPx = with(density) { itemHeight.toPx() }
-    
-    val digits = remember(range) { range.toList() }
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = digits.indexOf(value).coerceAtLeast(0))
-    val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
-
-    LaunchedEffect(listState.isScrollInProgress) {
-        if (!listState.isScrollInProgress) {
-            val centerIndex = listState.firstVisibleItemIndex
-            if (centerIndex in digits.indices) {
-                onValueChange(digits[centerIndex])
-            }
-        }
-    }
-
-    Box(
-        modifier = modifier
-            .width(40.dp)
-            .height(itemHeight * 3),
-        contentAlignment = Alignment.Center
-    ) {
-        // Selection indicator lines
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(itemHeight)
-                .background(
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                    shape = MaterialTheme.shapes.small
-                )
-                .align(Alignment.Center)
-        )
-        
-        LazyColumn(
-            state = listState,
-            flingBehavior = snapFlingBehavior,
-            contentPadding = PaddingValues(vertical = itemHeight),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(digits.size) { index ->
-                val digit = digits[index]
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(itemHeight),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = digit.toString(),
-                        style = if (index == listState.firstVisibleItemIndex) 
-                            MaterialTheme.typography.headlineMedium.numbers() 
-                            else MaterialTheme.typography.titleMedium.numbers(),
-                        color = if (index == listState.firstVisibleItemIndex)
-                            MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.outline
-                    )
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun WeightHistorySheet(
-    weights: List<Weight>,
-    onDismiss: () -> Unit,
-    onEdit: (Weight) -> Unit,
-    onDelete: (Int) -> Unit,
-) {
-    val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = state,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.label_body_weight_history),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(16.dp)
-            )
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(weights.reversed()) { weight ->
-                    SwipeToDeleteBox(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        onDismiss = { onDelete(weight.id) },
-                        showIcon = true
-                    ) {
-                        Surface(
-                            color = MaterialTheme.colorScheme.surfaceContainer,
-                            shape = MaterialTheme.shapes.medium,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onEdit(weight) }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = formatDate(weight.date, DateFormat.YearMonthDay),
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                                Spacer(modifier = Modifier.weight(1f))
-                                Text(
-                                    text = "${weight.value} ${stringResource(R.string.label_weight_unit)}",
-                                    style = MaterialTheme.typography.titleMedium.numbers()
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun PlanCard() {
-    KenkoTheme {
-        CurrentPlanCard(
-            onPlanClick = {
-            },
-            name = "Push-Pull-Leg",
-            content = {
-                Text(
-                    text = stringResource(
-                        R.string.label_plan_description,
-                        12,
-                        normalizeInt(5),
-                        normalizeInt(2),
-                    ),
-                )
-            },
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun EmptyPlanCardPreview() {
-    KenkoTheme {
-        SelectPlanCard({})
     }
 }
 

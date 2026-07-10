@@ -16,10 +16,6 @@ package com.looker.kenko.ui.feature.exercise
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -62,19 +58,17 @@ class AddEditExerciseViewModel @Inject constructor(
 
     private val targetMuscle = MutableStateFlow(MuscleGroups.Chest)
 
-    val snackbarState = SnackbarHostState()
-
-    var exerciseName: String by mutableStateOf("")
-        private set
+    private val exerciseName = MutableStateFlow("")
 
     val isBodyweightFlow = MutableStateFlow(false)
 
     private var originalName: String = ""
 
-    var showRenameConfirmation: Boolean by mutableStateOf(false)
-        private set
+    val showRenameConfirmation = MutableStateFlow(false)
 
-    private val exerciseAlreadyExistError = snapshotFlow { exerciseName }
+    val snackbarState = SnackbarHostState()
+
+    private val exerciseAlreadyExistError = exerciseName
         .debounce(200.milliseconds)
         .mapLatest { repo.isExerciseAvailable(it) && it != originalName }
 
@@ -82,22 +76,28 @@ class AddEditExerciseViewModel @Inject constructor(
         targetMuscle,
         exerciseAlreadyExistError,
         isBodyweightFlow,
-    ) { target, alreadyExist, bodyweight ->
+        exerciseName,
+        showRenameConfirmation,
+    ) { target, alreadyExist, bodyweight, name, renameConfirm ->
         AddEditExerciseUiState(
             targetMuscle = target,
             isError = alreadyExist,
             isBodyweight = bodyweight,
+            exerciseName = name,
+            showRenameConfirmation = renameConfirm,
         )
     }.asStateFlow(
         AddEditExerciseUiState(
             targetMuscle = MuscleGroups.Chest,
             isError = false,
             isBodyweight = false,
+            exerciseName = "",
+            showRenameConfirmation = false,
         ),
     )
 
     fun setName(value: String) {
-        exerciseName = value
+        exerciseName.value = value
     }
 
     fun setTargetMuscle(value: MuscleGroups) {
@@ -107,17 +107,18 @@ class AddEditExerciseViewModel @Inject constructor(
     }
 
     fun dismissRenameConfirmation() {
-        showRenameConfirmation = false
+        showRenameConfirmation.value = false
     }
 
     fun saveExercise(onDone: () -> Unit) {
         viewModelScope.launch {
-            if (exerciseName.isBlank()) {
+            val name = exerciseName.value
+            if (name.isBlank()) {
                 snackbarState.showSnackbar(stringHandler.getString(R.string.error_exercise_name_empty))
                 return@launch
             }
-            if (exerciseId != null && exerciseName != originalName && repo.hasHistory(exerciseId)) {
-                showRenameConfirmation = true
+            if (exerciseId != null && name != originalName && repo.hasHistory(exerciseId)) {
+                showRenameConfirmation.value = true
                 return@launch
             }
             commitRename(onDone)
@@ -126,16 +127,16 @@ class AddEditExerciseViewModel @Inject constructor(
 
     fun confirmRename(onDone: () -> Unit) {
         viewModelScope.launch {
-            showRenameConfirmation = false
+            showRenameConfirmation.value = false
             commitRename(onDone)
         }
     }
 
     private suspend fun commitRename(onDone: () -> Unit) {
         val name = if (settingsRepo.stream.first().capitalizeExerciseName) {
-            exerciseName.titleCase()
+            exerciseName.value.titleCase()
         } else {
-            exerciseName
+            exerciseName.value
         }
         repo.upsert(
             Exercise(
@@ -160,12 +161,12 @@ class AddEditExerciseViewModel @Inject constructor(
                 val exercise = repo.get(exerciseId)
                 exercise?.let {
                     originalName = it.name
-                    setName(it.name)
+                    exerciseName.value = it.name
                     setTargetMuscle(it.target)
                     isBodyweightFlow.value = it.isBodyweight
                 }
             } else {
-                if (routeData.name != null) setName(routeData.name)
+                if (routeData.name != null) exerciseName.value = routeData.name
                 if (defaultTarget != null) setTargetMuscle(defaultTarget)
             }
         }
@@ -177,4 +178,6 @@ data class AddEditExerciseUiState(
     val targetMuscle: MuscleGroups,
     val isError: Boolean,
     val isBodyweight: Boolean,
+    val exerciseName: String = "",
+    val showRenameConfirmation: Boolean = false,
 )

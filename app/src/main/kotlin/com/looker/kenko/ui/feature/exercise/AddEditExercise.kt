@@ -68,7 +68,7 @@ fun AddEditExercise(
     val viewModel: AddEditExerciseViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    if (viewModel.showRenameConfirmation) {
+    if (state.showRenameConfirmation) {
         AlertDialog(
             onDismissRequest = viewModel::dismissRenameConfirmation,
             title = {
@@ -91,7 +91,7 @@ fun AddEditExercise(
     }
 
     AddEditExercise(
-        exerciseName = viewModel.exerciseName,
+        exerciseName = state.exerciseName,
         state = state,
         snackbarState = viewModel.snackbarState,
         onSelectTarget = viewModel::setTargetMuscle,
