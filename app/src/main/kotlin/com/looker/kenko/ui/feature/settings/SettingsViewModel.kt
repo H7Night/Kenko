@@ -22,7 +22,6 @@ import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.backup.BackupManager
 import com.looker.kenko.data.backup.BackupResult
 import com.looker.kenko.domain.model.settings.BackupInterval
-import com.looker.kenko.domain.model.settings.ColorPalettes
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.data.repository.SettingsRepo
@@ -51,7 +50,6 @@ class SettingsViewModel @Inject constructor(
     ) { settings, backupState ->
         SettingsUiData(
             selectedTheme = settings.theme,
-            selectedColorPalette = settings.colorPalette,
             backupUri = settings.backupUri,
             backupInterval = settings.backupInterval,
             lastBackupTime = settings.lastBackupTime,
@@ -64,7 +62,6 @@ class SettingsViewModel @Inject constructor(
     }.asStateFlow(
         SettingsUiData(
             selectedTheme = Theme.System,
-            selectedColorPalette = ColorPalettes.Default,
             backupUri = null,
             backupInterval = BackupInterval.Off,
             lastBackupTime = null,
@@ -79,12 +76,6 @@ class SettingsViewModel @Inject constructor(
     fun updateTheme(theme: Theme) {
         viewModelScope.launch {
             repo.setTheme(theme)
-        }
-    }
-
-    fun updateColorPalette(colorPalette: ColorPalettes) {
-        viewModelScope.launch {
-            repo.setColorPalette(colorPalette)
         }
     }
 
@@ -183,7 +174,6 @@ enum class BackupMessage {
 @Stable
 data class SettingsUiData(
     val selectedTheme: Theme,
-    val selectedColorPalette: ColorPalettes,
     val backupUri: String?,
     val backupInterval: BackupInterval,
     val lastBackupTime: Instant?,

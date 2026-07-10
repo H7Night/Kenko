@@ -14,7 +14,6 @@
 
 package com.looker.kenko.ui
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.looker.kenko.domain.model.settings.Language
@@ -23,14 +22,10 @@ import com.looker.kenko.domain.model.localDate
 import com.looker.kenko.data.repository.PerformanceRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo
-import com.looker.kenko.ui.theme.colorSchemes.ColorSchemes
-import com.looker.kenko.ui.theme.colorSchemes.tokyoNightColorSchemes
-import com.looker.kenko.ui.theme.dynamicColorSchemes
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
@@ -41,7 +36,6 @@ class MainViewModel @Inject constructor(
     repo: SettingsRepo,
     sessionRepo: SessionRepo,
     performanceRepo: PerformanceRepo,
-    context: Context,
 ) : ViewModel() {
 
     val isReady: StateFlow<Boolean> = repo.stream
@@ -54,10 +48,6 @@ class MainViewModel @Inject constructor(
 
     val theme: StateFlow<Theme> = repo.get { theme }
         .asStateFlow(Theme.System)
-
-    val colorScheme: StateFlow<ColorSchemes> = repo.stream
-        .map { it.colorPalette.scheme ?: dynamicColorSchemes(context) ?: tokyoNightColorSchemes }
-        .asStateFlow(tokyoNightColorSchemes)
 
     val language: StateFlow<Language> = repo.get { language }
         .asStateFlow(Language.System)

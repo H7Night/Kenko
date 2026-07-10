@@ -62,7 +62,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val theme by viewModel.theme.collectAsStateWithLifecycle()
-            val colorScheme by viewModel.colorScheme.collectAsStateWithLifecycle()
             val language by viewModel.language.collectAsStateWithLifecycle()
             val isExerciseVisible by viewModel.isExerciseVisible.collectAsStateWithLifecycle()
 
@@ -79,7 +78,6 @@ class MainActivity : AppCompatActivity() {
 
             KenkoTheme(
                 theme = theme,
-                colorSchemes = colorScheme,
             ) {
                 val navController = rememberNavController()
                 val backStackEntry by navController.currentBackStackEntryAsState()

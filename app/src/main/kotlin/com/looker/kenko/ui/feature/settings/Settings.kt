@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.settings.BackupInterval
-import com.looker.kenko.domain.model.settings.ColorPalettes
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.ui.component.BackButton
@@ -79,7 +78,6 @@ fun Settings(
         state = state,
         onSelectLanguage = viewModel::updateLanguage,
         onSelectTheme = viewModel::updateTheme,
-        onSelectColorPalette = viewModel::updateColorPalette,
         onSelectCapitalize = viewModel::updateCapitalizeExerciseName,
         onSelectBackupLocation = viewModel::setBackupLocation,
         onSelectBackupInterval = viewModel::setBackupInterval,
@@ -96,7 +94,6 @@ private fun Settings(
     state: SettingsUiData,
     onSelectLanguage: (Language) -> Unit,
     onSelectTheme: (Theme) -> Unit,
-    onSelectColorPalette: (ColorPalettes) -> Unit,
     onSelectCapitalize: (Boolean) -> Unit,
     onSelectBackupLocation: (Uri) -> Unit,
     onSelectBackupInterval: (BackupInterval) -> Unit,
@@ -157,14 +154,6 @@ private fun Settings(
                 modifier = Modifier.align(CenterHorizontally),
                 selectedTheme = state.selectedTheme,
                 onClick = onSelectTheme,
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            CategoryHeader(title = stringResource(R.string.label_color_palettes))
-            Spacer(modifier = Modifier.height(8.dp))
-            ColorPaletteSelection(
-                selectedColorPalette = state.selectedColorPalette,
-                selectedTheme = state.selectedTheme,
-                onClickPalette = onSelectColorPalette,
             )
             Spacer(modifier = Modifier.height(16.dp))
             PreferenceSwitchRow(
@@ -336,7 +325,6 @@ private fun SettingsPreview() {
         Settings(
             state = SettingsUiData(
                 selectedTheme = Theme.System,
-                selectedColorPalette = ColorPalettes.Default,
                 backupUri = null,
                 backupInterval = BackupInterval.Off,
                 lastBackupTime = null,
@@ -348,7 +336,6 @@ private fun SettingsPreview() {
             ),
             onSelectLanguage = {},
             onSelectTheme = {},
-            onSelectColorPalette = {},
             onSelectCapitalize = {},
             onSelectBackupLocation = {},
             onSelectBackupInterval = {},

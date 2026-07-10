@@ -15,7 +15,6 @@
 package com.looker.kenko.data.repository
 
 import com.looker.kenko.domain.model.settings.BackupInterval
-import com.looker.kenko.domain.model.settings.ColorPalettes
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Settings
 import com.looker.kenko.domain.model.settings.Theme
@@ -29,8 +28,6 @@ interface SettingsRepo {
     fun <T> get(block: Settings.() -> T): Flow<T>
 
     suspend fun setOnboardingDone()
-
-    suspend fun setColorPalette(colorPalette: ColorPalettes)
 
     suspend fun setTheme(theme: Theme)
 
