@@ -12,7 +12,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.looker.kenko.data.model
+package com.looker.kenko.domain.model
 
 // TODO: Empahsis on these being a suggestion, "These labels are just suggestions,
 //  even if you are advanced you can use a beginner plan

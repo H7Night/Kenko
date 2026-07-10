@@ -21,8 +21,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.looker.kenko.data.model.Exercise
-import com.looker.kenko.data.model.MuscleGroups
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel

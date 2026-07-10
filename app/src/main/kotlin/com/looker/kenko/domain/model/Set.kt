@@ -12,22 +12,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.looker.kenko.data.model
+package com.looker.kenko.domain.model
 
 import androidx.compose.runtime.Immutable
-import kotlinx.datetime.DayOfWeek
-import kotlinx.datetime.LocalDate
+import com.looker.kenko.data.local.model.SetType
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Immutable
-data class Session(
-    val date: LocalDate,
-    val sets: List<Set>,
-    val planId: Int?,
-    val planDayOverride: DayOfWeek? = null,
+data class Set(
+    val repsOrDuration: Int,
+    val weight: Float,
+    val type: SetType,
+    val exercise: Exercise,
+    val rir: RepsInReserve,
     val id: Int? = null,
-) {
-    val performExercises: List<Exercise>
-        get() = sets.map { it.exercise }.distinct()
-}
+)
 
-fun Session(planId: Int, sets: List<Set>) = Session(planId = planId, date = localDate, sets = sets)
+val Set.rating: Rating
+    get() = Rating(repsOrDuration * weight * type.ratingModifier * rir.modifier)
+

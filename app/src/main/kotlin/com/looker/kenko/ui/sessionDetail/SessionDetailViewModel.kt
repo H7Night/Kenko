@@ -22,16 +22,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.looker.kenko.R
-import com.looker.kenko.data.model.Exercise
-import com.looker.kenko.data.model.PlanItem
-import com.looker.kenko.data.model.Session
-import com.looker.kenko.data.model.Set
-import com.looker.kenko.data.model.localDate
-import com.looker.kenko.data.model.week
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.PlanItem
+import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.Set
+import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.week
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo
-import com.looker.kenko.data.model.titlesMap
+import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.ui.sessionDetail.navigation.SessionDetailRoute
 import com.looker.kenko.utils.asStateFlow
 import com.looker.kenko.utils.isToday
@@ -157,7 +157,7 @@ class SessionDetailViewModel @Inject constructor(
             val previousSessionDate = flows[2] as LocalDate?
             val available = flows[3] as Map<DayOfWeek, List<Exercise>>
             val isEditMode = flows[4] as Boolean
-            val plans = flows[5] as List<com.looker.kenko.data.model.Plan>
+            val plans = flows[5] as List<com.looker.kenko.domain.model.Plan>
 
             if (session == null && epochDays != null) {
                 return@combine SessionDetailState.Error.InvalidSession

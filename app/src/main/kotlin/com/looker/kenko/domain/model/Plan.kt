@@ -12,14 +12,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.looker.kenko.data.model
+package com.looker.kenko.domain.model
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import com.looker.kenko.data.model.Labels.Difficulty
-import com.looker.kenko.data.model.Labels.Equipment
-import com.looker.kenko.data.model.Labels.Focus
-import com.looker.kenko.data.model.Labels.Time
+import com.looker.kenko.domain.model.Labels.Difficulty
+import com.looker.kenko.domain.model.Labels.Equipment
+import com.looker.kenko.domain.model.Labels.Focus
+import com.looker.kenko.domain.model.Labels.Time
 import kotlin.time.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DayOfWeek

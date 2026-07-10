@@ -15,7 +15,7 @@
 package com.looker.kenko.data.backup
 
 import android.net.Uri
-import com.looker.kenko.data.model.settings.BackupInterval
+import com.looker.kenko.domain.model.settings.BackupInterval
 
 interface BackupManager {
 

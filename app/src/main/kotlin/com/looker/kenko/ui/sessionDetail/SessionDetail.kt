@@ -79,8 +79,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
-import com.looker.kenko.data.model.Exercise
-import com.looker.kenko.data.model.Set
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.Set
 import com.looker.kenko.ui.addSet.AddSet
 import com.looker.kenko.ui.components.BackButton
 import com.looker.kenko.ui.components.KenkoBorderWidth

@@ -16,7 +16,7 @@ package com.looker.kenko.ui.performance
 
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
-import com.looker.kenko.data.model.Plan
+import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.data.repository.Performance
 import com.looker.kenko.data.repository.PerformanceRepo
 import com.looker.kenko.data.repository.PlanRepo

@@ -28,7 +28,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.looker.kenko.data.model.Weight
+import com.looker.kenko.domain.model.Weight
 
 @Composable
 fun WeightLineChart(

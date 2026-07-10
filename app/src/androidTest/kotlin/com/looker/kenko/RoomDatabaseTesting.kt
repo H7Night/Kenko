@@ -24,7 +24,7 @@ import com.looker.kenko.data.local.MIGRATION_1_2
 import com.looker.kenko.data.local.dao.ExerciseDao
 import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.model.ExerciseEntity
-import com.looker.kenko.data.model.MuscleGroups
+import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.utils.EpochDays
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest

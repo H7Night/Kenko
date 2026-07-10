@@ -14,11 +14,11 @@
 
 package com.looker.kenko.data.repository
 
-import com.looker.kenko.data.model.settings.BackupInterval
-import com.looker.kenko.data.model.settings.ColorPalettes
-import com.looker.kenko.data.model.settings.Language
-import com.looker.kenko.data.model.settings.Settings
-import com.looker.kenko.data.model.settings.Theme
+import com.looker.kenko.domain.model.settings.BackupInterval
+import com.looker.kenko.domain.model.settings.ColorPalettes
+import com.looker.kenko.domain.model.settings.Language
+import com.looker.kenko.domain.model.settings.Settings
+import com.looker.kenko.domain.model.settings.Theme
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 

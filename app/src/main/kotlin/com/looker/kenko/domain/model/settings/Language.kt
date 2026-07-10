@@ -12,29 +12,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.looker.kenko.data.model
+package com.looker.kenko.domain.model.settings
 
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
-import androidx.compose.ui.util.packInts
-import androidx.compose.ui.util.unpackInt1
-import androidx.compose.ui.util.unpackInt2
+import androidx.annotation.StringRes
+import com.looker.kenko.R
 
-@Immutable
-@JvmInline
-value class PlanStat(private val packedInt: Long) {
-
-    @Stable
-    val exercises: Int get() = unpackInt1(packedInt)
-
-    @Stable
-    val workDays: Int get() = unpackInt2(packedInt)
-
-    @Stable
-    val restDays: Int get() = 7 - workDays
+enum class Language(val code: String?, @StringRes val labelRes: Int) {
+    System(null, R.string.label_theme_system),
+    English("en", R.string.label_language_en),
+    Chinese("zh", R.string.label_language_zh),
 }
-
-fun PlanStat(exercises: Int, workDays: Int): PlanStat {
-    return PlanStat(packInts(exercises, workDays))
-}
-

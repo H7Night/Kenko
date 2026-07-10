@@ -26,8 +26,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.looker.kenko.R
 import com.looker.kenko.data.StringHandler
-import com.looker.kenko.data.model.Exercise
-import com.looker.kenko.data.model.MuscleGroups
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.ui.addEditExercise.navigation.AddEditExerciseRoute

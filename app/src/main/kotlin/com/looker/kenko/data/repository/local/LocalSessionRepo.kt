@@ -23,9 +23,9 @@ import com.looker.kenko.data.local.model.SetEntity
 import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.data.local.model.toEntity
 import com.looker.kenko.data.local.model.toExternal
-import com.looker.kenko.data.model.RepsInReserve
-import com.looker.kenko.data.model.Session
-import com.looker.kenko.data.model.Set
+import com.looker.kenko.domain.model.RepsInReserve
+import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.Set
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.utils.toLocalEpochDays
 import javax.inject.Inject

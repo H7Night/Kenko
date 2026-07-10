@@ -12,7 +12,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.looker.kenko.data.model.settings
+package com.looker.kenko.domain.model.settings
 
 import androidx.annotation.StringRes
 import com.looker.kenko.R

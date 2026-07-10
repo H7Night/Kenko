@@ -17,10 +17,10 @@ package com.looker.kenko.ui.profile
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.looker.kenko.data.model.Plan
-import com.looker.kenko.data.model.PlanStat
-import com.looker.kenko.data.model.Weight
-import com.looker.kenko.data.model.localDate
+import com.looker.kenko.domain.model.Plan
+import com.looker.kenko.domain.model.PlanStat
+import com.looker.kenko.domain.model.Weight
+import com.looker.kenko.domain.model.localDate
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.WeightRepo

@@ -21,10 +21,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.backup.BackupManager
 import com.looker.kenko.data.backup.BackupResult
-import com.looker.kenko.data.model.settings.BackupInterval
-import com.looker.kenko.data.model.settings.ColorPalettes
-import com.looker.kenko.data.model.settings.Language
-import com.looker.kenko.data.model.settings.Theme
+import com.looker.kenko.domain.model.settings.BackupInterval
+import com.looker.kenko.domain.model.settings.ColorPalettes
+import com.looker.kenko.domain.model.settings.Language
+import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel

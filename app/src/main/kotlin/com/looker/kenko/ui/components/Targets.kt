@@ -37,7 +37,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.looker.kenko.data.model.MuscleGroups
+import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.ui.exercises.string
 import com.looker.kenko.ui.theme.KenkoTheme
 

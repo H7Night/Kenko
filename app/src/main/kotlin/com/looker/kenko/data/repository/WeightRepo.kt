@@ -14,7 +14,7 @@
 
 package com.looker.kenko.data.repository
 
-import com.looker.kenko.data.model.Weight
+import com.looker.kenko.domain.model.Weight
 import kotlinx.coroutines.flow.Flow
 
 interface WeightRepo {

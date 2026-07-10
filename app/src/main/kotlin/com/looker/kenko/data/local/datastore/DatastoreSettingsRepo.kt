@@ -22,11 +22,11 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.looker.kenko.BuildConfig
-import com.looker.kenko.data.model.settings.BackupInterval
-import com.looker.kenko.data.model.settings.ColorPalettes
-import com.looker.kenko.data.model.settings.Language
-import com.looker.kenko.data.model.settings.Settings
-import com.looker.kenko.data.model.settings.Theme
+import com.looker.kenko.domain.model.settings.BackupInterval
+import com.looker.kenko.domain.model.settings.ColorPalettes
+import com.looker.kenko.domain.model.settings.Language
+import com.looker.kenko.domain.model.settings.Settings
+import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.data.repository.SettingsRepo
 import javax.inject.Inject
 import kotlin.time.Instant

@@ -23,8 +23,8 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.looker.kenko.data.local.KenkoDatabase
-import com.looker.kenko.data.model.localDate
-import com.looker.kenko.data.model.settings.BackupInterval
+import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.di.IoDispatcher
 import com.looker.kenko.utils.DateFormat
 import dagger.hilt.android.qualifiers.ApplicationContext

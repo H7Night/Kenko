@@ -19,8 +19,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteStatement
 import com.looker.kenko.data.local.model.ExerciseEntity
-import com.looker.kenko.data.model.Set
-import com.looker.kenko.data.model.localDate
+import com.looker.kenko.domain.model.Set
+import com.looker.kenko.domain.model.localDate
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.serializers.DayOfWeekSerializer

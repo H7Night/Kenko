@@ -16,10 +16,10 @@ package com.looker.kenko
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.looker.kenko.data.local.model.SetType
-import com.looker.kenko.data.model.PlanItem
-import com.looker.kenko.data.model.RepsInReserve
-import com.looker.kenko.data.model.Set
-import com.looker.kenko.data.model.localDate
+import com.looker.kenko.domain.model.PlanItem
+import com.looker.kenko.domain.model.RepsInReserve
+import com.looker.kenko.domain.model.Set
+import com.looker.kenko.domain.model.localDate
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo

@@ -56,12 +56,12 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
 import com.looker.kenko.data.local.model.SetType
-import com.looker.kenko.data.model.Exercise
-import com.looker.kenko.data.model.ExercisesPreviewParameter
-import com.looker.kenko.data.model.MuscleGroups
-import com.looker.kenko.data.model.RepsInReserve
-import com.looker.kenko.data.model.Set
-import com.looker.kenko.data.model.repDurationStringRes
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.ExercisesPreviewParameter
+import com.looker.kenko.domain.model.MuscleGroups
+import com.looker.kenko.domain.model.RepsInReserve
+import com.looker.kenko.domain.model.Set
+import com.looker.kenko.domain.model.repDurationStringRes
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.ui.theme.numbers
 

@@ -12,25 +12,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.looker.kenko.data.model
+package com.looker.kenko.domain.model
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.looker.kenko.R
-import com.looker.kenko.data.model.MuscleGroups.Biceps
-import com.looker.kenko.data.model.MuscleGroups.Calves
-import com.looker.kenko.data.model.MuscleGroups.Chest
-import com.looker.kenko.data.model.MuscleGroups.Core
-import com.looker.kenko.data.model.MuscleGroups.Glutes
-import com.looker.kenko.data.model.MuscleGroups.Hamstrings
-import com.looker.kenko.data.model.MuscleGroups.Lats
-import com.looker.kenko.data.model.MuscleGroups.Quads
-import com.looker.kenko.data.model.MuscleGroups.Shoulders
-import com.looker.kenko.data.model.MuscleGroups.Traps
-import com.looker.kenko.data.model.MuscleGroups.Triceps
-import com.looker.kenko.data.model.MuscleGroups.UpperBack
+import com.looker.kenko.domain.model.MuscleGroups.Biceps
+import com.looker.kenko.domain.model.MuscleGroups.Calves
+import com.looker.kenko.domain.model.MuscleGroups.Chest
+import com.looker.kenko.domain.model.MuscleGroups.Core
+import com.looker.kenko.domain.model.MuscleGroups.Glutes
+import com.looker.kenko.domain.model.MuscleGroups.Hamstrings
+import com.looker.kenko.domain.model.MuscleGroups.Lats
+import com.looker.kenko.domain.model.MuscleGroups.Quads
+import com.looker.kenko.domain.model.MuscleGroups.Shoulders
+import com.looker.kenko.domain.model.MuscleGroups.Traps
+import com.looker.kenko.domain.model.MuscleGroups.Triceps
+import com.looker.kenko.domain.model.MuscleGroups.UpperBack
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

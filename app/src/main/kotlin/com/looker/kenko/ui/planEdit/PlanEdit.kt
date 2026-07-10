@@ -86,9 +86,9 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.BuildConfig
 import com.looker.kenko.R
-import com.looker.kenko.data.model.Exercise
-import com.looker.kenko.data.model.ExercisesPreviewParameter
-import com.looker.kenko.data.model.MuscleGroups
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.ExercisesPreviewParameter
+import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.ui.components.BackButton
 import com.looker.kenko.ui.components.DaySelectorChip
 import com.looker.kenko.ui.components.ErrorSnackbar

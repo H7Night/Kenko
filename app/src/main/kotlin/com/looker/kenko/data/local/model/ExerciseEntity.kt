@@ -16,8 +16,8 @@ package com.looker.kenko.data.local.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.looker.kenko.data.model.Exercise
-import com.looker.kenko.data.model.MuscleGroups
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.MuscleGroups
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

@@ -20,8 +20,8 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.looker.kenko.data.model.Session
-import com.looker.kenko.data.model.Set
+import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.Set
 import com.looker.kenko.utils.EpochDays
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate

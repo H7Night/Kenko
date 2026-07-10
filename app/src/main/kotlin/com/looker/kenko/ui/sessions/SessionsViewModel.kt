@@ -16,12 +16,12 @@ package com.looker.kenko.ui.sessions
 
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
-import com.looker.kenko.data.model.Session
-import com.looker.kenko.data.model.localDate
+import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.localDate
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.PlanRepo
-import com.looker.kenko.data.model.Exercise
-import com.looker.kenko.data.model.titlesMap
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject

@@ -23,7 +23,7 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import com.looker.kenko.data.local.model.ExerciseEntity
 import com.looker.kenko.data.local.model.PlanDayEntity
 import com.looker.kenko.data.local.model.PlanEntity
-import com.looker.kenko.data.model.Labels
+import com.looker.kenko.domain.model.Labels
 import kotlinx.coroutines.flow.Flow
 
 @Dao

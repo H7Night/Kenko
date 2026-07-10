@@ -15,9 +15,9 @@
 package com.looker.kenko.data.repository
 
 import com.looker.kenko.data.local.model.SetType
-import com.looker.kenko.data.model.RepsInReserve
-import com.looker.kenko.data.model.Session
-import com.looker.kenko.data.model.Set
+import com.looker.kenko.domain.model.RepsInReserve
+import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.Set
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate

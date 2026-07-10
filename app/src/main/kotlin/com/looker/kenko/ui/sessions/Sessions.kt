@@ -46,8 +46,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
-import com.looker.kenko.data.model.Session
-import com.looker.kenko.data.model.Exercise
+import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.ui.components.BackButton
 import com.looker.kenko.ui.components.EmptyPage
 import com.looker.kenko.ui.extensions.plus
@@ -252,8 +252,8 @@ private fun ExportDialog(
     onExportMarkdown: (LocalDate, LocalDate) -> Unit,
 ) {
     val context = LocalContext.current
-    var startDate by remember { mutableStateOf(com.looker.kenko.data.model.localDate) }
-    var endDate by remember { mutableStateOf(com.looker.kenko.data.model.localDate) }
+    var startDate by remember { mutableStateOf(com.looker.kenko.domain.model.localDate) }
+    var endDate by remember { mutableStateOf(com.looker.kenko.domain.model.localDate) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -292,7 +292,7 @@ private fun AddHistoryDialog(
     onDismiss: () -> Unit,
     onConfirm: (LocalDate, DayOfWeek) -> Unit,
 ) {
-    var date by remember { mutableStateOf(com.looker.kenko.data.model.localDate) }
+    var date by remember { mutableStateOf(com.looker.kenko.domain.model.localDate) }
     var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
 
     LaunchedEffect(date) {

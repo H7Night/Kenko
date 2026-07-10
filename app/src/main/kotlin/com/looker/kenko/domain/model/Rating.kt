@@ -12,13 +12,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.looker.kenko.data.model.settings
+package com.looker.kenko.domain.model
 
-import androidx.annotation.StringRes
-import com.looker.kenko.R
+import androidx.compose.runtime.Immutable
 
-enum class Language(val code: String?, @StringRes val labelRes: Int) {
-    System(null, R.string.label_theme_system),
-    English("en", R.string.label_language_en),
-    Chinese("zh", R.string.label_language_zh),
-}
+@Immutable
+@JvmInline
+value class Rating(val value: Float)
+
+operator fun Rating.plus(other: Rating) = Rating(value + other.value)

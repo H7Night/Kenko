@@ -58,7 +58,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import com.looker.kenko.data.model.Weight
+import com.looker.kenko.domain.model.Weight
 import com.looker.kenko.ui.components.WeightLineChart
 import com.looker.kenko.utils.DateFormat
 import com.looker.kenko.utils.formatDate
@@ -95,7 +95,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
-import com.looker.kenko.data.model.PlanStat
+import com.looker.kenko.domain.model.PlanStat
 import com.looker.kenko.ui.components.BackButton
 import com.looker.kenko.ui.components.KenkoBorderWidth
 import com.looker.kenko.ui.components.OutlineBorder

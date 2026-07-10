@@ -14,13 +14,13 @@
 
 package com.looker.kenko.data.repository
 
-import com.looker.kenko.data.model.Exercise
-import com.looker.kenko.data.model.Labels.Difficulty
-import com.looker.kenko.data.model.Labels.Equipment
-import com.looker.kenko.data.model.Labels.Focus
-import com.looker.kenko.data.model.Labels.Time
-import com.looker.kenko.data.model.Plan
-import com.looker.kenko.data.model.PlanItem
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.Labels.Difficulty
+import com.looker.kenko.domain.model.Labels.Equipment
+import com.looker.kenko.domain.model.Labels.Focus
+import com.looker.kenko.domain.model.Labels.Time
+import com.looker.kenko.domain.model.Plan
+import com.looker.kenko.domain.model.PlanItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.DayOfWeek
 

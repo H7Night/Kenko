@@ -16,7 +16,7 @@ package com.looker.kenko.ui.plans
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.looker.kenko.data.model.Plan
+import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.utils.asStateFlow

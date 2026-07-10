@@ -41,8 +41,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
-import com.looker.kenko.data.model.Plan
-import com.looker.kenko.data.model.PlanPreviewParameters
+import com.looker.kenko.domain.model.Plan
+import com.looker.kenko.domain.model.PlanPreviewParameters
 import com.looker.kenko.ui.extensions.normalizeInt
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme

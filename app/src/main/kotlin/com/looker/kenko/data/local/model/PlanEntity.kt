@@ -19,15 +19,15 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.looker.kenko.data.model.Exercise
-import com.looker.kenko.data.model.Labels.Difficulty
-import com.looker.kenko.data.model.Labels.Equipment
-import com.looker.kenko.data.model.Labels.Focus
-import com.looker.kenko.data.model.Labels.Time
-import com.looker.kenko.data.model.MuscleGroups
-import com.looker.kenko.data.model.Plan
-import com.looker.kenko.data.model.PlanItem
-import com.looker.kenko.data.model.PlanStat
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.Labels.Difficulty
+import com.looker.kenko.domain.model.Labels.Equipment
+import com.looker.kenko.domain.model.Labels.Focus
+import com.looker.kenko.domain.model.Labels.Time
+import com.looker.kenko.domain.model.MuscleGroups
+import com.looker.kenko.domain.model.Plan
+import com.looker.kenko.domain.model.PlanItem
+import com.looker.kenko.domain.model.PlanStat
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.isoDayNumber
 

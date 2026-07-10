@@ -16,7 +16,7 @@ package com.looker.kenko.ui.home
 
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
-import com.looker.kenko.data.model.localDate
+import com.looker.kenko.domain.model.localDate
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.utils.asStateFlow

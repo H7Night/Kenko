@@ -19,7 +19,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
-import com.looker.kenko.data.model.MuscleGroups
+import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.ui.planEdit.PlanEdit
 import kotlinx.serialization.Serializable
 

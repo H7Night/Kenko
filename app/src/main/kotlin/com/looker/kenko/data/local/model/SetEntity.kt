@@ -19,9 +19,9 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.looker.kenko.data.model.Exercise
-import com.looker.kenko.data.model.RepsInReserve
-import com.looker.kenko.data.model.Set
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.RepsInReserve
+import com.looker.kenko.domain.model.Set
 
 @Entity(
     "sets",

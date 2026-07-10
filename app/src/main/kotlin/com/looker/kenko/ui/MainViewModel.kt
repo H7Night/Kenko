@@ -17,9 +17,9 @@ package com.looker.kenko.ui
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.looker.kenko.data.model.settings.Language
-import com.looker.kenko.data.model.settings.Theme
-import com.looker.kenko.data.model.localDate
+import com.looker.kenko.domain.model.settings.Language
+import com.looker.kenko.domain.model.settings.Theme
+import com.looker.kenko.domain.model.localDate
 import com.looker.kenko.data.repository.PerformanceRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo

@@ -52,8 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
-import com.looker.kenko.data.model.Exercise
-import com.looker.kenko.data.model.MuscleGroups
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.ui.components.LazyTargets
 import com.looker.kenko.ui.components.TargetChip
 import com.looker.kenko.ui.components.disableScrollConnection

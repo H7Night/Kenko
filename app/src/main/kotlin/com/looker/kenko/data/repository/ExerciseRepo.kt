@@ -14,7 +14,7 @@
 
 package com.looker.kenko.data.repository
 
-import com.looker.kenko.data.model.Exercise
+import com.looker.kenko.domain.model.Exercise
 import kotlinx.coroutines.flow.Flow
 
 interface ExerciseRepo {

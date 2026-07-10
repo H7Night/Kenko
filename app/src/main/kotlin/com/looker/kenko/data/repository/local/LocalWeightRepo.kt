@@ -16,9 +16,9 @@ package com.looker.kenko.data.repository.local
 
 import com.looker.kenko.data.local.dao.WeightDao
 import com.looker.kenko.data.local.model.WeightEntity
-import com.looker.kenko.data.model.Weight
-import com.looker.kenko.data.model.toEntity
-import com.looker.kenko.data.model.toExternal
+import com.looker.kenko.domain.model.Weight
+import com.looker.kenko.domain.model.toEntity
+import com.looker.kenko.domain.model.toExternal
 import com.looker.kenko.data.repository.WeightRepo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

@@ -80,10 +80,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
-import com.looker.kenko.data.model.settings.BackupInterval
-import com.looker.kenko.data.model.settings.ColorPalettes
-import com.looker.kenko.data.model.settings.Language
-import com.looker.kenko.data.model.settings.Theme
+import com.looker.kenko.domain.model.settings.BackupInterval
+import com.looker.kenko.domain.model.settings.ColorPalettes
+import com.looker.kenko.domain.model.settings.Language
+import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.ui.components.BackButton
 import com.looker.kenko.ui.components.KenkoBorderWidth
 import com.looker.kenko.ui.theme.KenkoIcons

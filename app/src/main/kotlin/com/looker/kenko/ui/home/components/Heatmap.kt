@@ -42,7 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
-import com.looker.kenko.data.model.localDate
+import com.looker.kenko.domain.model.localDate
 import com.looker.kenko.ui.theme.KenkoIcons
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
