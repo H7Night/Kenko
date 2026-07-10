@@ -1,0 +1,660 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.looker.kenko.ui.feature.session
+
+import androidx.compose.ui.draw.rotate
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.width
+import com.looker.kenko.ui.theme.numbers
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.SwapHoriz
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonShapes
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.toShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.looker.kenko.R
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.Set
+import com.looker.kenko.ui.feature.session.AddSet
+import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.ui.component.KenkoBorderWidth
+import com.looker.kenko.ui.component.SwipeToDeleteBox
+import com.looker.kenko.ui.component.TypingText
+import com.looker.kenko.ui.extension.normalizeInt
+import com.looker.kenko.ui.extension.plus
+import com.looker.kenko.ui.feature.plan.components.dayName
+import com.looker.kenko.ui.feature.session.components.SetItem
+import com.looker.kenko.ui.theme.KenkoIcons
+import com.looker.kenko.ui.theme.KenkoTheme
+import com.looker.kenko.utils.DateFormat
+import com.looker.kenko.utils.formatDate
+import java.util.*
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
+
+@Composable
+fun SessionDetails(
+    viewModel: SessionDetailViewModel,
+    onBackPress: () -> Unit,
+    onHistoryClick: (LocalDate) -> Unit,
+    showBackButton: Boolean = true,
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val previousSessionDate = (state as? SessionDetailState.Success)?.data?.previousSessionDate
+    SessionDetail(
+        state = state,
+        onBackPress = onBackPress,
+        onRemoveSet = viewModel::removeSet,
+        onUpdateSet = viewModel::updateSet,
+        onSelectBottomSheet = viewModel::showBottomSheet,
+        onHistoryClick = { previousSessionDate?.let(onHistoryClick) },
+        onImportDay = viewModel::importPlanFromDay,
+        onEditToggle = viewModel::toggleEditMode,
+        onClearSets = viewModel::clearTodaySets,
+        showBackButton = showBackButton,
+    )
+    val exercise by viewModel.current.collectAsStateWithLifecycle()
+    if (exercise != null) {
+        AddSetSheet(
+            exercise = exercise!!,
+            date = (state as? SessionDetailState.Success)?.data?.date,
+            onDismiss = viewModel::hideSheet,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SessionDetail(
+    state: SessionDetailState,
+    onBackPress: () -> Unit = {},
+    onRemoveSet: (Int?) -> Unit = {},
+    onUpdateSet: (Int?, Int, Float) -> Unit = { _, _, _ -> },
+    onSelectBottomSheet: (Exercise) -> Unit = {},
+    onHistoryClick: () -> Unit = {},
+    onImportDay: (DayOfWeek) -> Unit = {},
+    onEditToggle: () -> Unit = {},
+    onClearSets: () -> Unit = {},
+    showBackButton: Boolean = true,
+) {
+    when (state) {
+        is SessionDetailState.Error.InvalidSession -> {
+            Column(Modifier.statusBarsPadding()) {
+                TopAppBar(
+                    navigationIcon = {
+                        if (showBackButton) BackButton(onClick = onBackPress)
+                    },
+                    title = {},
+                )
+                SessionError(
+                    title = stringResource(state.title),
+                    message = stringResource(state.errorMessage),
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+
+        is SessionDetailState.Error.EmptyPlan -> {
+            var showImportList by remember { mutableStateOf(false) }
+            Column(Modifier.statusBarsPadding()) {
+                TopAppBar(
+                    navigationIcon = {
+                        if (showBackButton) BackButton(onClick = onBackPress)
+                    },
+                    title = {},
+                )
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    SessionError(
+                        title = stringResource(state.title),
+                        message = stringResource(state.errorMessage),
+                    )
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    if (!showImportList) {
+                        FilledTonalButton(
+                            onClick = { showImportList = true },
+                            shape = MaterialTheme.shapes.large,
+                            contentPadding = PaddingValues(horizontal = 32.dp, vertical = 16.dp)
+                        ) {
+                            Text(text = stringResource(R.string.label_train_anyway))
+                        }
+                        Spacer(modifier = Modifier.weight(1.5f))
+                    } else if (state.availablePlanDays.isNotEmpty()) {
+                        HorizontalDivider(
+                            thickness = KenkoBorderWidth,
+                            modifier = Modifier.padding(horizontal = 32.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.label_import_from_other_day),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(top = 24.dp, bottom = 16.dp)
+                        )
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            contentPadding = PaddingValues(horizontal = 32.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.weight(3f)
+                        ) {
+                            state.availablePlanDays.toSortedMap().forEach { (day, exercises) ->
+                                item {
+                                    Button(
+                                        onClick = { onImportDay(day) },
+                                        shape = MaterialTheme.shapes.large,
+                                        contentPadding = PaddingValues(vertical = 12.dp)
+                                    ) {
+                                        val title = state.dayTitles[day]
+                                        Text(text = if (title.isNullOrBlank()) dayName(day) else title)
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.weight(1.5f))
+                    }
+                }
+            }
+        }
+
+        SessionDetailState.Loading -> {
+            Column(Modifier.statusBarsPadding()) {
+                TopAppBar(
+                    navigationIcon = {
+                        if (showBackButton) BackButton(onClick = onBackPress)
+                    },
+                    title = {},
+                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+
+        is SessionDetailState.Success -> {
+            val data = state.data
+            SetsList(
+                date = data.date,
+                exerciseSets = data.sets,
+                isToday = data.isToday,
+                isEditMode = data.isEditMode,
+                previousSessionDate = data.previousSessionDate,
+                dayTitle = data.dayTitle,
+                availablePlanDays = data.availablePlanDays,
+                dayTitles = data.dayTitles,
+                onBackPress = onBackPress,
+                onRemoveSet = onRemoveSet,
+                onUpdateSet = onUpdateSet,
+                onSelectBottomSheet = onSelectBottomSheet,
+                onHistoryClick = onHistoryClick,
+                onEditToggle = onEditToggle,
+                onImportDay = onImportDay,
+                onClearSets = onClearSets,
+                showBackButton = showBackButton,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun SetsList(
+    date: LocalDate,
+    exerciseSets: Map<Exercise, List<Set>>,
+    isToday: Boolean,
+    isEditMode: Boolean,
+    previousSessionDate: LocalDate?,
+    dayTitle: String?,
+    availablePlanDays: Map<DayOfWeek, List<Exercise>>,
+    dayTitles: Map<DayOfWeek, String>,
+    onBackPress: () -> Unit,
+    onRemoveSet: (Int?) -> Unit,
+    onUpdateSet: (Int?, Int, Float) -> Unit,
+    onSelectBottomSheet: (Exercise) -> Unit,
+    onHistoryClick: () -> Unit,
+    onEditToggle: () -> Unit,
+    onImportDay: (DayOfWeek) -> Unit,
+    onClearSets: () -> Unit,
+    showBackButton: Boolean = true,
+) {
+    var collapsedExercises by rememberSaveable { mutableStateOf(emptySet<Int>()) }
+    var showImportDialog by remember { mutableStateOf(false) }
+    var showImportSheet by remember { mutableStateOf(false) }
+
+    if (showImportDialog) {
+        AlertDialog(
+            onDismissRequest = { showImportDialog = false },
+            title = { Text(text = stringResource(R.string.label_modify_plan)) },
+            text = { Text(text = stringResource(R.string.label_modify_plan_message)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onClearSets()
+                        showImportDialog = false
+                        showImportSheet = true
+                    },
+                ) {
+                    Text(text = stringResource(R.string.label_yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImportDialog = false }) {
+                    Text(text = stringResource(R.string.label_no))
+                }
+            }
+        )
+    }
+
+    if (showImportSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showImportSheet = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ) {
+            Text(
+                text = stringResource(R.string.label_import_plan),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(16.dp)
+            )
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(bottom = 32.dp)
+            ) {
+                availablePlanDays.toSortedMap().forEach { (day, exercises) ->
+                    item {
+                        Button(
+                            onClick = {
+                                onImportDay(day)
+                                showImportSheet = false
+                            },
+                            shape = MaterialTheme.shapes.large,
+                            contentPadding = PaddingValues(vertical = 12.dp)
+                        ) {
+                            val title = dayTitles[day]
+                            Text(text = if (title.isNullOrBlank()) dayName(day) else title)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(360.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        contentPadding = WindowInsets.navigationBars.asPaddingValues(LocalDensity.current) +
+                PaddingValues(bottom = 12.dp),
+    ) {
+        item(
+            span = { GridItemSpan(maxLineSpan) },
+        ) {
+            Header(
+                performedOn = date,
+                dayTitle = dayTitle,
+                onBackPress = onBackPress,
+                showBackButton = showBackButton,
+                actions = {
+                    if (isToday) {
+                        IconButton(onClick = { showImportDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Rounded.SwapHoriz,
+                                contentDescription = null,
+                            )
+                        }
+                    }
+
+                    if (previousSessionDate != null) {
+                        IconButton(onClick = onHistoryClick) {
+                            Icon(
+                                painter = KenkoIcons.History,
+                                contentDescription = null,
+                            )
+                        }
+                    }
+
+                    if (!isToday) {
+                        IconButton(onClick = onEditToggle) {
+                            Icon(
+                                painter = if (isEditMode) KenkoIcons.Done else KenkoIcons.Rename,
+                                contentDescription = null,
+                            )
+                        }
+                    }
+                },
+            )
+        }
+        exerciseSets.forEach { (exercise, sets) ->
+            val isCollapsed = exercise.id in collapsedExercises
+            item(
+                span = { GridItemSpan(maxLineSpan) },
+            ) {
+                StickyHeader(
+                    name = exercise.name,
+                    setCount = sets.size,
+                    isCollapsed = isCollapsed,
+                    onCollapseToggle = {
+                        collapsedExercises = if (isCollapsed) {
+                            collapsedExercises - exercise.id!!
+                        } else {
+                            collapsedExercises + exercise.id!!
+                        }
+                    }
+                ) {
+                    if (isEditMode) {
+                        FilledTonalIconButton(
+                            shapes = IconButtonShapes(
+                                shape = MaterialShapes.Circle.toShape(),
+                                pressedShape = MaterialShapes.Cookie6Sided.toShape(),
+                            ),
+                            onClick = { onSelectBottomSheet(exercise) },
+                        ) {
+                            Icon(painter = KenkoIcons.Add, contentDescription = null)
+                        }
+                    }
+                }
+            }
+            if (!isCollapsed) {
+                itemsIndexed(items = sets) { index, set ->
+                    val setItem = @Composable {
+                        SetItem(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                            set = set,
+                            isToday = isToday,
+                            isEditMode = isEditMode,
+                            onRepsUpdate = { onUpdateSet(set.id, it, set.weight) },
+                            onWeightUpdate = { onUpdateSet(set.id, set.repsOrDuration, it) },
+                            title = {
+                                Text(normalizeInt(index + 1))
+                            },
+                        )
+                    }
+                    if (isEditMode) {
+                        SwipeToDeleteBox(
+                            modifier = Modifier.animateItem(),
+                            onDismiss = { onRemoveSet(set.id) },
+                            content = setItem
+                        )
+                    } else {
+                        setItem()
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun Header(
+    performedOn: LocalDate,
+    dayTitle: String?,
+    onBackPress: () -> Unit,
+    modifier: Modifier = Modifier,
+    showBackButton: Boolean = true,
+    actions: @Composable (RowScope.() -> Unit),
+) {
+    val date = remember {
+        formatDate(performedOn, DateFormat.YearMonthDay)
+    }
+    val name = dayName(performedOn.dayOfWeek)
+    val dayText = remember(dayTitle, name) {
+        if (dayTitle.isNullOrBlank()) name else "$dayTitle ($name)"
+    }
+    TopAppBar(
+        modifier = modifier,
+        actions = actions,
+        navigationIcon = { if (showBackButton) BackButton(onClick = onBackPress) },
+        title = {
+            Column(
+                verticalArrangement = Arrangement.Center,
+            ) {
+                var startAnimatingDate by remember {
+                    mutableStateOf(false)
+                }
+                TypingText(
+                    text = dayText,
+                    onCompleteListener = {
+                        startAnimatingDate = true
+                    },
+                )
+                TypingText(
+                    text = date,
+                    startTyping = startAnimatingDate,
+                    initialDelay = 0.milliseconds,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.outline,
+                )
+            }
+        },
+
+    )
+}
+
+@Composable
+private fun StickyHeader(
+    name: String,
+    setCount: Int = 0,
+    isCollapsed: Boolean = false,
+    onCollapseToggle: () -> Unit = {},
+    actions: (@Composable RowScope.() -> Unit)? = null,
+) {
+    Surface(
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = MaterialTheme.shapes.medium,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(24.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(onClick = onCollapseToggle),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                if (setCount > 0) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = normalizeInt(setCount),
+                        style = MaterialTheme.typography.titleMedium.numbers(),
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                    Icon(
+                        modifier = Modifier.rotate(if (isCollapsed) 180F else 90F),
+                        painter = KenkoIcons.KeyboardArrowRight,
+                        tint = MaterialTheme.colorScheme.outline,
+                        contentDescription = null,
+                    )
+                }
+            }
+            if (actions != null) {
+                actions()
+            }
+        }
+    }
+}
+
+@Composable
+private fun SessionError(
+    title: String,
+    message: String,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                text = message,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.outline,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddSetSheet(
+    exercise: Exercise,
+    date: LocalDate?,
+    onDismiss: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
+        sheetState = state,
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        AddSet(
+            exercise = exercise,
+            date = date,
+            onDone = {
+                scope.launch { state.hide() }.invokeOnCompletion {
+                    if (!state.isVisible) onDismiss()
+                }
+            },
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SessionDetailPreview() {
+    KenkoTheme {
+        val data = remember {
+            SessionDetailState.Success(
+                SessionUiData(
+                    date = LocalDate(2024, 4, 15),
+                    sets = emptyMap(),
+                    isToday = true,
+                ),
+            )
+        }
+        Surface(modifier = Modifier.fillMaxSize()) {
+            SessionDetail(state = data)
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SessionErrorPreview() {
+    KenkoTheme {
+        val data = remember {
+            SessionDetailState.Error.InvalidSession
+        }
+        Surface(modifier = Modifier.fillMaxSize()) {
+            SessionDetail(state = data)
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SessionEmptyPreview() {
+    KenkoTheme {
+        val data = remember {
+            SessionDetailState.Error.EmptyPlan(
+                mapOf(DayOfWeek.MONDAY to emptyList())
+            )
+        }
+        Surface(modifier = Modifier.fillMaxSize()) {
+            SessionDetail(state = data)
+        }
+    }
+}

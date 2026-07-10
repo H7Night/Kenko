@@ -1,0 +1,248 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.looker.kenko.ui.feature.exercise
+
+import androidx.annotation.StringRes
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.looker.kenko.R
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.ExercisesPreviewParameter
+import com.looker.kenko.domain.model.MuscleGroups
+import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.ui.component.ErrorSnackbar
+import com.looker.kenko.ui.component.KenkoBorderWidth
+import com.looker.kenko.ui.component.LazyTargets
+import com.looker.kenko.ui.component.SecondaryKenkoButton
+import com.looker.kenko.ui.component.SwipeToDeleteBox
+import com.looker.kenko.ui.component.TargetChip
+import com.looker.kenko.ui.extension.plus
+import com.looker.kenko.ui.theme.KenkoIcons
+import com.looker.kenko.ui.theme.KenkoTheme
+
+@Composable
+fun Exercises(
+    viewModel: ExercisesViewModel,
+    onExerciseClick: (id: Int?) -> Unit,
+    onCreateClick: (target: MuscleGroups?) -> Unit,
+    onBackPress: () -> Unit,
+) {
+    val state by viewModel.exercises.collectAsStateWithLifecycle()
+    Exercises(
+        state = state,
+        snackbarState = viewModel.snackbarState,
+        onBackPress = onBackPress,
+        onExerciseClick = onExerciseClick,
+        onCreateClick = onCreateClick,
+        onSelectTarget = viewModel::setTarget,
+        onReferenceClick = viewModel::onReferenceClick,
+        onRemove = viewModel::removeExercise,
+    )
+}
+
+@Composable
+private fun Exercises(
+    state: ExercisesUiState,
+    snackbarState: SnackbarHostState,
+    onExerciseClick: (id: Int?) -> Unit,
+    onCreateClick: (target: MuscleGroups?) -> Unit,
+    onSelectTarget: (MuscleGroups?) -> Unit,
+    onRemove: (Int?) -> Unit,
+    onBackPress: () -> Unit,
+    onReferenceClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Scaffold(
+        modifier = modifier.fillMaxWidth(),
+        floatingActionButton = {
+            SecondaryKenkoButton(
+                onClick = { onCreateClick(state.selected) },
+                label = {
+                    Icon(
+                        painter = KenkoIcons.Add,
+                        contentDescription = null,
+                    )
+                },
+                icon = {
+                    Text(stringResource(R.string.label_create_exercise))
+                }
+            )
+        },
+        floatingActionButtonPosition = FabPosition.Center,
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarState) {
+                ErrorSnackbar(data = it)
+            }
+        },
+        topBar = {
+            Header(
+                target = state.selected,
+                onSelect = onSelectTarget,
+                onBackPress = onBackPress,
+            )
+        },
+    ) { innerPadding ->
+        ExercisesList(
+            exercises = state.exercises,
+            contentPadding = innerPadding + PaddingValues(bottom = 80.dp),
+            onExerciseClick = onExerciseClick,
+            onReferenceClick = onReferenceClick,
+            onRemove = onRemove,
+        )
+    }
+}
+
+@Composable
+private fun ExercisesList(
+    exercises: List<Exercise>,
+    contentPadding: PaddingValues,
+    onExerciseClick: (id: Int?) -> Unit,
+    onRemove: (Int?) -> Unit,
+    onReferenceClick: (String) -> Unit,
+) {
+    LazyColumn(
+        contentPadding = contentPadding + PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items(exercises, key = { it.id!! }) { exercise ->
+            val exerciseId by rememberUpdatedState(exercise.id)
+            SwipeToDeleteBox(
+                modifier = Modifier.animateItem(),
+                onDismiss = { onRemove(exerciseId) }
+            ) {
+                ExerciseItem(
+                    exercise = exercise,
+                    onClick = { onExerciseClick(exerciseId) },
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun Header(
+    target: MuscleGroups?,
+    onSelect: (MuscleGroups?) -> Unit,
+    onBackPress: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.background(MaterialTheme.colorScheme.background)) {
+        TopAppBar(
+            title = {
+                Text(text = stringResource(id = R.string.label_browse_exercises))
+            },
+            navigationIcon = {
+                BackButton(onClick = onBackPress)
+            }
+        )
+        LazyTargets(contentPadding = PaddingValues(horizontal = 8.dp)) {
+            TargetChip(
+                selected = target == it,
+                onClick = { onSelect(it) },
+                text = stringResource(it.string),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExerciseItem(
+    exercise: Exercise,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    @StringRes
+    val targetName: Int = remember { exercise.target.stringRes }
+    Surface(
+        modifier = modifier,
+        onClick = onClick,
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(
+                    text = exercise.name,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = stringResource(targetName),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.outline,
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ExercisesPreview(
+    @PreviewParameter(ExercisesPreviewParameter::class, limit = 2) exercises: List<Exercise>,
+) {
+    KenkoTheme {
+        Exercises(
+            state = ExercisesUiState(MuscleGroups.entries.flatMap { exercises }),
+            snackbarState = SnackbarHostState(),
+            onExerciseClick = {},
+            onCreateClick = {},
+            onSelectTarget = {},
+            onBackPress = {},
+            onReferenceClick = {},
+            onRemove = {}
+        )
+    }
+}

@@ -21,25 +21,25 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.navOptions
-import com.looker.kenko.ui.addEditExercise.navigation.addEditExercise
-import com.looker.kenko.ui.addEditExercise.navigation.navigateToAddEditExercise
-import com.looker.kenko.ui.exercises.navigation.exercises
-import com.looker.kenko.ui.exercises.navigation.navigateToExercises
-import com.looker.kenko.ui.home.navigation.HomeRoute
-import com.looker.kenko.ui.home.navigation.home
-import com.looker.kenko.ui.performance.navigation.performance
-import com.looker.kenko.ui.planEdit.navigation.navigateToPlanEdit
-import com.looker.kenko.ui.planEdit.navigation.planEdit
-import com.looker.kenko.ui.plans.navigation.navigateToPlans
-import com.looker.kenko.ui.plans.navigation.plans
-import com.looker.kenko.ui.profile.navigation.navigateToProfile
-import com.looker.kenko.ui.profile.navigation.profile
-import com.looker.kenko.ui.sessionDetail.navigation.navigateToSessionDetail
-import com.looker.kenko.ui.sessionDetail.navigation.sessionDetail
-import com.looker.kenko.ui.sessions.navigation.navigateToSessions
-import com.looker.kenko.ui.sessions.navigation.sessions
-import com.looker.kenko.ui.settings.navigation.navigateToSettings
-import com.looker.kenko.ui.settings.navigation.settings
+import com.looker.kenko.ui.feature.exercise.navigation.addEditExercise
+import com.looker.kenko.ui.feature.exercise.navigation.navigateToAddEditExercise
+import com.looker.kenko.ui.feature.exercise.navigation.exercises
+import com.looker.kenko.ui.feature.exercise.navigation.navigateToExercises
+import com.looker.kenko.ui.feature.home.navigation.HomeRoute
+import com.looker.kenko.ui.feature.home.navigation.home
+import com.looker.kenko.ui.feature.performance.navigation.performance
+import com.looker.kenko.ui.feature.plan.navigation.navigateToPlanEdit
+import com.looker.kenko.ui.feature.plan.navigation.planEdit
+import com.looker.kenko.ui.feature.plan.navigation.navigateToPlans
+import com.looker.kenko.ui.feature.plan.navigation.plans
+import com.looker.kenko.ui.feature.profile.navigation.navigateToProfile
+import com.looker.kenko.ui.feature.profile.navigation.profile
+import com.looker.kenko.ui.feature.session.navigation.navigateToSessionDetail
+import com.looker.kenko.ui.feature.session.navigation.sessionDetail
+import com.looker.kenko.ui.feature.session.navigation.navigateToSessions
+import com.looker.kenko.ui.feature.session.navigation.sessions
+import com.looker.kenko.ui.feature.settings.navigation.navigateToSettings
+import com.looker.kenko.ui.feature.settings.navigation.settings
 
 private val singleTopNavOptions = navOptions {
     launchSingleTop = true
