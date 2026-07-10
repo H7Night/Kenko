@@ -12,23 +12,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.looker.kenko.data.local.model
+package com.looker.kenko.data.mapper
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import com.looker.kenko.domain.model.MuscleGroups
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.looker.kenko.data.local.model.WeightEntity
+import com.looker.kenko.domain.model.Weight
+import com.looker.kenko.utils.EpochDays
+import kotlinx.datetime.LocalDate
 
-@Serializable
-@SerialName("exercise")
-@Entity("exercises")
-data class ExerciseEntity(
-    val name: String,
-    val target: MuscleGroups,
-    val reference: String? = null,
-    val isIsometric: Boolean = false,
-    val isBodyweight: Boolean = false,
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0
+fun Weight.toEntity(): WeightEntity = WeightEntity(
+    date = EpochDays(date.toEpochDays().toInt()),
+    value = value,
+    id = id
+)
+
+fun WeightEntity.toExternal(): Weight = Weight(
+    date = LocalDate.fromEpochDays(date.value),
+    value = value,
+    id = id
 )

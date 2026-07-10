@@ -16,8 +16,8 @@ package com.looker.kenko.data.repository.local
 
 import com.looker.kenko.data.local.dao.ExerciseDao
 import com.looker.kenko.data.local.model.ExerciseEntity
-import com.looker.kenko.data.local.model.toEntity
-import com.looker.kenko.data.local.model.toExternal
+import com.looker.kenko.data.mapper.toEntity
+import com.looker.kenko.data.mapper.toExternal
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.data.repository.ExerciseRepo
 import kotlinx.coroutines.flow.Flow

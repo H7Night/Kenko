@@ -15,8 +15,6 @@
 package com.looker.kenko.domain.model
 
 import androidx.compose.runtime.Immutable
-import com.looker.kenko.data.local.model.WeightEntity
-import com.looker.kenko.utils.EpochDays
 import kotlinx.datetime.LocalDate
 
 @Immutable
@@ -24,16 +22,4 @@ data class Weight(
     val date: LocalDate,
     val value: Float,
     val id: Int = 0,
-)
-
-fun Weight.toEntity(): WeightEntity = WeightEntity(
-    date = EpochDays(date.toEpochDays().toInt()),
-    value = value,
-    id = id
-)
-
-fun WeightEntity.toExternal(): Weight = Weight(
-    date = LocalDate.fromEpochDays(date.value),
-    value = value,
-    id = id
 )

@@ -12,23 +12,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.looker.kenko.data.local.model
+package com.looker.kenko.data.mapper
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import com.looker.kenko.domain.model.MuscleGroups
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.looker.kenko.data.local.model.ExerciseEntity
+import com.looker.kenko.domain.model.Exercise
 
-@Serializable
-@SerialName("exercise")
-@Entity("exercises")
-data class ExerciseEntity(
-    val name: String,
-    val target: MuscleGroups,
-    val reference: String? = null,
-    val isIsometric: Boolean = false,
-    val isBodyweight: Boolean = false,
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0
+fun ExerciseEntity.toExternal(): Exercise = Exercise(
+    id = id,
+    name = name,
+    target = target,
+    reference = reference,
+    isIsometric = isIsometric,
+    isBodyweight = isBodyweight,
+)
+
+fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
+    id = id ?: 0,
+    name = name,
+    target = target,
+    reference = reference,
+    isIsometric = isIsometric,
+    isBodyweight = isBodyweight,
 )

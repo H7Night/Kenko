@@ -19,9 +19,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.RepsInReserve
-import com.looker.kenko.domain.model.Set
 
 @Entity(
     "sets",
@@ -54,24 +51,4 @@ data class SetEntity(
     val rir: Int = 2,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-)
-
-fun SetEntity.toExternal(exercise: Exercise): Set = Set(
-    repsOrDuration = repsOrDuration,
-    weight = weight,
-    type = type,
-    exercise = exercise,
-    rir = RepsInReserve(rir),
-    id = id,
-)
-
-fun Set.toEntity(sessionId: Int, order: Int): SetEntity = SetEntity(
-    id = id ?: 0,
-    repsOrDuration = repsOrDuration,
-    weight = weight,
-    type = type,
-    order = order,
-    sessionId = sessionId,
-    exerciseId = requireNotNull(exercise.id),
-    rir = rir.value,
 )

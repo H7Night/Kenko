@@ -19,17 +19,11 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Labels.Difficulty
 import com.looker.kenko.domain.model.Labels.Equipment
 import com.looker.kenko.domain.model.Labels.Focus
 import com.looker.kenko.domain.model.Labels.Time
 import com.looker.kenko.domain.model.MuscleGroups
-import com.looker.kenko.domain.model.Plan
-import com.looker.kenko.domain.model.PlanItem
-import com.looker.kenko.domain.model.PlanStat
-import kotlinx.datetime.DayOfWeek
-import kotlinx.datetime.isoDayNumber
 
 @Entity(tableName = "plans")
 data class PlanEntity(
@@ -76,47 +70,4 @@ data class PlanDayEntity(
     val dayOfWeek: Int,
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-)
-
-fun PlanEntity.toExternal(isActive: Boolean, stat: PlanStat) = Plan(
-    id = id,
-    name = name,
-    description = description,
-    difficulty = difficulty,
-    focus = focus,
-    equipment = equipment,
-    time = time,
-    stat = stat,
-    isActive = isActive,
-    dayTitles = dayTitles,
-)
-
-fun Plan.toEntity(): PlanEntity = PlanEntity(
-    id = id ?: 0,
-    name = name,
-    description = description,
-    difficulty = difficulty,
-    focus = focus,
-    equipment = equipment,
-    time = time,
-    dayTitles = dayTitles,
-)
-
-fun PlanItem.toEntity() = PlanDayEntity(
-    id = id ?: 0,
-    planId = planId,
-    exerciseId = requireNotNull(exercise.id) { "Exercise id cannot be null" },
-    dayOfWeek = dayOfWeek.isoDayNumber,
-)
-
-inline fun PlanDayEntity.toExternal(block: (exerciseId: Int) -> Exercise?) = PlanItem(
-    planId = planId,
-    dayOfWeek = DayOfWeek(dayOfWeek),
-    exercise = block(exerciseId) ?: DefaultExercise,
-    id = id,
-)
-
-val DefaultExercise = Exercise(
-    name = "Exercise Deleted",
-    target = MuscleGroups.Core,
 )

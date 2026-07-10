@@ -19,8 +19,8 @@ import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.dao.PlanHistoryDao
 import com.looker.kenko.data.local.model.PlanEntity
 import com.looker.kenko.data.local.model.PlanHistoryEntity
-import com.looker.kenko.data.local.model.toEntity
-import com.looker.kenko.data.local.model.toExternal
+import com.looker.kenko.data.mapper.toEntity
+import com.looker.kenko.data.mapper.toExternal
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Labels
 import com.looker.kenko.domain.model.Plan
