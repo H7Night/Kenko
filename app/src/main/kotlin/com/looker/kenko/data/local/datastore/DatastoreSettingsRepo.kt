@@ -23,7 +23,6 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.looker.kenko.BuildConfig
 import com.looker.kenko.domain.model.settings.BackupInterval
-import com.looker.kenko.domain.model.settings.ColorPalettes
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Settings
 import com.looker.kenko.domain.model.settings.Theme
@@ -51,10 +50,6 @@ class DatastoreSettingsRepo @Inject constructor(
         if (!BuildConfig.DEBUG) {
             ONBOARDING_DONE.update(true)
         }
-    }
-
-    override suspend fun setColorPalette(colorPalette: ColorPalettes) {
-        COLOR_PALETTE.update(colorPalette.name)
     }
 
     override suspend fun setTheme(theme: Theme) {
@@ -112,7 +107,6 @@ class DatastoreSettingsRepo @Inject constructor(
     private fun mapSettings(preferences: Preferences): Settings {
         val isOnboardingDone = preferences[ONBOARDING_DONE] ?: false
         val theme = preferences[THEME] ?: Theme.System.name
-        val colorPalettes = preferences[COLOR_PALETTE] ?: ColorPalettes.TokyoNight.name
         val lastSetTime = preferences[LAST_SET_TIME_SECONDS]
         val backupUri = preferences[BACKUP_URI]
         val backupInterval = preferences[BACKUP_INTERVAL] ?: BackupInterval.Off.name
@@ -122,7 +116,6 @@ class DatastoreSettingsRepo @Inject constructor(
         return Settings(
             isOnboardingDone = isOnboardingDone,
             theme = Theme.valueOf(theme),
-            colorPalette = ColorPalettes.valueOf(colorPalettes),
             lastSetTime = lastSetTime?.let { Instant.fromEpochSeconds(it) },
             backupUri = backupUri,
             backupInterval = BackupInterval.valueOf(backupInterval),
@@ -135,7 +128,6 @@ class DatastoreSettingsRepo @Inject constructor(
     private companion object Keys {
         val ONBOARDING_DONE: Preferences.Key<Boolean> = booleanPreferencesKey("onboarding_done")
         val THEME: Preferences.Key<String> = stringPreferencesKey("theme")
-        val COLOR_PALETTE: Preferences.Key<String> = stringPreferencesKey("color_palette")
         val LAST_SET_TIME_SECONDS: Preferences.Key<Long> =
             longPreferencesKey("last_set_time_seconds")
         val BACKUP_URI: Preferences.Key<String> = stringPreferencesKey("backup_uri")

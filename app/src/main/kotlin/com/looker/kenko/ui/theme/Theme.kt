@@ -15,31 +15,31 @@
 package com.looker.kenko.ui.theme
 
 import android.app.Activity
-import android.content.Context
 import android.os.Build
 import android.view.View
+import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import com.looker.kenko.R
 import com.looker.kenko.domain.model.settings.Theme
-import com.looker.kenko.ui.theme.colorSchemes.ColorSchemes
-import com.looker.kenko.ui.theme.colorSchemes.tokyoNightColorSchemes
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun KenkoTheme(
     theme: Theme = Theme.System,
-    colorSchemes: ColorSchemes = tokyoNightColorSchemes,
     content: @Composable () -> Unit,
 ) {
+    val context = LocalContext.current
     val systemTheme = isSystemInDarkTheme()
     val isDarkTheme = remember(theme) {
         when (theme) {
@@ -49,9 +49,17 @@ fun KenkoTheme(
         }
     }
     val colorScheme = if (isDarkTheme) {
-        colorSchemes.dark
+        if (supportsDynamicColor()) {
+            dynamicDarkColorScheme(context)
+        } else {
+            darkColorScheme()
+        }
     } else {
-        colorSchemes.light
+        if (supportsDynamicColor()) {
+            dynamicLightColorScheme(context)
+        } else {
+            lightColorScheme()
+        }
     }
 
     val localView = LocalView.current
@@ -65,6 +73,9 @@ fun KenkoTheme(
     )
 }
 
+@ChecksSdkIntAtLeast(api = Build.VERSION_CODES.S)
+fun supportsDynamicColor(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
 fun setupSystemBar(view: View, isDarkTheme: Boolean) {
     if (view.isInEditMode) return
     val window = (view.context as Activity).window
@@ -73,14 +84,3 @@ fun setupSystemBar(view: View, isDarkTheme: Boolean) {
         isAppearanceLightNavigationBars = !isDarkTheme
     }
 }
-
-fun dynamicColorSchemes(context: Context): ColorSchemes? =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        ColorSchemes(
-            light = dynamicLightColorScheme(context),
-            dark = dynamicDarkColorScheme(context),
-            nameRes = R.string.label_color_scheme_dynamic,
-        )
-    } else {
-        null
-    }

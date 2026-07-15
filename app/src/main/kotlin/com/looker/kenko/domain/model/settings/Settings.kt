@@ -19,7 +19,6 @@ import kotlin.time.Instant
 data class Settings(
     val isOnboardingDone: Boolean,
     val theme: Theme,
-    val colorPalette: ColorPalettes,
     val lastSetTime: Instant?,
     val backupUri: String?,
     val backupInterval: BackupInterval,
