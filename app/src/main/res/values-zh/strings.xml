@@ -187,6 +187,15 @@
     <string name="label_select_backup_location">选择备份文件夹</string>
     <string name="label_select_backup_file">选择备份文件</string>
 
+    <!--Export-->
+    <string name="label_export_data">导出数据</string>
+    <string name="label_export_sessions">训练历史</string>
+    <string name="label_export_plans">训练计划</string>
+    <string name="label_export_exercises">动作</string>
+    <string name="label_export_weights">体重记录</string>
+    <string name="label_export_success">导出完成</string>
+    <string name="error_export_failed">导出失败</string>
+
     <!--Muscle Groups-->
     <string name="label_muscle_biceps">二头肌</string>
     <string name="label_muscle_triceps">三头肌</string>

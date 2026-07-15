@@ -196,6 +196,15 @@
     <string name="label_select_backup_location">Select backup folder</string>
     <string name="label_select_backup_file">Select backup file</string>
 
+    <!--Export-->
+    <string name="label_export_data">Export Data</string>
+    <string name="label_export_sessions">Training History</string>
+    <string name="label_export_plans">Training Plans</string>
+    <string name="label_export_exercises">Exercises</string>
+    <string name="label_export_weights">Body Weight</string>
+    <string name="label_export_success">Export completed</string>
+    <string name="error_export_failed">Export failed</string>
+
     <!--Muscle Groups-->
     <string name="label_muscle_biceps">Biceps</string>
     <string name="label_muscle_triceps">Triceps</string>

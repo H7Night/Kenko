@@ -16,6 +16,8 @@ package com.looker.kenko.di
 
 import com.looker.kenko.data.backup.BackupManager
 import com.looker.kenko.data.backup.BackupManagerImpl
+import com.looker.kenko.data.export.ExportManager
+import com.looker.kenko.data.export.ExportManagerImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -31,4 +33,10 @@ abstract class BackupModule {
     abstract fun bindBackupManager(
         impl: BackupManagerImpl,
     ): BackupManager
+
+    @Binds
+    @Singleton
+    abstract fun bindExportManager(
+        impl: ExportManagerImpl,
+    ): ExportManager
 }

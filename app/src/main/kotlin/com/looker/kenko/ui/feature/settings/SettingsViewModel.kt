@@ -21,6 +21,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.backup.BackupManager
 import com.looker.kenko.data.backup.BackupResult
+import com.looker.kenko.data.export.ExportManager
+import com.looker.kenko.data.export.ExportOptions
 import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
@@ -40,6 +42,7 @@ import kotlinx.coroutines.launch
 class SettingsViewModel @Inject constructor(
     private val repo: SettingsRepo,
     private val backupManager: BackupManager,
+    private val exportManager: ExportManager,
 ) : ViewModel() {
 
     private val _backupState = MutableStateFlow(BackupState())
@@ -55,6 +58,7 @@ class SettingsViewModel @Inject constructor(
             lastBackupTime = settings.lastBackupTime,
             isBackingUp = backupState.isBackingUp,
             isRestoring = backupState.isRestoring,
+            isExporting = backupState.isExporting,
             backupMessage = backupState.message,
             capitalizeExerciseName = settings.capitalizeExerciseName,
             language = settings.language,
@@ -67,6 +71,7 @@ class SettingsViewModel @Inject constructor(
             lastBackupTime = null,
             isBackingUp = false,
             isRestoring = false,
+            isExporting = false,
             backupMessage = null,
             capitalizeExerciseName = true,
             language = Language.System,
@@ -153,6 +158,26 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun exportData(options: ExportOptions, uri: Uri) {
+        viewModelScope.launch {
+            _backupState.update { it.copy(isExporting = true, message = null) }
+
+            when (exportManager.export(options, uri)) {
+                is BackupResult.Success -> {
+                    _backupState.update {
+                        it.copy(isExporting = false, message = BackupMessage.ExportSuccess)
+                    }
+                }
+
+                is BackupResult.Error -> {
+                    _backupState.update {
+                        it.copy(isExporting = false, message = BackupMessage.ExportFailed)
+                    }
+                }
+            }
+        }
+    }
+
     fun clearBackupMessage() {
         _backupState.update { it.copy(message = null) }
     }
@@ -161,6 +186,7 @@ class SettingsViewModel @Inject constructor(
 private data class BackupState(
     val isBackingUp: Boolean = false,
     val isRestoring: Boolean = false,
+    val isExporting: Boolean = false,
     val message: BackupMessage? = null,
 )
 
@@ -169,6 +195,8 @@ enum class BackupMessage {
     BackupFailed,
     RestoreSuccess,
     RestoreFailed,
+    ExportSuccess,
+    ExportFailed,
 }
 
 @Stable
@@ -179,6 +207,7 @@ data class SettingsUiData(
     val lastBackupTime: Instant?,
     val isBackingUp: Boolean,
     val isRestoring: Boolean,
+    val isExporting: Boolean,
     val backupMessage: BackupMessage?,
     val capitalizeExerciseName: Boolean,
     val language: Language,

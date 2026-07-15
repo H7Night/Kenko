@@ -55,6 +55,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.looker.kenko.R
+import com.looker.kenko.data.export.ExportOptions
 import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
@@ -70,27 +71,29 @@ internal fun BackupSection(
     lastBackupTime: Instant?,
     isBackingUp: Boolean,
     isRestoring: Boolean,
+    isExporting: Boolean,
     onSelectLocation: (Uri) -> Unit,
     onSelectInterval: (BackupInterval) -> Unit,
     onBackupNow: () -> Unit,
     onRestore: (Uri) -> Unit,
+    onExport: (ExportOptions, Uri) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     var showRestoreDialog by remember { mutableStateOf(false) }
     var pendingRestoreUri by remember { mutableStateOf<Uri?>(null) }
+    var showExportDialog by remember { mutableStateOf(false) }
+    var pendingExportOptions by remember { mutableStateOf<ExportOptions?>(null) }
 
     val folderPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree(),
     ) { uri ->
         uri?.let {
-            // Take persistable permission
             context.contentResolver.takePersistableUriPermission(
                 it,
                 android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
                         android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
             )
-            // Store the tree URI - file will be created by BackupManager
             onSelectLocation(it)
         }
     }
@@ -104,6 +107,15 @@ internal fun BackupSection(
         }
     }
 
+    val jsonFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null && pendingExportOptions != null) {
+            onExport(pendingExportOptions!!, uri!!)
+            pendingExportOptions = null
+        }
+    }
+
     if (showRestoreDialog) {
         RestoreConfirmationDialog(
             onConfirm = {
@@ -114,6 +126,17 @@ internal fun BackupSection(
             onDismiss = {
                 showRestoreDialog = false
                 pendingRestoreUri = null
+            },
+        )
+    }
+
+    if (showExportDialog) {
+        ExportDataDialog(
+            onDismiss = { showExportDialog = false },
+            onConfirm = { options ->
+                pendingExportOptions = options
+                jsonFileLauncher.launch("kenko_export.json")
+                showExportDialog = false
             },
         )
     }
@@ -143,7 +166,6 @@ internal fun BackupSection(
         )
 
         if (lastBackupTime != null) {
-
             Text(
                 text = stringResource(R.string.label_last_backup, lastBackupTime.toFormat()),
                 style = MaterialTheme.typography.bodySmall,
@@ -160,7 +182,7 @@ internal fun BackupSection(
         ) {
             OutlinedButton(
                 onClick = onBackupNow,
-                enabled = backupUri != null && !isBackingUp && !isRestoring,
+                enabled = backupUri != null && !isBackingUp && !isRestoring && !isExporting,
                 modifier = Modifier.weight(1f),
             ) {
                 if (isBackingUp) {
@@ -181,7 +203,7 @@ internal fun BackupSection(
 
             OutlinedButton(
                 onClick = { filePickerLauncher.launch(arrayOf("application/zip")) },
-                enabled = !isBackingUp && !isRestoring,
+                enabled = !isBackingUp && !isRestoring && !isExporting,
                 modifier = Modifier.weight(1f),
             ) {
                 if (isRestoring) {
@@ -199,6 +221,25 @@ internal fun BackupSection(
                     },
                 )
             }
+        }
+
+        OutlinedButton(
+            onClick = { showExportDialog = true },
+            enabled = !isBackingUp && !isRestoring && !isExporting,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+        ) {
+            if (isExporting) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp,
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = stringResource(R.string.label_export_data),
+            )
         }
     }
 }
@@ -317,10 +358,12 @@ private fun BackupSectionPreview() {
             lastBackupTime = null,
             isBackingUp = false,
             isRestoring = false,
+            isExporting = false,
             onSelectLocation = {},
             onSelectInterval = {},
             onBackupNow = {},
             onRestore = {},
+            onExport = { _, _ -> },
         )
     }
 }

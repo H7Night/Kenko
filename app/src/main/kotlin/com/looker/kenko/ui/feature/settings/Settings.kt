@@ -55,6 +55,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
+import com.looker.kenko.data.export.ExportOptions
 import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
@@ -83,6 +84,7 @@ fun Settings(
         onSelectBackupInterval = viewModel::setBackupInterval,
         onBackupNow = viewModel::backupNow,
         onRestore = viewModel::restore,
+        onExport = viewModel::exportData,
         onClearMessage = viewModel::clearBackupMessage,
         onBackPress = onBackPress,
     )
@@ -99,6 +101,7 @@ private fun Settings(
     onSelectBackupInterval: (BackupInterval) -> Unit,
     onBackupNow: () -> Unit,
     onRestore: (Uri) -> Unit,
+    onExport: (ExportOptions, Uri) -> Unit,
     onClearMessage: () -> Unit,
     onBackPress: () -> Unit,
     modifier: Modifier = Modifier,
@@ -114,6 +117,8 @@ private fun Settings(
                 BackupMessage.BackupFailed -> context.getString(R.string.error_backup_failed)
                 BackupMessage.RestoreSuccess -> context.getString(R.string.label_restore_success)
                 BackupMessage.RestoreFailed -> context.getString(R.string.error_restore_failed)
+                BackupMessage.ExportSuccess -> context.getString(R.string.label_export_success)
+                BackupMessage.ExportFailed -> context.getString(R.string.error_export_failed)
             }
             snackbarHostState.showSnackbar(text)
             onClearMessage()
@@ -170,10 +175,12 @@ private fun Settings(
                 lastBackupTime = state.lastBackupTime,
                 isBackingUp = state.isBackingUp,
                 isRestoring = state.isRestoring,
+                isExporting = state.isExporting,
                 onSelectLocation = onSelectBackupLocation,
                 onSelectInterval = onSelectBackupInterval,
                 onBackupNow = onBackupNow,
                 onRestore = onRestore,
+                onExport = onExport,
             )
         }
     }
@@ -330,6 +337,7 @@ private fun SettingsPreview() {
                 lastBackupTime = null,
                 isBackingUp = false,
                 isRestoring = false,
+                isExporting = false,
                 backupMessage = null,
                 capitalizeExerciseName = true,
                 language = Language.System,
@@ -341,6 +349,7 @@ private fun SettingsPreview() {
             onSelectBackupInterval = {},
             onBackupNow = {},
             onRestore = {},
+            onExport = { _, _ -> },
             onClearMessage = {},
             onBackPress = {},
         )

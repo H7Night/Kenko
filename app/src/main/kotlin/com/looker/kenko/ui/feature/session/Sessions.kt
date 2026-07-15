@@ -66,8 +66,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.looker.kenko.ui.component.SwipeToDeleteBox
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
@@ -76,20 +74,12 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.IosShare
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalContext
 import com.looker.kenko.ui.component.KenkoBorderWidth
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.datetime.toJavaLocalDate
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.datetime.DayOfWeek
-import java.io.OutputStreamWriter
 
 @Composable
 fun Sessions(
@@ -98,38 +88,8 @@ fun Sessions(
     onBackPress: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
-    var showExportDialog by remember { mutableStateOf(false) }
     var showAddHistoryDialog by remember { mutableStateOf(false) }
-    var exportData by remember { mutableStateOf<String?>(null) }
-
-    val createDocumentLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/markdown")
-    ) { uri ->
-        if (uri != null && exportData != null) {
-            scope.launch(Dispatchers.IO) {
-                context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-                    OutputStreamWriter(outputStream).use { writer ->
-                        writer.write(exportData)
-                    }
-                }
-                exportData = null
-            }
-        }
-    }
-
-    if (showExportDialog) {
-        ExportDialog(
-            onDismiss = { showExportDialog = false },
-            onExportMarkdown = { start, end ->
-                exportData = viewModel.generateMarkdown(start, end)
-                createDocumentLauncher.launch("kenko_export_${start}_to_${end}.md")
-                showExportDialog = false
-            }
-        )
-    }
 
     if (showAddHistoryDialog) {
         AddHistoryDialog(
@@ -150,7 +110,6 @@ fun Sessions(
         onSessionClick = onSessionClick,
         onRemoveSession = viewModel::removeSession,
         onBackPress = onBackPress,
-        onExportClick = { showExportDialog = true },
         onAddClick = { showAddHistoryDialog = true }
     )
 }
@@ -162,7 +121,6 @@ private fun Sessions(
     onSessionClick: (LocalDate?) -> Unit,
     onRemoveSession: (Session) -> Unit,
     onBackPress: () -> Unit,
-    onExportClick: () -> Unit,
     onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -208,12 +166,6 @@ private fun Sessions(
                             contentDescription = stringResource(R.string.label_add_history)
                         )
                     }
-                    IconButton(onClick = onExportClick) {
-                        Icon(
-                            imageVector = Icons.Rounded.IosShare,
-                            contentDescription = stringResource(R.string.label_export)
-                        )
-                    }
                 }
             )
         },
@@ -244,45 +196,6 @@ private fun Sessions(
             }
         }
     }
-}
-
-@Composable
-private fun ExportDialog(
-    onDismiss: () -> Unit,
-    onExportMarkdown: (LocalDate, LocalDate) -> Unit,
-) {
-    val context = LocalContext.current
-    var startDate by remember { mutableStateOf(com.looker.kenko.domain.model.localDate) }
-    var endDate by remember { mutableStateOf(com.looker.kenko.domain.model.localDate) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = stringResource(R.string.label_select_date_range)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                DateSelectionRow(
-                    label = stringResource(R.string.label_start_date),
-                    date = startDate,
-                    onDateSelected = { startDate = it }
-                )
-                DateSelectionRow(
-                    label = stringResource(R.string.label_end_date),
-                    date = endDate,
-                    onDateSelected = { endDate = it }
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onExportMarkdown(startDate, endDate) }) {
-                Text(text = stringResource(R.string.label_export_markdown))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.label_cancel))
-            }
-        }
-    )
 }
 
 @Composable
@@ -490,7 +403,6 @@ private fun SessionsPreview() {
             onBackPress = {},
             onSessionClick = {},
             onRemoveSession = {},
-            onExportClick = {},
             onAddClick = {},
         )
     }
