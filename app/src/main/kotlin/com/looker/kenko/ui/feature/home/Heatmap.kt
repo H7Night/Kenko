@@ -42,10 +42,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
-<<<<<<< HEAD:app/src/main/kotlin/com/looker/kenko/ui/feature/home/Heatmap.kt
-import com.looker.kenko.domain.model.localDate
-=======
->>>>>>> e5c9102 (fix: heatmap edge padding, dynamic today date, and weight chart X-axis improvements):app/src/main/kotlin/com/looker/kenko/ui/home/components/Heatmap.kt
 import com.looker.kenko.ui.theme.KenkoIcons
 import kotlin.time.Clock
 import kotlinx.coroutines.launch
