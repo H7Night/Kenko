@@ -30,6 +30,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
@@ -41,15 +44,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
+import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.ErrorSnackbar
 import com.looker.kenko.ui.component.KenkoButton
+import com.looker.kenko.ui.component.TagSelector
 import com.looker.kenko.ui.component.kenkoTextFieldColor
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.theme.KenkoIcons
@@ -62,6 +68,7 @@ fun AddEditExercise(
 ) {
     val viewModel: AddEditExerciseViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val tagSelectorState by viewModel.tagState.collectAsStateWithLifecycle()
 
     if (state.showRenameConfirmation) {
         AlertDialog(
@@ -88,7 +95,11 @@ fun AddEditExercise(
     AddEditExercise(
         exerciseName = state.exerciseName,
         state = state,
+        tagSelectorState = tagSelectorState,
         snackbarState = viewModel.snackbarState,
+        onAddTag = viewModel::addTag,
+        onRemoveTag = viewModel::removeTag,
+        onSetCountType = viewModel::setCountType,
         onBodyweightChange = { viewModel.isBodyweightFlow.value = it },
         onNameChange = viewModel::setName,
         onBackPress = onBackPress,
@@ -101,12 +112,17 @@ fun AddEditExercise(
 private fun AddEditExercise(
     exerciseName: String,
     state: AddEditExerciseUiState,
+    tagSelectorState: TagSelectorState,
     snackbarState: SnackbarHostState,
+    onAddTag: (com.looker.kenko.domain.model.Tag) -> Unit,
+    onRemoveTag: (com.looker.kenko.domain.model.Tag) -> Unit,
+    onSetCountType: (CountType) -> Unit,
     onBodyweightChange: (Boolean) -> Unit,
     onNameChange: (String) -> Unit,
     onDone: () -> Unit,
     onBackPress: () -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -141,7 +157,21 @@ private fun AddEditExercise(
                 isError = state.isError,
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(12.dp))
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Tag selector (two-level)
+            TagSelector(
+                parents = tagSelectorState.parents,
+                children = tagSelectorState.children,
+                selectedTags = state.selectedTags,
+                onAddTag = onAddTag,
+                onRemoveTag = onRemoveTag,
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Body weight switch
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -154,15 +184,51 @@ private fun AddEditExercise(
                 )
                 Switch(
                     checked = state.isBodyweight,
-                    onCheckedChange = onBodyweightChange,
+                    onCheckedChange = {
+                        focusManager.clearFocus()
+                        onBodyweightChange(it)
+                    },
                 )
             }
-            Spacer(modifier = Modifier.height(18.dp))
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Count type selector
+            Text(
+                text = stringResource(R.string.label_count_type),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.outline,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                CountType.entries.forEachIndexed { index, type ->
+                    SegmentedButton(
+                        selected = state.countType == type,
+                        onClick = {
+                            focusManager.clearFocus()
+                            onSetCountType(type)
+                        },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = CountType.entries.size,
+                        ),
+                    ) {
+                        Text(stringResource(type.labelRes))
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Save button
             KenkoButton(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .navigationBarsPadding(),
                 onClick = {
+                    focusManager.clearFocus()
                     onDone()
                 },
                 label = {
@@ -244,8 +310,17 @@ private fun AddEditPreview() {
     KenkoTheme {
         AddEditExercise(
             exerciseName = "BenchPress",
-            state = AddEditExerciseUiState(false, false),
+            state = AddEditExerciseUiState(
+                isError = false,
+                isBodyweight = false,
+                countType = CountType.REPS,
+                selectedTags = emptyList(),
+            ),
+            tagSelectorState = TagSelectorState(),
             snackbarState = SnackbarHostState(),
+            onAddTag = {},
+            onRemoveTag = {},
+            onSetCountType = {},
             onBodyweightChange = {},
             onNameChange = {},
             onDone = {},

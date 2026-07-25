@@ -22,9 +22,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.looker.kenko.R
 import com.looker.kenko.data.StringHandler
-import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.SettingsRepo
+import com.looker.kenko.data.repository.TagRepo
+import com.looker.kenko.domain.model.CountType
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.feature.exercise.navigation.AddEditExerciseRoute
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -44,6 +47,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class AddEditExerciseViewModel @Inject constructor(
     private val repo: ExerciseRepo,
+    private val tagRepo: TagRepo,
     private val stringHandler: StringHandler,
     private val settingsRepo: SettingsRepo,
     savedStateHandle: SavedStateHandle,
@@ -57,11 +61,23 @@ class AddEditExerciseViewModel @Inject constructor(
 
     val isBodyweightFlow = MutableStateFlow(false)
 
+    val countTypeFlow = MutableStateFlow(CountType.REPS)
+
+    val selectedTags = MutableStateFlow<List<Tag>>(emptyList())
+
     private var originalName: String = ""
 
     val showRenameConfirmation = MutableStateFlow(false)
 
     val snackbarState = SnackbarHostState()
+
+    val tagState = combine(
+        tagRepo.streamParents,
+        tagRepo.stream,
+    ) { parents, all ->
+        val children = all.filter { it.parentId != null }
+        TagSelectorState(parents = parents, children = children)
+    }.asStateFlow(TagSelectorState())
 
     private val exerciseAlreadyExistError = exerciseName
         .debounce(200.milliseconds)
@@ -70,12 +86,16 @@ class AddEditExerciseViewModel @Inject constructor(
     val state = combine(
         exerciseAlreadyExistError,
         isBodyweightFlow,
+        countTypeFlow,
+        selectedTags,
         exerciseName,
         showRenameConfirmation,
-    ) { alreadyExist, bodyweight, name, renameConfirm ->
+    ) { alreadyExist, bodyweight, countType, tags, name, renameConfirm ->
         AddEditExerciseUiState(
             isError = alreadyExist,
             isBodyweight = bodyweight,
+            countType = countType,
+            selectedTags = tags,
             exerciseName = name,
             showRenameConfirmation = renameConfirm,
         )
@@ -83,6 +103,8 @@ class AddEditExerciseViewModel @Inject constructor(
         AddEditExerciseUiState(
             isError = false,
             isBodyweight = false,
+            countType = CountType.REPS,
+            selectedTags = emptyList(),
             exerciseName = "",
             showRenameConfirmation = false,
         ),
@@ -90,6 +112,22 @@ class AddEditExerciseViewModel @Inject constructor(
 
     fun setName(value: String) {
         exerciseName.value = value
+    }
+
+    fun addTag(tag: Tag) {
+        val current = selectedTags.value.toMutableList()
+        if (current.none { it.id == tag.id }) {
+            current.add(tag)
+            selectedTags.value = current
+        }
+    }
+
+    fun removeTag(tag: Tag) {
+        selectedTags.value = selectedTags.value.filter { it.id != tag.id }
+    }
+
+    fun setCountType(type: CountType) {
+        countTypeFlow.value = type
     }
 
     fun dismissRenameConfirmation() {
@@ -103,22 +141,26 @@ class AddEditExerciseViewModel @Inject constructor(
                 snackbarState.showSnackbar(stringHandler.getString(R.string.error_exercise_name_empty))
                 return@launch
             }
+            if (selectedTags.value.isEmpty()) {
+                snackbarState.showSnackbar(stringHandler.getString(R.string.label_at_least_one_tag))
+                return@launch
+            }
             if (exerciseId != null && name != originalName && repo.hasHistory(exerciseId)) {
                 showRenameConfirmation.value = true
                 return@launch
             }
-            commitRename(onDone)
+            commitSave(onDone)
         }
     }
 
     fun confirmRename(onDone: () -> Unit) {
         viewModelScope.launch {
             showRenameConfirmation.value = false
-            commitRename(onDone)
+            commitSave(onDone)
         }
     }
 
-    private suspend fun commitRename(onDone: () -> Unit) {
+    private suspend fun commitSave(onDone: () -> Unit) {
         val name = if (settingsRepo.stream.first().capitalizeExerciseName) {
             exerciseName.value.titleCase()
         } else {
@@ -127,7 +169,8 @@ class AddEditExerciseViewModel @Inject constructor(
         repo.upsert(
             Exercise(
                 name = name,
-                tags = emptyList(),
+                tags = selectedTags.value,
+                countType = countTypeFlow.value,
                 isBodyweight = isBodyweightFlow.value,
                 id = exerciseId,
             ),
@@ -149,6 +192,8 @@ class AddEditExerciseViewModel @Inject constructor(
                     originalName = it.name
                     exerciseName.value = it.name
                     isBodyweightFlow.value = it.isBodyweight
+                    countTypeFlow.value = it.countType
+                    selectedTags.value = it.tags
                 }
             } else {
                 if (routeData.name != null) exerciseName.value = routeData.name
@@ -161,6 +206,13 @@ class AddEditExerciseViewModel @Inject constructor(
 data class AddEditExerciseUiState(
     val isError: Boolean,
     val isBodyweight: Boolean,
+    val countType: CountType = CountType.REPS,
+    val selectedTags: List<Tag> = emptyList(),
     val exerciseName: String = "",
     val showRenameConfirmation: Boolean = false,
+)
+
+data class TagSelectorState(
+    val parents: List<Tag> = emptyList(),
+    val children: List<Tag> = emptyList(),
 )
