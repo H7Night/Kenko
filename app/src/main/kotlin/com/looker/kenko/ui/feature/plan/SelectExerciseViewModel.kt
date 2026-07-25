@@ -14,65 +14,91 @@
 
 package com.looker.kenko.ui.feature.plan
 
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.data.repository.ExerciseRepo
+import com.looker.kenko.data.repository.TagRepo
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+
+sealed interface SearchResult {
+    data object Loading : SearchResult
+    data object NotFound : SearchResult
+    data class Success(val exercises: List<Exercise>) : SearchResult
+}
 
 @HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
 class SelectExerciseViewModel @Inject constructor(
-    repo: ExerciseRepo,
+    private val repo: ExerciseRepo,
+    private val tagRepo: TagRepo,
 ) : ViewModel() {
 
-    var searchQuery: String by mutableStateOf("")
-        private set
+    val searchQuery = MutableStateFlow("")
 
-    private val searchQueryFlow = snapshotFlow { searchQuery }
+    val selectedParentId = MutableStateFlow<Int?>(null)
+    val selectedChildId = MutableStateFlow<Int?>(null)
 
-    private val exerciseStream = repo.stream
+    val parentTags: StateFlow<List<Tag>> = tagRepo.streamParents
+        .asStateFlow(emptyList())
 
-    val searchResult = combine(
-        searchQueryFlow,
-        exerciseStream,
-    ) { query, exercises ->
-        val filteredExercises = exercises
-            .filter { it.satisfiesSearch(query) }
-        if (filteredExercises.isNotEmpty()) {
-            SearchResult.Success(filteredExercises)
-        } else {
-            SearchResult.NotFound
+    val children: StateFlow<List<Tag>> = combine(
+        tagRepo.stream,
+        selectedParentId,
+    ) { all, parentId ->
+        if (parentId == null) emptyList()
+        else all.filter { it.parentId == parentId }
+    }.asStateFlow(emptyList())
+
+    val searchResult: StateFlow<SearchResult> = combine(
+        repo.stream,
+        searchQuery,
+        selectedChildId,
+    ) { exercises, query, childId ->
+        var filtered = exercises
+
+        // Filter by tag (child/specific muscle)
+        if (childId != null) {
+            filtered = filtered.filter { exercise ->
+                exercise.tags.any { it.id == childId }
+            }
+        } else if (selectedParentId.value != null) {
+            // If only parent selected, show all exercises under that parent
+            filtered = filtered.filter { exercise ->
+                exercise.tags.any { it.parentId == selectedParentId.value }
+            }
+        }
+
+        // Filter by name search
+        if (query.isNotBlank()) {
+            filtered = filtered.filter { it.name.contains(query, ignoreCase = true) }
+        }
+
+        when {
+            filtered.isEmpty() -> SearchResult.NotFound
+            else -> SearchResult.Success(filtered)
         }
     }.asStateFlow(SearchResult.Loading)
 
     fun setSearch(value: String) {
-        searchQuery = value
+        searchQuery.value = value
     }
 
-    private fun Exercise.satisfiesSearch(query: String): Boolean {
-        return query.isBlank() || name.contains(query, ignoreCase = true)
+    fun setParentFilter(parentId: Int?) {
+        selectedParentId.value = parentId
     }
-}
 
-@Stable
-sealed interface SearchResult {
-
-    @Stable
-    data object Loading : SearchResult
-
-    @Stable
-    data class Success(val exercises: List<Exercise>) : SearchResult
-
-    @Stable
-    data object NotFound : SearchResult
+    fun setChildFilter(childId: Int?) {
+        selectedChildId.value = childId
+    }
 }

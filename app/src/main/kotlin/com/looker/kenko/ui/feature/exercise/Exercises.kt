@@ -16,14 +16,18 @@ package com.looker.kenko.ui.feature.exercise
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,10 +47,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.ExercisesPreviewParameter
+import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.ErrorSnackbar
 import com.looker.kenko.ui.component.KenkoBorderWidth
@@ -64,8 +70,14 @@ fun Exercises(
     onBackPress: () -> Unit,
 ) {
     val state by viewModel.exercises.collectAsStateWithLifecycle()
+    val parentTags by viewModel.parentTags.collectAsStateWithLifecycle()
+    val selectedFilter by viewModel.selectedParentFilter.collectAsStateWithLifecycle()
+
     Exercises(
         state = state,
+        parentTags = parentTags,
+        selectedFilter = selectedFilter,
+        onSelectFilter = viewModel::setParentFilter,
         snackbarState = viewModel.snackbarState,
         onBackPress = onBackPress,
         onExerciseClick = onExerciseClick,
@@ -75,9 +87,13 @@ fun Exercises(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun Exercises(
     state: List<Exercise>,
+    parentTags: List<Tag>,
+    selectedFilter: Int?,
+    onSelectFilter: (Int?) -> Unit,
     snackbarState: SnackbarHostState,
     onExerciseClick: (id: Int?) -> Unit,
     onCreateClick: () -> Unit,
@@ -109,21 +125,68 @@ private fun Exercises(
             }
         },
         topBar = {
-            Header(
-                onBackPress = onBackPress,
-            )
+            Column {
+                TopAppBar(
+                    title = {
+                        Text(text = stringResource(id = R.string.label_browse_exercises))
+                    },
+                    navigationIcon = {
+                        BackButton(onClick = onBackPress)
+                    }
+                )
+                HorizontalDivider(thickness = KenkoBorderWidth)
+                // Parent tag filter chips
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    item {
+                        FilterChip(
+                            selected = selectedFilter == null,
+                            onClick = { onSelectFilter(null) },
+                            label = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                        )
+                    }
+                    items(parentTags, key = { it.id }) { tag ->
+                        FilterChip(
+                            selected = selectedFilter == tag.id,
+                            onClick = { onSelectFilter(tag.id) },
+                            label = { Text(tag.name) },
+                        )
+                    }
+                }
+            }
         },
     ) { innerPadding ->
-        ExercisesList(
-            exercises = state,
-            contentPadding = innerPadding + PaddingValues(bottom = 80.dp),
-            onExerciseClick = onExerciseClick,
-            onReferenceClick = onReferenceClick,
-            onRemove = onRemove,
+        if (state.isEmpty()) {
+            EmptyExercises(
+                modifier = Modifier.padding(innerPadding + PaddingValues(bottom = 80.dp)),
+            )
+        } else {
+            ExercisesList(
+                exercises = state,
+                contentPadding = innerPadding + PaddingValues(bottom = 80.dp),
+                onExerciseClick = onExerciseClick,
+                onReferenceClick = onReferenceClick,
+                onRemove = onRemove,
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyExercises(modifier: Modifier = Modifier) {
+    Surface(modifier = modifier) {
+        Text(
+            text = stringResource(R.string.label_no_exercise_today),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.outline,
+            modifier = Modifier.padding(32.dp),
         )
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ExercisesList(
     exercises: List<Exercise>,
@@ -142,66 +205,43 @@ private fun ExercisesList(
                 modifier = Modifier.animateItem(),
                 onDismiss = { onRemove(exerciseId) }
             ) {
-                ExerciseItem(
-                    exercise = exercise,
+                Surface(
                     onClick = { onExerciseClick(exerciseId) },
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun Header(
-    onBackPress: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column {
-        TopAppBar(
-            title = {
-                Text(text = stringResource(id = R.string.label_browse_exercises))
-            },
-            navigationIcon = {
-                BackButton(onClick = onBackPress)
-            }
-        )
-    }
-}
-
-@Composable
-private fun ExerciseItem(
-    exercise: Exercise,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val tagNames = remember { exercise.tags.joinToString(", ") { it.name } }
-    Surface(
-        modifier = modifier,
-        onClick = onClick,
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(
-                    text = exercise.name,
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                if (tagNames.isNotEmpty()) {
-                    Text(
-                        text = tagNames,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.outline,
-                    )
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 14.dp),
+                    ) {
+                        Text(
+                            text = exercise.name,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        if (exercise.tags.isNotEmpty()) {
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalArrangement = Arrangement.spacedBy(2.dp),
+                                modifier = Modifier.padding(top = 6.dp),
+                            ) {
+                                exercise.tags.forEach { tag ->
+                                    val label = tag.parentName?.let { "${it}→${tag.name}" } ?: tag.name
+                                    Surface(
+                                        shape = MaterialTheme.shapes.small,
+                                        color = MaterialTheme.colorScheme.secondaryContainer,
+                                    ) {
+                                        Text(
+                                            text = label,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -216,6 +256,9 @@ private fun ExercisesPreview(
     KenkoTheme {
         Exercises(
             state = exercises,
+            parentTags = emptyList(),
+            selectedFilter = null,
+            onSelectFilter = {},
             snackbarState = SnackbarHostState(),
             onExerciseClick = {},
             onCreateClick = {},

@@ -33,14 +33,21 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -53,6 +60,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.component.disableScrollConnection
 import com.looker.kenko.ui.component.kenkoTextFieldColor
 import com.looker.kenko.ui.feature.plan.components.ExerciseItem
@@ -61,7 +69,7 @@ import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.ui.theme.end
 import com.looker.kenko.ui.theme.start
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SelectExercise(
     onDone: (Exercise) -> Unit,
@@ -77,11 +85,15 @@ fun SelectExercise(
             .wrapContentHeight(),
     ) {
         val searchResult by viewModel.searchResult.collectAsStateWithLifecycle()
+        val parentTags by viewModel.parentTags.collectAsStateWithLifecycle()
+        val children by viewModel.children.collectAsStateWithLifecycle()
 
         AddExerciseHeader(
             title = title,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
+
+        // Search field
         ExerciseSearchField(
             modifier = Modifier.padding(horizontal = 16.dp),
             name = viewModel.searchQuery,
@@ -92,6 +104,103 @@ fun SelectExercise(
             },
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Two-level filter: Parent dropdown
+        var parentExpanded by remember { mutableStateOf(false) }
+        var childExpanded by remember { mutableStateOf(false) }
+        val selectedParentId = viewModel.selectedParentId
+        val selectedChildId = viewModel.selectedChildId
+
+        ExposedDropdownMenuBox(
+            expanded = parentExpanded,
+            onExpandedChange = { parentExpanded = it },
+            modifier = Modifier.padding(horizontal = 16.dp),
+        ) {
+            val parentName = selectedParentId?.let { id ->
+                parentTags.find { it.id == id }?.name ?: stringResource(R.string.label_select_body_part)
+            } ?: stringResource(R.string.label_select_body_part)
+            OutlinedTextField(
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
+                value = parentName,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(stringResource(R.string.label_select_body_part)) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = parentExpanded) },
+                singleLine = true,
+            )
+            ExposedDropdownMenu(
+                expanded = parentExpanded,
+                onDismissRequest = { parentExpanded = false },
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                    onClick = {
+                        viewModel.setParentFilter(null)
+                        viewModel.setChildFilter(null)
+                        parentExpanded = false
+                    },
+                )
+                parentTags.forEach { parent ->
+                    DropdownMenuItem(
+                        text = { Text(parent.name) },
+                        onClick = {
+                            viewModel.setParentFilter(parent.id)
+                            viewModel.setChildFilter(null)
+                            parentExpanded = false
+                            childExpanded = true
+                        },
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Child dropdown
+        if (selectedParentId != null) {
+            ExposedDropdownMenuBox(
+                expanded = childExpanded && children.isNotEmpty(),
+                onExpandedChange = { childExpanded = it },
+                modifier = Modifier.padding(horizontal = 16.dp),
+            ) {
+                val childName = selectedChildId?.let { id ->
+                    children.find { it.id == id }?.name ?: stringResource(R.string.label_select_muscle)
+                } ?: stringResource(R.string.label_select_muscle)
+                OutlinedTextField(
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    value = childName,
+                    onValueChange = {},
+                    readOnly = true,
+                    enabled = children.isNotEmpty(),
+                    label = { Text(stringResource(R.string.label_select_muscle)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = childExpanded) },
+                    singleLine = true,
+                )
+                ExposedDropdownMenu(
+                    expanded = childExpanded && children.isNotEmpty(),
+                    onDismissRequest = { childExpanded = false },
+                ) {
+                    children.forEach { child ->
+                        DropdownMenuItem(
+                            text = { Text(child.name) },
+                            onClick = {
+                                viewModel.setChildFilter(child.id)
+                                childExpanded = false
+                            },
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Results
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.height(240.dp),
