@@ -19,18 +19,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -39,8 +43,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -52,7 +58,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.ExercisesPreviewParameter
-import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.ErrorSnackbar
 import com.looker.kenko.ui.component.KenkoBorderWidth
@@ -71,13 +76,18 @@ fun Exercises(
 ) {
     val state by viewModel.exercises.collectAsStateWithLifecycle()
     val parentTags by viewModel.parentTags.collectAsStateWithLifecycle()
-    val selectedFilter by viewModel.selectedParentFilter.collectAsStateWithLifecycle()
+    val children by viewModel.children.collectAsStateWithLifecycle()
+    val selectedParent by viewModel.selectedParentFilter.collectAsStateWithLifecycle()
+    val selectedChild by viewModel.selectedChildFilter.collectAsStateWithLifecycle()
 
     Exercises(
         state = state,
         parentTags = parentTags,
-        selectedFilter = selectedFilter,
-        onSelectFilter = viewModel::setParentFilter,
+        children = children,
+        selectedParent = selectedParent,
+        selectedChild = selectedChild,
+        onSelectParent = viewModel::setParentFilter,
+        onSelectChild = viewModel::setChildFilter,
         snackbarState = viewModel.snackbarState,
         onBackPress = onBackPress,
         onExerciseClick = onExerciseClick,
@@ -91,9 +101,12 @@ fun Exercises(
 @Composable
 private fun Exercises(
     state: List<Exercise>,
-    parentTags: List<Tag>,
-    selectedFilter: Int?,
-    onSelectFilter: (Int?) -> Unit,
+    parentTags: List<com.looker.kenko.domain.model.Tag>,
+    children: List<com.looker.kenko.domain.model.Tag>,
+    selectedParent: Int?,
+    selectedChild: Int?,
+    onSelectParent: (Int?) -> Unit,
+    onSelectChild: (Int?) -> Unit,
     snackbarState: SnackbarHostState,
     onExerciseClick: (id: Int?) -> Unit,
     onCreateClick: () -> Unit,
@@ -102,6 +115,9 @@ private fun Exercises(
     onReferenceClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var parentExpanded by remember { mutableStateOf(false) }
+    var childExpanded by remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier.fillMaxWidth(),
         floatingActionButton = {
@@ -135,24 +151,96 @@ private fun Exercises(
                     }
                 )
                 HorizontalDivider(thickness = KenkoBorderWidth)
-                // Parent tag filter chips
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+
+                // Two-level filter dropdowns
+                Column(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                 ) {
-                    item {
-                        FilterChip(
-                            selected = selectedFilter == null,
-                            onClick = { onSelectFilter(null) },
-                            label = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                    // Parent dropdown (body part)
+                    ExposedDropdownMenuBox(
+                        expanded = parentExpanded,
+                        onExpandedChange = { parentExpanded = it },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        val parentName = selectedParent?.let { id ->
+                            parentTags.find { it.id == id }?.name
+                                ?: stringResource(R.string.label_select_body_part)
+                        } ?: stringResource(R.string.label_all_muscle_groups)
+                        OutlinedTextField(
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth(),
+                            value = parentName,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text(stringResource(R.string.label_select_body_part)) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = parentExpanded) },
+                            singleLine = true,
                         )
+                        ExposedDropdownMenu(
+                            expanded = parentExpanded,
+                            onDismissRequest = { parentExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                                onClick = {
+                                    onSelectParent(null)
+                                    parentExpanded = false
+                                },
+                            )
+                            parentTags.forEach { parent ->
+                                DropdownMenuItem(
+                                    text = { Text(parent.name) },
+                                    onClick = {
+                                        onSelectParent(parent.id)
+                                        parentExpanded = false
+                                        childExpanded = true
+                                    },
+                                )
+                            }
+                        }
                     }
-                    items(parentTags, key = { it.id }) { tag ->
-                        FilterChip(
-                            selected = selectedFilter == tag.id,
-                            onClick = { onSelectFilter(tag.id) },
-                            label = { Text(tag.name) },
-                        )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Child dropdown (specific muscle)
+                    if (selectedParent != null) {
+                        ExposedDropdownMenuBox(
+                            expanded = childExpanded && children.isNotEmpty(),
+                            onExpandedChange = { childExpanded = it },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            val childName = selectedChild?.let { id ->
+                                children.find { it.id == id }?.name
+                                    ?: stringResource(R.string.label_select_muscle)
+                            } ?: stringResource(R.string.label_select_muscle)
+                            OutlinedTextField(
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth(),
+                                value = childName,
+                                onValueChange = {},
+                                readOnly = true,
+                                enabled = children.isNotEmpty(),
+                                label = { Text(stringResource(R.string.label_select_muscle)) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = childExpanded) },
+                                singleLine = true,
+                            )
+                            ExposedDropdownMenu(
+                                expanded = childExpanded && children.isNotEmpty(),
+                                onDismissRequest = { childExpanded = false },
+                            ) {
+                                children.forEach { child ->
+                                    DropdownMenuItem(
+                                        text = { Text(child.name) },
+                                        onClick = {
+                                            onSelectChild(child.id)
+                                            childExpanded = false
+                                        },
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -257,8 +345,11 @@ private fun ExercisesPreview(
         Exercises(
             state = exercises,
             parentTags = emptyList(),
-            selectedFilter = null,
-            onSelectFilter = {},
+            children = emptyList(),
+            selectedParent = null,
+            selectedChild = null,
+            onSelectParent = {},
+            onSelectChild = {},
             snackbarState = SnackbarHostState(),
             onExerciseClick = {},
             onCreateClick = {},

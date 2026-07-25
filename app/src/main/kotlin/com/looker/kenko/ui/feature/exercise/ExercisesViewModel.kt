@@ -32,7 +32,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -48,25 +47,46 @@ class ExercisesViewModel @Inject constructor(
     val snackbarState = SnackbarHostState()
 
     val selectedParentFilter = MutableStateFlow<Int?>(null)
+    val selectedChildFilter = MutableStateFlow<Int?>(null)
 
     val parentTags: StateFlow<List<Tag>> = tagRepo.streamParents
         .asStateFlow(emptyList())
 
+    val children: StateFlow<List<Tag>> = combine(
+        tagRepo.stream,
+        selectedParentFilter,
+    ) { all, parentId ->
+        if (parentId == null) emptyList()
+        else all.filter { it.parentId == parentId }
+    }.asStateFlow(emptyList())
+
     val exercises: StateFlow<List<Exercise>> = combine(
         repo.stream,
         selectedParentFilter,
-    ) { allExercises, parentId ->
-        if (parentId == null) {
-            allExercises
-        } else {
-            allExercises.filter { exercise ->
+        selectedChildFilter,
+    ) { allExercises, parentId, childId ->
+        var filtered = allExercises
+
+        if (childId != null) {
+            filtered = filtered.filter { exercise ->
+                exercise.tags.any { it.id == childId }
+            }
+        } else if (parentId != null) {
+            filtered = filtered.filter { exercise ->
                 exercise.tags.any { it.parentId == parentId }
             }
         }
+
+        filtered
     }.asStateFlow(emptyList())
 
     fun setParentFilter(parentId: Int?) {
         selectedParentFilter.value = parentId
+        if (parentId == null) selectedChildFilter.value = null
+    }
+
+    fun setChildFilter(childId: Int?) {
+        selectedChildFilter.value = childId
     }
 
     fun removeExercise(id: Int?) {
