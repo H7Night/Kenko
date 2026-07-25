@@ -12,6 +12,7 @@ thought-out plans
 ## Features
 - **Workout Journal**: Track your training sessions (Resistance and Cardio) with ease.
 - **Custom Plans**: Create and manage your own workout plans with custom name and day titles.
+- **Two-Level Exercise Tags**: Classify exercises by body part → specific muscle groups. Multi-tag support with tag management in Settings.
 - **Interactive Heatmap**: View your training consistency with a scrollable monthly/yearly heatmap and day-of-week labels.
 - **Progressive Overload**: Monitor your progress over time with detailed session history.
 - **Body Weight Tracking**: Record your body weight and view progress on interactive line charts.

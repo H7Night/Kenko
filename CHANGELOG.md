@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Two-level exercise tag system: body part → specific muscle groups
+- Tag management in Settings (add, edit, delete, reorder)
+- Multi-tag support for exercises with chip display
+- CountType selector (reps/minutes) replacing implicit Cardio detection
+- Two-level tag filter in plan exercise selection
+
+### Changed
+- Exercise model: `target: MuscleGroups` replaced with `tags: List<Tag>` + `countType: CountType`
+- Database migrated from version 7 to 8 (tags + exercise_tags tables)
+- Exercise editing UI: two-level tag selector replaces single target picker
+- Exercise list: tag chips replace single MuscleGroups display
+- Plan exercise search: two-level dropdowns replace horizontal target chips
+- Session UI: Cardio detection uses CountType instead of MuscleGroups
+- Export: exercise target field now uses tag names
+- Removed `MuscleGroups` enum and all related components
+
 ## [1.3.2] - 2026-04-20
 
 ### Added
