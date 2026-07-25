@@ -56,9 +56,9 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
 import com.looker.kenko.data.local.model.SetType
+import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.ExercisesPreviewParameter
-import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Set
 import com.looker.kenko.domain.model.repDurationStringRes
@@ -75,7 +75,7 @@ fun SetItem(
     onWeightUpdate: (Float) -> Unit = {},
     title: @Composable () -> Unit,
 ) {
-    val isCardio = set.exercise.target == MuscleGroups.Cardio
+    val isCardio = set.exercise.countType == CountType.MINUTES
     val containerColor = if (isToday) {
         MaterialTheme.colorScheme.secondaryContainer
     } else {

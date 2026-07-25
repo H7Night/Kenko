@@ -23,7 +23,6 @@ import com.looker.kenko.domain.model.Labels.Difficulty
 import com.looker.kenko.domain.model.Labels.Equipment
 import com.looker.kenko.domain.model.Labels.Focus
 import com.looker.kenko.domain.model.Labels.Time
-import com.looker.kenko.domain.model.MuscleGroups
 
 @Entity(tableName = "plans")
 data class PlanEntity(

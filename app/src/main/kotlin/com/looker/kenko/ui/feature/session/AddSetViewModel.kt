@@ -27,7 +27,7 @@ import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.local.model.SetType
-import com.looker.kenko.domain.model.MuscleGroups
+import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.localDate
 import com.looker.kenko.data.repository.ExerciseRepo
@@ -69,7 +69,7 @@ class AddSetViewModel @AssistedInject constructor(
     init {
         viewModelScope.launch {
             val exercise = exerciseRepo.get(id)
-            isCardio = exercise?.target == MuscleGroups.Cardio
+            isCardio = exercise?.countType == CountType.MINUTES
             if (isCardio) {
                 reps.setTextAndPlaceCursorAtEnd("20")
             }

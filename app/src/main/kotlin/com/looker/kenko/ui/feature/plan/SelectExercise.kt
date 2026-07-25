@@ -53,12 +53,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.MuscleGroups
-import com.looker.kenko.ui.component.LazyTargets
-import com.looker.kenko.ui.component.TargetChip
 import com.looker.kenko.ui.component.disableScrollConnection
 import com.looker.kenko.ui.component.kenkoTextFieldColor
-import com.looker.kenko.ui.feature.exercise.string
 import com.looker.kenko.ui.feature.plan.components.ExerciseItem
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
@@ -69,7 +65,7 @@ import com.looker.kenko.ui.theme.start
 @Composable
 fun SelectExercise(
     onDone: (Exercise) -> Unit,
-    onRequestNewExercise: (name: String?, target: MuscleGroups?) -> Unit,
+    onRequestNewExercise: (name: String?) -> Unit,
     title: String? = null,
 ) {
     val viewModel: SelectExerciseViewModel = hiltViewModel()
@@ -80,7 +76,6 @@ fun SelectExercise(
             .nestedScroll(disableScrollConnection())
             .wrapContentHeight(),
     ) {
-        val target by viewModel.targetMuscle.collectAsStateWithLifecycle()
         val searchResult by viewModel.searchResult.collectAsStateWithLifecycle()
 
         AddExerciseHeader(
@@ -93,19 +88,9 @@ fun SelectExercise(
             onNameChange = viewModel::setSearch,
             onAddClick = {
                 focusManager.clearFocus()
-                onRequestNewExercise(viewModel.searchQuery.ifBlank { null }, target)
+                onRequestNewExercise(viewModel.searchQuery.ifBlank { null })
             },
         )
-        LazyTargets(contentPadding = PaddingValues(horizontal = 8.dp)) {
-            TargetChip(
-                selected = target == it,
-                onClick = {
-                    focusManager.clearFocus()
-                    viewModel.setTarget(it)
-                },
-                text = stringResource(it.string),
-            )
-        }
 
         Box(
             contentAlignment = Alignment.Center,
@@ -116,7 +101,7 @@ fun SelectExercise(
                 SearchResult.NotFound -> SearchNotFound(
                     onAddNewExercise = {
                         focusManager.clearFocus()
-                        onRequestNewExercise(viewModel.searchQuery, target)
+                        onRequestNewExercise(viewModel.searchQuery)
                     }
                 )
 

@@ -123,19 +123,17 @@ fun KenkoNavHost(
                     navOptions = singleTopNavOptions
                 )
             },
-            onCreateClick = { target ->
+            onCreateClick = {
                 navController.navigateToAddEditExercise(
-                    target = target,
                     navOptions = singleTopNavOptions
                 )
             },
             onBackPress = navController::popBackStackOnResume
         )
 
-        planEdit(navController::popBackStackOnResume) { name, target ->
+        planEdit(navController::popBackStackOnResume) { name ->
             navController.navigateToAddEditExercise(
                 name = name,
-                target = target,
                 navOptions = singleTopNavOptions,
             )
         }

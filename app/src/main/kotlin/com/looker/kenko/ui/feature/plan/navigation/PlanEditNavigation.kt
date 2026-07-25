@@ -20,7 +20,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
-import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.ui.feature.plan.PlanEdit
 import kotlinx.serialization.Serializable
 
@@ -35,7 +34,7 @@ fun NavController.navigateToPlanEdit(id: Int = -1, navOptions: NavOptions? = nul
 
 fun NavGraphBuilder.planEdit(
     onBackPress: () -> Unit,
-    onAddNewExerciseClick: (name: String?, target: MuscleGroups?) -> Unit,
+    onAddNewExerciseClick: (name: String?) -> Unit,
 ) {
     composable<PlanEditRoute>(
         deepLinks = listOf(navDeepLink { uriPattern = "kenko://plan/{id}" }),

@@ -17,20 +17,7 @@ package com.looker.kenko.domain.model
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.looker.kenko.R
-import com.looker.kenko.domain.model.MuscleGroups.Biceps
-import com.looker.kenko.domain.model.MuscleGroups.Calves
-import com.looker.kenko.domain.model.MuscleGroups.Chest
-import com.looker.kenko.domain.model.MuscleGroups.Core
-import com.looker.kenko.domain.model.MuscleGroups.Glutes
-import com.looker.kenko.domain.model.MuscleGroups.Hamstrings
-import com.looker.kenko.domain.model.MuscleGroups.Lats
-import com.looker.kenko.domain.model.MuscleGroups.Quads
-import com.looker.kenko.domain.model.MuscleGroups.Shoulders
-import com.looker.kenko.domain.model.MuscleGroups.Traps
-import com.looker.kenko.domain.model.MuscleGroups.Triceps
-import com.looker.kenko.domain.model.MuscleGroups.UpperBack
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -39,10 +26,11 @@ import kotlinx.serialization.Serializable
 @SerialName("exercise")
 data class Exercise(
     val name: String,
-    val target: MuscleGroups,
-    val reference: String? = null,
+    val tags: List<Tag> = emptyList(),
+    val countType: CountType = CountType.REPS,
     val isIsometric: Boolean = false,
     val isBodyweight: Boolean = false,
+    val reference: String? = null,
     val id: Int? = null,
 )
 
@@ -51,67 +39,67 @@ val Exercise.repDurationStringRes: Int
     @StringRes
     get() = when {
         isIsometric -> R.string.label_duration
-        target == MuscleGroups.Cardio -> R.string.label_min
+        countType == CountType.MINUTES -> R.string.label_min
         else -> R.string.label_reps
     }
 
 class ExercisesPreviewParameter : PreviewParameterProvider<List<Exercise>> {
     override val values = sequenceOf(
         listOf(
-            Exercise("Curls", Biceps),
-            Exercise("Barbell Curls", Biceps),
-            Exercise("Preacher Curls", Biceps),
-            Exercise("B-t-B Curls", Biceps),
+            Exercise("Curls", tags = listOf(Tag(1, "二头肌", parentId = 5, parentName = "手臂"))),
+            Exercise("Barbell Curls", tags = listOf(Tag(1, "二头肌", parentId = 5, parentName = "手臂"))),
+            Exercise("Preacher Curls", tags = listOf(Tag(1, "二头肌", parentId = 5, parentName = "手臂"))),
+            Exercise("B-t-B Curls", tags = listOf(Tag(1, "二头肌", parentId = 5, parentName = "手臂"))),
         ),
         listOf(
-            Exercise("Push-down", Triceps),
-            Exercise("Skull-Crushers", Triceps),
-            Exercise("Push-overs", Triceps),
+            Exercise("Push-down", tags = listOf(Tag(2, "三头肌", parentId = 5, parentName = "手臂"))),
+            Exercise("Skull-Crushers", tags = listOf(Tag(2, "三头肌", parentId = 5, parentName = "手臂"))),
+            Exercise("Push-overs", tags = listOf(Tag(2, "三头肌", parentId = 5, parentName = "手臂"))),
         ),
         listOf(
-            Exercise("Lateral Raises", Shoulders),
-            Exercise("Shoulder Press", Shoulders),
-            Exercise("Face Pulls", Shoulders),
+            Exercise("Lateral Raises", tags = listOf(Tag(3, "中束", parentId = 4, parentName = "肩"))),
+            Exercise("Shoulder Press", tags = listOf(Tag(3, "中束", parentId = 4, parentName = "肩"))),
+            Exercise("Face Pulls", tags = listOf(Tag(3, "中束", parentId = 4, parentName = "肩"))),
         ),
         listOf(
-            Exercise("Squats", Quads),
-            Exercise("Leg Press", Quads),
-            Exercise("Hack Squats", Quads),
-            Exercise("Leg Extensions", Quads),
+            Exercise("Squats", tags = listOf(Tag(4, "股四头肌", parentId = 3, parentName = "腿"))),
+            Exercise("Leg Press", tags = listOf(Tag(4, "股四头肌", parentId = 3, parentName = "腿"))),
+            Exercise("Hack Squats", tags = listOf(Tag(4, "股四头肌", parentId = 3, parentName = "腿"))),
+            Exercise("Leg Extensions", tags = listOf(Tag(4, "股四头肌", parentId = 3, parentName = "腿"))),
         ),
         listOf(
-            Exercise("SDL", Hamstrings),
-            Exercise("Lying Leg Curls", Hamstrings),
+            Exercise("SDL", tags = listOf(Tag(5, "腘绳肌", parentId = 3, parentName = "腿"))),
+            Exercise("Lying Leg Curls", tags = listOf(Tag(5, "腘绳肌", parentId = 3, parentName = "腿"))),
         ),
-        listOf(Exercise("Calve Raises", Calves)),
+        listOf(Exercise("Calve Raises", tags = listOf(Tag(6, "小腿", parentId = 3, parentName = "腿")))),
         listOf(
-            Exercise("Hip Thrusts", Glutes),
-            Exercise("Lunges", Glutes),
-        ),
-        listOf(
-            Exercise("Sit-ups", Core),
-            Exercise("Leg Raises", Core),
+            Exercise("Hip Thrusts", tags = listOf(Tag(7, "臀肌", parentId = 3, parentName = "腿"))),
+            Exercise("Lunges", tags = listOf(Tag(7, "臀肌", parentId = 3, parentName = "腿"))),
         ),
         listOf(
-            Exercise("Bench Press", Chest),
-            Exercise("Incline Bench", Chest),
-            Exercise("Pec Dec", Chest),
-            Exercise("Chest Fly", Chest),
-        ),
-        listOf(Exercise("Shrugs", Traps)),
-        listOf(
-            Exercise("Lat Pull-down", Lats),
-            Exercise("Pull-ups", Lats),
-            Exercise("Lat Prayers", Lats),
+            Exercise("Sit-ups", tags = listOf(Tag(8, "上腹", parentId = 6, parentName = "腹"))),
+            Exercise("Leg Raises", tags = listOf(Tag(8, "上腹", parentId = 6, parentName = "腹"))),
         ),
         listOf(
-            Exercise("Bent-over Rows", UpperBack),
-            Exercise("Chest-Supported Rows", UpperBack),
-            Exercise("Rows", UpperBack),
+            Exercise("Bench Press", tags = listOf(Tag(9, "中胸", parentId = 1, parentName = "胸"))),
+            Exercise("Incline Bench", tags = listOf(Tag(10, "上胸", parentId = 1, parentName = "胸"))),
+            Exercise("Pec Dec", tags = listOf(Tag(9, "中胸", parentId = 1, parentName = "胸"))),
+            Exercise("Chest Fly", tags = listOf(Tag(9, "中胸", parentId = 1, parentName = "胸"))),
+        ),
+        listOf(Exercise("Shrugs", tags = listOf(Tag(11, "斜方肌", parentId = 2, parentName = "背")))),
+        listOf(
+            Exercise("Lat Pull-down", tags = listOf(Tag(12, "背阔肌", parentId = 2, parentName = "背"))),
+            Exercise("Pull-ups", tags = listOf(Tag(12, "背阔肌", parentId = 2, parentName = "背"))),
+            Exercise("Lat Prayers", tags = listOf(Tag(12, "背阔肌", parentId = 2, parentName = "背"))),
         ),
         listOf(
-            Exercise("Treadmill", MuscleGroups.Cardio),
-            Exercise("Cycling", MuscleGroups.Cardio),
+            Exercise("Bent-over Rows", tags = listOf(Tag(13, "竖脊肌", parentId = 2, parentName = "背"))),
+            Exercise("Chest-Supported Rows", tags = listOf(Tag(13, "竖脊肌", parentId = 2, parentName = "背"))),
+            Exercise("Rows", tags = listOf(Tag(13, "竖脊肌", parentId = 2, parentName = "背"))),
+        ),
+        listOf(
+            Exercise("Treadmill", tags = listOf(Tag(14, "跑步", parentId = 7, parentName = "有氧")), countType = CountType.MINUTES),
+            Exercise("Cycling", tags = listOf(Tag(15, "骑行", parentId = 7, parentName = "有氧")), countType = CountType.MINUTES),
         ),
     )
 }

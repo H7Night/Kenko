@@ -41,21 +41,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
-import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.ErrorSnackbar
-import com.looker.kenko.ui.component.FlowTargets
 import com.looker.kenko.ui.component.KenkoButton
-import com.looker.kenko.ui.component.TargetChip
 import com.looker.kenko.ui.component.kenkoTextFieldColor
-import com.looker.kenko.ui.feature.exercise.string
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
@@ -94,7 +89,6 @@ fun AddEditExercise(
         exerciseName = state.exerciseName,
         state = state,
         snackbarState = viewModel.snackbarState,
-        onSelectTarget = viewModel::setTargetMuscle,
         onBodyweightChange = { viewModel.isBodyweightFlow.value = it },
         onNameChange = viewModel::setName,
         onBackPress = onBackPress,
@@ -108,13 +102,11 @@ private fun AddEditExercise(
     exerciseName: String,
     state: AddEditExerciseUiState,
     snackbarState: SnackbarHostState,
-    onSelectTarget: (MuscleGroups) -> Unit,
     onBodyweightChange: (Boolean) -> Unit,
     onNameChange: (String) -> Unit,
     onDone: () -> Unit,
     onBackPress: () -> Unit,
 ) {
-    val focusManager = LocalFocusManager.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -149,22 +141,6 @@ private fun AddEditExercise(
                 isError = state.isError,
                 modifier = Modifier.fillMaxWidth()
             )
-            Text(
-                modifier = Modifier.padding(vertical = 8.dp),
-                text = stringResource(R.string.label_target),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.outline
-            )
-            FlowTargets {
-                TargetChip(
-                    selected = state.targetMuscle == it,
-                    onClick = {
-                        focusManager.clearFocus()
-                        onSelectTarget(it)
-                    },
-                    text = stringResource(it.string),
-                )
-            }
             Spacer(modifier = Modifier.height(12.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -187,7 +163,6 @@ private fun AddEditExercise(
                     .align(Alignment.CenterHorizontally)
                     .navigationBarsPadding(),
                 onClick = {
-                    focusManager.clearFocus()
                     onDone()
                 },
                 label = {
@@ -269,9 +244,8 @@ private fun AddEditPreview() {
     KenkoTheme {
         AddEditExercise(
             exerciseName = "BenchPress",
-            state = AddEditExerciseUiState(MuscleGroups.Chest, false, false),
+            state = AddEditExerciseUiState(false, false),
             snackbarState = SnackbarHostState(),
-            onSelectTarget = {},
             onBodyweightChange = {},
             onNameChange = {},
             onDone = {},

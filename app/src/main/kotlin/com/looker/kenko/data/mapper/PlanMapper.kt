@@ -17,7 +17,6 @@ package com.looker.kenko.data.mapper
 import com.looker.kenko.data.local.model.PlanDayEntity
 import com.looker.kenko.data.local.model.PlanEntity
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.PlanStat
@@ -64,5 +63,4 @@ inline fun PlanDayEntity.toExternal(block: (exerciseId: Int) -> Exercise?) = Pla
 
 val DefaultExercise = Exercise(
     name = "Exercise Deleted",
-    target = MuscleGroups.Core,
 )

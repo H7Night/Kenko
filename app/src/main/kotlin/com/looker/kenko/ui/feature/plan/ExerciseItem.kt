@@ -33,6 +33,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -76,17 +77,20 @@ fun ExerciseItem(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.SpaceAround,
             ) {
+                val tagNames = remember { exercise.tags.joinToString(", ") { it.name } }
                 Text(
                     text = exercise.name,
                     maxLines = 2,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-                Text(
-                    text = stringResource(exercise.target.stringRes),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
-                )
+                if (tagNames.isNotEmpty()) {
+                    Text(
+                        text = tagNames,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                }
             }
             CompositionLocalProvider(
                 LocalTextStyle provides MaterialTheme.typography.headlineSmall,

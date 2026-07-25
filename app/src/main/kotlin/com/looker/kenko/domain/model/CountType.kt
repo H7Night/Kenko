@@ -15,33 +15,9 @@
 package com.looker.kenko.domain.model
 
 import androidx.annotation.StringRes
-import androidx.compose.runtime.Stable
 import com.looker.kenko.R
-import kotlinx.serialization.Serializable
 
-@Stable
-@Serializable
-enum class MuscleGroups(@StringRes val stringRes: Int) {
-    // Arms
-    Biceps(R.string.label_muscle_biceps),
-    Triceps(R.string.label_muscle_triceps),
-    Shoulders(R.string.label_muscle_shoulders),
-
-    // Legs
-    Quads(R.string.label_muscle_quads),
-    Hamstrings(R.string.label_muscle_hamstrings),
-    Calves(R.string.label_muscle_calves),
-    Glutes(R.string.label_muscle_glutes),
-
-    // Front
-    Core(R.string.label_muscle_core),
-    Chest(R.string.label_muscle_chest),
-
-    // Back
-    Traps(R.string.label_muscle_traps),
-    Lats(R.string.label_muscle_lats),
-    UpperBack(R.string.label_muscle_back),
-
-    // Special
-    Cardio(R.string.label_muscle_cardio),
+enum class CountType(@StringRes val labelRes: Int) {
+    REPS(R.string.label_count_type_reps),
+    MINUTES(R.string.label_count_type_minutes),
 }

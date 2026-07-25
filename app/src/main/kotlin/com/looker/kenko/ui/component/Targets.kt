@@ -14,67 +14,10 @@
 
 package com.looker.kenko.ui.component
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.looker.kenko.domain.model.MuscleGroups
-import com.looker.kenko.ui.feature.exercise.string
-import com.looker.kenko.ui.theme.KenkoTheme
-
-private val SortedTargets = MuscleGroups.entries.sortedBy { it.string }
-private val Targets = listOf(null) + SortedTargets
-
-@Composable
-fun FlowTargets(
-    modifier: Modifier = Modifier,
-    content: @Composable (MuscleGroups) -> Unit,
-) {
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier,
-    ) {
-        SortedTargets.forEach { target ->
-            content(target)
-        }
-    }
-}
-
-@Composable
-fun LazyTargets(
-    modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
-    content: @Composable (MuscleGroups?) -> Unit,
-) {
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = contentPadding,
-        modifier = modifier,
-    ) {
-        items(Targets) { target ->
-            content(target)
-        }
-    }
-}
 
 @Composable
 fun TargetChip(
@@ -89,63 +32,4 @@ fun TargetChip(
         label = { Text(text = text) },
         modifier = modifier,
     )
-}
-
-@Composable
-fun HorizontalTargetChips(
-    target: MuscleGroups?,
-    onSelect: (MuscleGroups?) -> Unit,
-    modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(bottom = 4.dp),
-    ) {
-        Spacer(modifier = Modifier.width(contentPadding.calculateStartPadding(LocalLayoutDirection.current)))
-        val sortedTargets = remember { Targets.sortedBy { it?.string } }
-        sortedTargets.forEachIndexed { index, muscle ->
-            FilterChip(
-                selected = target == muscle,
-                onClick = { onSelect(muscle) },
-                label = { Text(text = stringResource(muscle.string)) },
-            )
-            if (sortedTargets.lastIndex != index) {
-                Spacer(modifier = Modifier.width(8.dp))
-            }
-        }
-        Spacer(modifier = Modifier.width(contentPadding.calculateEndPadding(LocalLayoutDirection.current)))
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun HorizontalTargetChipsPreview() {
-    KenkoTheme {
-        LazyTargets {
-            TargetChip(
-                selected = it == null,
-                onClick = {},
-                text = stringResource(it.string),
-                modifier = Modifier.padding(horizontal = 4.dp),
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun FlowTargetChipsPreview() {
-    KenkoTheme {
-        FlowTargets {
-            TargetChip(
-                selected = false,
-                onClick = {},
-                text = stringResource(it.stringRes),
-                modifier = Modifier.padding(horizontal = 4.dp),
-            )
-        }
-    }
 }

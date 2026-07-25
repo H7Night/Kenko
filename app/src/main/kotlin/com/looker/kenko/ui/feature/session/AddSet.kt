@@ -66,8 +66,8 @@ import androidx.graphics.shapes.RoundedPolygon
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.looker.kenko.R
 import com.looker.kenko.data.local.model.SetType
+import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.domain.model.repDurationStringRes
 import com.looker.kenko.ui.feature.session.AddSetViewModel.FloatTransformation
 import com.looker.kenko.ui.feature.session.AddSetViewModel.IntTransformation
@@ -86,7 +86,7 @@ private val zIndexModifier = Modifier.zIndex(1F)
 
 @Composable
 fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
-    val isCardio = exercise.target == MuscleGroups.Cardio
+    val isCardio = exercise.countType == CountType.MINUTES
     val viewModel: AddSetViewModel =
         hiltViewModel<AddSetViewModel, AddSetViewModel.AddSetViewModelFactory>(key = exercise.name) {
             it.create(exercise.id!!, date)

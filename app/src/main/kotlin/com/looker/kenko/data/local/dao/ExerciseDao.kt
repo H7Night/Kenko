@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.Flow
 interface ExerciseDao {
 
     @Upsert
-    suspend fun upsert(exercise: ExerciseEntity)
+    suspend fun upsert(exercise: ExerciseEntity): Long
 
     @Query(
         """

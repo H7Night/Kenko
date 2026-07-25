@@ -15,30 +15,44 @@
 package com.looker.kenko.data.repository.local
 
 import com.looker.kenko.data.local.dao.ExerciseDao
+import com.looker.kenko.data.local.dao.TagDao
 import com.looker.kenko.data.local.model.ExerciseEntity
 import com.looker.kenko.data.mapper.toEntity
 import com.looker.kenko.data.mapper.toExternal
-import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.data.repository.ExerciseRepo
+import com.looker.kenko.domain.model.Exercise
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class LocalExerciseRepo @Inject constructor(
     private val dao: ExerciseDao,
+    private val tagDao: TagDao,
     private val setsDao: com.looker.kenko.data.local.dao.SetsDao,
 ) : ExerciseRepo {
 
     override val stream: Flow<List<Exercise>> =
-        dao.stream().map { it.map(ExerciseEntity::toExternal) }
+        dao.stream().map { entities ->
+            entities.map { entity ->
+                val tags = tagDao.getTagsForExercise(entity.id).map { it.toExternal() }
+                entity.toExternal(tags)
+            }
+        }
 
     override val numberOfExercise: Flow<Int> = dao.number()
 
-    override suspend fun get(id: Int): Exercise? =
-        dao.get(id)?.toExternal()
+    override suspend fun get(id: Int): Exercise? {
+        val entity = dao.get(id) ?: return null
+        val tags = tagDao.getTagsForExercise(entity.id).map { it.toExternal() }
+        return entity.toExternal(tags)
+    }
 
     override suspend fun upsert(exercise: Exercise) {
-        dao.upsert(exercise.toEntity())
+        val entityId = dao.upsert(exercise.toEntity())
+        val id = exercise.id ?: entityId
+        if (id != 0) {
+            tagDao.replaceExerciseTags(id, exercise.tags.map { it.id })
+        }
     }
 
     override suspend fun remove(id: Int) {

@@ -14,21 +14,16 @@
 
 package com.looker.kenko.ui.feature.exercise
 
-import androidx.annotation.StringRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -52,14 +47,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.ExercisesPreviewParameter
-import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.ErrorSnackbar
 import com.looker.kenko.ui.component.KenkoBorderWidth
-import com.looker.kenko.ui.component.LazyTargets
 import com.looker.kenko.ui.component.SecondaryKenkoButton
 import com.looker.kenko.ui.component.SwipeToDeleteBox
-import com.looker.kenko.ui.component.TargetChip
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
@@ -68,7 +60,7 @@ import com.looker.kenko.ui.theme.KenkoTheme
 fun Exercises(
     viewModel: ExercisesViewModel,
     onExerciseClick: (id: Int?) -> Unit,
-    onCreateClick: (target: MuscleGroups?) -> Unit,
+    onCreateClick: () -> Unit,
     onBackPress: () -> Unit,
 ) {
     val state by viewModel.exercises.collectAsStateWithLifecycle()
@@ -78,7 +70,6 @@ fun Exercises(
         onBackPress = onBackPress,
         onExerciseClick = onExerciseClick,
         onCreateClick = onCreateClick,
-        onSelectTarget = viewModel::setTarget,
         onReferenceClick = viewModel::onReferenceClick,
         onRemove = viewModel::removeExercise,
     )
@@ -86,11 +77,10 @@ fun Exercises(
 
 @Composable
 private fun Exercises(
-    state: ExercisesUiState,
+    state: List<Exercise>,
     snackbarState: SnackbarHostState,
     onExerciseClick: (id: Int?) -> Unit,
-    onCreateClick: (target: MuscleGroups?) -> Unit,
-    onSelectTarget: (MuscleGroups?) -> Unit,
+    onCreateClick: () -> Unit,
     onRemove: (Int?) -> Unit,
     onBackPress: () -> Unit,
     onReferenceClick: (String) -> Unit,
@@ -100,7 +90,7 @@ private fun Exercises(
         modifier = modifier.fillMaxWidth(),
         floatingActionButton = {
             SecondaryKenkoButton(
-                onClick = { onCreateClick(state.selected) },
+                onClick = onCreateClick,
                 label = {
                     Icon(
                         painter = KenkoIcons.Add,
@@ -120,14 +110,12 @@ private fun Exercises(
         },
         topBar = {
             Header(
-                target = state.selected,
-                onSelect = onSelectTarget,
                 onBackPress = onBackPress,
             )
         },
     ) { innerPadding ->
         ExercisesList(
-            exercises = state.exercises,
+            exercises = state,
             contentPadding = innerPadding + PaddingValues(bottom = 80.dp),
             onExerciseClick = onExerciseClick,
             onReferenceClick = onReferenceClick,
@@ -166,12 +154,10 @@ private fun ExercisesList(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Header(
-    target: MuscleGroups?,
-    onSelect: (MuscleGroups?) -> Unit,
     onBackPress: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.background(MaterialTheme.colorScheme.background)) {
+    Column {
         TopAppBar(
             title = {
                 Text(text = stringResource(id = R.string.label_browse_exercises))
@@ -180,13 +166,6 @@ private fun Header(
                 BackButton(onClick = onBackPress)
             }
         )
-        LazyTargets(contentPadding = PaddingValues(horizontal = 8.dp)) {
-            TargetChip(
-                selected = target == it,
-                onClick = { onSelect(it) },
-                text = stringResource(it.string),
-            )
-        }
     }
 }
 
@@ -196,8 +175,7 @@ private fun ExerciseItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    @StringRes
-    val targetName: Int = remember { exercise.target.stringRes }
+    val tagNames = remember { exercise.tags.joinToString(", ") { it.name } }
     Surface(
         modifier = modifier,
         onClick = onClick,
@@ -218,11 +196,13 @@ private fun ExerciseItem(
                     text = exercise.name,
                     style = MaterialTheme.typography.titleMedium,
                 )
-                Text(
-                    text = stringResource(targetName),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.outline,
-                )
+                if (tagNames.isNotEmpty()) {
+                    Text(
+                        text = tagNames,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                }
             }
         }
     }
@@ -235,11 +215,10 @@ private fun ExercisesPreview(
 ) {
     KenkoTheme {
         Exercises(
-            state = ExercisesUiState(MuscleGroups.entries.flatMap { exercises }),
+            state = exercises,
             snackbarState = SnackbarHostState(),
             onExerciseClick = {},
             onCreateClick = {},
-            onSelectTarget = {},
             onBackPress = {},
             onReferenceClick = {},
             onRemove = {}

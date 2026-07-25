@@ -29,7 +29,6 @@ import com.looker.kenko.data.local.MIGRATION_6_7
 import com.looker.kenko.data.local.dao.ExerciseDao
 import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.model.ExerciseEntity
-import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.utils.EpochDays
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -112,7 +111,7 @@ class RoomDatabaseTesting {
         assertTrue(currentPlanItems.all { it.exerciseId != 0 })
         assertContains(
             exercises,
-            ExerciseEntity("Pullups", MuscleGroups.Lats, isIsometric = false, id = 1),
+            ExerciseEntity("Pullups", isIsometric = false, id = 1),
         )
         assertEquals(planHistory.planId, 1)
         assertEquals(fullHistory.size, 1)

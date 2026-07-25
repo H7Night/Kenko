@@ -87,7 +87,7 @@ private fun Session.toExport(): ExportSession = ExportSession(
             repsOrDuration = set.repsOrDuration,
             weight = set.weight,
             exerciseName = set.exercise.name,
-            exerciseTarget = set.exercise.target.name,
+            exerciseTarget = set.exercise.tags.firstOrNull()?.parentName ?: "",
         )
     },
     planId = planId,
@@ -102,7 +102,7 @@ private fun Plan.toExport(): ExportPlan = ExportPlan(
 
 private fun Exercise.toExport(): ExportExercise = ExportExercise(
     name = name,
-    target = target.name,
+    target = tags.firstOrNull()?.parentName ?: "",
     isBodyweight = isBodyweight,
     isIsometric = isIsometric,
 )

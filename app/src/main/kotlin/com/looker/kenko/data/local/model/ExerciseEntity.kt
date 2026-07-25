@@ -16,7 +16,7 @@ package com.looker.kenko.data.local.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.looker.kenko.domain.model.MuscleGroups
+import com.looker.kenko.domain.model.CountType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -25,10 +25,10 @@ import kotlinx.serialization.Serializable
 @Entity("exercises")
 data class ExerciseEntity(
     val name: String,
-    val target: MuscleGroups,
+    val countType: CountType = CountType.REPS,
     val reference: String? = null,
     val isIsometric: Boolean = false,
     val isBodyweight: Boolean = false,
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0
+    val id: Int = 0,
 )

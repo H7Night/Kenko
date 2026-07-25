@@ -24,18 +24,21 @@ import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.dao.PlanHistoryDao
 import com.looker.kenko.data.local.dao.SessionDao
 import com.looker.kenko.data.local.dao.SetsDao
+import com.looker.kenko.data.local.dao.TagDao
 import com.looker.kenko.data.local.dao.WeightDao
 import com.looker.kenko.data.local.model.ExerciseEntity
+import com.looker.kenko.data.local.model.ExerciseTagEntity
 import com.looker.kenko.data.local.model.PlanDayEntity
 import com.looker.kenko.data.local.model.PlanEntity
 import com.looker.kenko.data.local.model.PlanHistoryEntity
 import com.looker.kenko.data.local.model.SessionDataEntity
 import com.looker.kenko.data.local.model.SetEntity
 import com.looker.kenko.data.local.model.SetTypeEntity
+import com.looker.kenko.data.local.model.TagEntity
 import com.looker.kenko.data.local.model.WeightEntity
 
 @Database(
-    version = 7,
+    version = 8,
     entities = [
         SessionDataEntity::class,
         ExerciseEntity::class,
@@ -45,6 +48,8 @@ import com.looker.kenko.data.local.model.WeightEntity
         SetEntity::class,
         SetTypeEntity::class,
         WeightEntity::class,
+        TagEntity::class,
+        ExerciseTagEntity::class,
     ],
 )
 abstract class KenkoDatabase : RoomDatabase() {
@@ -55,6 +60,7 @@ abstract class KenkoDatabase : RoomDatabase() {
     abstract fun historyDao(): PlanHistoryDao
     abstract fun performanceDao(): PerformanceDao
     abstract fun weightDao(): WeightDao
+    abstract fun tagDao(): TagDao
 }
 
 fun kenkoDatabase(context: Context) = Room
@@ -71,5 +77,6 @@ fun kenkoDatabase(context: Context) = Room
         MIGRATION_4_5,
         MIGRATION_5_6,
         MIGRATION_6_7,
+        MIGRATION_7_8,
     )
     .build()

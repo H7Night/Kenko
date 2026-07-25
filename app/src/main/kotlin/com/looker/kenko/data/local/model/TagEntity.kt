@@ -12,28 +12,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.looker.kenko.data.mapper
+package com.looker.kenko.data.local.model
 
-import com.looker.kenko.data.local.model.ExerciseEntity
-import com.looker.kenko.domain.model.Exercise
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-fun ExerciseEntity.toExternal(
-    tags: List<com.looker.kenko.domain.model.Tag> = emptyList(),
-): Exercise = Exercise(
-    id = id,
-    name = name,
-    tags = tags,
-    countType = countType,
-    reference = reference,
-    isIsometric = isIsometric,
-    isBodyweight = isBodyweight,
-)
-
-fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
-    id = id ?: 0,
-    name = name,
-    countType = countType,
-    reference = reference,
-    isIsometric = isIsometric,
-    isBodyweight = isBodyweight,
+@Entity("tags")
+data class TagEntity(
+    val name: String,
+    val parentId: Int? = null,
+    val sortOrder: Int = 0,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
 )

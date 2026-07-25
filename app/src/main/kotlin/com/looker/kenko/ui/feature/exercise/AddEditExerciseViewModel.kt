@@ -23,7 +23,6 @@ import androidx.navigation.toRoute
 import com.looker.kenko.R
 import com.looker.kenko.data.StringHandler
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.ui.feature.exercise.navigation.AddEditExerciseRoute
@@ -54,10 +53,6 @@ class AddEditExerciseViewModel @Inject constructor(
 
     private val exerciseId: Int? = routeData.id
 
-    private val defaultTarget: MuscleGroups? = routeData.target?.let { MuscleGroups.valueOf(it) }
-
-    private val targetMuscle = MutableStateFlow(MuscleGroups.Chest)
-
     private val exerciseName = MutableStateFlow("")
 
     val isBodyweightFlow = MutableStateFlow(false)
@@ -73,14 +68,12 @@ class AddEditExerciseViewModel @Inject constructor(
         .mapLatest { repo.isExerciseAvailable(it) && it != originalName }
 
     val state = combine(
-        targetMuscle,
         exerciseAlreadyExistError,
         isBodyweightFlow,
         exerciseName,
         showRenameConfirmation,
-    ) { target, alreadyExist, bodyweight, name, renameConfirm ->
+    ) { alreadyExist, bodyweight, name, renameConfirm ->
         AddEditExerciseUiState(
-            targetMuscle = target,
             isError = alreadyExist,
             isBodyweight = bodyweight,
             exerciseName = name,
@@ -88,7 +81,6 @@ class AddEditExerciseViewModel @Inject constructor(
         )
     }.asStateFlow(
         AddEditExerciseUiState(
-            targetMuscle = MuscleGroups.Chest,
             isError = false,
             isBodyweight = false,
             exerciseName = "",
@@ -98,12 +90,6 @@ class AddEditExerciseViewModel @Inject constructor(
 
     fun setName(value: String) {
         exerciseName.value = value
-    }
-
-    fun setTargetMuscle(value: MuscleGroups) {
-        viewModelScope.launch {
-            targetMuscle.emit(value)
-        }
     }
 
     fun dismissRenameConfirmation() {
@@ -141,7 +127,7 @@ class AddEditExerciseViewModel @Inject constructor(
         repo.upsert(
             Exercise(
                 name = name,
-                target = targetMuscle.value,
+                tags = emptyList(),
                 isBodyweight = isBodyweightFlow.value,
                 id = exerciseId,
             ),
@@ -162,12 +148,10 @@ class AddEditExerciseViewModel @Inject constructor(
                 exercise?.let {
                     originalName = it.name
                     exerciseName.value = it.name
-                    setTargetMuscle(it.target)
                     isBodyweightFlow.value = it.isBodyweight
                 }
             } else {
                 if (routeData.name != null) exerciseName.value = routeData.name
-                if (defaultTarget != null) setTargetMuscle(defaultTarget)
             }
         }
     }
@@ -175,7 +159,6 @@ class AddEditExerciseViewModel @Inject constructor(
 
 @Stable
 data class AddEditExerciseUiState(
-    val targetMuscle: MuscleGroups,
     val isError: Boolean,
     val isBodyweight: Boolean,
     val exerciseName: String = "",

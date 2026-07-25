@@ -330,3 +330,101 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
         db.execSQL("ALTER TABLE exercises ADD COLUMN isBodyweight INTEGER NOT NULL DEFAULT 0")
     }
 }
+
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // 1. Create tags table
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `tags` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `name` TEXT NOT NULL,
+                `parentId` INTEGER,
+                `sortOrder` INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (`parentId`) REFERENCES `tags`(`id`) ON DELETE SET NULL
+            )
+        """.trimIndent())
+
+        // 2. Create exercise_tags junction table
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `exercise_tags` (
+                `exerciseId` INTEGER NOT NULL,
+                `tagId` INTEGER NOT NULL,
+                PRIMARY KEY (`exerciseId`, `tagId`),
+                FOREIGN KEY (`exerciseId`) REFERENCES `exercises`(`id`) ON DELETE CASCADE,
+                FOREIGN KEY (`tagId`) REFERENCES `tags`(`id`) ON DELETE CASCADE
+            )
+        """.trimIndent())
+
+        // 3. Insert parent tags (body parts)
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (1, '胸', NULL, 1)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (2, '背', NULL, 2)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (3, '腿', NULL, 3)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (4, '肩', NULL, 4)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (5, '手臂', NULL, 5)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (6, '腹', NULL, 6)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (7, '有氧', NULL, 7)")
+
+        // 4. Insert child tags (specific muscles)
+        // 胸
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (8, '上胸', 1, 1)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (9, '中胸', 1, 2)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (10, '下胸', 1, 3)")
+        // 背
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (11, '背阔肌', 2, 1)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (12, '斜方肌', 2, 2)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (13, '竖脊肌', 2, 3)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (14, '菱形肌', 2, 4)")
+        // 腿
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (15, '股四头肌', 3, 1)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (16, '腘绳肌', 3, 2)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (17, '小腿', 3, 3)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (18, '臀肌', 3, 4)")
+        // 肩
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (19, '前束', 4, 1)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (20, '中束', 4, 2)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (21, '后束', 4, 3)")
+        // 手臂
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (22, '二头肌', 5, 1)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (23, '三头肌', 5, 2)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (24, '前臂', 5, 3)")
+        // 腹
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (25, '上腹', 6, 1)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (26, '下腹', 6, 2)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (27, '腹斜肌', 6, 3)")
+        // 有氧
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (28, '跑步', 7, 1)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (29, '骑行', 7, 2)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (30, '划船', 7, 3)")
+
+        // 5. Add countType column to exercises
+        db.execSQL("ALTER TABLE `exercises` ADD COLUMN `countType` TEXT NOT NULL DEFAULT 'REPS'")
+        // Set countType to MINUTES for cardio exercises
+        db.execSQL("UPDATE `exercises` SET `countType` = 'MINUTES' WHERE `target` = 'Cardio'")
+
+        // 6. Map existing exercises' target to tags in exercise_tags
+        // Map each MuscleGroups value to the appropriate child tag
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 8 FROM `exercises` WHERE `target` = 'Chest'")    // 胸→上胸
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 11 FROM `exercises` WHERE `target` = 'Lats'")     // 背→背阔肌
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 11 FROM `exercises` WHERE `target` = 'Traps'")    // 斜方肌→背阔肌（最接近的匹配）
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 13 FROM `exercises` WHERE `target` = 'UpperBack'") // 上背→竖脊肌
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 15 FROM `exercises` WHERE `target` = 'Quads'")    // 腿→股四头肌
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 16 FROM `exercises` WHERE `target` = 'Hamstrings'")
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 17 FROM `exercises` WHERE `target` = 'Calves'")
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 18 FROM `exercises` WHERE `target` = 'Glutes'")
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 20 FROM `exercises` WHERE `target` = 'Shoulders'") // 肩→中束
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 22 FROM `exercises` WHERE `target` = 'Biceps'")
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 23 FROM `exercises` WHERE `target` = 'Triceps'")
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 25 FROM `exercises` WHERE `target` = 'Core'")     // 核心→上腹
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 28 FROM `exercises` WHERE `target` = 'Cardio'")   // 有氧→跑步
+
+        // 7. Remove target column from exercises
+        db.execSQL("CREATE TABLE IF NOT EXISTS `exercises_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `reference` TEXT, `isIsometric` INTEGER NOT NULL DEFAULT 0, `isBodyweight` INTEGER NOT NULL DEFAULT 0, `countType` TEXT NOT NULL DEFAULT 'REPS')")
+        db.execSQL("INSERT INTO `exercises_new` (`id`, `name`, `reference`, `isIsometric`, `isBodyweight`, `countType`) SELECT `id`, `name`, `reference`, `isIsometric`, `isBodyweight`, `countType` FROM `exercises`")
+        db.execSQL("DROP TABLE `exercises`")
+        db.execSQL("ALTER TABLE `exercises_new` RENAME TO `exercises`")
+
+        // 8. Create indexes for performance
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_tags_exerciseId` ON `exercise_tags` (`exerciseId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_tags_tagId` ON `exercise_tags` (`tagId`)")
+    }
+}

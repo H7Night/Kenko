@@ -14,26 +14,19 @@
 
 package com.looker.kenko.data.mapper
 
-import com.looker.kenko.data.local.model.ExerciseEntity
-import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.data.local.model.TagEntity
+import com.looker.kenko.domain.model.Tag
 
-fun ExerciseEntity.toExternal(
-    tags: List<com.looker.kenko.domain.model.Tag> = emptyList(),
-): Exercise = Exercise(
+fun TagEntity.toExternal(): Tag = Tag(
     id = id,
     name = name,
-    tags = tags,
-    countType = countType,
-    reference = reference,
-    isIsometric = isIsometric,
-    isBodyweight = isBodyweight,
+    parentId = parentId,
+    sortOrder = sortOrder,
 )
 
-fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
-    id = id ?: 0,
+fun Tag.toEntity(): TagEntity = TagEntity(
+    id = id,
     name = name,
-    countType = countType,
-    reference = reference,
-    isIsometric = isIsometric,
-    isBodyweight = isBodyweight,
+    parentId = parentId,
+    sortOrder = sortOrder,
 )

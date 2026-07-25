@@ -18,7 +18,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
-import com.looker.kenko.domain.model.MuscleGroups
 import com.looker.kenko.ui.feature.exercise.AddEditExercise
 import kotlinx.serialization.Serializable
 
@@ -26,16 +25,14 @@ import kotlinx.serialization.Serializable
 data class AddEditExerciseRoute(
     val id: Int? = null,
     val name: String? = null,
-    val target: String? = null,
 )
 
 fun NavController.navigateToAddEditExercise(
     id: Int? = null,
     name: String? = null,
-    target: MuscleGroups? = null,
     navOptions: NavOptions? = null,
 ) {
-    navigate(AddEditExerciseRoute(id, name, target?.name), navOptions)
+    navigate(AddEditExerciseRoute(id, name), navOptions)
 }
 
 fun NavGraphBuilder.addEditExercise(

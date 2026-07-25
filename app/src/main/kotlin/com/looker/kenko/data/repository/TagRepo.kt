@@ -12,28 +12,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.looker.kenko.data.mapper
+package com.looker.kenko.data.repository
 
-import com.looker.kenko.data.local.model.ExerciseEntity
-import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.Tag
+import kotlinx.coroutines.flow.Flow
 
-fun ExerciseEntity.toExternal(
-    tags: List<com.looker.kenko.domain.model.Tag> = emptyList(),
-): Exercise = Exercise(
-    id = id,
-    name = name,
-    tags = tags,
-    countType = countType,
-    reference = reference,
-    isIsometric = isIsometric,
-    isBodyweight = isBodyweight,
-)
+interface TagRepo {
 
-fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
-    id = id ?: 0,
-    name = name,
-    countType = countType,
-    reference = reference,
-    isIsometric = isIsometric,
-    isBodyweight = isBodyweight,
-)
+    val stream: Flow<List<Tag>>
+
+    val streamParents: Flow<List<Tag>>
+
+    fun streamChildren(parentId: Int): Flow<List<Tag>>
+
+    suspend fun get(id: Int): Tag?
+
+    suspend fun upsert(tag: Tag)
+
+    suspend fun delete(tag: Tag)
+
+    suspend fun deleteById(id: Int)
+
+    suspend fun exerciseCount(tagId: Int): Int
+
+    suspend fun getTagsForExercise(exerciseId: Int): List<Tag>
+
+    fun streamTagsForExercise(exerciseId: Int): Flow<List<Tag>>
+}
