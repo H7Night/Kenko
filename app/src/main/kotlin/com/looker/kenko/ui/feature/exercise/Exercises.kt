@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -152,15 +153,18 @@ private fun Exercises(
                 )
                 HorizontalDivider(thickness = KenkoBorderWidth)
 
-                // Two-level filter dropdowns
-                Column(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                // Two-level filter dropdowns side by side
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     // Parent dropdown (body part)
                     ExposedDropdownMenuBox(
                         expanded = parentExpanded,
                         onExpandedChange = { parentExpanded = it },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.weight(1f),
                     ) {
                         val parentName = selectedParent?.let { id ->
                             parentTags.find { it.id == id }?.name
@@ -201,14 +205,12 @@ private fun Exercises(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // Child dropdown (specific muscle)
+                    // Child dropdown (specific muscle) - only show when parent selected
                     if (selectedParent != null) {
                         ExposedDropdownMenuBox(
                             expanded = childExpanded && children.isNotEmpty(),
                             onExpandedChange = { childExpanded = it },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.weight(1f),
                         ) {
                             val childName = selectedChild?.let { id ->
                                 children.find { it.id == id }?.name
