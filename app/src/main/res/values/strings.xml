@@ -205,20 +205,6 @@
     <string name="label_export_success">Export completed</string>
     <string name="error_export_failed">Export failed</string>
 
-    <!--Muscle Groups-->
-    <string name="label_muscle_biceps">Biceps</string>
-    <string name="label_muscle_triceps">Triceps</string>
-    <string name="label_muscle_back">Back</string>
-    <string name="label_muscle_lats">Lats</string>
-    <string name="label_muscle_traps">Traps</string>
-    <string name="label_muscle_chest">Chest</string>
-    <string name="label_muscle_core">Core</string>
-    <string name="label_muscle_glutes">Glutes</string>
-    <string name="label_muscle_calves">Calves</string>
-    <string name="label_muscle_hamstrings">Hamstrings</string>
-    <string name="label_muscle_quads">Quads</string>
-    <string name="label_muscle_shoulders">Shoulders</string>
-    <string name="label_muscle_cardio">Cardio</string>
 
     <string name="label_min">min</string>
 

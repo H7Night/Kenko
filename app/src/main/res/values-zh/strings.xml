@@ -196,20 +196,6 @@
     <string name="label_export_success">导出完成</string>
     <string name="error_export_failed">导出失败</string>
 
-    <!--Muscle Groups-->
-    <string name="label_muscle_biceps">二头肌</string>
-    <string name="label_muscle_triceps">三头肌</string>
-    <string name="label_muscle_back">背部</string>
-    <string name="label_muscle_lats">背阔肌</string>
-    <string name="label_muscle_traps">斜方肌</string>
-    <string name="label_muscle_chest">胸部</string>
-    <string name="label_muscle_core">核心</string>
-    <string name="label_muscle_glutes">臀部</string>
-    <string name="label_muscle_calves">小腿</string>
-    <string name="label_muscle_hamstrings">腘绳肌</string>
-    <string name="label_muscle_quads">股四头肌</string>
-    <string name="label_muscle_shoulders">肩部</string>
-    <string name="label_muscle_cardio">有氧</string>
 
     <string name="label_min">分钟</string>
 
