@@ -11,3 +11,4 @@ local.properties
 *.jks
 /.kotlin
 /kls_database.db
+*.zip
