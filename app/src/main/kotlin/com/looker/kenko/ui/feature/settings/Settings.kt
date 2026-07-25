@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
@@ -62,6 +63,8 @@ import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.PreferenceSwitchRow
+import com.looker.kenko.ui.component.SecondaryKenkoButton
+import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.ui.theme.end
 import com.looker.kenko.ui.theme.start
@@ -73,6 +76,7 @@ import kotlinx.datetime.toLocalDateTime
 fun Settings(
     viewModel: SettingsViewModel,
     onBackPress: () -> Unit,
+    onTagManagementClick: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     Settings(
@@ -87,6 +91,7 @@ fun Settings(
         onExport = viewModel::exportData,
         onClearMessage = viewModel::clearBackupMessage,
         onBackPress = onBackPress,
+        onTagManagementClick = onTagManagementClick,
     )
 }
 
@@ -104,6 +109,7 @@ private fun Settings(
     onExport: (ExportOptions, Uri) -> Unit,
     onClearMessage: () -> Unit,
     onBackPress: () -> Unit,
+    onTagManagementClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -165,6 +171,17 @@ private fun Settings(
                 title = stringResource(R.string.label_capitalize_exercise_name),
                 checked = state.capitalizeExerciseName,
                 onCheckedChange = onSelectCapitalize,
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            CategoryHeader(title = stringResource(R.string.label_tag_management))
+            Spacer(modifier = Modifier.height(8.dp))
+            SecondaryKenkoButton(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth(),
+                onClick = onTagManagementClick,
+                label = { Text(stringResource(R.string.label_tag_management)) },
+                icon = { Icon(painter = KenkoIcons.Add, contentDescription = null) },
             )
             Spacer(modifier = Modifier.height(24.dp))
             CategoryHeader(title = stringResource(R.string.label_backup))

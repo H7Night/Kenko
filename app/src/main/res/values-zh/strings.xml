@@ -232,6 +232,7 @@
     <string name="label_delete_tag_warning">该标签关联了 %d 个动作。删除后将移除这些动作的该标签。</string>
     <string name="label_tag_delete_blocked">其中 %d 个动作将失去所有标签，请先为这些动作补充标签。</string>
     <string name="label_tag_change_warning">此修改会影响所有关联此标签的历史数据，是否继续？</string>
+    <string name="label_confirm_delete_tag">确定要删除此标签？</string>
 
     <!--Day of Week-->
     <string name="label_today">.今天</string>

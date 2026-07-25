@@ -40,6 +40,8 @@ import com.looker.kenko.ui.feature.session.navigation.navigateToSessions
 import com.looker.kenko.ui.feature.session.navigation.sessions
 import com.looker.kenko.ui.feature.settings.navigation.navigateToSettings
 import com.looker.kenko.ui.feature.settings.navigation.settings
+import com.looker.kenko.ui.feature.tags.navigation.navigateToTagManagement
+import com.looker.kenko.ui.feature.tags.navigation.tagManagement
 
 private val singleTopNavOptions = navOptions {
     launchSingleTop = true
@@ -98,7 +100,12 @@ fun KenkoNavHost(
             onBackPress = navController::popBackStackOnResume
         )
 
-        settings(navController::popBackStackOnResume)
+        settings(
+            navController::popBackStackOnResume,
+            onTagManagementClick = {
+                navController.navigateToTagManagement(navOptions = singleTopNavOptions)
+            },
+        )
 
         profile(
             onBackPress = navController::popBackStackOnResume,
@@ -144,6 +151,8 @@ fun KenkoNavHost(
         )
 
         addEditExercise(navController::popBackStackOnResume)
+
+        tagManagement(navController::popBackStackOnResume)
 
         performance()
     }
