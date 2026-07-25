@@ -90,14 +90,14 @@ class AddEditExerciseViewModel @Inject constructor(
         selectedTags,
         exerciseName,
         showRenameConfirmation,
-    ) { alreadyExist, bodyweight, countType, tags, name, renameConfirm ->
+    ) { array: Array<*> ->
         AddEditExerciseUiState(
-            isError = alreadyExist,
-            isBodyweight = bodyweight,
-            countType = countType,
-            selectedTags = tags,
-            exerciseName = name,
-            showRenameConfirmation = renameConfirm,
+            isError = array[0] as Boolean,
+            isBodyweight = array[1] as Boolean,
+            countType = array[2] as CountType,
+            selectedTags = @Suppress("UNCHECKED_CAST") array[3] as List<Tag>,
+            exerciseName = array[4] as String,
+            showRenameConfirmation = array[5] as Boolean,
         )
     }.asStateFlow(
         AddEditExerciseUiState(

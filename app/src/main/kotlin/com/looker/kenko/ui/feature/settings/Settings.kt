@@ -366,9 +366,10 @@ private fun SettingsPreview() {
             onSelectBackupInterval = {},
             onBackupNow = {},
             onRestore = {},
-            onExport = { _, _ -> },
+            onExport = { _: ExportOptions, _: Uri -> },
             onClearMessage = {},
             onBackPress = {},
+            onTagManagementClick = {},
         )
     }
 }

@@ -333,27 +333,11 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
 
 val MIGRATION_7_8 = object : Migration(7, 8) {
     override fun migrate(db: SupportSQLiteDatabase) {
-        // 1. Create tags table
-        db.execSQL("""
-            CREATE TABLE IF NOT EXISTS `tags` (
-                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                `name` TEXT NOT NULL,
-                `parentId` INTEGER,
-                `sortOrder` INTEGER NOT NULL DEFAULT 0,
-                FOREIGN KEY (`parentId`) REFERENCES `tags`(`id`) ON DELETE SET NULL
-            )
-        """.trimIndent())
+        // 1. Create tags table - must match Room schema exactly
+        db.execSQL("CREATE TABLE IF NOT EXISTS `tags` (`name` TEXT NOT NULL, `parentId` INTEGER, `sortOrder` INTEGER NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
 
-        // 2. Create exercise_tags junction table
-        db.execSQL("""
-            CREATE TABLE IF NOT EXISTS `exercise_tags` (
-                `exerciseId` INTEGER NOT NULL,
-                `tagId` INTEGER NOT NULL,
-                PRIMARY KEY (`exerciseId`, `tagId`),
-                FOREIGN KEY (`exerciseId`) REFERENCES `exercises`(`id`) ON DELETE CASCADE,
-                FOREIGN KEY (`tagId`) REFERENCES `tags`(`id`) ON DELETE CASCADE
-            )
-        """.trimIndent())
+        // 2. Create exercise_tags junction table - must match Room schema exactly
+        db.execSQL("CREATE TABLE IF NOT EXISTS `exercise_tags` (`exerciseId` INTEGER NOT NULL, `tagId` INTEGER NOT NULL, PRIMARY KEY(`exerciseId`, `tagId`), FOREIGN KEY(`tagId`) REFERENCES `tags`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
 
         // 3. Insert parent tags (body parts)
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (1, '胸', NULL, 1)")
@@ -418,13 +402,9 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 28 FROM `exercises` WHERE `target` = 'Cardio'")   // 有氧→跑步
 
         // 7. Remove target column from exercises
-        db.execSQL("CREATE TABLE IF NOT EXISTS `exercises_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `reference` TEXT, `isIsometric` INTEGER NOT NULL DEFAULT 0, `isBodyweight` INTEGER NOT NULL DEFAULT 0, `countType` TEXT NOT NULL DEFAULT 'REPS')")
-        db.execSQL("INSERT INTO `exercises_new` (`id`, `name`, `reference`, `isIsometric`, `isBodyweight`, `countType`) SELECT `id`, `name`, `reference`, `isIsometric`, `isBodyweight`, `countType` FROM `exercises`")
+        db.execSQL("CREATE TABLE IF NOT EXISTS `exercises_new` (`name` TEXT NOT NULL, `countType` TEXT NOT NULL, `reference` TEXT, `isIsometric` INTEGER NOT NULL, `isBodyweight` INTEGER NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
+        db.execSQL("INSERT INTO `exercises_new` (`name`, `countType`, `reference`, `isIsometric`, `isBodyweight`, `id`) SELECT `name`, `countType`, `reference`, `isIsometric`, `isBodyweight`, `id` FROM `exercises`")
         db.execSQL("DROP TABLE `exercises`")
         db.execSQL("ALTER TABLE `exercises_new` RENAME TO `exercises`")
-
-        // 8. Create indexes for performance
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_tags_exerciseId` ON `exercise_tags` (`exerciseId`)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_tags_tagId` ON `exercise_tags` (`tagId`)")
     }
 }

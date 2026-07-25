@@ -49,7 +49,7 @@ class LocalExerciseRepo @Inject constructor(
 
     override suspend fun upsert(exercise: Exercise) {
         val entityId = dao.upsert(exercise.toEntity())
-        val id = exercise.id ?: entityId
+        val id = exercise.id ?: entityId.toInt()
         if (id != 0) {
             tagDao.replaceExerciseTags(id, exercise.tags.map { it.id })
         }

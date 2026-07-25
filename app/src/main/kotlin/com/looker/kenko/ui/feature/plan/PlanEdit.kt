@@ -443,6 +443,7 @@ private fun ExerciseItemActions(
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 private fun AddExerciseSheet(
     title: String?,
     onDismiss: () -> Unit,

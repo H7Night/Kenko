@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -60,7 +61,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.component.disableScrollConnection
 import com.looker.kenko.ui.component.kenkoTextFieldColor
 import com.looker.kenko.ui.feature.plan.components.ExerciseItem
@@ -87,6 +87,8 @@ fun SelectExercise(
         val searchResult by viewModel.searchResult.collectAsStateWithLifecycle()
         val parentTags by viewModel.parentTags.collectAsStateWithLifecycle()
         val children by viewModel.children.collectAsStateWithLifecycle()
+        val selectedParentId by viewModel.selectedParentId.collectAsStateWithLifecycle()
+        val selectedChildId by viewModel.selectedChildId.collectAsStateWithLifecycle()
 
         AddExerciseHeader(
             title = title,
@@ -96,29 +98,29 @@ fun SelectExercise(
         // Search field
         ExerciseSearchField(
             modifier = Modifier.padding(horizontal = 16.dp),
-            name = viewModel.searchQuery,
+            name = viewModel.searchQuery.value,
             onNameChange = viewModel::setSearch,
             onAddClick = {
                 focusManager.clearFocus()
-                onRequestNewExercise(viewModel.searchQuery.ifBlank { null })
+                onRequestNewExercise(viewModel.searchQuery.value.ifBlank { null })
             },
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Two-level filter: Parent dropdown
+        // Two-level filter
         var parentExpanded by remember { mutableStateOf(false) }
         var childExpanded by remember { mutableStateOf(false) }
-        val selectedParentId = viewModel.selectedParentId
-        val selectedChildId = viewModel.selectedChildId
 
+        // Parent dropdown (body part filter)
         ExposedDropdownMenuBox(
             expanded = parentExpanded,
             onExpandedChange = { parentExpanded = it },
             modifier = Modifier.padding(horizontal = 16.dp),
         ) {
             val parentName = selectedParentId?.let { id ->
-                parentTags.find { it.id == id }?.name ?: stringResource(R.string.label_select_body_part)
+                parentTags.find { it.id == id }?.name
+                    ?: stringResource(R.string.label_select_body_part)
             } ?: stringResource(R.string.label_select_body_part)
             OutlinedTextField(
                 modifier = Modifier
@@ -159,7 +161,7 @@ fun SelectExercise(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Child dropdown
+        // Child dropdown (specific muscle filter)
         if (selectedParentId != null) {
             ExposedDropdownMenuBox(
                 expanded = childExpanded && children.isNotEmpty(),
@@ -167,7 +169,8 @@ fun SelectExercise(
                 modifier = Modifier.padding(horizontal = 16.dp),
             ) {
                 val childName = selectedChildId?.let { id ->
-                    children.find { it.id == id }?.name ?: stringResource(R.string.label_select_muscle)
+                    children.find { it.id == id }?.name
+                        ?: stringResource(R.string.label_select_muscle)
                 } ?: stringResource(R.string.label_select_muscle)
                 OutlinedTextField(
                     modifier = Modifier
@@ -210,7 +213,7 @@ fun SelectExercise(
                 SearchResult.NotFound -> SearchNotFound(
                     onAddNewExercise = {
                         focusManager.clearFocus()
-                        onRequestNewExercise(viewModel.searchQuery)
+                        onRequestNewExercise(viewModel.searchQuery.value)
                     }
                 )
 
@@ -287,7 +290,7 @@ private fun ExerciseSearchField(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TextField(
+        OutlinedTextField(
             modifier = Modifier.weight(1f),
             value = name,
             onValueChange = onNameChange,

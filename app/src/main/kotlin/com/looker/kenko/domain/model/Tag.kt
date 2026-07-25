@@ -14,10 +14,13 @@
 
 package com.looker.kenko.domain.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Tag(
-    val id: Int,
     val name: String,
     val parentId: Int? = null,
     val parentName: String? = null,
     val sortOrder: Int = 0,
+    val id: Int = 0,
 )

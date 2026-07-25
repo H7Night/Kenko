@@ -58,6 +58,7 @@ import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.theme.KenkoTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TagManagementScreen(
     onBackPress: () -> Unit,
