@@ -81,6 +81,11 @@ fun SwipeToDeleteBox(
             state.currentValue == DragPositions.End
         }
     }
+    val isSwiping by remember {
+        derivedStateOf {
+            state.requireOffset() > 0f
+        }
+    }
     val background by animateColorAsState(
         targetValue = if (isOutsideBound) {
             MaterialTheme.colorScheme.errorContainer
@@ -107,7 +112,7 @@ fun SwipeToDeleteBox(
                 },
             contentAlignment = Alignment.Center,
         ) {
-            if (showIcon) {
+            if (isSwiping) {
                 Icon(
                     modifier = Modifier
                         .requiredWidth(actionWidth)
