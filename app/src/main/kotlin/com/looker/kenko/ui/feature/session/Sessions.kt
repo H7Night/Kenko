@@ -197,14 +197,14 @@ private fun Sessions(
                 }
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
     ) { padding ->
         if (state.sessions.isEmpty()) {
             EmptyPage(stringResource(id = R.string.label_no_sessions))
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = padding + PaddingValues(bottom = 140.dp, start = 14.dp, end = 14.dp),
+                contentPadding = padding + PaddingValues(bottom = 96.dp, start = 14.dp, end = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
