@@ -26,13 +26,13 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.DayOfWeek
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
 
 @HiltViewModel
 class SessionsViewModel @Inject constructor(
@@ -49,21 +49,32 @@ class SessionsViewModel @Inject constructor(
                 .mapValues { entry -> entry.value.map { it.exercise } }
         }
 
+    private val _searchQuery = kotlinx.coroutines.flow.MutableStateFlow("")
+
     val state: StateFlow<SessionsUiData> = combine(
         sessionsStream,
         isCurrentSessionActive,
         availablePlanItems,
         planRepo.plans,
-    ) { sessions, isCurrentSessionActive, available, plans ->
+        _searchQuery,
+    ) { sessions, isCurrentSessionActive, available, plans, query ->
         val currentPlan = plans.find { it.isActive }
         val currentPlanTitles = currentPlan?.titlesMap ?: emptyMap()
+        val filtered = if (query.isBlank()) sessions
+            else sessions.filter { session ->
+                session.performExercises.any { it.name.contains(query, ignoreCase = true) }
+            }
         SessionsUiData(
-            sessions = sessions.filter { it.sets.isNotEmpty() },
+            sessions = filtered.filter { it.sets.isNotEmpty() },
             isCurrentSessionActive = isCurrentSessionActive,
             availablePlanDays = available,
             dayTitles = currentPlanTitles,
         )
     }.asStateFlow(SessionsUiData(emptyList(), false))
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
 
     fun addSession(date: LocalDate, day: DayOfWeek, onComplete: () -> Unit) {
         viewModelScope.launch {

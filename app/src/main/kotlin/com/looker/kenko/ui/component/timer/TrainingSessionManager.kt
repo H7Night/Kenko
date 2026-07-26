@@ -20,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -46,14 +47,12 @@ class TrainingSessionManager @Inject constructor(
             val sessionId = sessionRepo.getSessionIdOrCreate(localDate)
             _sessionState.value = TrainingSessionState.Active(sessionId)
             // Continue from existing duration if any
-            val existingSession = sessionRepo.streamByDate(localDate)
-            existingSession.first { true }.let { session ->
-                val existingDuration = session?.durationSeconds ?: 0L
-                if (existingDuration > 0) {
-                    timerManager.startWithDuration(existingDuration)
-                } else {
-                    timerManager.start()
-                }
+            val existingSession = sessionRepo.streamByDate(localDate).first()
+            val existingDuration = existingSession?.durationSeconds ?: 0L
+            if (existingDuration > 0) {
+                timerManager.startWithDuration(existingDuration)
+            } else {
+                timerManager.start()
             }
         }
     }
