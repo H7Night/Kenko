@@ -27,14 +27,17 @@ import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.datetime.LocalDate
 
 @HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel @Inject constructor(
     planRepo: PlanRepo,
     sessionRepo: SessionRepo,
@@ -59,6 +62,11 @@ class HomeViewModel @Inject constructor(
 
     val planExercises: StateFlow<List<com.looker.kenko.domain.model.PlanItem>> = planItemStream
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val sessionSets: StateFlow<Map<com.looker.kenko.domain.model.Exercise, List<com.looker.kenko.domain.model.Set>>> =
+        sessionStream.map { session ->
+            session?.sets?.groupBy { it.exercise } ?: emptyMap()
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     val state: StateFlow<HomeUiData> = combine(
         planStream,

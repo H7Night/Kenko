@@ -28,6 +28,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -35,7 +37,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -58,11 +60,17 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.Set
+import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.timer.TimerCard
 import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.ui.component.timer.rememberNotificationPermissionState
+import com.looker.kenko.ui.feature.session.AddSetSheet
+import com.looker.kenko.ui.feature.session.components.SetItem
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.header
+import com.looker.kenko.ui.theme.numbers
 
 @Composable
 fun Home(
@@ -74,10 +82,10 @@ fun Home(
     onCurrentPlanClick: (Int) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val sessionSets by viewModel.sessionSets.collectAsStateWithLifecycle()
     val timerSeconds by viewModel.timerManager.elapsedSeconds.collectAsStateWithLifecycle()
     val notifState = rememberNotificationPermissionState()
 
-    // Request notification permission on first launch
     LaunchedEffect(Unit) {
         if (!notifState.granted) {
             notifState.request()
@@ -85,6 +93,7 @@ fun Home(
     }
 
     var showEndConfirm by remember { mutableStateOf(false) }
+    var addSetExercise by remember { mutableStateOf<Exercise?>(null) }
 
     if (showEndConfirm) {
         AlertDialog(
@@ -112,6 +121,15 @@ fun Home(
         )
     }
 
+    // AddSet bottom sheet
+    addSetExercise?.let { exercise ->
+        AddSetSheet(
+            exercise = exercise,
+            date = localDate,
+            onDismiss = { addSetExercise = null },
+        )
+    }
+
     Scaffold { innerPadding ->
         Column(
             modifier = Modifier
@@ -119,7 +137,6 @@ fun Home(
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding),
         ) {
-            // Timer card - always visible at top
             TimerCard(
                 timerState = state.timerState,
                 elapsedSeconds = timerSeconds,
@@ -137,11 +154,9 @@ fun Home(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
 
-            // Main content below timer
             when (state.trainingState) {
                 is TrainingSessionState.Idle,
                 is TrainingSessionState.Ended -> {
-                    // Show current plan with today's exercises
                     PlanInfoCard(
                         isPlanSelected = state.isPlanSelected,
                         planName = state.planName,
@@ -151,13 +166,51 @@ fun Home(
                     )
                 }
                 is TrainingSessionState.Active -> {
-                    // Training session card with action buttons
-                    TrainingSessionCard(
-                        onAddExercise = onStartSessionClick,
-                        onChangePlan = onSelectPlanClick,
-                        onHistoryClick = onExploreSessionsClick,
+                    InlineTrainingContent(
+                        exerciseSets = sessionSets,
+                        onAddSet = { exercise -> addSetExercise = exercise },
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InlineTrainingContent(
+    exerciseSets: Map<Exercise, List<Set>>,
+    onAddSet: (Exercise) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.padding(horizontal = 12.dp)) {
+        exerciseSets.forEach { (exercise, sets) ->
+            StickyHeader(
+                name = exercise.name,
+                setCount = sets.size,
+                actions = {
+                    FilledTonalIconButton(
+                        onClick = { onAddSet(exercise) },
+                        modifier = Modifier.size(36.dp),
+                    ) {
+                        Icon(
+                            painter = KenkoIcons.Add,
+                            contentDescription = stringResource(R.string.label_add_set_for),
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                },
+            )
+            sets.forEachIndexed { index, set ->
+                SetItem(
+                    set = set,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                    title = {
+                        Text(
+                            text = normalizeInt(index + 1),
+                            style = MaterialTheme.typography.displayMedium.numbers(),
+                        )
+                    },
+                )
             }
         }
     }
@@ -238,62 +291,6 @@ private fun PlanInfoCard(
 }
 
 @Composable
-private fun TrainingSessionCard(
-    onAddExercise: () -> Unit,
-    onChangePlan: () -> Unit,
-    onHistoryClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = stringResource(R.string.label_training_session),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                FilledTonalButton(
-                    onClick = onAddExercise,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Icon(
-                        painter = KenkoIcons.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.label_add_exercise))
-                }
-                FilledTonalButton(
-                    onClick = onChangePlan,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(stringResource(R.string.label_change_plan))
-                }
-                FilledTonalButton(
-                    onClick = onHistoryClick,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(stringResource(R.string.label_session))
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun SelectPlanPrompt(
     onSelectPlanClick: () -> Unit,
 ) {
@@ -344,3 +341,5 @@ private fun KenkoTopBar(
         modifier = modifier,
     )
 }
+
+private fun normalizeInt(value: Int): String = value.toString()

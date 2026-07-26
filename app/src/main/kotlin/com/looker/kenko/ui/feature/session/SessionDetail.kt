@@ -686,7 +686,7 @@ private fun ExerciseSearchDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddSetSheet(
+fun AddSetSheet(
     exercise: Exercise,
     date: LocalDate?,
     onDismiss: () -> Unit,
