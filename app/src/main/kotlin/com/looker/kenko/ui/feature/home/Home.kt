@@ -16,8 +16,6 @@ package com.looker.kenko.ui.feature.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -53,7 +51,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,13 +67,14 @@ import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.timer.TimerCard
 import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.ui.component.timer.rememberNotificationPermissionState
+import com.looker.kenko.ui.feature.plan.components.dayName
 import com.looker.kenko.ui.feature.session.ExerciseSearchDialog
 import com.looker.kenko.ui.feature.session.AddSetSheet
 import com.looker.kenko.ui.feature.session.components.SetItem
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.header
 import com.looker.kenko.ui.theme.numbers
-import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,9 +91,7 @@ fun Home(
     val timerSeconds by viewModel.timerManager.elapsedSeconds.collectAsStateWithLifecycle()
     val allExercises by viewModel.allExercises.collectAsStateWithLifecycle()
     val availablePlanDays by viewModel.availablePlanDays.collectAsStateWithLifecycle()
-    val previousSessionDate by viewModel.previousSessionDate.collectAsStateWithLifecycle()
     val notifState = rememberNotificationPermissionState()
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         if (!notifState.granted) {
@@ -158,7 +154,6 @@ fun Home(
         )
     }
 
-    // Import plan confirmation dialog
     if (showImportConfirm) {
         AlertDialog(
             onDismissRequest = { showImportConfirm = false },
@@ -180,7 +175,6 @@ fun Home(
         )
     }
 
-    // Import plan bottom sheet
     if (showImportSheet) {
         ModalBottomSheet(
             onDismissRequest = { showImportSheet = false },
@@ -191,10 +185,8 @@ fun Home(
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(16.dp),
             )
-            Column(
-                modifier = Modifier.padding(bottom = 32.dp),
-            ) {
-                availablePlanDays.toSortedMap().forEach { (day, items) ->
+            Column(modifier = Modifier.padding(bottom = 32.dp)) {
+                availablePlanDays.toSortedMap().forEach { (day, _) ->
                     Button(
                         onClick = {
                             viewModel.importPlanFromDay(day)
@@ -206,7 +198,7 @@ fun Home(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 4.dp),
                     ) {
-                        Text(text = day.toString())
+                        Text(text = dayName(day))
                     }
                 }
             }
@@ -243,8 +235,7 @@ fun Home(
                     PlanInfoCard(
                         isPlanSelected = state.isPlanSelected,
                         planName = state.planName,
-                        todayExercises = state.todayExercises,
-                        isTodayEmpty = state.isTodayEmpty,
+                        dayTitle = state.dayTitle,
                         onSelectPlanClick = onSelectPlanClick,
                     )
                 }
@@ -252,11 +243,6 @@ fun Home(
                     TrainingActionBar(
                         onAddExercise = { showAddExerciseDialog = true },
                         onChangePlan = { showImportConfirm = true },
-                        onHistory = {
-                            previousSessionDate?.let { date ->
-                                onStartSessionClick() // navigate to session detail
-                            }
-                        },
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     InlineTrainingContent(
@@ -273,7 +259,6 @@ fun Home(
 private fun TrainingActionBar(
     onAddExercise: () -> Unit,
     onChangePlan: () -> Unit,
-    onHistory: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -307,16 +292,6 @@ private fun TrainingActionBar(
                 Icon(Icons.Rounded.SwapHoriz, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(2.dp))
                 Text(stringResource(R.string.label_change_plan), style = MaterialTheme.typography.labelSmall)
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            FilledTonalButton(
-                onClick = onHistory,
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
-            ) {
-                Icon(painter = KenkoIcons.History, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(2.dp))
-                Text(stringResource(R.string.label_session), style = MaterialTheme.typography.labelSmall)
             }
         }
     }
@@ -360,13 +335,11 @@ private fun InlineTrainingContent(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PlanInfoCard(
     isPlanSelected: Boolean,
     planName: String?,
-    todayExercises: List<Exercise>,
-    isTodayEmpty: Boolean,
+    dayTitle: String?,
     onSelectPlanClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -383,53 +356,32 @@ private fun PlanInfoCard(
         color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Plan name
             if (planName != null) {
                 Text(
-                    text = stringResource(R.string.label_current_plan_title, planName),
+                    text = planName,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
             }
 
+            // Date and day of week
+            val dateStr = localDate.toString()
+            val dayStr = dayName(localDate.dayOfWeek)
             Text(
-                text = stringResource(R.string.label_today_plan),
+                text = "$dateStr $dayStr",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Today's training title
+            Text(
+                text = "${stringResource(R.string.label_today_plan)}: ${dayTitle ?: "-"}",
                 style = MaterialTheme.typography.titleMedium,
             )
-            Spacer(modifier = Modifier.height(4.dp))
-
-            if (isTodayEmpty) {
-                Text(
-                    text = stringResource(R.string.label_no_plan_today),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.label_train_anyway_prompt),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            } else if (todayExercises.isNotEmpty()) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    todayExercises.forEach { exercise ->
-                        Surface(
-                            shape = MaterialTheme.shapes.small,
-                            color = MaterialTheme.colorScheme.secondaryContainer,
-                        ) {
-                            Text(
-                                text = exercise.name,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            )
-                        }
-                    }
-                }
-            }
         }
     }
 }

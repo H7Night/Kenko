@@ -21,6 +21,7 @@ import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.ui.component.timer.TimerManager
 import com.looker.kenko.ui.component.timer.TimerState
 import com.looker.kenko.ui.component.timer.TrainingSessionManager
@@ -117,6 +118,9 @@ class HomeViewModel @Inject constructor(
         val trainingState = array[5] as TrainingSessionState
 
         val isFirstSession = sessions.size <= 1 && sessions.firstOrNull()?.date == localDate
+        val dayTitle = currentPlan?.titlesMap?.get(
+            currentSession?.planDayOverride ?: localDate.dayOfWeek
+        )
         HomeUiData(
             isPlanSelected = currentPlan != null,
             isSessionStarted = currentSession != null && currentSession.sets.isNotEmpty(),
@@ -127,6 +131,7 @@ class HomeViewModel @Inject constructor(
             timerState = timerState,
             trainingState = trainingState,
             planName = currentPlan?.name,
+            dayTitle = dayTitle,
             todayExercises = planItems.mapNotNull { it.exercise },
         )
     }.asStateFlow(
@@ -140,6 +145,7 @@ class HomeViewModel @Inject constructor(
             timerState = TimerState.IDLE,
             trainingState = TrainingSessionState.Idle,
             planName = null,
+            dayTitle = null,
             todayExercises = emptyList(),
         ),
     )
@@ -189,5 +195,6 @@ data class HomeUiData(
     val timerState: TimerState = TimerState.IDLE,
     val trainingState: TrainingSessionState = TrainingSessionState.Idle,
     val planName: String? = null,
+    val dayTitle: String? = null,
     val todayExercises: List<com.looker.kenko.domain.model.Exercise> = emptyList(),
 )
