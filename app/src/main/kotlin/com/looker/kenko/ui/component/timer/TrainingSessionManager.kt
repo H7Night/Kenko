@@ -45,7 +45,16 @@ class TrainingSessionManager @Inject constructor(
         scope.launch {
             val sessionId = sessionRepo.getSessionIdOrCreate(localDate)
             _sessionState.value = TrainingSessionState.Active(sessionId)
-            timerManager.start()
+            // Continue from existing duration if any
+            val existingSession = sessionRepo.streamByDate(localDate)
+            existingSession.first { true }.let { session ->
+                val existingDuration = session?.durationSeconds ?: 0L
+                if (existingDuration > 0) {
+                    timerManager.startWithDuration(existingDuration)
+                } else {
+                    timerManager.start()
+                }
+            }
         }
     }
 

@@ -67,6 +67,14 @@ class TimerManager @Inject constructor(
         startTicker()
     }
 
+    fun startWithDuration(initialSeconds: Long) {
+        if (_state.value == TimerState.RUNNING) return
+        _elapsedSeconds.value = initialSeconds
+        _state.value = TimerState.RUNNING
+        TimerService.start(context)
+        startTicker()
+    }
+
     fun pause() {
         if (_state.value != TimerState.RUNNING) return
         _state.value = TimerState.PAUSED

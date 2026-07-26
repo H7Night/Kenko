@@ -256,11 +256,11 @@ fun Home(
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = "Stick to the plan\nNot your mood.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .padding(top = 48.dp, bottom = 16.dp),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
         }
