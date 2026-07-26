@@ -50,6 +50,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -295,11 +296,21 @@ private fun InlineTrainingContent(
     onAddSet: (Exercise) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val collapsedExercises = remember { mutableStateListOf<Int>() }
     Column(modifier = modifier.padding(horizontal = 12.dp)) {
         exerciseSets.forEach { (exercise, sets) ->
+            val isCollapsed = exercise.id in collapsedExercises
             StickyHeader(
                 name = exercise.name,
                 setCount = sets.size,
+                isCollapsed = isCollapsed,
+                onCollapseToggle = {
+                    if (isCollapsed) {
+                        collapsedExercises.remove(exercise.id!!)
+                    } else {
+                        collapsedExercises.add(exercise.id!!)
+                    }
+                },
                 actions = {
                     FilledTonalButton(
                         onClick = { onAddSet(exercise) },
@@ -311,17 +322,19 @@ private fun InlineTrainingContent(
                     }
                 },
             )
-            sets.forEachIndexed { index, set ->
-                SetItem(
-                    set = set,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                    title = {
-                        Text(
-                            text = normalizeInt(index + 1),
-                            style = MaterialTheme.typography.displayMedium.numbers(),
-                        )
-                    },
-                )
+            if (!isCollapsed) {
+                sets.forEachIndexed { index, set ->
+                    SetItem(
+                        set = set,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        title = {
+                            Text(
+                                text = normalizeInt(index + 1),
+                                style = MaterialTheme.typography.displayMedium.numbers(),
+                            )
+                        },
+                    )
+                }
             }
         }
     }
