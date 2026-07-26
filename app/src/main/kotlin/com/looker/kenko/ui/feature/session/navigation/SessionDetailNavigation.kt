@@ -42,6 +42,7 @@ fun NavController.navigateToSessionDetail(
 fun NavGraphBuilder.sessionDetail(
     onBackPress: () -> Unit,
     onHistoryClick: (LocalDate) -> Unit,
+    onAddExerciseClick: (String) -> Unit = {},
 ) {
     composable<SessionDetailRoute>(
         deepLinks = listOf(navDeepLink { uriPattern = "kenko://session/{epochDays}" }),
@@ -51,6 +52,7 @@ fun NavGraphBuilder.sessionDetail(
             onBackPress = onBackPress,
             onHistoryClick = onHistoryClick,
             showBackButton = route.showBackButton,
+            onAddExerciseClick = onAddExerciseClick,
             viewModel = hiltViewModel(),
         )
     }

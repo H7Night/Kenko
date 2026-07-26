@@ -21,6 +21,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.navOptions
+import com.looker.kenko.ui.feature.about.navigation.about
+import com.looker.kenko.ui.feature.about.navigation.navigateToAbout
 import com.looker.kenko.ui.feature.backup.navigation.backup
 import com.looker.kenko.ui.feature.backup.navigation.navigateToBackup
 import com.looker.kenko.ui.feature.exercise.navigation.addEditExercise
@@ -110,6 +112,9 @@ fun KenkoNavHost(
             onBackupClick = {
                 navController.navigateToBackup(navOptions = singleTopNavOptions)
             },
+            onAboutClick = {
+                navController.navigateToAbout(navOptions = singleTopNavOptions)
+            },
         )
 
         profile(
@@ -153,6 +158,12 @@ fun KenkoNavHost(
         sessionDetail(
             onBackPress = navController::popBackStackOnResume,
             onHistoryClick = navController::navigateToSessionDetail,
+            onAddExerciseClick = { name ->
+                navController.navigateToAddEditExercise(
+                    name = name,
+                    navOptions = singleTopNavOptions,
+                )
+            },
         )
 
         addEditExercise(navController::popBackStackOnResume)
@@ -160,6 +171,8 @@ fun KenkoNavHost(
         tagManagement(navController::popBackStackOnResume)
 
         backup(navController::popBackStackOnResume)
+
+        about(navController::popBackStackOnResume)
 
         performance()
     }

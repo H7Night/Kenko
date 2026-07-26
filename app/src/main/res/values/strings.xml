@@ -96,6 +96,9 @@
     <string name="label_browse_exercises">Browse Exercises</string>
     <string name="label_all_muscle_groups">All</string>
     <string name="label_create_exercise">Create</string>
+    <string name="label_create_exercise_name">Create \"%s\"</string>
+    <string name="label_select_exercise">Select Exercise</string>
+    <string name="label_search">Search</string>
 
     <!--Add Exercises-->
     <string name="label_new_exercise">Add Exercise</string>
@@ -277,4 +280,6 @@
         <item>Sat</item>
         <item>Sun</item>
     </string-array>
+    <string name="label_about">About</string>
+    <string name="label_view_source_on_github">View source on GitHub</string>
 </resources>

@@ -52,7 +52,9 @@ fun KenkoBottomBar(
         windowInsets = WindowInsets(0, 0, 0, 0)
     ) {
         val itemColors = NavigationBarItemDefaults.colors(
-            indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
         )
         
         NavigationBarItem(

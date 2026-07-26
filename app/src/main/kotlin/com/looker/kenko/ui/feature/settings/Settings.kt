@@ -29,8 +29,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FormatSize
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -50,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -69,6 +72,7 @@ fun Settings(
     onBackPress: () -> Unit,
     onTagManagementClick: () -> Unit,
     onBackupClick: () -> Unit,
+    onAboutClick: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     Settings(
@@ -79,6 +83,7 @@ fun Settings(
         onBackPress = onBackPress,
         onTagManagementClick = onTagManagementClick,
         onBackupClick = onBackupClick,
+        onAboutClick = onAboutClick,
     )
 }
 
@@ -92,6 +97,7 @@ private fun Settings(
     onBackPress: () -> Unit,
     onTagManagementClick: () -> Unit,
     onBackupClick: () -> Unit,
+    onAboutClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showLanguageDialog by remember { mutableStateOf(false) }
@@ -139,17 +145,17 @@ private fun Settings(
             HorizontalDivider(thickness = KenkoBorderWidth)
             Spacer(modifier = Modifier.height(8.dp))
 
-            SettingsClickRow(
+            SettingsSelectionRow(
                 icon = { Icon(imageVector = Icons.Default.Language, contentDescription = null) },
                 title = stringResource(R.string.label_language),
-                subtitle = stringResource(state.language.labelRes),
+                value = stringResource(state.language.labelRes),
                 onClick = { showLanguageDialog = true },
             )
 
-            SettingsClickRow(
+            SettingsSelectionRow(
                 icon = { Icon(painter = KenkoIcons.Lightbulb, contentDescription = null) },
                 title = stringResource(R.string.label_theme),
-                subtitle = stringResource(state.selectedTheme.nameRes),
+                value = stringResource(state.selectedTheme.nameRes),
                 onClick = { showThemeDialog = true },
             )
 
@@ -165,14 +171,13 @@ private fun Settings(
                 thickness = KenkoBorderWidth,
             )
 
-            SettingsClickRow(
+            SettingsNavRow(
                 icon = { Icon(imageVector = Icons.Default.Label, contentDescription = null) },
                 title = stringResource(R.string.label_tag_management),
-                subtitle = null,
                 onClick = onTagManagementClick,
             )
 
-            SettingsClickRow(
+            SettingsNavRow(
                 icon = { Icon(painter = KenkoIcons.Save, contentDescription = null) },
                 title = stringResource(R.string.label_backup),
                 subtitle = state.backupUri?.let { extractFolderName(it) }
@@ -180,16 +185,78 @@ private fun Settings(
                 onClick = onBackupClick,
             )
 
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                thickness = KenkoBorderWidth,
+            )
+
+            SettingsNavRow(
+                icon = { Icon(imageVector = Icons.Default.Info, contentDescription = null) },
+                title = stringResource(R.string.label_about),
+                onClick = onAboutClick,
+            )
+
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
+/**
+ * A settings row that opens a selection dialog.
+ * Layout: [icon] [title]                    [value] [⇅]
+ */
 @Composable
-private fun SettingsClickRow(
+private fun SettingsSelectionRow(
     icon: @Composable () -> Unit,
     title: String,
-    subtitle: String?,
+    value: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier.size(24.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            icon()
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.outline,
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(
+            imageVector = Icons.Default.UnfoldMore,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            modifier = Modifier.size(20.dp),
+        )
+    }
+}
+
+/**
+ * A settings row that navigates to another screen.
+ * Layout: [icon] [title / subtitle]          [>]
+ */
+@Composable
+private fun SettingsNavRow(
+    icon: @Composable () -> Unit,
+    title: String,
+    subtitle: String? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -221,11 +288,10 @@ private fun SettingsClickRow(
             }
         }
         Spacer(modifier = Modifier.width(8.dp))
-        Icon(
-            painter = KenkoIcons.ArrowForward,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-            modifier = Modifier.size(20.dp),
+        Text(
+            text = ">",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
         )
     }
 }
@@ -370,6 +436,7 @@ private fun SettingsPreview() {
             onBackPress = {},
             onTagManagementClick = {},
             onBackupClick = {},
+            onAboutClick = {},
         )
     }
 }

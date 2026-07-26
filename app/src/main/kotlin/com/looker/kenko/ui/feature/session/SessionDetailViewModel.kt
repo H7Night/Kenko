@@ -28,6 +28,7 @@ import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.Set
 import com.looker.kenko.domain.model.localDate
 import com.looker.kenko.domain.model.week
+import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo
@@ -57,6 +58,7 @@ import kotlinx.datetime.minus
 class SessionDetailViewModel @Inject constructor(
     private val repo: SessionRepo,
     private val planRepo: PlanRepo,
+    private val exerciseRepo: ExerciseRepo,
     private val settingsRepo: SettingsRepo,
     private val savedStateHandle: SavedStateHandle,
     private val uriHandler: UriHandler,
@@ -89,6 +91,9 @@ class SessionDetailViewModel @Inject constructor(
             items.groupBy { it.dayOfWeek }
                 .mapValues { entry -> entry.value.map { it.exercise } }
         }
+
+    val allExercises: StateFlow<List<Exercise>> = exerciseRepo.stream
+        .asStateFlow(initial = emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val exercisesToday: Flow<List<Exercise>> =

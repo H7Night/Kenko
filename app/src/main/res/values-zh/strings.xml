@@ -87,6 +87,9 @@
     <string name="label_browse_exercises">浏览动作</string>
     <string name="label_all_muscle_groups">全部</string>
     <string name="label_create_exercise">创建</string>
+    <string name="label_create_exercise_name">创建「%s」</string>
+    <string name="label_select_exercise">选择动作</string>
+    <string name="label_search">搜索</string>
 
     <!--Add Exercises-->
     <string name="label_new_exercise">添加动作</string>
@@ -268,4 +271,6 @@
         <item>六</item>
         <item>日</item>
     </string-array>
+    <string name="label_about">关于</string>
+    <string name="label_view_source_on_github">在 GitHub 查看源代码</string>
 </resources>

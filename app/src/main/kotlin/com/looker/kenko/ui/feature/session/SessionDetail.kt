@@ -16,6 +16,7 @@ package com.looker.kenko.ui.feature.session
 
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,13 +31,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -52,10 +59,14 @@ import androidx.compose.material3.IconButtonShapes
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
@@ -76,6 +87,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Set
+import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.feature.session.AddSet
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.KenkoBorderWidth
@@ -87,6 +99,8 @@ import com.looker.kenko.ui.feature.plan.components.dayName
 import com.looker.kenko.ui.feature.session.components.SetItem
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
+import com.looker.kenko.ui.theme.end
+import com.looker.kenko.ui.theme.start
 import com.looker.kenko.utils.DateFormat
 import com.looker.kenko.utils.formatDate
 import java.util.*
@@ -105,11 +119,14 @@ fun SessionDetails(
     onBackPress: () -> Unit,
     onHistoryClick: (LocalDate) -> Unit,
     showBackButton: Boolean = true,
+    onAddExerciseClick: (String) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val allExercises by viewModel.allExercises.collectAsStateWithLifecycle()
     val previousSessionDate = (state as? SessionDetailState.Success)?.data?.previousSessionDate
     SessionDetail(
         state = state,
+        allExercises = allExercises,
         onBackPress = onBackPress,
         onRemoveSet = viewModel::removeSet,
         onUpdateSet = viewModel::updateSet,
@@ -119,6 +136,7 @@ fun SessionDetails(
         onEditToggle = viewModel::toggleEditMode,
         onClearSets = viewModel::clearTodaySets,
         showBackButton = showBackButton,
+        onAddExerciseClick = onAddExerciseClick,
     )
     val exercise by viewModel.current.collectAsStateWithLifecycle()
     if (exercise != null) {
@@ -134,6 +152,7 @@ fun SessionDetails(
 @Composable
 private fun SessionDetail(
     state: SessionDetailState,
+    allExercises: List<Exercise> = emptyList(),
     onBackPress: () -> Unit = {},
     onRemoveSet: (Int?) -> Unit = {},
     onUpdateSet: (Int?, Int, Float) -> Unit = { _, _, _ -> },
@@ -143,6 +162,7 @@ private fun SessionDetail(
     onEditToggle: () -> Unit = {},
     onClearSets: () -> Unit = {},
     showBackButton: Boolean = true,
+    onAddExerciseClick: (String) -> Unit = {},
 ) {
     when (state) {
         is SessionDetailState.Error.InvalidSession -> {
@@ -256,6 +276,7 @@ private fun SessionDetail(
                 dayTitle = data.dayTitle,
                 availablePlanDays = data.availablePlanDays,
                 dayTitles = data.dayTitles,
+                allExercises = allExercises,
                 onBackPress = onBackPress,
                 onRemoveSet = onRemoveSet,
                 onUpdateSet = onUpdateSet,
@@ -265,6 +286,7 @@ private fun SessionDetail(
                 onImportDay = onImportDay,
                 onClearSets = onClearSets,
                 showBackButton = showBackButton,
+                onAddExerciseClick = onAddExerciseClick,
             )
         }
     }
@@ -281,6 +303,7 @@ private fun SetsList(
     dayTitle: String?,
     availablePlanDays: Map<DayOfWeek, List<Exercise>>,
     dayTitles: Map<DayOfWeek, String>,
+    allExercises: List<Exercise> = emptyList(),
     onBackPress: () -> Unit,
     onRemoveSet: (Int?) -> Unit,
     onUpdateSet: (Int?, Int, Float) -> Unit,
@@ -290,10 +313,12 @@ private fun SetsList(
     onImportDay: (DayOfWeek) -> Unit,
     onClearSets: () -> Unit,
     showBackButton: Boolean = true,
+    onAddExerciseClick: (String) -> Unit = {},
 ) {
     var collapsedExercises by rememberSaveable { mutableStateOf(emptySet<Int>()) }
     var showImportDialog by remember { mutableStateOf(false) }
     var showImportSheet by remember { mutableStateOf(false) }
+    var showAddExerciseDialog by rememberSaveable { mutableStateOf(false) }
 
     if (showImportDialog) {
         AlertDialog(
@@ -355,6 +380,21 @@ private fun SetsList(
         }
     }
 
+    if (showAddExerciseDialog) {
+        ExerciseSearchDialog(
+            exercises = allExercises,
+            onExerciseSelected = { exercise ->
+                showAddExerciseDialog = false
+                onSelectBottomSheet(exercise)
+            },
+            onCreateNew = { name ->
+                showAddExerciseDialog = false
+                onAddExerciseClick(name)
+            },
+            onDismiss = { showAddExerciseDialog = false },
+        )
+    }
+
     LazyVerticalGrid(
         columns = GridCells.Adaptive(360.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -371,6 +411,12 @@ private fun SetsList(
                 showBackButton = showBackButton,
                 actions = {
                     if (isToday) {
+                        IconButton(onClick = { showAddExerciseDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                            )
+                        }
                         IconButton(onClick = { showImportDialog = true }) {
                             Icon(
                                 imageVector = Icons.Rounded.SwapHoriz,
@@ -518,6 +564,219 @@ private fun SessionError(
             )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExerciseSearchDialog(
+    exercises: List<Exercise>,
+    onExerciseSelected: (Exercise) -> Unit,
+    onCreateNew: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val parentTags = remember(exercises) {
+        exercises.flatMap { it.tags }
+            .filter { it.parentId == null }
+            .distinctBy { it.id }
+            .sortedBy { it.sortOrder }
+    }
+
+    var selectedParentId by remember { mutableStateOf<Int?>(null) }
+    var selectedChildId by remember { mutableStateOf<Int?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedExercise by remember { mutableStateOf<Exercise?>(null) }
+    var parentExpanded by remember { mutableStateOf(false) }
+    var childExpanded by remember { mutableStateOf(false) }
+
+    val childTags = remember(selectedParentId, exercises) {
+        if (selectedParentId != null) {
+            exercises.flatMap { it.tags }
+                .filter { it.parentId == selectedParentId }
+                .distinctBy { it.id }
+                .sortedBy { it.sortOrder }
+        } else {
+            emptyList()
+        }
+    }
+
+    val filteredExercises = remember(searchQuery, selectedParentId, selectedChildId, exercises) {
+        var filtered = exercises
+        if (selectedChildId != null) {
+            filtered = filtered.filter { exercise ->
+                exercise.tags.any { it.id == selectedChildId }
+            }
+        } else if (selectedParentId != null) {
+            filtered = filtered.filter { exercise ->
+                exercise.tags.any { it.parentId == selectedParentId }
+            }
+        }
+        if (searchQuery.isNotBlank()) {
+            filtered = filtered.filter { it.name.contains(searchQuery, ignoreCase = true) }
+        }
+        filtered
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.label_select_exercise)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text(stringResource(R.string.label_search)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    // Parent tag dropdown
+                    Box(modifier = Modifier.weight(1f)) {
+                        ExposedDropdownMenuBox(
+                            expanded = parentExpanded,
+                            onExpandedChange = { parentExpanded = it },
+                        ) {
+                            OutlinedTextField(
+                                value = if (selectedParentId == null) {
+                                    stringResource(R.string.label_all_muscle_groups)
+                                } else {
+                                    parentTags.find { it.id == selectedParentId }?.name ?: ""
+                                },
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = parentExpanded) },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth(),
+                                singleLine = true,
+                            )
+                            ExposedDropdownMenu(
+                                expanded = parentExpanded,
+                                onDismissRequest = { parentExpanded = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                                    onClick = {
+                                        selectedParentId = null
+                                        selectedChildId = null
+                                        parentExpanded = false
+                                    },
+                                )
+                                parentTags.forEach { tag ->
+                                    DropdownMenuItem(
+                                        text = { Text(tag.name) },
+                                        onClick = {
+                                            selectedParentId = tag.id
+                                            selectedChildId = null
+                                            parentExpanded = false
+                                            childExpanded = true
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    // Child tag dropdown
+                    if (selectedParentId != null && childTags.isNotEmpty()) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ExposedDropdownMenuBox(
+                                expanded = childExpanded,
+                                onExpandedChange = { childExpanded = it },
+                            ) {
+                                OutlinedTextField(
+                                    value = childTags.find { it.id == selectedChildId }?.name
+                                        ?: stringResource(R.string.label_all_muscle_groups),
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = childExpanded) },
+                                    modifier = Modifier
+                                        .menuAnchor()
+                                        .fillMaxWidth(),
+                                    singleLine = true,
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = childExpanded,
+                                    onDismissRequest = { childExpanded = false },
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                                        onClick = {
+                                            selectedChildId = null
+                                            childExpanded = false
+                                        },
+                                    )
+                                    childTags.forEach { tag ->
+                                        DropdownMenuItem(
+                                            text = { Text(tag.name) },
+                                            onClick = {
+                                                selectedChildId = tag.id
+                                                childExpanded = false
+                                            },
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyColumn(
+                    modifier = Modifier.height(300.dp),
+                ) {
+                    items(filteredExercises, key = { it.id ?: it.name }) { exercise ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedExercise = exercise }
+                                .padding(vertical = 10.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = exercise.name,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f),
+                            )
+                            if (exercise == selectedExercise) {
+                                Text(
+                                    text = "✓",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                            }
+                        }
+                    }
+                }
+                if (searchQuery.isNotBlank() && filteredExercises.isEmpty()) {
+                    TextButton(
+                        onClick = { onCreateNew(searchQuery.trim()) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.label_create_exercise_name, searchQuery.trim()),
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    selectedExercise?.let(onExerciseSelected)
+                },
+                enabled = selectedExercise != null,
+            ) {
+                Text(stringResource(R.string.label_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.label_cancel))
+            }
+        },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

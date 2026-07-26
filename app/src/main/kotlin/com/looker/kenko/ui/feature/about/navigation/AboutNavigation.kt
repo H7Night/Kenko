@@ -12,39 +12,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.looker.kenko.ui.feature.settings.navigation
+package com.looker.kenko.ui.feature.about.navigation
 
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
-import androidx.navigation.navDeepLink
-import com.looker.kenko.ui.feature.settings.Settings
+import com.looker.kenko.ui.feature.about.AboutScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
-object SettingsRoute
+object AboutRoute
 
-fun NavController.navigateToSettings(navOptions: NavOptions? = null) {
-    navigate(SettingsRoute, navOptions)
+fun NavController.navigateToAbout(navOptions: NavOptions? = null) {
+    navigate(AboutRoute, navOptions)
 }
 
-fun NavGraphBuilder.settings(
+fun NavGraphBuilder.about(
     onBackPress: () -> Unit,
-    onTagManagementClick: () -> Unit,
-    onBackupClick: () -> Unit,
-    onAboutClick: () -> Unit,
 ) {
-    composable<SettingsRoute>(
-        deepLinks = listOf(navDeepLink { uriPattern = "kenko://settings" }),
-    ) {
-        Settings(
+    composable<AboutRoute> {
+        AboutScreen(
             onBackPress = onBackPress,
-            onTagManagementClick = onTagManagementClick,
-            onBackupClick = onBackupClick,
-            onAboutClick = onAboutClick,
-            viewModel = hiltViewModel(),
         )
     }
 }
