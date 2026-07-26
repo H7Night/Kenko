@@ -58,6 +58,7 @@ fun SwipeToDeleteBox(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     showIcon: Boolean = true,
+    clipShape: androidx.compose.ui.graphics.Shape = MaterialTheme.shapes.extraLarge,
     content: @Composable () -> Unit,
 ) {
     val density = LocalDensity.current
@@ -97,7 +98,7 @@ fun SwipeToDeleteBox(
     Box(
         modifier = modifier
             .height(IntrinsicSize.Min)
-            .clip(MaterialTheme.shapes.extraLarge)
+            .clip(clipShape)
             .background(background),
     ) {
         Box(

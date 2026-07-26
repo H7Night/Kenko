@@ -76,16 +76,8 @@ fun SetItem(
     title: @Composable () -> Unit,
 ) {
     val isCardio = set.exercise.countType == CountType.MINUTES
-    val containerColor = if (isToday) {
-        MaterialTheme.colorScheme.secondaryContainer
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerLow
-    }
-    val containerShape = if (isToday) {
-        androidx.compose.foundation.shape.CircleShape
-    } else {
-        MaterialTheme.shapes.extraLarge
-    }
+    val containerColor = androidx.compose.ui.graphics.Color.Transparent
+    val containerShape = MaterialTheme.shapes.large
     Surface(
         modifier = Modifier
             .widthIn(240.dp, 420.dp)

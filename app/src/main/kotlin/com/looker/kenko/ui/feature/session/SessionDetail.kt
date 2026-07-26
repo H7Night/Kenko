@@ -492,6 +492,7 @@ private fun SetsList(
                         SwipeToDeleteBox(
                             modifier = Modifier.animateItem(),
                             onDismiss = { onRemoveSet(set.id) },
+                            clipShape = MaterialTheme.shapes.large,
                             content = setItem
                         )
                     } else {
