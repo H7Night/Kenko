@@ -45,19 +45,18 @@ fun StickyHeader(
     Surface(
         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = MaterialTheme.shapes.medium,
+        shape = MaterialTheme.shapes.extraLarge,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(24.dp)
+                .clickable(onClick = onCollapseToggle)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable(onClick = onCollapseToggle),
+                modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
