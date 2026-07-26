@@ -452,9 +452,7 @@ fun SessionCard(
     Surface(
         modifier = modifier,
         color = containerColor,
-        shape = MaterialTheme.shapes.extraLarge,
-        tonalElevation = if (session.date.isToday) 4.dp else 2.dp,
-        shadowElevation = 4.dp,
+        shape = MaterialTheme.shapes.large,
         onClick = onClick,
     ) {
         Column(
