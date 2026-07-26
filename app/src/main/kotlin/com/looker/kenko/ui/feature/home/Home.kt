@@ -14,7 +14,6 @@
 
 package com.looker.kenko.ui.feature.home
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -37,7 +36,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -46,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,9 +59,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.ui.component.timer.TimerCard
+import com.looker.kenko.ui.component.timer.TimerState
 import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.ui.component.timer.rememberNotificationPermissionState
-import com.looker.kenko.ui.feature.home.components.TrainingHeatmap
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.header
 
@@ -78,6 +77,13 @@ fun Home(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val timerSeconds by viewModel.timerManager.elapsedSeconds.collectAsStateWithLifecycle()
     val notifState = rememberNotificationPermissionState()
+
+    // Request notification permission on first launch
+    LaunchedEffect(Unit) {
+        if (!notifState.granted) {
+            notifState.request()
+        }
+    }
 
     var showEndConfirm by remember { mutableStateOf(false) }
 
@@ -114,6 +120,7 @@ fun Home(
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding),
         ) {
+            // Timer card - always visible at top
             TimerCard(
                 timerState = state.timerState,
                 elapsedSeconds = timerSeconds,
@@ -131,32 +138,21 @@ fun Home(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
 
-            AnimatedContent(
-                targetState = state.trainingState !is TrainingSessionState.Active,
-                label = "heatmap",
-            ) { showHeatmap ->
-                if (showHeatmap && state.isPlanSelected) {
-                    TrainingHeatmap(
-                        sessionDates = state.sessionDates,
-                        onClick = onExploreSessionsClick,
-                    )
-                }
-            }
-
+            // Main content below timer
             when (state.trainingState) {
                 is TrainingSessionState.Idle,
                 is TrainingSessionState.Ended -> {
-                    PlanStatusCard(
+                    // Show current plan with today's exercises
+                    PlanInfoCard(
                         isPlanSelected = state.isPlanSelected,
                         planName = state.planName,
                         todayExercises = state.todayExercises,
                         isTodayEmpty = state.isTodayEmpty,
-                        isSessionStarted = state.isSessionStarted,
                         onSelectPlanClick = onSelectPlanClick,
-                        onStartSessionClick = onStartSessionClick,
                     )
                 }
                 is TrainingSessionState.Active -> {
+                    // Training session card with action buttons
                     TrainingSessionCard(
                         onAddExercise = onStartSessionClick,
                         onChangePlan = onSelectPlanClick,
@@ -170,18 +166,16 @@ fun Home(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun PlanStatusCard(
+private fun PlanInfoCard(
     isPlanSelected: Boolean,
     planName: String?,
     todayExercises: List<Exercise>,
     isTodayEmpty: Boolean,
-    isSessionStarted: Boolean,
     onSelectPlanClick: () -> Unit,
-    onStartSessionClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (!isPlanSelected) {
-        SelectPlan(onSelectPlanClick = onSelectPlanClick)
+        SelectPlanPrompt(onSelectPlanClick = onSelectPlanClick)
         return
     }
 
@@ -239,18 +233,6 @@ private fun PlanStatusCard(
                         }
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onStartSessionClick,
-            ) {
-                Text(
-                    if (isSessionStarted) stringResource(R.string.label_continue_session)
-                    else stringResource(R.string.label_start_session)
-                )
             }
         }
     }
@@ -313,7 +295,7 @@ private fun TrainingSessionCard(
 }
 
 @Composable
-private fun SelectPlan(
+private fun SelectPlanPrompt(
     onSelectPlanClick: () -> Unit,
 ) {
     Column(
