@@ -62,7 +62,10 @@ import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.ui.theme.end
 import com.looker.kenko.ui.theme.start
 import com.looker.kenko.utils.toFormat
+import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @Composable
 internal fun BackupSection(
@@ -135,7 +138,7 @@ internal fun BackupSection(
             onDismiss = { showExportDialog = false },
             onConfirm = { options ->
                 pendingExportOptions = options
-                jsonFileLauncher.launch("kenko_export.json")
+                jsonFileLauncher.launch(buildExportFileName())
                 showExportDialog = false
             },
         )
@@ -331,7 +334,14 @@ internal fun RestoreConfirmationDialog(
     )
 }
 
-private fun extractFolderName(uri: String): String {
+private fun buildExportFileName(): String {
+    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    val datePart = "${now.year}${now.monthNumber.toString().padStart(2, '0')}${now.dayOfMonth.toString().padStart(2, '0')}"
+    val timePart = "${now.hour.toString().padStart(2, '0')}${now.minute.toString().padStart(2, '0')}${now.second.toString().padStart(2, '0')}"
+    return "kenko-export-$datePart-$timePart"
+}
+
+internal fun extractFolderName(uri: String): String {
     return try {
         uri.toUri().lastPathSegment?.substringAfterLast('/') ?: uri
     } catch (_: Exception) {

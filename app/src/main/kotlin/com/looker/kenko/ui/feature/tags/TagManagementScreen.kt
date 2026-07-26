@@ -27,9 +27,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Label
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -171,7 +171,7 @@ fun TagManagementScreen(
                         style = MaterialTheme.typography.titleLarge,
                     )
                     IconButton(onClick = { showAddParentDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.label_add_tag))
+                        Icon(Icons.Default.Label, contentDescription = stringResource(R.string.label_add_tag))
                     }
                 }
                 HorizontalDivider()
@@ -214,7 +214,7 @@ private fun ParentTagCard(
             )
             Row {
                 IconButton(onClick = onAddChild) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(Icons.Default.Label, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 }
                 IconButton(onClick = { onEdit(parent) }) {
                     Icon(Icons.Default.Edit, contentDescription = null)

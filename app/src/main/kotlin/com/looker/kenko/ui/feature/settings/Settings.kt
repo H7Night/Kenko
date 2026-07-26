@@ -14,7 +14,8 @@
 
 package com.looker.kenko.ui.feature.settings
 
-import android.net.Uri
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,61 +23,52 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FormatSize
+import androidx.compose.material.icons.filled.Label
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonColors
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.SingleChoiceSegmentedButtonRowScope
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
-import com.looker.kenko.data.export.ExportOptions
 import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.KenkoBorderWidth
-import com.looker.kenko.ui.component.PreferenceSwitchRow
-import com.looker.kenko.ui.component.SecondaryKenkoButton
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
-import com.looker.kenko.ui.theme.end
-import com.looker.kenko.ui.theme.start
-import kotlin.time.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 @Composable
 fun Settings(
     viewModel: SettingsViewModel,
     onBackPress: () -> Unit,
     onTagManagementClick: () -> Unit,
+    onBackupClick: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     Settings(
@@ -84,14 +76,9 @@ fun Settings(
         onSelectLanguage = viewModel::updateLanguage,
         onSelectTheme = viewModel::updateTheme,
         onSelectCapitalize = viewModel::updateCapitalizeExerciseName,
-        onSelectBackupLocation = viewModel::setBackupLocation,
-        onSelectBackupInterval = viewModel::setBackupInterval,
-        onBackupNow = viewModel::backupNow,
-        onRestore = viewModel::restore,
-        onExport = viewModel::exportData,
-        onClearMessage = viewModel::clearBackupMessage,
         onBackPress = onBackPress,
         onTagManagementClick = onTagManagementClick,
+        onBackupClick = onBackupClick,
     )
 }
 
@@ -102,39 +89,39 @@ private fun Settings(
     onSelectLanguage: (Language) -> Unit,
     onSelectTheme: (Theme) -> Unit,
     onSelectCapitalize: (Boolean) -> Unit,
-    onSelectBackupLocation: (Uri) -> Unit,
-    onSelectBackupInterval: (BackupInterval) -> Unit,
-    onBackupNow: () -> Unit,
-    onRestore: (Uri) -> Unit,
-    onExport: (ExportOptions, Uri) -> Unit,
-    onClearMessage: () -> Unit,
     onBackPress: () -> Unit,
     onTagManagementClick: () -> Unit,
+    onBackupClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
 
-    // Handle backup messages
-    LaunchedEffect(state.backupMessage) {
-        state.backupMessage?.let { message ->
-            val text = when (message) {
-                BackupMessage.BackupSuccess -> context.getString(R.string.label_backup_success)
-                BackupMessage.BackupFailed -> context.getString(R.string.error_backup_failed)
-                BackupMessage.RestoreSuccess -> context.getString(R.string.label_restore_success)
-                BackupMessage.RestoreFailed -> context.getString(R.string.error_restore_failed)
-                BackupMessage.ExportSuccess -> context.getString(R.string.label_export_success)
-                BackupMessage.ExportFailed -> context.getString(R.string.error_export_failed)
-            }
-            snackbarHostState.showSnackbar(text)
-            onClearMessage()
-        }
+    if (showLanguageDialog) {
+        LanguageSelectionDialog(
+            selected = state.language,
+            onSelect = { language ->
+                onSelectLanguage(language)
+                showLanguageDialog = false
+            },
+            onDismiss = { showLanguageDialog = false },
+        )
+    }
+
+    if (showThemeDialog) {
+        ThemeSelectionDialog(
+            selected = state.selectedTheme,
+            onSelect = { theme ->
+                onSelectTheme(theme)
+                showThemeDialog = false
+            },
+            onDismiss = { showThemeDialog = false },
+        )
     }
 
     Scaffold(
         modifier = modifier,
         containerColor = Color.Transparent,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -150,196 +137,214 @@ private fun Settings(
                 .verticalScroll(rememberScrollState()),
         ) {
             HorizontalDivider(thickness = KenkoBorderWidth)
-            Spacer(modifier = Modifier.height(16.dp))
-            CategoryHeader(title = stringResource(R.string.label_language))
             Spacer(modifier = Modifier.height(8.dp))
-            LanguageSelector(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                selectedLanguage = state.language,
-                onSelectLanguage = onSelectLanguage,
+
+            SettingsClickRow(
+                icon = { Icon(imageVector = Icons.Default.Language, contentDescription = null) },
+                title = stringResource(R.string.label_language),
+                subtitle = stringResource(state.language.labelRes),
+                onClick = { showLanguageDialog = true },
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            CategoryHeader(title = stringResource(R.string.label_theme))
-            Spacer(modifier = Modifier.height(4.dp))
-            ThemeButton(
-                modifier = Modifier.align(CenterHorizontally),
-                selectedTheme = state.selectedTheme,
-                onClick = onSelectTheme,
+
+            SettingsClickRow(
+                icon = { Icon(painter = KenkoIcons.Lightbulb, contentDescription = null) },
+                title = stringResource(R.string.label_theme),
+                subtitle = stringResource(state.selectedTheme.nameRes),
+                onClick = { showThemeDialog = true },
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            PreferenceSwitchRow(
+
+            SettingsSwitchRow(
+                icon = { Icon(imageVector = Icons.Default.FormatSize, contentDescription = null) },
                 title = stringResource(R.string.label_capitalize_exercise_name),
                 checked = state.capitalizeExerciseName,
                 onCheckedChange = onSelectCapitalize,
             )
-            Spacer(modifier = Modifier.height(24.dp))
-            CategoryHeader(title = stringResource(R.string.label_tag_management))
-            Spacer(modifier = Modifier.height(8.dp))
-            SecondaryKenkoButton(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth(),
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                thickness = KenkoBorderWidth,
+            )
+
+            SettingsClickRow(
+                icon = { Icon(imageVector = Icons.Default.Label, contentDescription = null) },
+                title = stringResource(R.string.label_tag_management),
+                subtitle = null,
                 onClick = onTagManagementClick,
-                label = { Text(stringResource(R.string.label_tag_management)) },
-                icon = { Icon(painter = KenkoIcons.Add, contentDescription = null) },
             )
-            Spacer(modifier = Modifier.height(24.dp))
-            CategoryHeader(title = stringResource(R.string.label_backup))
-            Spacer(modifier = Modifier.height(8.dp))
-            BackupSection(
-                backupUri = state.backupUri,
-                backupInterval = state.backupInterval,
-                lastBackupTime = state.lastBackupTime,
-                isBackingUp = state.isBackingUp,
-                isRestoring = state.isRestoring,
-                isExporting = state.isExporting,
-                onSelectLocation = onSelectBackupLocation,
-                onSelectInterval = onSelectBackupInterval,
-                onBackupNow = onBackupNow,
-                onRestore = onRestore,
-                onExport = onExport,
+
+            SettingsClickRow(
+                icon = { Icon(painter = KenkoIcons.Save, contentDescription = null) },
+                title = stringResource(R.string.label_backup),
+                subtitle = state.backupUri?.let { extractFolderName(it) }
+                    ?: stringResource(R.string.label_backup_location_not_set),
+                onClick = onBackupClick,
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
 @Composable
-private fun CategoryHeader(
+private fun SettingsClickRow(
+    icon: @Composable () -> Unit,
     title: String,
+    subtitle: String?,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 16.dp),
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = title, style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.width(4.dp))
-    }
-}
-
-@Composable
-private fun LanguageSelector(
-    selectedLanguage: Language,
-    onSelectLanguage: (Language) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
-        Language.entries.forEachIndexed { index, language ->
-            SegmentedButton(
-                selected = selectedLanguage == language,
-                onClick = { onSelectLanguage(language) },
-                shape = when (index) {
-                    0 -> CircleShape.end(8.dp)
-                    Language.entries.lastIndex -> CircleShape.start(8.dp)
-                    else -> RoundedCornerShape(8.dp)
-                },
-                colors = themeButtonColors,
-                modifier = Modifier.padding(2.dp),
-            ) {
+        Box(
+            modifier = Modifier.size(24.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            icon()
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            if (subtitle != null) {
                 Text(
-                    text = stringResource(language.labelRes),
-                    style = MaterialTheme.typography.labelSmall,
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline,
                 )
             }
         }
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(
+            painter = KenkoIcons.ArrowForward,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ThemeButton(
-    selectedTheme: Theme,
-    onClick: (Theme) -> Unit,
+private fun SettingsSwitchRow(
+    icon: @Composable () -> Unit,
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SingleChoiceSegmentedButtonRow(modifier = modifier) {
-        val isSystem = remember(selectedTheme) { selectedTheme == Theme.System }
-        val isDark = remember(selectedTheme) { selectedTheme == Theme.Dark }
-        val isLight = remember(selectedTheme) { selectedTheme == Theme.Light }
-        SystemButton(isSelected = isSystem, onClick = onClick)
-        LightButton(isSelected = isLight, onClick = onClick)
-        DarkButton(isSelected = isDark, onClick = onClick)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SingleChoiceSegmentedButtonRowScope.SystemButton(
-    isSelected: Boolean,
-    onClick: (Theme) -> Unit,
-) {
-    val theme = Theme.System
-    SegmentedButton(
-        selected = isSelected,
-        onClick = { onClick(theme) },
-        shape = CircleShape.end(8.dp),
-        colors = themeButtonColors,
-        modifier = Modifier.padding(2.dp),
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = stringResource(theme.nameRes))
+        Box(
+            modifier = Modifier.size(24.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            icon()
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SingleChoiceSegmentedButtonRowScope.LightButton(
-    isSelected: Boolean,
-    onClick: (Theme) -> Unit,
+private fun LanguageSelectionDialog(
+    selected: Language,
+    onSelect: (Language) -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    val theme = Theme.Light
-    SegmentedButton(
-        selected = isSelected,
-        onClick = { onClick(theme) },
-        shape = RoundedCornerShape(8.dp),
-        colors = themeButtonColors,
-        modifier = Modifier.padding(2.dp),
-    ) {
-        Text(text = stringResource(theme.nameRes))
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SingleChoiceSegmentedButtonRowScope.DarkButton(
-    isSelected: Boolean,
-    onClick: (Theme) -> Unit,
-) {
-    val theme = Theme.Dark
-    SegmentedButton(
-        selected = isSelected,
-        onClick = { onClick(theme) },
-        shape = CircleShape.start(8.dp),
-        colors = themeButtonColors,
-        modifier = Modifier.padding(2.dp),
-    ) {
-        Text(text = stringResource(theme.nameRes))
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-private val themeButtonColors: SegmentedButtonColors
-    @Composable
-    get() = SegmentedButtonDefaults.colors(
-        activeBorderColor = Color.Transparent,
-        inactiveBorderColor = Color.Transparent,
-        inactiveContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.label_language)) },
+        text = {
+            Column {
+                Language.entries.forEach { language ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(language) }
+                            .padding(vertical = 12.dp, horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = stringResource(language.labelRes),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (language == selected) {
+                            Text(
+                                text = "✓",
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.label_cancel))
+            }
+        },
     )
-
-private fun formatBackupTime(instant: Instant): String {
-    val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-    return "${localDateTime.date} ${localDateTime.hour}:${
-        localDateTime.minute.toString().padStart(2, '0')
-    }"
 }
 
-@Preview
 @Composable
-private fun ThemePreview() {
-    KenkoTheme {
-        ThemeButton(selectedTheme = Theme.System, onClick = {})
-    }
+private fun ThemeSelectionDialog(
+    selected: Theme,
+    onSelect: (Theme) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.label_theme)) },
+        text = {
+            Column {
+                Theme.entries.forEach { theme ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(theme) }
+                            .padding(vertical = 12.dp, horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = stringResource(theme.nameRes),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (theme == selected) {
+                            Text(
+                                text = "✓",
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.label_cancel))
+            }
+        },
+    )
 }
 
 @Preview
@@ -362,14 +367,9 @@ private fun SettingsPreview() {
             onSelectLanguage = {},
             onSelectTheme = {},
             onSelectCapitalize = {},
-            onSelectBackupLocation = {},
-            onSelectBackupInterval = {},
-            onBackupNow = {},
-            onRestore = {},
-            onExport = { _: ExportOptions, _: Uri -> },
-            onClearMessage = {},
             onBackPress = {},
             onTagManagementClick = {},
+            onBackupClick = {},
         )
     }
 }

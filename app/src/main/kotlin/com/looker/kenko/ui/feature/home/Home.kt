@@ -17,7 +17,6 @@ package com.looker.kenko.ui.feature.home
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -60,7 +59,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.TertiaryKenkoButton
-import com.looker.kenko.ui.component.TickerText
 import com.looker.kenko.ui.feature.home.components.TrainingHeatmap
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
@@ -112,18 +110,6 @@ private fun Home(
                         sessionDates = state.sessionDates,
                         onClick = onExploreSessionsClick,
                     )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        TickerText(
-                            text = stringResource(R.string.label_select_a_plan),
-                            color = MaterialTheme.colorScheme.outline,
-                        )
-                    }
                 }
             }
             if (state.isPlanSelected) {

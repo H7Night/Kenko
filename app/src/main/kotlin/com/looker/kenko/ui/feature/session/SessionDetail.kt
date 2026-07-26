@@ -81,7 +81,6 @@ import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.SwipeToDeleteBox
-import com.looker.kenko.ui.component.TypingText
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.dayName
@@ -485,19 +484,11 @@ private fun Header(
             Column(
                 verticalArrangement = Arrangement.Center,
             ) {
-                var startAnimatingDate by remember {
-                    mutableStateOf(false)
-                }
-                TypingText(
+                Text(
                     text = dayText,
-                    onCompleteListener = {
-                        startAnimatingDate = true
-                    },
                 )
-                TypingText(
+                Text(
                     text = date,
-                    startTyping = startAnimatingDate,
-                    initialDelay = 0.milliseconds,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.outline,
                 )
