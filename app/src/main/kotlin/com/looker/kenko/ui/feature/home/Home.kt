@@ -210,7 +210,6 @@ fun Home(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(innerPadding),
         ) {
             TimerCard(
@@ -252,6 +251,17 @@ fun Home(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = "Stick to the plan\nNot your mood.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
         }
     }
 }
