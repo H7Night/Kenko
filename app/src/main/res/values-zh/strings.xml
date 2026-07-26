@@ -55,6 +55,8 @@
     <string name="label_plans_title">计划</string>
     <string name="label_edit_plan">编辑计划</string>
     <string name="no_exercises_yet">尚无动作</string>
+    <string name="label_modify_plan">修改今日计划</string>
+    <string name="label_modify_plan_message">是否要修改今日的训练计划？这将清空今天已有的训练数据。</string>
 
     <string name="heading_select_plan_name">选择计划名称</string>
     <string name="heading_select_plan_items">选择动作</string>

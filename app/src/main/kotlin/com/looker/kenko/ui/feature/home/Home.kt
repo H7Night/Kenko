@@ -261,38 +261,30 @@ private fun TrainingActionBar(
     onChangePlan: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
+    Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+        FilledTonalButton(
+            onClick = onAddExercise,
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
         ) {
-            FilledTonalButton(
-                onClick = onAddExercise,
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(2.dp))
-                Text(stringResource(R.string.label_add_exercise), style = MaterialTheme.typography.labelSmall)
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            FilledTonalButton(
-                onClick = onChangePlan,
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
-            ) {
-                Icon(Icons.Rounded.SwapHoriz, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(2.dp))
-                Text(stringResource(R.string.label_change_plan), style = MaterialTheme.typography.labelSmall)
-            }
+            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(2.dp))
+            Text(stringResource(R.string.label_add_exercise), style = MaterialTheme.typography.labelSmall)
+        }
+        Spacer(modifier = Modifier.width(4.dp))
+        FilledTonalButton(
+            onClick = onChangePlan,
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+        ) {
+            Icon(Icons.Rounded.SwapHoriz, contentDescription = null, modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(2.dp))
+            Text(stringResource(R.string.label_change_plan), style = MaterialTheme.typography.labelSmall)
         }
     }
 }
