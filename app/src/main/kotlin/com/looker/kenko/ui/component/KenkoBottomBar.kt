@@ -15,16 +15,21 @@
 package com.looker.kenko.ui.component
 
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,67 +50,109 @@ fun KenkoBottomBar(
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    NavigationBar(
-        modifier = modifier.height(56.dp),
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 0.dp,
-        windowInsets = WindowInsets(0, 0, 0, 0)
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .shadow(elevation = 12.dp, shape = RoundedCornerShape(28.dp)),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        tonalElevation = 4.dp,
     ) {
-        val itemColors = NavigationBarItemDefaults.colors(
-            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-        )
-        
-        NavigationBarItem(
-            selected = currentRouteName == HomeRoute::class.qualifiedName,
-            onClick = onHomeClick,
-            icon = { 
-                Icon(
-                    painter = KenkoIcons.Home, 
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp)
-                ) 
-            },
-            colors = itemColors
-        )
-        if (isExerciseVisible) {
+        NavigationBar(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            tonalElevation = 0.dp,
+            windowInsets = WindowInsets(0, 0, 0, 0),
+        ) {
+            val itemColors = NavigationBarItemDefaults.colors(
+                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            )
+
             NavigationBarItem(
-                selected = currentRouteName == SessionDetailRoute::class.qualifiedName,
-                onClick = onExerciseClick,
-                icon = { 
+                selected = currentRouteName == HomeRoute::class.qualifiedName,
+                onClick = onHomeClick,
+                icon = {
                     Icon(
-                        painter = KenkoIcons.Plan, 
+                        painter = KenkoIcons.Home,
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp)
-                    ) 
+                        modifier = Modifier.size(22.dp),
+                    )
                 },
-                colors = itemColors
+                label = {
+                    Text(
+                        text = stringResource(R.string.label_home),
+                        fontSize = 10.sp,
+                    )
+                },
+                colors = itemColors,
+                alwaysShowLabel = true,
+            )
+            if (isExerciseVisible) {
+                NavigationBarItem(
+                    selected = currentRouteName == SessionDetailRoute::class.qualifiedName,
+                    onClick = onExerciseClick,
+                    icon = {
+                        Icon(
+                            painter = KenkoIcons.Plan,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = stringResource(R.string.label_today),
+                            fontSize = 10.sp,
+                        )
+                    },
+                    colors = itemColors,
+                    alwaysShowLabel = true,
+                )
+            }
+            NavigationBarItem(
+                selected = currentRouteName == SessionRoute::class.qualifiedName,
+                onClick = onHistoryClick,
+                icon = {
+                    Icon(
+                        painter = KenkoIcons.History,
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                    )
+                },
+                label = {
+                    Text(
+                        text = stringResource(R.string.label_records),
+                        fontSize = 10.sp,
+                    )
+                },
+                colors = itemColors,
+                alwaysShowLabel = true,
+            )
+            NavigationBarItem(
+                selected = currentRouteName == ProfileRoute::class.qualifiedName,
+                onClick = onProfileClick,
+                icon = {
+                    Icon(
+                        painter = KenkoIcons.Person,
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                    )
+                },
+                label = {
+                    Text(
+                        text = stringResource(R.string.label_profile),
+                        fontSize = 10.sp,
+                    )
+                },
+                colors = itemColors,
+                alwaysShowLabel = true,
             )
         }
-        NavigationBarItem(
-            selected = currentRouteName == SessionRoute::class.qualifiedName,
-            onClick = onHistoryClick,
-            icon = {
-                Icon(
-                    painter = KenkoIcons.History,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp)
-                )
-            },
-            colors = itemColors
-        )
-        NavigationBarItem(
-            selected = currentRouteName == ProfileRoute::class.qualifiedName,
-            onClick = onProfileClick,
-            icon = { 
-                Icon(
-                    painter = KenkoIcons.Person, 
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp)
-                ) 
-            },
-            colors = itemColors
-        )
     }
 }

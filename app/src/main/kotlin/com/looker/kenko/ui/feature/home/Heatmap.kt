@@ -81,13 +81,13 @@ fun TrainingHeatmap(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(12.dp)
+            .padding(10.dp)
             .clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .clickable(onClick = onClick)
-            .padding(top = 16.dp, bottom = 12.dp),
+            .padding(top = 14.dp, bottom = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(7.dp)
     ) {
         HeatmapHeader(
             displayedDate = displayedDate,

@@ -16,25 +16,34 @@ package com.looker.kenko.ui.feature.home
 
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
-import com.looker.kenko.domain.model.localDate
+import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
+import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.ui.component.timer.TimerManager
+import com.looker.kenko.ui.component.timer.TimerState
+import com.looker.kenko.ui.component.timer.TrainingSessionManager
+import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.datetime.LocalDate
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     planRepo: PlanRepo,
     sessionRepo: SessionRepo,
+    val timerManager: TimerManager,
+    val trainingSessionManager: TrainingSessionManager,
 ) : ViewModel() {
 
     private val planStream = planRepo.current
-
-    private val sessionStream = sessionRepo.streamByDate(localDate)
-
+    val sessionStream = sessionRepo.streamByDate(localDate)
     private val sessionsStream = sessionRepo.stream
 
     private val planItemStream = combine(
@@ -45,12 +54,29 @@ class HomeViewModel @Inject constructor(
         planItems.filter { it.dayOfWeek == day }
     }
 
-    val state = combine(
+    val planName: StateFlow<String?> = planStream.map { it?.name }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val planExercises: StateFlow<List<com.looker.kenko.domain.model.PlanItem>> = planItemStream
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val state: StateFlow<HomeUiData> = combine(
         planStream,
         sessionStream,
         sessionsStream,
         planItemStream,
-    ) { currentPlan, currentSession, sessions, planItems ->
+        timerManager.state,
+        trainingSessionManager.sessionState,
+    ) { array: Array<*> ->
+        val currentPlan = array[0] as? com.looker.kenko.domain.model.Plan
+        val currentSession = array[1] as? com.looker.kenko.domain.model.Session
+        @Suppress("UNCHECKED_CAST")
+        val sessions = array[2] as List<com.looker.kenko.domain.model.Session>
+        @Suppress("UNCHECKED_CAST")
+        val planItems = array[3] as List<com.looker.kenko.domain.model.PlanItem>
+        val timerState = array[4] as TimerState
+        val trainingState = array[5] as TrainingSessionState
+
         val isFirstSession = sessions.size <= 1 && sessions.firstOrNull()?.date == localDate
         HomeUiData(
             isPlanSelected = currentPlan != null,
@@ -59,17 +85,45 @@ class HomeViewModel @Inject constructor(
             isFirstSession = isFirstSession,
             currentPlanId = currentPlan?.id,
             sessionDates = sessions.map { it.date }.toSet(),
+            timerState = timerState,
+            trainingState = trainingState,
+            planName = currentPlan?.name,
+            todayExercises = planItems.mapNotNull { it.exercise },
         )
     }.asStateFlow(
         HomeUiData(
-            isPlanSelected = true,
+            isPlanSelected = false,
             isSessionStarted = false,
             isTodayEmpty = false,
             isFirstSession = false,
             currentPlanId = null,
             sessionDates = emptySet(),
+            timerState = TimerState.IDLE,
+            trainingState = TrainingSessionState.Idle,
+            planName = null,
+            todayExercises = emptyList(),
         ),
     )
+
+    fun startWorkout() {
+        trainingSessionManager.startTraining()
+    }
+
+    fun pauseWorkout() {
+        timerManager.pause()
+    }
+
+    fun resumeWorkout() {
+        timerManager.resume()
+    }
+
+    fun endWorkout() {
+        trainingSessionManager.endTraining()
+    }
+
+    fun dismissEndedSession() {
+        trainingSessionManager.reset()
+    }
 }
 
 @Immutable
@@ -80,4 +134,8 @@ data class HomeUiData(
     val isFirstSession: Boolean,
     val currentPlanId: Int?,
     val sessionDates: Set<LocalDate>,
+    val timerState: TimerState = TimerState.IDLE,
+    val trainingState: TrainingSessionState = TrainingSessionState.Idle,
+    val planName: String? = null,
+    val todayExercises: List<com.looker.kenko.domain.model.Exercise> = emptyList(),
 )

@@ -28,6 +28,7 @@
 
     <!--Sessions-->
     <string name="label_sessions_title">训练记录</string>
+    <string name="label_records">记录</string>
     <string name="label_delete_session_title">删除记录？</string>
     <string name="label_delete_session_message">这将永久删除此条训练记录及其所有组数信息。</string>
     <string name="label_export">导出</string>

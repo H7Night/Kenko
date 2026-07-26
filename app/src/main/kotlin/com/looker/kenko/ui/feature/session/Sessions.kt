@@ -52,6 +52,7 @@ import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.EmptyPage
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.dayName
+import com.looker.kenko.ui.feature.home.components.TrainingHeatmap
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.utils.DateFormat
@@ -179,6 +180,13 @@ private fun Sessions(
                 contentPadding = padding + PaddingValues(bottom = 96.dp, start = 14.dp, end = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                item {
+                    TrainingHeatmap(
+                        sessionDates = state.sessionDates,
+                        onClick = { },
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                }
                 items(
                     items = state.sessions,
                     key = { it.id!! },

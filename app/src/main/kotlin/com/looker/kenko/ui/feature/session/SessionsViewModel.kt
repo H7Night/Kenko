@@ -87,4 +87,6 @@ data class SessionsUiData(
     val isCurrentSessionActive: Boolean,
     val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),
     val dayTitles: Map<DayOfWeek, String> = emptyMap(),
-)
+) {
+    val sessionDates: Set<LocalDate> get() = sessions.map { it.date }.toSet()
+}

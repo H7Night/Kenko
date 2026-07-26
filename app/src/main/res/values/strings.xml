@@ -33,6 +33,7 @@
 
     <!--Sessions-->
     <string name="label_sessions_title">History</string>
+    <string name="label_records">Records</string>
     <string name="label_delete_session_title">Delete Session?</string>
     <string name="label_delete_session_message">This will permanently delete this session and all its sets.</string>
     <string name="label_export">Export</string>

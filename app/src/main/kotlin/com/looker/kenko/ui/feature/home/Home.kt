@@ -15,10 +15,10 @@
 package com.looker.kenko.ui.feature.home
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -30,38 +30,40 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
-import com.looker.kenko.ui.component.KenkoBorderWidth
-import com.looker.kenko.ui.component.TertiaryKenkoButton
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.ui.component.timer.TimerCard
+import com.looker.kenko.ui.component.timer.TrainingSessionState
+import com.looker.kenko.ui.component.timer.rememberNotificationPermissionState
 import com.looker.kenko.ui.feature.home.components.TrainingHeatmap
 import com.looker.kenko.ui.theme.KenkoIcons
-import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.ui.theme.header
 
 @Composable
@@ -74,26 +76,37 @@ fun Home(
     onCurrentPlanClick: (Int) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    Home(
-        state = state,
-        onProfileClick = onProfileClick,
-        onSelectPlanClick = onSelectPlanClick,
-        onExploreSessionsClick = onExploreSessionsClick,
-        onStartSessionClick = onStartSessionClick,
-        onCurrentPlanClick = onCurrentPlanClick,
-    )
-}
+    val timerSeconds by viewModel.timerManager.elapsedSeconds.collectAsStateWithLifecycle()
+    val notifState = rememberNotificationPermissionState()
 
-// TODO: Add current plan indicator on this page
-@Composable
-private fun Home(
-    state: HomeUiData,
-    onProfileClick: () -> Unit = {},
-    onSelectPlanClick: () -> Unit = {},
-    onExploreSessionsClick: () -> Unit = {},
-    onStartSessionClick: () -> Unit = {},
-    onCurrentPlanClick: (Int) -> Unit = {},
-) {
+    var showEndConfirm by remember { mutableStateOf(false) }
+
+    if (showEndConfirm) {
+        AlertDialog(
+            onDismissRequest = { showEndConfirm = false },
+            title = { Text(stringResource(R.string.label_end_workout)) },
+            text = { Text(stringResource(R.string.label_end_workout_confirm)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.endWorkout()
+                        showEndConfirm = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                    ),
+                ) {
+                    Text(stringResource(R.string.label_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEndConfirm = false }) {
+                    Text(stringResource(R.string.label_cancel))
+                }
+            },
+        )
+    }
+
     Scaffold { innerPadding ->
         Column(
             modifier = Modifier
@@ -101,129 +114,240 @@ private fun Home(
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding),
         ) {
+            TimerCard(
+                timerState = state.timerState,
+                elapsedSeconds = timerSeconds,
+                notificationGranted = notifState.granted,
+                onStart = {
+                    if (!notifState.granted) {
+                        notifState.request()
+                    } else {
+                        viewModel.startWorkout()
+                    }
+                },
+                onPause = viewModel::pauseWorkout,
+                onResume = viewModel::resumeWorkout,
+                onEnd = { showEndConfirm = true },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+
             AnimatedContent(
-                targetState = state.isPlanSelected,
-                label = "plan_status",
-            ) { isPlanActive ->
-                if (isPlanActive) {
+                targetState = state.trainingState !is TrainingSessionState.Active,
+                label = "heatmap",
+            ) { showHeatmap ->
+                if (showHeatmap && state.isPlanSelected) {
                     TrainingHeatmap(
                         sessionDates = state.sessionDates,
                         onClick = onExploreSessionsClick,
                     )
                 }
             }
-            if (state.isPlanSelected) {
-                StartSession(
-                    onStartSessionClick = onStartSessionClick,
-                    content = {
-                        val heading = remember(state.isSessionStarted, state.isTodayEmpty) {
-                            if (state.isSessionStarted) {
-                                R.string.label_continue_session_heading
-                            } else if (state.isTodayEmpty) {
-                                R.string.label_rest_day_heading
-                            } else {
-                                if (state.isFirstSession) {
-                                    R.string.label_start_first_session
-                                } else {
-                                    R.string.label_start_session_heading
-                                }
-                            }
-                        }
-                        Text(
-                            modifier = Modifier
-                                .align(CenterHorizontally)
-                                .padding(horizontal = 16.dp),
-                            text = stringResource(heading),
-                            style = MaterialTheme.typography.header()
-                                .merge(
-                                    lineBreak = LineBreak.Heading,
-                                    color = MaterialTheme.colorScheme.primary,
-                                ),
-                        )
-                    },
-                    buttonText = {
-                        val stringRes = remember(state.isSessionStarted) {
-                            if (state.isSessionStarted) {
-                                R.string.label_continue_session
-                            } else {
-                                R.string.label_start_session
-                            }
-                        }
-                        Text(text = stringResource(stringRes))
-                    },
+
+            when (state.trainingState) {
+                is TrainingSessionState.Idle,
+                is TrainingSessionState.Ended -> {
+                    PlanStatusCard(
+                        isPlanSelected = state.isPlanSelected,
+                        planName = state.planName,
+                        todayExercises = state.todayExercises,
+                        isTodayEmpty = state.isTodayEmpty,
+                        isSessionStarted = state.isSessionStarted,
+                        onSelectPlanClick = onSelectPlanClick,
+                        onStartSessionClick = onStartSessionClick,
+                    )
+                }
+                is TrainingSessionState.Active -> {
+                    TrainingSessionCard(
+                        onAddExercise = onStartSessionClick,
+                        onChangePlan = onSelectPlanClick,
+                        onHistoryClick = onExploreSessionsClick,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PlanStatusCard(
+    isPlanSelected: Boolean,
+    planName: String?,
+    todayExercises: List<Exercise>,
+    isTodayEmpty: Boolean,
+    isSessionStarted: Boolean,
+    onSelectPlanClick: () -> Unit,
+    onStartSessionClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (!isPlanSelected) {
+        SelectPlan(onSelectPlanClick = onSelectPlanClick)
+        return
+    }
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            if (planName != null) {
+                Text(
+                    text = stringResource(R.string.label_current_plan_title, planName),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
                 )
-            } else {
-                SelectPlan(onSelectPlanClick = onSelectPlanClick)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            Text(
+                text = stringResource(R.string.label_today_plan),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+
+            if (isTodayEmpty) {
+                Text(
+                    text = stringResource(R.string.label_no_plan_today),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.label_train_anyway_prompt),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else if (todayExercises.isNotEmpty()) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    todayExercises.forEach { exercise ->
+                        Surface(
+                            shape = MaterialTheme.shapes.small,
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                        ) {
+                            Text(
+                                text = exercise.name,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onStartSessionClick,
+            ) {
+                Text(
+                    if (isSessionStarted) stringResource(R.string.label_continue_session)
+                    else stringResource(R.string.label_start_session)
+                )
             }
         }
     }
 }
 
 @Composable
-private fun ColumnScope.StartSession(
-    onStartSessionClick: () -> Unit,
-    content: @Composable () -> Unit,
-    buttonText: @Composable () -> Unit,
+private fun TrainingSessionCard(
+    onAddExercise: () -> Unit,
+    onChangePlan: () -> Unit,
+    onHistoryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.label_training_session),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilledTonalButton(
+                    onClick = onAddExercise,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(
+                        painter = KenkoIcons.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.label_add_exercise))
+                }
+                FilledTonalButton(
+                    onClick = onChangePlan,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.label_change_plan))
+                }
+                FilledTonalButton(
+                    onClick = onHistoryClick,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.label_session))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelectPlan(
+    onSelectPlanClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .weight(1f),
-        horizontalAlignment = CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        content()
-    }
-    TertiaryKenkoButton(
-        modifier = Modifier
-            .align(CenterHorizontally)
-            .padding(bottom = 16.dp),
-        onClick = onStartSessionClick,
-        label = buttonText,
-        icon = {
+        Text(
+            text = stringResource(R.string.label_selecting_a_plan),
+            style = MaterialTheme.typography.header().copy(
+                lineBreak = LineBreak.Heading,
+            ),
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = onSelectPlanClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = MaterialTheme.colorScheme.onTertiary,
+            ),
+            contentPadding = PaddingValues(
+                vertical = 24.dp,
+                horizontal = 40.dp,
+            ),
+        ) {
+            Text(text = stringResource(R.string.label_select_plan_one))
+            Spacer(modifier = Modifier.width(12.dp))
             Icon(
-                modifier = Modifier.size(18.dp),
                 painter = KenkoIcons.ArrowOutward,
                 contentDescription = null,
             )
-        },
-    )
-}
-
-@Composable
-private fun ColumnScope.SelectPlan(
-    onSelectPlanClick: () -> Unit,
-) {
-    Spacer(modifier = Modifier.weight(1F))
-    Text(
-        modifier = Modifier
-            .align(CenterHorizontally)
-            .padding(horizontal = 16.dp),
-        text = stringResource(R.string.label_selecting_a_plan),
-        style = MaterialTheme.typography.header().copy(
-            lineBreak = LineBreak.Heading,
-        ),
-        color = MaterialTheme.colorScheme.primary,
-    )
-    Spacer(modifier = Modifier.weight(1F))
-    Button(
-        modifier = Modifier.align(CenterHorizontally),
-        onClick = onSelectPlanClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.tertiary,
-            contentColor = MaterialTheme.colorScheme.onTertiary,
-        ),
-        contentPadding = PaddingValues(
-            vertical = 24.dp,
-            horizontal = 40.dp,
-        ),
-    ) {
-        Text(text = stringResource(R.string.label_select_plan_one))
-        Spacer(modifier = Modifier.width(12.dp))
-        Icon(
-            painter = KenkoIcons.ArrowOutward,
-            contentDescription = null,
-        )
+        }
     }
 }
 
@@ -234,91 +358,8 @@ private fun KenkoTopBar(
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     TopAppBar(
-        title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.ic_app_icon),
-                    contentDescription = null,
-                    modifier = Modifier.clip(CircleShape)
-                )
-                Text(
-                    text = "KENKO",
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-        },
+        title = { Text(text = "KENKO") },
         actions = actions,
         modifier = modifier,
     )
-}
-
-@Preview
-@Composable
-private fun HomePreview() {
-    KenkoTheme {
-        Home(
-            state = HomeUiData(
-                isPlanSelected = true,
-                isSessionStarted = true,
-                isTodayEmpty = false,
-                isFirstSession = false,
-                currentPlanId = null,
-                sessionDates = emptySet(),
-            ),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun StartTodayPreview() {
-    KenkoTheme {
-        Home(
-            state = HomeUiData(
-                isPlanSelected = true,
-                isSessionStarted = false,
-                isTodayEmpty = false,
-                isFirstSession = false,
-                currentPlanId = null,
-                sessionDates = emptySet(),
-            ),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun TodayEmptyPreview() {
-    KenkoTheme {
-        Home(
-            state = HomeUiData(
-                isPlanSelected = true,
-                isSessionStarted = false,
-                isTodayEmpty = true,
-                isFirstSession = false,
-                currentPlanId = null,
-                sessionDates = emptySet(),
-            ),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun FirstStartHomePreview() {
-    KenkoTheme {
-        Home(
-            state = HomeUiData(
-                isPlanSelected = false,
-                isSessionStarted = false,
-                isTodayEmpty = false,
-                isFirstSession = true,
-                currentPlanId = null,
-                sessionDates = emptySet(),
-            ),
-        )
-    }
 }

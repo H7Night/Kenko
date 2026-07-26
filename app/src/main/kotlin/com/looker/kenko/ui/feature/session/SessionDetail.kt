@@ -64,6 +64,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
@@ -84,6 +87,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Set
+import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.feature.session.AddSet
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.KenkoBorderWidth
@@ -568,18 +572,23 @@ private fun ExerciseSearchDialog(
     onCreateNew: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var nameQuery by remember { mutableStateOf("") }
-    var tagQuery by remember { mutableStateOf("") }
     var selectedExercise by remember { mutableStateOf<Exercise?>(null) }
+    var selectedTag by remember { mutableStateOf<Tag?>(null) }
+    var tagExpanded by remember { mutableStateOf(false) }
 
-    val filteredExercises = remember(nameQuery, tagQuery, exercises) {
+    val allTags = remember(exercises) {
+        exercises.flatMap { it.tags }
+            .distinctBy { it.id }
+            .sortedBy { it.sortOrder }
+    }
+
+    val filteredExercises = remember(selectedTag, exercises) {
         var filtered = exercises
-        if (nameQuery.isNotBlank()) {
-            filtered = filtered.filter { it.name.contains(nameQuery, ignoreCase = true) }
-        }
-        if (tagQuery.isNotBlank()) {
+        val currentTag = selectedTag
+        if (currentTag != null) {
+            val tagId = currentTag.id
             filtered = filtered.filter { exercise ->
-                exercise.tags.any { it.name.contains(tagQuery, ignoreCase = true) }
+                exercise.tags.any { it.id == tagId }
             }
         }
         filtered
@@ -590,21 +599,44 @@ private fun ExerciseSearchDialog(
         title = { Text(stringResource(R.string.label_select_exercise)) },
         text = {
             Column {
-                OutlinedTextField(
-                    value = nameQuery,
-                    onValueChange = { nameQuery = it },
-                    label = { Text(stringResource(R.string.label_search_exercise)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = tagQuery,
-                    onValueChange = { tagQuery = it },
-                    label = { Text(stringResource(R.string.label_search_tag)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                ExposedDropdownMenuBox(
+                    expanded = tagExpanded,
+                    onExpandedChange = { tagExpanded = it },
+                ) {
+                    OutlinedTextField(
+                        value = selectedTag?.name
+                            ?: stringResource(R.string.label_search_tag),
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = tagExpanded) },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth(),
+                        singleLine = true,
+                    )
+                    ExposedDropdownMenu(
+                        expanded = tagExpanded,
+                        onDismissRequest = { tagExpanded = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                            onClick = {
+                                selectedTag = null
+                                tagExpanded = false
+                            },
+                        )
+                        allTags.forEach { tag ->
+                            val label = tag.parentName?.let { "${it} → ${tag.name}" } ?: tag.name
+                            DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = {
+                                    selectedTag = tag
+                                    tagExpanded = false
+                                },
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyColumn(
                     modifier = Modifier.height(300.dp),
@@ -630,16 +662,6 @@ private fun ExerciseSearchDialog(
                                 )
                             }
                         }
-                    }
-                }
-                if (nameQuery.isNotBlank() && filteredExercises.isEmpty()) {
-                    TextButton(
-                        onClick = { onCreateNew(nameQuery.trim()) },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.label_create_exercise_name, nameQuery.trim()),
-                        )
                     }
                 }
             }

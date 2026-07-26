@@ -17,24 +17,25 @@ package com.looker.kenko.ui.component.timer
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import androidx.lifecycle.LifecycleService
-import androidx.lifecycle.lifecycleScope
 import com.looker.kenko.R
 import com.looker.kenko.ui.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class TimerService : LifecycleService() {
+class TimerService : Service() {
 
     @Inject
     lateinit var timerManager: TimerManager
@@ -49,6 +50,9 @@ class TimerService : LifecycleService() {
         timerManager.registerService(this)
     }
 
+    private val serviceScope = CoroutineScope(Dispatchers.Default + Job())
+    private var tickerJob: Job? = null
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START -> {
@@ -57,6 +61,7 @@ class TimerService : LifecycleService() {
                 startTicker()
             }
             ACTION_STOP -> {
+                tickerJob?.cancel()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
@@ -64,13 +69,17 @@ class TimerService : LifecycleService() {
         return START_STICKY
     }
 
+    override fun onBind(intent: Intent?): IBinder? = null
+
     override fun onDestroy() {
         timerManager.unregisterService()
+        serviceScope.cancel()
         super.onDestroy()
     }
 
     private fun startTicker() {
-        lifecycleScope.launch {
+        tickerJob?.cancel()
+        tickerJob = serviceScope.launch {
             while (isActive) {
                 val elapsed = timerManager.elapsedSeconds.value
                 updateNotification(elapsed)
