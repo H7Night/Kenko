@@ -90,6 +90,7 @@
     <string name="label_create_exercise_name">创建「%s」</string>
     <string name="label_select_exercise">选择动作</string>
     <string name="label_search">搜索</string>
+    <string name="label_search_tag">搜索标签</string>
 
     <!--Add Exercises-->
     <string name="label_new_exercise">添加动作</string>

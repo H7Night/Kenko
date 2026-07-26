@@ -99,6 +99,7 @@
     <string name="label_create_exercise_name">Create \"%s\"</string>
     <string name="label_select_exercise">Select Exercise</string>
     <string name="label_search">Search</string>
+    <string name="label_search_tag">Search Tag</string>
 
     <!--Add Exercises-->
     <string name="label_new_exercise">Add Exercise</string>

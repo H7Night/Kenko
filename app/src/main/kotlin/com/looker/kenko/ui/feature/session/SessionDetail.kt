@@ -64,9 +64,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
@@ -87,7 +84,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Set
-import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.feature.session.AddSet
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.KenkoBorderWidth
@@ -99,8 +95,6 @@ import com.looker.kenko.ui.feature.plan.components.dayName
 import com.looker.kenko.ui.feature.session.components.SetItem
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
-import com.looker.kenko.ui.theme.end
-import com.looker.kenko.ui.theme.start
 import com.looker.kenko.utils.DateFormat
 import com.looker.kenko.utils.formatDate
 import java.util.*
@@ -574,44 +568,19 @@ private fun ExerciseSearchDialog(
     onCreateNew: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val parentTags = remember(exercises) {
-        exercises.flatMap { it.tags }
-            .filter { it.parentId == null }
-            .distinctBy { it.id }
-            .sortedBy { it.sortOrder }
-    }
-
-    var selectedParentId by remember { mutableStateOf<Int?>(null) }
-    var selectedChildId by remember { mutableStateOf<Int?>(null) }
-    var searchQuery by remember { mutableStateOf("") }
+    var nameQuery by remember { mutableStateOf("") }
+    var tagQuery by remember { mutableStateOf("") }
     var selectedExercise by remember { mutableStateOf<Exercise?>(null) }
-    var parentExpanded by remember { mutableStateOf(false) }
-    var childExpanded by remember { mutableStateOf(false) }
 
-    val childTags = remember(selectedParentId, exercises) {
-        if (selectedParentId != null) {
-            exercises.flatMap { it.tags }
-                .filter { it.parentId == selectedParentId }
-                .distinctBy { it.id }
-                .sortedBy { it.sortOrder }
-        } else {
-            emptyList()
-        }
-    }
-
-    val filteredExercises = remember(searchQuery, selectedParentId, selectedChildId, exercises) {
+    val filteredExercises = remember(nameQuery, tagQuery, exercises) {
         var filtered = exercises
-        if (selectedChildId != null) {
-            filtered = filtered.filter { exercise ->
-                exercise.tags.any { it.id == selectedChildId }
-            }
-        } else if (selectedParentId != null) {
-            filtered = filtered.filter { exercise ->
-                exercise.tags.any { it.parentId == selectedParentId }
-            }
+        if (nameQuery.isNotBlank()) {
+            filtered = filtered.filter { it.name.contains(nameQuery, ignoreCase = true) }
         }
-        if (searchQuery.isNotBlank()) {
-            filtered = filtered.filter { it.name.contains(searchQuery, ignoreCase = true) }
+        if (tagQuery.isNotBlank()) {
+            filtered = filtered.filter { exercise ->
+                exercise.tags.any { it.name.contains(tagQuery, ignoreCase = true) }
+            }
         }
         filtered
     }
@@ -622,106 +591,20 @@ private fun ExerciseSearchDialog(
         text = {
             Column {
                 OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    label = { Text(stringResource(R.string.label_search)) },
+                    value = nameQuery,
+                    onValueChange = { nameQuery = it },
+                    label = { Text(stringResource(R.string.label_search_exercise)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(
+                OutlinedTextField(
+                    value = tagQuery,
+                    onValueChange = { tagQuery = it },
+                    label = { Text(stringResource(R.string.label_search_tag)) },
+                    singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    // Parent tag dropdown
-                    Box(modifier = Modifier.weight(1f)) {
-                        ExposedDropdownMenuBox(
-                            expanded = parentExpanded,
-                            onExpandedChange = { parentExpanded = it },
-                        ) {
-                            OutlinedTextField(
-                                value = if (selectedParentId == null) {
-                                    stringResource(R.string.label_all_muscle_groups)
-                                } else {
-                                    parentTags.find { it.id == selectedParentId }?.name ?: ""
-                                },
-                                onValueChange = {},
-                                readOnly = true,
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = parentExpanded) },
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth(),
-                                singleLine = true,
-                            )
-                            ExposedDropdownMenu(
-                                expanded = parentExpanded,
-                                onDismissRequest = { parentExpanded = false },
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.label_all_muscle_groups)) },
-                                    onClick = {
-                                        selectedParentId = null
-                                        selectedChildId = null
-                                        parentExpanded = false
-                                    },
-                                )
-                                parentTags.forEach { tag ->
-                                    DropdownMenuItem(
-                                        text = { Text(tag.name) },
-                                        onClick = {
-                                            selectedParentId = tag.id
-                                            selectedChildId = null
-                                            parentExpanded = false
-                                            childExpanded = true
-                                        },
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    // Child tag dropdown
-                    if (selectedParentId != null && childTags.isNotEmpty()) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ExposedDropdownMenuBox(
-                                expanded = childExpanded,
-                                onExpandedChange = { childExpanded = it },
-                            ) {
-                                OutlinedTextField(
-                                    value = childTags.find { it.id == selectedChildId }?.name
-                                        ?: stringResource(R.string.label_all_muscle_groups),
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = childExpanded) },
-                                    modifier = Modifier
-                                        .menuAnchor()
-                                        .fillMaxWidth(),
-                                    singleLine = true,
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = childExpanded,
-                                    onDismissRequest = { childExpanded = false },
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.label_all_muscle_groups)) },
-                                        onClick = {
-                                            selectedChildId = null
-                                            childExpanded = false
-                                        },
-                                    )
-                                    childTags.forEach { tag ->
-                                        DropdownMenuItem(
-                                            text = { Text(tag.name) },
-                                            onClick = {
-                                                selectedChildId = tag.id
-                                                childExpanded = false
-                                            },
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyColumn(
                     modifier = Modifier.height(300.dp),
@@ -749,13 +632,13 @@ private fun ExerciseSearchDialog(
                         }
                     }
                 }
-                if (searchQuery.isNotBlank() && filteredExercises.isEmpty()) {
+                if (nameQuery.isNotBlank() && filteredExercises.isEmpty()) {
                     TextButton(
-                        onClick = { onCreateNew(searchQuery.trim()) },
+                        onClick = { onCreateNew(nameQuery.trim()) },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(
-                            text = stringResource(R.string.label_create_exercise_name, searchQuery.trim()),
+                            text = stringResource(R.string.label_create_exercise_name, nameQuery.trim()),
                         )
                     }
                 }
