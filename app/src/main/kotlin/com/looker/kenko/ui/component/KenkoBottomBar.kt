@@ -59,7 +59,7 @@ fun KenkoBottomBar(
         NavigationBar(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(64.dp),
+                .height(80.dp),
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
             tonalElevation = 0.dp,
             windowInsets = WindowInsets(0, 0, 0, 0),
