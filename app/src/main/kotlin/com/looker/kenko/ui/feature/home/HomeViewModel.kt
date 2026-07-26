@@ -35,13 +35,15 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.launch
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel @Inject constructor(
     planRepo: PlanRepo,
-    sessionRepo: SessionRepo,
+    private val sessionRepo: SessionRepo,
     exerciseRepo: ExerciseRepo,
     val timerManager: TimerManager,
     val trainingSessionManager: TrainingSessionManager,
@@ -64,6 +66,20 @@ class HomeViewModel @Inject constructor(
 
     val allExercises: StateFlow<List<com.looker.kenko.domain.model.Exercise>> = exerciseRepo.stream
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val availablePlanDays: StateFlow<Map<DayOfWeek, List<com.looker.kenko.domain.model.PlanItem>>> =
+        planRepo.planItems.map { items ->
+            items.groupBy { it.dayOfWeek }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    val previousSessionDate: StateFlow<LocalDate?> = combine(
+        planStream,
+        sessionStream,
+    ) { plan, session ->
+        val day = session?.planDayOverride ?: localDate.dayOfWeek
+        sessionRepo.previousSessionDate(localDate, plan?.id, day)
+    }.flatMapLatest { it }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val planExercises: StateFlow<List<com.looker.kenko.domain.model.PlanItem>> = planItemStream
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -146,6 +162,19 @@ class HomeViewModel @Inject constructor(
 
     fun dismissEndedSession() {
         trainingSessionManager.reset()
+    }
+
+    fun importPlanFromDay(day: DayOfWeek) {
+        viewModelScope.launch {
+            sessionRepo.clearSets(localDate)
+            sessionRepo.updatePlanDay(localDate, day)
+        }
+    }
+
+    fun clearTodaySets() {
+        viewModelScope.launch {
+            sessionRepo.clearSets(localDate)
+        }
     }
 }
 

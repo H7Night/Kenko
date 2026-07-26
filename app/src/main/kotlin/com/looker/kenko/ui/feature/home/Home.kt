@@ -41,16 +41,19 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,7 +76,9 @@ import com.looker.kenko.ui.feature.session.components.SetItem
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.header
 import com.looker.kenko.ui.theme.numbers
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Home(
     viewModel: HomeViewModel,
@@ -87,7 +92,10 @@ fun Home(
     val sessionSets by viewModel.sessionSets.collectAsStateWithLifecycle()
     val timerSeconds by viewModel.timerManager.elapsedSeconds.collectAsStateWithLifecycle()
     val allExercises by viewModel.allExercises.collectAsStateWithLifecycle()
+    val availablePlanDays by viewModel.availablePlanDays.collectAsStateWithLifecycle()
+    val previousSessionDate by viewModel.previousSessionDate.collectAsStateWithLifecycle()
     val notifState = rememberNotificationPermissionState()
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         if (!notifState.granted) {
@@ -98,6 +106,8 @@ fun Home(
     var showEndConfirm by remember { mutableStateOf(false) }
     var addSetExercise by remember { mutableStateOf<Exercise?>(null) }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
+    var showImportConfirm by remember { mutableStateOf(false) }
+    var showImportSheet by remember { mutableStateOf(false) }
 
     if (showEndConfirm) {
         AlertDialog(
@@ -148,6 +158,61 @@ fun Home(
         )
     }
 
+    // Import plan confirmation dialog
+    if (showImportConfirm) {
+        AlertDialog(
+            onDismissRequest = { showImportConfirm = false },
+            title = { Text(stringResource(R.string.label_modify_plan)) },
+            text = { Text(stringResource(R.string.label_modify_plan_message)) },
+            confirmButton = {
+                Button(onClick = {
+                    showImportConfirm = false
+                    showImportSheet = true
+                }) {
+                    Text(stringResource(R.string.label_yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImportConfirm = false }) {
+                    Text(stringResource(R.string.label_no))
+                }
+            },
+        )
+    }
+
+    // Import plan bottom sheet
+    if (showImportSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showImportSheet = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ) {
+            Text(
+                text = stringResource(R.string.label_import_plan),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(16.dp),
+            )
+            Column(
+                modifier = Modifier.padding(bottom = 32.dp),
+            ) {
+                availablePlanDays.toSortedMap().forEach { (day, items) ->
+                    Button(
+                        onClick = {
+                            viewModel.importPlanFromDay(day)
+                            showImportSheet = false
+                        },
+                        shape = MaterialTheme.shapes.large,
+                        contentPadding = PaddingValues(vertical = 12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                    ) {
+                        Text(text = day.toString())
+                    }
+                }
+            }
+        }
+    }
+
     Scaffold { innerPadding ->
         Column(
             modifier = Modifier
@@ -186,8 +251,12 @@ fun Home(
                 is TrainingSessionState.Active -> {
                     TrainingActionBar(
                         onAddExercise = { showAddExerciseDialog = true },
-                        onChangePlan = onSelectPlanClick,
-                        onHistory = onStartSessionClick,
+                        onChangePlan = { showImportConfirm = true },
+                        onHistory = {
+                            previousSessionDate?.let { date ->
+                                onStartSessionClick() // navigate to session detail
+                            }
+                        },
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     InlineTrainingContent(
