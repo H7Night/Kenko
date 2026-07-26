@@ -445,9 +445,9 @@ fun SessionCard(
     onClick: () -> Unit = {},
 ) {
     val containerColor = if (session.date.isToday) {
-        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
+        MaterialTheme.colorScheme.tertiaryContainer
     } else {
-        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
+        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
     }
     Surface(
         modifier = modifier,

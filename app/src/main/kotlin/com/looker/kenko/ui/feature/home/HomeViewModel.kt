@@ -32,6 +32,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -60,6 +61,16 @@ class HomeViewModel @Inject constructor(
     ) { session, planItems ->
         val day = session?.planDayOverride ?: localDate.dayOfWeek
         planItems.filter { it.dayOfWeek == day }
+    }
+
+    init {
+        viewModelScope.launch {
+            val existingSession = sessionRepo.streamByDate(localDate).first()
+            val existingDuration = existingSession?.durationSeconds ?: 0L
+            if (existingDuration > 0 && timerManager.state.value == TimerState.IDLE) {
+                timerManager.setElapsedSeconds(existingDuration)
+            }
+        }
     }
 
     val planName: StateFlow<String?> = planStream.map { it?.name }

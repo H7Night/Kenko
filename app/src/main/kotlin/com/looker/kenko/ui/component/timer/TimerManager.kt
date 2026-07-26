@@ -103,6 +103,10 @@ class TimerManager @Inject constructor(
         _elapsedSeconds.value = 0L
     }
 
+    fun setElapsedSeconds(seconds: Long) {
+        _elapsedSeconds.value = seconds
+    }
+
     private fun startTicker() {
         tickerJob?.cancel()
         tickerJob = scope.launch {
