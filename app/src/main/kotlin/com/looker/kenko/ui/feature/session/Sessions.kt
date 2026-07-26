@@ -52,6 +52,7 @@ import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.EmptyPage
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.dayName
+import com.looker.kenko.ui.component.timer.TimerService
 import com.looker.kenko.ui.feature.home.components.TrainingHeatmap
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
@@ -368,6 +369,16 @@ fun SessionCard(
                 }
             }
             Text(text = string)
+
+            // Duration
+            if (session.durationSeconds != null && session.durationSeconds > 0) {
+                val durationText = TimerService.formatTime(session.durationSeconds)
+                Text(
+                    text = durationText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline,
+                )
+            }
 
             val exerciseNames = remember(session.performExercises) {
                 session.performExercises.joinToString { it.name }

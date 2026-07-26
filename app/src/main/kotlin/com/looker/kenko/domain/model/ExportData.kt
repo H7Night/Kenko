@@ -30,6 +30,7 @@ data class ExportSession(
     val date: LocalDate,
     val sets: List<ExportSet>,
     val planId: Int?,
+    val durationSeconds: Long? = null,
 )
 
 @Serializable
@@ -38,6 +39,8 @@ data class ExportSet(
     val weight: Float,
     val exerciseName: String,
     val exerciseTarget: String,
+    val rir: Int? = null,
+    val setType: String? = null,
 )
 
 @Serializable
@@ -52,8 +55,10 @@ data class ExportPlan(
 data class ExportExercise(
     val name: String,
     val target: String,
-    val isBodyweight: Boolean,
-    val isIsometric: Boolean,
+    val tags: List<String> = emptyList(),
+    val countType: String = "REPS",
+    val isBodyweight: Boolean = false,
+    val isIsometric: Boolean = false,
 )
 
 @Serializable

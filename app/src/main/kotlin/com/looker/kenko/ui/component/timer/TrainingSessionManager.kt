@@ -57,6 +57,11 @@ class TrainingSessionManager @Inject constructor(
             timerManager.stop()
 
             if (sessionId != null) {
+                // Save duration to session
+                if (elapsed > 0) {
+                    sessionRepo.updateSessionDuration(sessionId, elapsed)
+                }
+
                 val sets = sessionRepo.getSets(sessionId)
                 if (sets.isEmpty() && elapsed < 60) {
                     sessionRepo.deleteSession(

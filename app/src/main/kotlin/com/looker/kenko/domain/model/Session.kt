@@ -24,6 +24,7 @@ data class Session(
     val sets: List<Set>,
     val planId: Int?,
     val planDayOverride: DayOfWeek? = null,
+    val durationSeconds: Long? = null,
     val id: Int? = null,
 ) {
     val performExercises: List<Exercise>

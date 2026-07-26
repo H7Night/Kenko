@@ -28,6 +28,7 @@ fun Session.data(): SessionDataEntity = SessionDataEntity(
     date = EpochDays(date.toEpochDays().toInt()),
     planId = planId,
     planDayOverride = planDayOverride?.isoDayNumber,
+    durationSeconds = durationSeconds,
     id = id ?: 0,
 )
 
@@ -42,5 +43,6 @@ fun SessionEntity.toExternal(
     date = LocalDate.fromEpochDays(data.date.value),
     sets = setsMap,
     planDayOverride = data.planDayOverride?.let { DayOfWeek(it) },
+    durationSeconds = data.durationSeconds,
     id = data.id,
 )

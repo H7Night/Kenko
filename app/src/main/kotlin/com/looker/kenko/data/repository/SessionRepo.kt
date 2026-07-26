@@ -47,6 +47,8 @@ interface SessionRepo {
 
     suspend fun updatePlanDay(date: LocalDate, day: DayOfWeek)
 
+    suspend fun updateSessionDuration(sessionId: Int, durationSeconds: Long)
+
     suspend fun getSessionIdOrCreate(date: LocalDate): Int
 
     fun streamByDate(date: LocalDate): Flow<Session?>

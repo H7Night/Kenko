@@ -99,6 +99,10 @@ class LocalSessionRepo @Inject constructor(
         dao.updatePlanDayOverride(date.toLocalEpochDays(), day.isoDayNumber)
     }
 
+    override suspend fun updateSessionDuration(sessionId: Int, durationSeconds: Long) {
+        dao.updateDuration(sessionId, durationSeconds)
+    }
+
     override suspend fun getSessionIdOrCreate(date: LocalDate): Int {
         val currentPlanId = requireNotNull(historyDao.getCurrentId()) { "No plan active" }
         val existingId = dao.getSessionId(date.toLocalEpochDays())
