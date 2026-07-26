@@ -17,6 +17,7 @@ package com.looker.kenko.ui.feature.home
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.domain.model.localDate
@@ -41,6 +42,7 @@ import kotlinx.datetime.LocalDate
 class HomeViewModel @Inject constructor(
     planRepo: PlanRepo,
     sessionRepo: SessionRepo,
+    exerciseRepo: ExerciseRepo,
     val timerManager: TimerManager,
     val trainingSessionManager: TrainingSessionManager,
 ) : ViewModel() {
@@ -60,12 +62,25 @@ class HomeViewModel @Inject constructor(
     val planName: StateFlow<String?> = planStream.map { it?.name }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val allExercises: StateFlow<List<com.looker.kenko.domain.model.Exercise>> = exerciseRepo.stream
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val planExercises: StateFlow<List<com.looker.kenko.domain.model.PlanItem>> = planItemStream
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val sessionSets: StateFlow<Map<com.looker.kenko.domain.model.Exercise, List<com.looker.kenko.domain.model.Set>>> =
-        sessionStream.map { session ->
-            session?.sets?.groupBy { it.exercise } ?: emptyMap()
+        combine(sessionStream, planItemStream) { session, planItems ->
+            val fromPlan = planItems.map { it.exercise }.distinct()
+            val fromSession = session?.sets?.groupBy { it.exercise } ?: emptyMap()
+            // Ensure all planned exercises are present, even with empty sets
+            val result = fromPlan.associateWith { exercise ->
+                fromSession[exercise] ?: emptyList()
+            }.toMutableMap()
+            // Also include exercises that have sets but aren't in today's plan
+            fromSession.forEach { (ex, sets) ->
+                if (ex !in result) result[ex] = sets
+            }
+            result.toMap()
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     val state: StateFlow<HomeUiData> = combine(
@@ -100,7 +115,7 @@ class HomeViewModel @Inject constructor(
         )
     }.asStateFlow(
         HomeUiData(
-            isPlanSelected = false,
+            isPlanSelected = true,
             isSessionStarted = false,
             isTodayEmpty = false,
             isFirstSession = false,

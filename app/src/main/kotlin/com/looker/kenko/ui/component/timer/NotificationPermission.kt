@@ -15,6 +15,8 @@
 package com.looker.kenko.ui.component.timer
 
 import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,10 +25,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 
 @Composable
 fun rememberNotificationPermissionState(): NotificationPermissionState {
-    var granted by remember { mutableStateOf(checkPermission()) }
+    val context = LocalContext.current
+    var granted by remember { mutableStateOf(checkPermission(context)) }
 
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -51,7 +56,9 @@ data class NotificationPermissionState(
     val request: () -> Unit,
 )
 
-private fun checkPermission(): Boolean {
+private fun checkPermission(context: Context): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
-    return true // We'll check at runtime; for the UI state default to true
+    return ContextCompat.checkSelfPermission(
+        context, Manifest.permission.POST_NOTIFICATIONS
+    ) == PackageManager.PERMISSION_GRANTED
 }

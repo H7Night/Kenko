@@ -566,7 +566,7 @@ private fun SessionError(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExerciseSearchDialog(
+fun ExerciseSearchDialog(
     exercises: List<Exercise>,
     onExerciseSelected: (Exercise) -> Unit,
     onCreateNew: (String) -> Unit,

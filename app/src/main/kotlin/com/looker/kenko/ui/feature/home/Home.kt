@@ -28,16 +28,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -66,6 +67,7 @@ import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.timer.TimerCard
 import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.ui.component.timer.rememberNotificationPermissionState
+import com.looker.kenko.ui.feature.session.ExerciseSearchDialog
 import com.looker.kenko.ui.feature.session.AddSetSheet
 import com.looker.kenko.ui.feature.session.components.SetItem
 import com.looker.kenko.ui.theme.KenkoIcons
@@ -84,6 +86,7 @@ fun Home(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val sessionSets by viewModel.sessionSets.collectAsStateWithLifecycle()
     val timerSeconds by viewModel.timerManager.elapsedSeconds.collectAsStateWithLifecycle()
+    val allExercises by viewModel.allExercises.collectAsStateWithLifecycle()
     val notifState = rememberNotificationPermissionState()
 
     LaunchedEffect(Unit) {
@@ -94,6 +97,7 @@ fun Home(
 
     var showEndConfirm by remember { mutableStateOf(false) }
     var addSetExercise by remember { mutableStateOf<Exercise?>(null) }
+    var showAddExerciseDialog by remember { mutableStateOf(false) }
 
     if (showEndConfirm) {
         AlertDialog(
@@ -121,12 +125,26 @@ fun Home(
         )
     }
 
-    // AddSet bottom sheet
     addSetExercise?.let { exercise ->
         AddSetSheet(
             exercise = exercise,
             date = localDate,
             onDismiss = { addSetExercise = null },
+        )
+    }
+
+    if (showAddExerciseDialog) {
+        ExerciseSearchDialog(
+            exercises = allExercises,
+            onExerciseSelected = { exercise ->
+                showAddExerciseDialog = false
+                addSetExercise = exercise
+            },
+            onCreateNew = { _ ->
+                showAddExerciseDialog = false
+                onStartSessionClick()
+            },
+            onDismiss = { showAddExerciseDialog = false },
         )
     }
 
@@ -166,11 +184,70 @@ fun Home(
                     )
                 }
                 is TrainingSessionState.Active -> {
+                    TrainingActionBar(
+                        onAddExercise = { showAddExerciseDialog = true },
+                        onChangePlan = onSelectPlanClick,
+                        onHistory = onStartSessionClick,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
                     InlineTrainingContent(
                         exerciseSets = sessionSets,
                         onAddSet = { exercise -> addSetExercise = exercise },
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TrainingActionBar(
+    onAddExercise: () -> Unit,
+    onChangePlan: () -> Unit,
+    onHistory: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            FilledTonalButton(
+                onClick = onAddExercise,
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(2.dp))
+                Text(stringResource(R.string.label_add_exercise), style = MaterialTheme.typography.labelSmall)
+            }
+            Spacer(modifier = Modifier.width(4.dp))
+            FilledTonalButton(
+                onClick = onChangePlan,
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+            ) {
+                Icon(Icons.Rounded.SwapHoriz, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(2.dp))
+                Text(stringResource(R.string.label_change_plan), style = MaterialTheme.typography.labelSmall)
+            }
+            Spacer(modifier = Modifier.width(4.dp))
+            FilledTonalButton(
+                onClick = onHistory,
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+            ) {
+                Icon(painter = KenkoIcons.History, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(2.dp))
+                Text(stringResource(R.string.label_session), style = MaterialTheme.typography.labelSmall)
             }
         }
     }
@@ -188,15 +265,13 @@ private fun InlineTrainingContent(
                 name = exercise.name,
                 setCount = sets.size,
                 actions = {
-                    FilledTonalIconButton(
+                    FilledTonalButton(
                         onClick = { onAddSet(exercise) },
-                        modifier = Modifier.size(36.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                     ) {
-                        Icon(
-                            painter = KenkoIcons.Add,
-                            contentDescription = stringResource(R.string.label_add_set_for),
-                            modifier = Modifier.size(18.dp),
-                        )
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(stringResource(R.string.label_add), style = MaterialTheme.typography.labelSmall)
                     }
                 },
             )
