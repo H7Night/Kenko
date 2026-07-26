@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -446,14 +445,16 @@ fun SessionCard(
     onClick: () -> Unit = {},
 ) {
     val containerColor = if (session.date.isToday) {
-        MaterialTheme.colorScheme.secondaryContainer
+        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
     } else {
-        MaterialTheme.colorScheme.surfaceContainerLow
+        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
     }
     Surface(
         modifier = modifier,
         color = containerColor,
-        shape = CircleShape,
+        shape = MaterialTheme.shapes.extraLarge,
+        tonalElevation = if (session.date.isToday) 4.dp else 2.dp,
+        shadowElevation = 4.dp,
         onClick = onClick,
     ) {
         Column(
