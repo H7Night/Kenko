@@ -50,7 +50,7 @@ fun KenkoBottomBar(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 48.dp, vertical = 8.dp)
             .shadow(elevation = 12.dp, shape = RoundedCornerShape(28.dp)),
         shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
