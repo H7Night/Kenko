@@ -224,6 +224,23 @@
     <string name="label_tag_change_warning">此修改会影响所有关联此标签的历史数据，是否继续？</string>
     <string name="label_confirm_delete_tag">确定要删除此标签？</string>
 
+    <!--Timer-->
+    <string name="label_timer_channel">训练计时器</string>
+    <string name="label_timer_channel_desc">训练进行中的计时通知</string>
+    <string name="label_timer_running">训练进行中</string>
+    <string name="label_start_workout">开始训练</string>
+    <string name="label_pause">暂停</string>
+    <string name="label_resume">继续</string>
+    <string name="label_end_workout">结束训练</string>
+    <string name="label_end_workout_confirm">确定结束当前训练？</string>
+    <string name="label_current_plan_title">当前计划：%s</string>
+    <string name="label_today_plan">今日训练</string>
+    <string name="label_no_plan_today">今日无计划</string>
+    <string name="label_train_anyway_prompt">今日无计划动作。是否仍要训练？</string>
+    <string name="label_add_exercise">添加动作</string>
+    <string name="label_change_plan">更改计划</string>
+    <string name="label_training_session">训练中</string>
+
     <!--Day of Week-->
     <string name="label_today">.今天</string>
     <string name="label_plan">计划</string>

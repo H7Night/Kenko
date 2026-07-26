@@ -233,6 +233,23 @@
     <string name="label_tag_change_warning">This change will affect all historical data linked to this tag. Continue?</string>
     <string name="label_confirm_delete_tag">Delete this tag?</string>
 
+    <!--Timer-->
+    <string name="label_timer_channel">Workout Timer</string>
+    <string name="label_timer_channel_desc">Timer notification for active workouts</string>
+    <string name="label_timer_running">Workout in progress</string>
+    <string name="label_start_workout">Start Workout</string>
+    <string name="label_pause">Pause</string>
+    <string name="label_resume">Resume</string>
+    <string name="label_end_workout">End Workout</string>
+    <string name="label_end_workout_confirm">End current workout?</string>
+    <string name="label_current_plan_title">Current Plan: %s</string>
+    <string name="label_today_plan">Today\'s Plan</string>
+    <string name="label_no_plan_today">No plan for today</string>
+    <string name="label_train_anyway_prompt">No exercises planned. Train anyway?</string>
+    <string name="label_add_exercise">Add Exercise</string>
+    <string name="label_change_plan">Change Plan</string>
+    <string name="label_training_session">Training Session</string>
+
     <!--Day of Week-->
     <string name="label_today">.today</string>
     <string name="label_plan">Plan</string>
