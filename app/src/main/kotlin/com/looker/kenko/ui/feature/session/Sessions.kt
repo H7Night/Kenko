@@ -26,8 +26,11 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -48,7 +51,9 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
+import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.EmptyPage
@@ -130,6 +135,25 @@ private fun Sessions(
     modifier: Modifier = Modifier,
 ) {
     var sessionToDelete by remember { mutableStateOf<Session?>(null) }
+    var planExpanded by remember { mutableStateOf(false) }
+    var dayExpanded by remember { mutableStateOf(false) }
+    var selectedPlan by remember { mutableStateOf<Plan?>(null) }
+    var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
+
+    val selectedPlanName = selectedPlan?.name ?: stringResource(R.string.label_select_plan_one)
+    val selectedDayName = selectedDay?.let { day -> state.dayTitles[day] ?: day.toString() } ?: stringResource(R.string.label_select_muscle)
+    val availableDays: Map<DayOfWeek, String> = remember(selectedPlan) {
+        selectedPlan?.titlesMap ?: emptyMap()
+    }
+
+    val filteredSessions = remember(state.sessions, selectedPlan, selectedDay) {
+        val planId = selectedPlan?.id
+        state.sessions.filter { session ->
+            val planMatch = planId == null || session.planId == planId
+            val dayMatch = selectedDay == null || session.planDayOverride == selectedDay
+            planMatch && dayMatch
+        }
+    }
 
     if (sessionToDelete != null) {
         AlertDialog(
@@ -191,30 +215,89 @@ private fun Sessions(
                             onClick = { },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .scale(0.7f)
                                 .padding(bottom = 4.dp),
                         )
-                        // Search filter
-                        OutlinedTextField(
-                            value = "", // Will use viewModel when wired
-                            onValueChange = { },
+                        // Filter row: plan + day dropdowns
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
-                            label = { Text(stringResource(R.string.label_search_exercise)) },
-                            singleLine = true,
-                            leadingIcon = {
-                                Icon(
-                                    painter = KenkoIcons.History,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            ExposedDropdownMenuBox(
+                                expanded = planExpanded,
+                                onExpandedChange = { planExpanded = it },
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                OutlinedTextField(
+                                    value = selectedPlanName,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Plan") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = planExpanded) },
+                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                    singleLine = true,
                                 )
-                            },
-                        )
+                                ExposedDropdownMenu(
+                                    expanded = planExpanded,
+                                    onDismissRequest = { planExpanded = false },
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                                        onClick = {
+                                            selectedPlan = null
+                                            selectedDay = null
+                                            planExpanded = false
+                                        },
+                                    )
+                                    state.plans.forEach { plan ->
+                                        DropdownMenuItem(
+                                            text = { Text(plan.name) },
+                                            onClick = {
+                                                selectedPlan = plan
+                                                selectedDay = null
+                                                planExpanded = false
+                                            },
+                                        )
+                                    }
+                                }
+                            }
+                            if (selectedPlan != null) {
+                                ExposedDropdownMenuBox(
+                                    expanded = dayExpanded,
+                                    onExpandedChange = { dayExpanded = it },
+                                    modifier = Modifier.weight(1f),
+                                ) {
+                                    OutlinedTextField(
+                                        value = selectedDayName,
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        label = { Text("Day") },
+                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dayExpanded) },
+                                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                        singleLine = true,
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = dayExpanded,
+                                        onDismissRequest = { dayExpanded = false },
+                                    ) {
+                                        availableDays.forEach { (day, title) ->
+                                            DropdownMenuItem(
+                                                text = { Text(title) },
+                                                onClick = {
+                                                    selectedDay = day
+                                                    dayExpanded = false
+                                                },
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 items(
-                    items = state.sessions,
+                    items = filteredSessions,
                     key = { it.id!! },
                 ) { session ->
                     SwipeToDeleteBox(

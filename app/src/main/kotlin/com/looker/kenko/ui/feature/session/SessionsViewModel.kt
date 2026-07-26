@@ -21,12 +21,12 @@ import com.looker.kenko.domain.model.localDate
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -39,42 +39,31 @@ class SessionsViewModel @Inject constructor(
     private val repo: SessionRepo,
     private val planRepo: PlanRepo,
 ) : ViewModel() {
-    private val sessionsStream: Flow<List<Session>> = repo.stream
+    private val sessionsStream = repo.stream
+    private val isCurrentSessionActive = repo.streamByDate(localDate).map { it != null }
 
-    private val isCurrentSessionActive: Flow<Boolean> = repo.streamByDate(localDate).map { it != null }
-
-    private val availablePlanItems: Flow<Map<DayOfWeek, List<Exercise>>> = planRepo.planItems
+    private val availablePlanItems = planRepo.planItems
         .map { items ->
             items.groupBy { it.dayOfWeek }
                 .mapValues { entry -> entry.value.map { it.exercise } }
         }
-
-    private val _searchQuery = kotlinx.coroutines.flow.MutableStateFlow("")
 
     val state: StateFlow<SessionsUiData> = combine(
         sessionsStream,
         isCurrentSessionActive,
         availablePlanItems,
         planRepo.plans,
-        _searchQuery,
-    ) { sessions, isCurrentSessionActive, available, plans, query ->
+    ) { sessions, isCurrentSessionActive, available, plans ->
         val currentPlan = plans.find { it.isActive }
         val currentPlanTitles = currentPlan?.titlesMap ?: emptyMap()
-        val filtered = if (query.isBlank()) sessions
-            else sessions.filter { session ->
-                session.performExercises.any { it.name.contains(query, ignoreCase = true) }
-            }
         SessionsUiData(
-            sessions = filtered.filter { it.sets.isNotEmpty() },
+            sessions = sessions.filter { it.sets.isNotEmpty() },
             isCurrentSessionActive = isCurrentSessionActive,
             availablePlanDays = available,
             dayTitles = currentPlanTitles,
+            plans = plans.filter { it.isActive || plans.indexOf(it) < 5 },
         )
     }.asStateFlow(SessionsUiData(emptyList(), false))
-
-    fun setSearchQuery(query: String) {
-        _searchQuery.value = query
-    }
 
     fun addSession(date: LocalDate, day: DayOfWeek, onComplete: () -> Unit) {
         viewModelScope.launch {
@@ -88,8 +77,6 @@ class SessionsViewModel @Inject constructor(
             repo.deleteSession(session)
         }
     }
-
-
 }
 
 @Stable
@@ -98,6 +85,7 @@ data class SessionsUiData(
     val isCurrentSessionActive: Boolean,
     val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),
     val dayTitles: Map<DayOfWeek, String> = emptyMap(),
+    val plans: List<Plan> = emptyList(),
 ) {
     val sessionDates: Set<LocalDate> get() = sessions.map { it.date }.toSet()
 }
