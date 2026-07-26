@@ -423,7 +423,7 @@ private fun SetsList(
                         }
                     }
 
-                    if (previousSessionDate != null) {
+                    if (isToday && previousSessionDate != null) {
                         IconButton(onClick = onHistoryClick) {
                             Icon(
                                 painter = KenkoIcons.History,

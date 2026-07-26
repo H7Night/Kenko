@@ -341,15 +341,10 @@ fun SessionCard(
     } else {
         MaterialTheme.colorScheme.surfaceContainerLow
     }
-    val containerShape = if (session.date.isToday) {
-        CircleShape
-    } else {
-        MaterialTheme.shapes.extraLarge
-    }
     Surface(
         modifier = modifier,
         color = containerColor,
-        shape = containerShape,
+        shape = CircleShape,
         onClick = onClick,
     ) {
         Column(

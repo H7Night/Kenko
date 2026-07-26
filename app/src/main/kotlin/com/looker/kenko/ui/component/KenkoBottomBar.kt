@@ -36,16 +36,13 @@ import androidx.compose.ui.unit.sp
 import com.looker.kenko.R
 import com.looker.kenko.ui.feature.home.navigation.HomeRoute
 import com.looker.kenko.ui.feature.profile.navigation.ProfileRoute
-import com.looker.kenko.ui.feature.session.navigation.SessionDetailRoute
 import com.looker.kenko.ui.feature.session.navigation.SessionRoute
 import com.looker.kenko.ui.theme.KenkoIcons
 
 @Composable
 fun KenkoBottomBar(
     currentRouteName: String?,
-    isExerciseVisible: Boolean,
     onHomeClick: () -> Unit,
-    onExerciseClick: () -> Unit,
     onHistoryClick: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -94,27 +91,6 @@ fun KenkoBottomBar(
                 colors = itemColors,
                 alwaysShowLabel = true,
             )
-            if (isExerciseVisible) {
-                NavigationBarItem(
-                    selected = currentRouteName == SessionDetailRoute::class.qualifiedName,
-                    onClick = onExerciseClick,
-                    icon = {
-                        Icon(
-                            painter = KenkoIcons.Plan,
-                            contentDescription = null,
-                            modifier = Modifier.size(22.dp),
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = stringResource(R.string.label_today),
-                            fontSize = 10.sp,
-                        )
-                    },
-                    colors = itemColors,
-                    alwaysShowLabel = true,
-                )
-            }
             NavigationBarItem(
                 selected = currentRouteName == SessionRoute::class.qualifiedName,
                 onClick = onHistoryClick,

@@ -63,7 +63,6 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val theme by viewModel.theme.collectAsStateWithLifecycle()
             val language by viewModel.language.collectAsStateWithLifecycle()
-            val isExerciseVisible by viewModel.isExerciseVisible.collectAsStateWithLifecycle()
 
             LaunchedEffect(language) {
                 val appLocale: LocaleListCompat = if (language.code != null) {
@@ -100,20 +99,8 @@ class MainActivity : AppCompatActivity() {
                         if (isTopLevelRoute) {
                             KenkoBottomBar(
                                 currentRouteName = currentRouteName,
-                                isExerciseVisible = isExerciseVisible,
                                 onHomeClick = {
                                     navController.navigateToHome(
-                                        navOptions = navOptions {
-                                            popUpTo(HomeRoute) { saveState = true }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
-                                    )
-                                },
-                                onExerciseClick = {
-                                    navController.navigateToSessionDetail(
-                                        date = null,
-                                        showBackButton = false,
                                         navOptions = navOptions {
                                             popUpTo(HomeRoute) { saveState = true }
                                             launchSingleTop = true
