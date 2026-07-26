@@ -210,6 +210,7 @@ fun Home(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(innerPadding),
         ) {
             TimerCard(
@@ -252,7 +253,7 @@ fun Home(
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = "Stick to the plan\nNot your mood.",
                 style = MaterialTheme.typography.bodyMedium,
