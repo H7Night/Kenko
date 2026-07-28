@@ -42,7 +42,7 @@ class PlanViewModel @Inject constructor(
     fun switchPlan(plan: Plan) {
         viewModelScope.launch {
             if (!plan.isActive) {
-                repo.setCurrent(plan.id!!)
+                plan.id?.let { repo.setCurrent(it) }
             } else {
                 repo.updatePlan(plan.copy(isActive = false))
             }

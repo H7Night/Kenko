@@ -124,7 +124,7 @@ private fun Profile(
             },
             onConfirm = { value ->
                 if (weightToEdit != null) {
-                    onUpdateWeight(weightToEdit!!.copy(value = value))
+                    weightToEdit?.copy(value = value)?.let(onUpdateWeight)
                 } else {
                     onAddWeight(value)
                 }
@@ -174,9 +174,9 @@ private fun Profile(
                         Text(
                             text = stringResource(
                                 R.string.label_plan_description,
-                                state.planStat!!.exercises,
-                                normalizeInt(state.planStat.workDays),
-                                normalizeInt(state.planStat.restDays),
+                                state.planStat?.exercises ?: 0,
+                                normalizeInt(state.planStat?.workDays ?: 0),
+                                normalizeInt(state.planStat?.restDays ?: 0),
                             ),
                         )
                     },

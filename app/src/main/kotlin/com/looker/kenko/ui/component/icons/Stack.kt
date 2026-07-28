@@ -25,7 +25,7 @@ import androidx.compose.ui.graphics.vector.path
 val Stack: ImageVector
     get() {
         if (_stack != null) {
-            return _stack!!
+            return _stack ?: error("Stack icon not initialized")
         }
         _stack = icon(
             name = "Stack",
@@ -166,7 +166,7 @@ val Stack: ImageVector
                 close()
             }
         }
-        return _stack!!
+        return _stack ?: error("Stack icon not initialized")
     }
 
 private var _stack: ImageVector? = null

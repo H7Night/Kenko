@@ -225,7 +225,7 @@ class PlanEditViewModel @Inject constructor(
 
     fun removeExercise(exercise: Exercise) {
         viewModelScope.launch {
-            repo.removeItemById(exercise.id!!)
+            exercise.id?.let { repo.removeItemById(it) }
         }
     }
 

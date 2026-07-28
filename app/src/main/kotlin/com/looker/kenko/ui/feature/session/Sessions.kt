@@ -162,7 +162,7 @@ private fun Sessions(
             confirmButton = {
                 Button(
                     onClick = {
-                        onRemoveSession(sessionToDelete!!)
+                        sessionToDelete?.let { onRemoveSession(it) }
                         sessionToDelete = null
                     },
                 ) {
@@ -297,7 +297,7 @@ private fun Sessions(
                 }
                 items(
                     items = filteredSessions,
-                    key = { it.id!! },
+                    key = { it.id ?: it.hashCode() },
                 ) { session ->
                     SwipeToDeleteBox(
                         modifier = Modifier.animateItem(),

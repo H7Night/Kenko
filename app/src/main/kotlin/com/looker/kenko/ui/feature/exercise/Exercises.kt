@@ -289,7 +289,7 @@ private fun ExercisesList(
         contentPadding = contentPadding + PaddingValues(horizontal = 14.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        items(exercises, key = { it.id!! }) { exercise ->
+        items(exercises, key = { it.id ?: it.hashCode() }) { exercise ->
             val exerciseId by rememberUpdatedState(exercise.id)
             SwipeToDeleteBox(
                 modifier = Modifier.animateItem(),

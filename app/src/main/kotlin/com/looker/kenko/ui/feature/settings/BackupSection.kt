@@ -114,7 +114,7 @@ internal fun BackupSection(
         contract = ActivityResultContracts.CreateDocument("application/json"),
     ) { uri ->
         if (uri != null && pendingExportOptions != null) {
-            onExport(pendingExportOptions!!, uri!!)
+            val opts = pendingExportOptions; val u = uri; if (opts != null && u != null) onExport(opts, u)
             pendingExportOptions = null
         }
     }

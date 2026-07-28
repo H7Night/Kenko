@@ -333,7 +333,7 @@ private fun PlanEdit(
             } else {
                 itemsIndexed(
                     items = localExercises,
-                    key = { _, exercise -> exercise.id!! }
+                    key = { _, exercise -> exercise.id ?: exercise.hashCode() }
                 ) { index, exercise ->
                     val isDragged = draggedItemIndex == index
                     val scale by animateFloatAsState(if (isDragged) 1.05f else 1f, label = "scale")

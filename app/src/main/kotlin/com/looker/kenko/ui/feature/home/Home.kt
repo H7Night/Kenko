@@ -317,9 +317,9 @@ private fun InlineTrainingContent(
                 isCollapsed = isCollapsed,
                 onCollapseToggle = {
                     if (isCollapsed) {
-                        collapsedExercises.remove(exercise.id!!)
+                        exercise.id?.let { collapsedExercises.remove(it) }
                     } else {
-                        collapsedExercises.add(exercise.id!!)
+                        exercise.id?.let { collapsedExercises.add(it) }
                     }
                 },
                 actions = {

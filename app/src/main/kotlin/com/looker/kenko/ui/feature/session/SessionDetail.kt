@@ -139,7 +139,7 @@ fun SessionDetails(
     val exercise by viewModel.current.collectAsStateWithLifecycle()
     if (exercise != null) {
         AddSetSheet(
-            exercise = exercise!!,
+            exercise = exercise ?: return,
             date = (state as? SessionDetailState.Success)?.data?.date,
             onDismiss = viewModel::hideSheet,
         )
@@ -454,9 +454,9 @@ private fun SetsList(
                     isCollapsed = isCollapsed,
                     onCollapseToggle = {
                         collapsedExercises = if (isCollapsed) {
-                            collapsedExercises - exercise.id!!
+                            exercise.id?.let { collapsedExercises - it } ?: collapsedExercises
                         } else {
-                            collapsedExercises + exercise.id!!
+                            exercise.id?.let { collapsedExercises + it } ?: collapsedExercises
                         }
                     }
                 ) {

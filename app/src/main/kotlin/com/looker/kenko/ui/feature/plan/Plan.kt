@@ -130,15 +130,15 @@ private fun Plan(
         ) {
             items(
                 items = plans,
-                key = { plan -> plan.id!! },
+                key = { plan -> plan.id ?: plan.hashCode() },
             ) { plan ->
                 SwipeToDeleteBox(
                     modifier = Modifier.animateItem(),
-                    onDismiss = { onRemove(plan.id!!) },
+                    onDismiss = { plan.id?.let { onRemove(it) } },
                 ) {
                     PlanItem(
                         plan = plan,
-                        onClick = { onPlanClick(plan.id!!) },
+                        onClick = { plan.id?.let { onPlanClick(it) } },
                         onActiveChange = { onSelectPlan(plan) },
                     )
                 }
