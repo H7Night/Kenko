@@ -15,7 +15,7 @@
 package com.looker.kenko.ui.component.timer
 
 import com.looker.kenko.data.repository.SessionRepo
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,10 +44,10 @@ class TrainingSessionManager @Inject constructor(
     fun startTraining() {
         if (_sessionState.value is TrainingSessionState.Active) return
         scope.launch {
-            val sessionId = sessionRepo.getSessionIdOrCreate(localDate)
+            val sessionId = sessionRepo.getSessionIdOrCreate(today())
             _sessionState.value = TrainingSessionState.Active(sessionId)
             // Continue from existing duration if any
-            val existingSession = sessionRepo.streamByDate(localDate).first()
+            val existingSession = sessionRepo.streamByDate(today()).first()
             val existingDuration = existingSession?.durationSeconds ?: 0L
             if (existingDuration > 0) {
                 timerManager.startWithDuration(existingDuration)
@@ -74,7 +74,7 @@ class TrainingSessionManager @Inject constructor(
                 if (sets.isEmpty() && elapsed < 60) {
                     sessionRepo.deleteSession(
                         com.looker.kenko.domain.model.Session(
-                            date = localDate,
+                            date = today(),
                             sets = emptyList(),
                             planId = null,
                             id = sessionId,

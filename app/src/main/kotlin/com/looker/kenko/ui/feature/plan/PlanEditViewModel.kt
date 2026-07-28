@@ -28,7 +28,7 @@ import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.RepsInReserve
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.withDayTitle
@@ -76,7 +76,7 @@ class PlanEditViewModel @Inject constructor(
         repo.plans.map { plans -> plans.find { it.id == id } }
     }
 
-    private val _dayOfWeek: MutableStateFlow<DayOfWeek> = MutableStateFlow(localDate.dayOfWeek)
+    private val _dayOfWeek: MutableStateFlow<DayOfWeek> = MutableStateFlow(today().dayOfWeek)
 
     val dayTitleState: TextFieldState = TextFieldState("")
 
@@ -162,7 +162,7 @@ class PlanEditViewModel @Inject constructor(
         )
     }.asStateFlow(
         PlanEditState(
-            currentDay = localDate.dayOfWeek,
+            currentDay = today().dayOfWeek,
             selectionMode = false,
             exerciseSheetVisible = false,
             exercises = emptyList(),

@@ -17,7 +17,7 @@ package com.looker.kenko.ui.feature.session
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import com.looker.kenko.domain.model.Session
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.domain.model.Exercise
@@ -40,7 +40,7 @@ class SessionsViewModel @Inject constructor(
     private val planRepo: PlanRepo,
 ) : ViewModel() {
     private val sessionsStream = repo.stream
-    private val isCurrentSessionActive = repo.streamByDate(localDate).map { it != null }
+    private val isCurrentSessionActive = repo.streamByDate(today()).map { it != null }
 
     private val availablePlanItems = planRepo.planItems
         .map { items ->

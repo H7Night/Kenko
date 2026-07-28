@@ -321,7 +321,7 @@ private fun AddHistoryDialog(
     onDismiss: () -> Unit,
     onConfirm: (LocalDate, DayOfWeek) -> Unit,
 ) {
-    var date by remember { mutableStateOf(com.looker.kenko.domain.model.localDate) }
+    var date by remember { mutableStateOf(com.looker.kenko.domain.model.today()) }
     var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
 
     LaunchedEffect(date) {

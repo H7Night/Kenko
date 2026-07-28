@@ -18,7 +18,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.PerformanceRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo
@@ -52,7 +52,7 @@ class MainViewModel @Inject constructor(
     val language: StateFlow<Language> = repo.get { language }
         .asStateFlow(Language.System)
 
-    val isExerciseVisible: StateFlow<Boolean> = sessionRepo.streamByDate(localDate)
+    val isExerciseVisible: StateFlow<Boolean> = sessionRepo.streamByDate(today())
         .map { it != null && it.sets.isNotEmpty() }
         .asStateFlow(false)
 

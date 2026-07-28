@@ -26,7 +26,7 @@ import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.Set
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.week
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
@@ -70,7 +70,7 @@ class SessionDetailViewModel @Inject constructor(
 
     private val sessionDate: LocalDate = epochDays?.let {
         LocalDate.fromEpochDays(it)
-    } ?: localDate
+    } ?: today()
 
     private val isTodaySession = epochDays == null
 

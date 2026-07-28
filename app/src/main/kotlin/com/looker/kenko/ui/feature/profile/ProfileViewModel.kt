@@ -20,7 +20,7 @@ import androidx.lifecycle.viewModelScope
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanStat
 import com.looker.kenko.domain.model.Weight
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.WeightRepo
@@ -57,7 +57,7 @@ class ProfileViewModel @Inject constructor(
 
     fun addWeight(value: Float) {
         viewModelScope.launch {
-            weightRepo.addWeight(Weight(localDate, value))
+            weightRepo.addWeight(Weight(today(), value))
         }
     }
 

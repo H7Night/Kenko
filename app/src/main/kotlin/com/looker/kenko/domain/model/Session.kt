@@ -31,4 +31,4 @@ data class Session(
         get() = sets.map { it.exercise }.distinct()
 }
 
-fun Session(planId: Int, sets: List<Set>) = Session(planId = planId, date = localDate, sets = sets)
+fun Session(planId: Int, sets: List<Set>) = Session(planId = planId, date = today(), sets = sets)

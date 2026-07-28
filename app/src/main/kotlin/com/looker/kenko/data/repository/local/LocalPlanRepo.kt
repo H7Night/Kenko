@@ -26,7 +26,7 @@ import com.looker.kenko.domain.model.Labels
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.PlanStat
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.utils.toLocalEpochDays
 import javax.inject.Inject
@@ -152,9 +152,9 @@ class LocalPlanRepo @Inject constructor(
     override suspend fun setCurrent(id: Int) {
         val current = historyDao.getCurrent()
         if (current != null) {
-            historyDao.upsert(current.copy(end = localDate.toLocalEpochDays()))
+            historyDao.upsert(current.copy(end = today().toLocalEpochDays()))
         }
-        historyDao.upsert(PlanHistoryEntity(planId = id, start = localDate.toLocalEpochDays()))
+        historyDao.upsert(PlanHistoryEntity(planId = id, start = today().toLocalEpochDays()))
     }
 
     override suspend fun deletePlan(id: Int) {

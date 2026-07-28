@@ -77,7 +77,7 @@ fun Plan.withDayTitle(dayOfWeek: DayOfWeek, title: String?): Plan {
     return copy(dayTitles = newDayTitles)
 }
 
-val localDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+fun today(): LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 
 val week = DatePeriod(days = 7)
 

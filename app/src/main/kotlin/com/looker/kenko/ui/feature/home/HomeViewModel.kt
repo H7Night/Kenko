@@ -20,7 +20,7 @@ import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.ui.component.timer.TimerManager
 import com.looker.kenko.ui.component.timer.TimerState
@@ -52,20 +52,20 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val planStream = planRepo.current
-    val sessionStream = sessionRepo.streamByDate(localDate)
+    val sessionStream = sessionRepo.streamByDate(today())
     private val sessionsStream = sessionRepo.stream
 
     private val planItemStream = combine(
         sessionStream,
         planRepo.planItems
     ) { session, planItems ->
-        val day = session?.planDayOverride ?: localDate.dayOfWeek
+        val day = session?.planDayOverride ?: today().dayOfWeek
         planItems.filter { it.dayOfWeek == day }
     }
 
     init {
         viewModelScope.launch {
-            val existingSession = sessionRepo.streamByDate(localDate).first()
+            val existingSession = sessionRepo.streamByDate(today()).first()
             val existingDuration = existingSession?.durationSeconds ?: 0L
             if (existingDuration > 0 && timerManager.state.value == TimerState.IDLE) {
                 timerManager.setElapsedSeconds(existingDuration)
@@ -88,8 +88,8 @@ class HomeViewModel @Inject constructor(
         planStream,
         sessionStream,
     ) { plan, session ->
-        val day = session?.planDayOverride ?: localDate.dayOfWeek
-        sessionRepo.previousSessionDate(localDate, plan?.id, day)
+        val day = session?.planDayOverride ?: today().dayOfWeek
+        sessionRepo.previousSessionDate(today(), plan?.id, day)
     }.flatMapLatest { it }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
@@ -128,9 +128,9 @@ class HomeViewModel @Inject constructor(
         val timerState = array[4] as TimerState
         val trainingState = array[5] as TrainingSessionState
 
-        val isFirstSession = sessions.size <= 1 && sessions.firstOrNull()?.date == localDate
+        val isFirstSession = sessions.size <= 1 && sessions.firstOrNull()?.date == today()
         val dayTitle = currentPlan?.titlesMap?.get(
-            currentSession?.planDayOverride ?: localDate.dayOfWeek
+            currentSession?.planDayOverride ?: today().dayOfWeek
         )
         HomeUiData(
             isPlanSelected = currentPlan != null,
@@ -183,14 +183,14 @@ class HomeViewModel @Inject constructor(
 
     fun importPlanFromDay(day: DayOfWeek) {
         viewModelScope.launch {
-            sessionRepo.clearSets(localDate)
-            sessionRepo.updatePlanDay(localDate, day)
+            sessionRepo.clearSets(today())
+            sessionRepo.updatePlanDay(today(), day)
         }
     }
 
     fun clearTodaySets() {
         viewModelScope.launch {
-            sessionRepo.clearSets(localDate)
+            sessionRepo.clearSets(today())
         }
     }
 }

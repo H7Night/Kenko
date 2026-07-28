@@ -29,7 +29,7 @@ import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.domain.model.RepsInReserve
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.ui.feature.session.components.BoundReached
@@ -123,7 +123,7 @@ class AddSetViewModel @AssistedInject constructor(
 
     fun addSet() {
         viewModelScope.launch {
-            val sessionId = sessionRepo.getSessionIdOrCreate(date ?: localDate)
+            val sessionId = sessionRepo.getSessionIdOrCreate(date ?: today())
             repeat(setsInt) {
                 sessionRepo.addSet(
                     sessionId = sessionId,

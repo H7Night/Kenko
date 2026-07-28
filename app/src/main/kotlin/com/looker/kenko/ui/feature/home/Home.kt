@@ -63,7 +63,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Set
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.timer.TimerCard
 import com.looker.kenko.ui.component.timer.TrainingSessionState
@@ -135,7 +135,7 @@ fun Home(
     addSetExercise?.let { exercise ->
         AddSetSheet(
             exercise = exercise,
-            date = localDate,
+            date = today(),
             onDismiss = { addSetExercise = null },
         )
     }
@@ -383,8 +383,8 @@ private fun PlanInfoCard(
             }
 
             // Date and day of week
-            val dateStr = localDate.toString()
-            val dayStr = dayName(localDate.dayOfWeek)
+            val dateStr = today().toString()
+            val dayStr = dayName(today().dayOfWeek)
             Text(
                 text = "$dateStr $dayStr",
                 style = MaterialTheme.typography.bodyMedium,
