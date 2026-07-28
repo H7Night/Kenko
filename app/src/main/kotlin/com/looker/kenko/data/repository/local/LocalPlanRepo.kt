@@ -34,6 +34,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.isoDayNumber
 
@@ -42,6 +44,8 @@ class LocalPlanRepo @Inject constructor(
     private val exerciseDao: ExerciseDao,
     private val historyDao: PlanHistoryDao,
 ) : PlanRepo {
+
+    private val mutex = Mutex()
 
     override val plans: Flow<List<Plan>> =
         combine(dao.plansFlow(), historyDao.currentIdFlow()) { plans, current ->
@@ -149,7 +153,7 @@ class LocalPlanRepo @Inject constructor(
         dao.upsertPlan(plan.toEntity())
     }
 
-    override suspend fun setCurrent(id: Int) {
+    override suspend fun setCurrent(id: Int) = mutex.withLock {
         val current = historyDao.getCurrent()
         if (current != null) {
             historyDao.upsert(current.copy(end = today().toLocalEpochDays()))

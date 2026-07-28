@@ -31,6 +31,8 @@ import com.looker.kenko.utils.toLocalEpochDays
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.isoDayNumber
@@ -42,6 +44,8 @@ class LocalSessionRepo @Inject constructor(
     private val exerciseDao: ExerciseDao,
 ) : SessionRepo {
 
+    private val mutex = Mutex()
+
     override val stream: Flow<List<Session>> =
         dao.stream().map {
             it.map { session ->
@@ -51,7 +55,7 @@ class LocalSessionRepo @Inject constructor(
     override val setsCount: Flow<Int> =
         setsDao.totalSetCount()
 
-    override suspend fun addSet(sessionId: Int, set: Set) {
+    override suspend fun addSet(sessionId: Int, set: Set) = mutex.withLock {
         setsDao.insert(
             set.toEntity(
                 sessionId,
@@ -67,7 +71,7 @@ class LocalSessionRepo @Inject constructor(
         reps: Int,
         setType: SetType,
         rir: RepsInReserve,
-    ) {
+    ) = mutex.withLock {
         setsDao.insert(
             SetEntity(
                 repsOrDuration = reps,
@@ -103,13 +107,13 @@ class LocalSessionRepo @Inject constructor(
         dao.updateDuration(sessionId, durationSeconds)
     }
 
-    override suspend fun getSessionIdOrCreate(date: LocalDate): Int {
+    override suspend fun getSessionIdOrCreate(date: LocalDate): Int = mutex.withLock {
         val currentPlanId = requireNotNull(historyDao.getCurrentId()) { "No plan active" }
         val existingId = dao.getSessionId(date.toLocalEpochDays())
         if (existingId != null) {
-            return existingId
+            return@withLock existingId
         }
-        return dao.insert(SessionDataEntity(date.toLocalEpochDays(), currentPlanId)).toInt()
+        return@withLock dao.insert(SessionDataEntity(date.toLocalEpochDays(), currentPlanId)).toInt()
     }
 
     override fun streamByDate(date: LocalDate): Flow<Session?> {
