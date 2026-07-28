@@ -52,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.ui.component.BackButton
@@ -321,7 +322,7 @@ private fun AddHistoryDialog(
     onDismiss: () -> Unit,
     onConfirm: (LocalDate, DayOfWeek) -> Unit,
 ) {
-    var date by remember { mutableStateOf(com.looker.kenko.domain.model.today()) }
+    var date by remember { mutableStateOf<LocalDate>(today()) }
     var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
 
     LaunchedEffect(date) {

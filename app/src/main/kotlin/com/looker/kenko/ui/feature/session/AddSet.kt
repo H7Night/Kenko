@@ -89,8 +89,8 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
     val isCardio = exercise.countType == CountType.MINUTES
     val viewModel: AddSetViewModel =
         hiltViewModel<AddSetViewModel, AddSetViewModel.AddSetViewModelFactory>(key = exercise.name) {
-            val id = exercise.id ?: return
-            it.create(id, date)
+            exercise.id?.let { id -> it.create(id, date) }
+                ?: error("Exercise id is null")
         }
     Column(
         modifier = Modifier
