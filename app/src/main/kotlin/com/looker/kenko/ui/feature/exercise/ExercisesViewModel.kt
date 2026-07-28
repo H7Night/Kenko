@@ -112,15 +112,11 @@ class ExercisesViewModel @Inject constructor(
     fun onReferenceClick(reference: String) {
         viewModelScope.launch {
             try {
-                try {
-                    uriHandler.openUri(reference)
-                } catch (e: IllegalStateException) {
-                    snackbarState.showSnackbar(
-                        e.message ?: stringHandler.getString(R.string.error_invalid_url)
-                    )
-                }
+                uriHandler.openUri(reference)
             } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
+                snackbarState.showSnackbar(
+                    e.message ?: stringHandler.getString(R.string.error_invalid_url)
+                )
             }
         }
     }

@@ -14,6 +14,7 @@
 
 package com.looker.kenko.ui.feature.about
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.Image
@@ -108,7 +109,11 @@ fun AboutScreen(
             Button(
                 onClick = {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/H7Night/Kenko"))
-                    context.startActivity(intent)
+                    try {
+                        context.startActivity(intent)
+                    } catch (_: ActivityNotFoundException) {
+                        // No browser installed — silently ignore
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.tertiary,
