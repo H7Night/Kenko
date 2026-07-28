@@ -132,14 +132,14 @@ class RoomDatabaseTesting {
     @Test
     fun schemaMigration2To3() = runTest {
         val db = helper.createDatabase(DB_NAME, 2)
-        db.execSQL("INSERT INTO sets (reps, weight, type, ` + "`\"`" + @"order` + "`\"`" + @", sessionId, exerciseId) VALUES (10, 50.0, 'Standard', 0, 1, 1)")
+        db.execSQL("INSERT INTO sets (reps, weight, type, \"order\", sessionId, exerciseId) VALUES (10, 50.0, 'Standard', 0, 1, 1)")
         helper.runMigrationsAndValidate(DB_NAME, 3, true, MIGRATION_2_3)
     }
 
     @Test
     fun schemaMigration3To4() = runTest {
         val db = helper.createDatabase(DB_NAME, 3)
-        db.execSQL("INSERT INTO sets (reps, weight, type, ` + "`\"`" + @"order` + "`\"`" + @", sessionId, exerciseId, rir) VALUES (10, 50.0, 'Standard', 0, 1, 1, 2)")
+        db.execSQL("INSERT INTO sets (reps, weight, type, \"order\", sessionId, exerciseId, rir) VALUES (10, 50.0, 'Standard', 0, 1, 1, 2)")
         helper.runMigrationsAndValidate(DB_NAME, 4, true, MIGRATION_3_4)
     }
 
