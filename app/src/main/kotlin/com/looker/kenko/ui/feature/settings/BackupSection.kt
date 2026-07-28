@@ -113,8 +113,8 @@ internal fun BackupSection(
     val jsonFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json"),
     ) { uri ->
-        if (uri != null && pendingExportOptions != null) {
-            val opts = pendingExportOptions; val u = uri; if (opts != null && u != null) onExport(opts, u)
+        if (uri != null) {
+            pendingExportOptions?.let { onExport(it, uri) }
             pendingExportOptions = null
         }
     }
