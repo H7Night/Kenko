@@ -38,6 +38,9 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -66,12 +69,19 @@ class AddSetViewModel @AssistedInject constructor(
 
     private var isCardio by mutableStateOf(false)
 
+    private val _snackbar = MutableSharedFlow<String>()
+    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
+
     init {
         viewModelScope.launch {
-            val exercise = exerciseRepo.get(id)
-            isCardio = exercise?.countType == CountType.MINUTES
-            if (isCardio) {
-                reps.setTextAndPlaceCursorAtEnd("20")
+            try {
+                val exercise = exerciseRepo.get(id)
+                isCardio = exercise?.countType == CountType.MINUTES
+                if (isCardio) {
+                    reps.setTextAndPlaceCursorAtEnd("20")
+                }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
     }
@@ -123,16 +133,20 @@ class AddSetViewModel @AssistedInject constructor(
 
     fun addSet() {
         viewModelScope.launch {
-            val sessionId = sessionRepo.getSessionIdOrCreate(date ?: today())
-            repeat(setsInt) {
-                sessionRepo.addSet(
-                    sessionId = sessionId,
-                    exerciseId = id,
-                    weight = weightFloat,
-                    reps = repInt,
-                    setType = selectedSetType,
-                    rir = RepsInReserve(2),
-                )
+            try {
+                val sessionId = sessionRepo.getSessionIdOrCreate(date ?: today())
+                repeat(setsInt) {
+                    sessionRepo.addSet(
+                        sessionId = sessionId,
+                        exerciseId = id,
+                        weight = weightFloat,
+                        reps = repInt,
+                        setType = selectedSetType,
+                        rir = RepsInReserve(2),
+                    )
+                }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
     }

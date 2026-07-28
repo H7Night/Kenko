@@ -30,13 +30,16 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -55,6 +58,9 @@ class HomeViewModel @Inject constructor(
     val sessionStream = sessionRepo.streamByDate(today())
     private val sessionsStream = sessionRepo.stream
 
+    private val _snackbar = MutableSharedFlow<String>()
+    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
+
     private val planItemStream = combine(
         sessionStream,
         planRepo.planItems
@@ -65,10 +71,14 @@ class HomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val existingSession = sessionRepo.streamByDate(today()).first()
-            val existingDuration = existingSession?.durationSeconds ?: 0L
-            if (existingDuration > 0 && timerManager.state.value == TimerState.IDLE) {
-                timerManager.setElapsedSeconds(existingDuration)
+            try {
+                val existingSession = sessionRepo.streamByDate(today()).first()
+                val existingDuration = existingSession?.durationSeconds ?: 0L
+                if (existingDuration > 0 && timerManager.state.value == TimerState.IDLE) {
+                    timerManager.setElapsedSeconds(existingDuration)
+                }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
     }
@@ -183,14 +193,22 @@ class HomeViewModel @Inject constructor(
 
     fun importPlanFromDay(day: DayOfWeek) {
         viewModelScope.launch {
-            sessionRepo.clearSets(today())
-            sessionRepo.updatePlanDay(today(), day)
+            try {
+                sessionRepo.clearSets(today())
+                sessionRepo.updatePlanDay(today(), day)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun clearTodaySets() {
         viewModelScope.launch {
-            sessionRepo.clearSets(today())
+            try {
+                sessionRepo.clearSets(today())
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 }

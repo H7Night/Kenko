@@ -22,7 +22,10 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -49,59 +52,90 @@ class TagManagementViewModel @Inject constructor(
         )
     }.asStateFlow(TagManagementUiState())
 
+    private val _snackbar = MutableSharedFlow<String>()
+    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
+
     fun refresh() {
         refreshTrigger.value++
     }
 
     fun addParent(name: String) {
         viewModelScope.launch {
-            val maxOrder = state.value.parents.maxOfOrNull { it.sortOrder } ?: 0
-            tagRepo.upsert(Tag(name = name, sortOrder = maxOrder + 1))
-            refresh()
+            try {
+                val maxOrder = state.value.parents.maxOfOrNull { it.sortOrder } ?: 0
+                tagRepo.upsert(Tag(name = name, sortOrder = maxOrder + 1))
+                refresh()
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun addChild(name: String, parentId: Int) {
         viewModelScope.launch {
-            val siblings = state.value.children.filter { it.parentId == parentId }
-            val maxOrder = siblings.maxOfOrNull { it.sortOrder } ?: 0
-            tagRepo.upsert(Tag(name = name, parentId = parentId, sortOrder = maxOrder + 1))
-            refresh()
+            try {
+                val siblings = state.value.children.filter { it.parentId == parentId }
+                val maxOrder = siblings.maxOfOrNull { it.sortOrder } ?: 0
+                tagRepo.upsert(Tag(name = name, parentId = parentId, sortOrder = maxOrder + 1))
+                refresh()
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun updateTag(tag: Tag) {
         viewModelScope.launch {
-            tagRepo.upsert(tag)
-            refresh()
+            try {
+                tagRepo.upsert(tag)
+                refresh()
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun deleteTag(tag: Tag) {
         viewModelScope.launch {
-            tagRepo.delete(tag)
-            refresh()
+            try {
+                tagRepo.delete(tag)
+                refresh()
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun deleteTagById(id: Int) {
         viewModelScope.launch {
-            tagRepo.deleteById(id)
-            refresh()
+            try {
+                tagRepo.deleteById(id)
+                refresh()
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun exerciseCount(tagId: Int, callback: (Int) -> Unit) {
         viewModelScope.launch {
-            callback(tagRepo.exerciseCount(tagId))
+            try {
+                callback(tagRepo.exerciseCount(tagId))
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun updateSortOrder(tagId: Int, newOrder: Int) {
         viewModelScope.launch {
-            val tag = tagRepo.get(tagId) ?: return@launch
-            tagRepo.upsert(tag.copy(sortOrder = newOrder))
-            refresh()
+            try {
+                val tag = tagRepo.get(tagId) ?: return@launch
+                tagRepo.upsert(tag.copy(sortOrder = newOrder))
+                refresh()
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 }

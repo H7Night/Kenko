@@ -28,7 +28,10 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
@@ -55,21 +58,36 @@ class ProfileViewModel @Inject constructor(
         )
     }.asStateFlow(ProfileUiState())
 
+    private val _snackbar = MutableSharedFlow<String>()
+    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
+
     fun addWeight(value: Float) {
         viewModelScope.launch {
-            weightRepo.addWeight(Weight(today(), value))
+            try {
+                weightRepo.addWeight(Weight(today(), value))
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun updateWeight(weight: Weight) {
         viewModelScope.launch {
-            weightRepo.updateWeight(weight)
+            try {
+                weightRepo.updateWeight(weight)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun deleteWeight(id: Int) {
         viewModelScope.launch {
-            weightRepo.deleteWeight(id)
+            try {
+                weightRepo.deleteWeight(id)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 }

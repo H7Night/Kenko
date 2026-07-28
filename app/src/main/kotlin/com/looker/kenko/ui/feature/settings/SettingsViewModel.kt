@@ -32,8 +32,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -46,6 +49,9 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _backupState = MutableStateFlow(BackupState())
+
+    private val _snackbar = MutableSharedFlow<String>()
+    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
 
     val state: StateFlow<SettingsUiData> = combine(
         repo.stream,
@@ -80,35 +86,55 @@ class SettingsViewModel @Inject constructor(
 
     fun updateTheme(theme: Theme) {
         viewModelScope.launch {
-            repo.setTheme(theme)
+            try {
+                repo.setTheme(theme)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun updateCapitalizeExerciseName(enabled: Boolean) {
         viewModelScope.launch {
-            repo.setCapitalizeExerciseName(enabled)
+            try {
+                repo.setCapitalizeExerciseName(enabled)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun updateLanguage(language: Language) {
         viewModelScope.launch {
-            repo.setLanguage(language)
+            try {
+                repo.setLanguage(language)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun setBackupLocation(uri: Uri) {
         viewModelScope.launch {
-            repo.setBackupUri(uri.toString())
-            backupManager.schedulePeriodicBackup(state.value.backupInterval, uri)
+            try {
+                repo.setBackupUri(uri.toString())
+                backupManager.schedulePeriodicBackup(state.value.backupInterval, uri)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun setBackupInterval(interval: BackupInterval) {
         viewModelScope.launch {
-            repo.setBackupInterval(interval)
-            val backupUri = state.value.backupUri?.toUri()
-            if (backupUri != null) {
-                backupManager.schedulePeriodicBackup(interval, backupUri)
+            try {
+                repo.setBackupInterval(interval)
+                val backupUri = state.value.backupUri?.toUri()
+                if (backupUri != null) {
+                    backupManager.schedulePeriodicBackup(interval, backupUri)
+                }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
     }
@@ -117,63 +143,78 @@ class SettingsViewModel @Inject constructor(
         val backupUri = state.value.backupUri?.toUri() ?: return
 
         viewModelScope.launch {
-            _backupState.update { it.copy(isBackingUp = true, message = null) }
+            try {
+                _backupState.update { it.copy(isBackingUp = true, message = null) }
 
-            when (backupManager.createBackup(backupUri)) {
-                is BackupResult.Success -> {
-                    repo.setLastBackupTime(Clock.System.now())
-                    _backupState.update {
-                        it.copy(isBackingUp = false, message = BackupMessage.BackupSuccess)
+                when (backupManager.createBackup(backupUri)) {
+                    is BackupResult.Success -> {
+                        repo.setLastBackupTime(Clock.System.now())
+                        _backupState.update {
+                            it.copy(isBackingUp = false, message = BackupMessage.BackupSuccess)
+                        }
+                    }
+
+                    is BackupResult.Error -> {
+                        _backupState.update {
+                            it.copy(isBackingUp = false, message = BackupMessage.BackupFailed)
+                        }
                     }
                 }
-
-                is BackupResult.Error -> {
-                    _backupState.update {
-                        it.copy(isBackingUp = false, message = BackupMessage.BackupFailed)
-                    }
-                }
+            } catch (e: Exception) {
+                _backupState.update { it.copy(isBackingUp = false) }
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
     }
 
     fun restore(uri: Uri) {
         viewModelScope.launch {
-            _backupState.update { it.copy(isRestoring = true, message = null) }
+            try {
+                _backupState.update { it.copy(isRestoring = true, message = null) }
 
-            when (backupManager.restoreBackup(uri)) {
-                is BackupResult.Success -> {
-                    repo.setBackupUri(null)
-                    repo.setLastBackupTime(null)
-                    _backupState.update {
-                        it.copy(isRestoring = false, message = BackupMessage.RestoreSuccess)
+                when (backupManager.restoreBackup(uri)) {
+                    is BackupResult.Success -> {
+                        repo.setBackupUri(null)
+                        repo.setLastBackupTime(null)
+                        _backupState.update {
+                            it.copy(isRestoring = false, message = BackupMessage.RestoreSuccess)
+                        }
+                    }
+
+                    is BackupResult.Error -> {
+                        _backupState.update {
+                            it.copy(isRestoring = false, message = BackupMessage.RestoreFailed)
+                        }
                     }
                 }
-
-                is BackupResult.Error -> {
-                    _backupState.update {
-                        it.copy(isRestoring = false, message = BackupMessage.RestoreFailed)
-                    }
-                }
+            } catch (e: Exception) {
+                _backupState.update { it.copy(isRestoring = false) }
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
     }
 
     fun exportData(options: ExportOptions, uri: Uri) {
         viewModelScope.launch {
-            _backupState.update { it.copy(isExporting = true, message = null) }
+            try {
+                _backupState.update { it.copy(isExporting = true, message = null) }
 
-            when (exportManager.export(options, uri)) {
-                is BackupResult.Success -> {
-                    _backupState.update {
-                        it.copy(isExporting = false, message = BackupMessage.ExportSuccess)
+                when (exportManager.export(options, uri)) {
+                    is BackupResult.Success -> {
+                        _backupState.update {
+                            it.copy(isExporting = false, message = BackupMessage.ExportSuccess)
+                        }
+                    }
+
+                    is BackupResult.Error -> {
+                        _backupState.update {
+                            it.copy(isExporting = false, message = BackupMessage.ExportFailed)
+                        }
                     }
                 }
-
-                is BackupResult.Error -> {
-                    _backupState.update {
-                        it.copy(isExporting = false, message = BackupMessage.ExportFailed)
-                    }
-                }
+            } catch (e: Exception) {
+                _backupState.update { it.copy(isExporting = false) }
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
     }

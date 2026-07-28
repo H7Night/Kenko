@@ -43,6 +43,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -68,6 +71,9 @@ class PlanEditViewModel @Inject constructor(
 
     val snackbarState = SnackbarHostState()
 
+    private val _snackbar = MutableSharedFlow<String>()
+    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
+
     private val _isBackAlreadyPressedOnce = MutableStateFlow(false)
 
     private val _planItemsStream = planIdStream.flatMapLatest { repo.planItems(it) }
@@ -82,50 +88,66 @@ class PlanEditViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            combine(_planStream, _dayOfWeek) { plan, day ->
-                plan?.titlesMap?.get(day) ?: ""
-            }.collect { title ->
-                if (dayTitleState.text.toString() != title) {
-                    dayTitleState.edit {
-                        replace(0, length, title)
+            try {
+                combine(_planStream, _dayOfWeek) { plan, day ->
+                    plan?.titlesMap?.get(day) ?: ""
+                }.collect { title ->
+                    if (dayTitleState.text.toString() != title) {
+                        dayTitleState.edit {
+                            replace(0, length, title)
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
 
         viewModelScope.launch {
-            _planStream.collect { plan ->
-                if (plan != null && planNameState.text.toString() != plan.name) {
-                    planNameState.edit {
-                        replace(0, length, plan.name)
+            try {
+                _planStream.collect { plan ->
+                    if (plan != null && planNameState.text.toString() != plan.name) {
+                        planNameState.edit {
+                            replace(0, length, plan.name)
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
 
         viewModelScope.launch {
-            snapshotFlow { dayTitleState.text.toString() }
-                .debounce(200.milliseconds)
-                .collect { title ->
-                    val currentPlan = repo.plan(planIdStream.value) ?: return@collect
-                    val day = _dayOfWeek.value
-                    if (currentPlan.titlesMap[day] != title) {
-                        repo.updatePlan(currentPlan.withDayTitle(day, title))
+            try {
+                snapshotFlow { dayTitleState.text.toString() }
+                    .debounce(200.milliseconds)
+                    .collect { title ->
+                        val currentPlan = repo.plan(planIdStream.value) ?: return@collect
+                        val day = _dayOfWeek.value
+                        if (currentPlan.titlesMap[day] != title) {
+                            repo.updatePlan(currentPlan.withDayTitle(day, title))
+                        }
                     }
-                }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
 
         viewModelScope.launch {
-            snapshotFlow { planNameState.text.toString() }
-                .debounce(500.milliseconds)
-                .collect { name ->
-                    val id = planIdStream.value
-                    if (id == -1 || name.isBlank() || isNameAlreadyUsed.value) return@collect
-                    val currentPlan = repo.plan(id) ?: return@collect
-                    if (currentPlan.name != name) {
-                        repo.updatePlan(currentPlan.copy(name = name))
+            try {
+                snapshotFlow { planNameState.text.toString() }
+                    .debounce(500.milliseconds)
+                    .collect { name ->
+                        val id = planIdStream.value
+                        if (id == -1 || name.isBlank() || isNameAlreadyUsed.value) return@collect
+                        val currentPlan = repo.plan(id) ?: return@collect
+                        if (currentPlan.name != name) {
+                            repo.updatePlan(currentPlan.copy(name = name))
+                        }
                     }
-                }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
@@ -171,87 +193,123 @@ class PlanEditViewModel @Inject constructor(
 
     fun saveName() {
         viewModelScope.launch {
-            if (planNameState.text.isBlank()) {
-                snackbarState.showSnackbar(stringHandler.getString(R.string.error_plan_name_empty))
-                return@launch
+            try {
+                if (planNameState.text.isBlank()) {
+                    snackbarState.showSnackbar(stringHandler.getString(R.string.error_plan_name_empty))
+                    return@launch
+                }
+                if (isNameAlreadyUsed.value) {
+                    snackbarState.showSnackbar(stringHandler.getString(R.string.error_plan_name_exists))
+                    return@launch
+                }
+                val createId = repo.createPlan(planNameState.text.toString())
+                planIdStream.emit(createId)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
-            if (isNameAlreadyUsed.value) {
-                snackbarState.showSnackbar(stringHandler.getString(R.string.error_plan_name_exists))
-                return@launch
-            }
-            val createId = repo.createPlan(planNameState.text.toString())
-            planIdStream.emit(createId)
         }
     }
 
     fun setCurrentDay(dayOfWeek: DayOfWeek) {
         viewModelScope.launch {
-            _dayOfWeek.emit(dayOfWeek)
-            if (_fullDaySelection.value) {
-                _fullDaySelection.emit(false)
+            try {
+                _dayOfWeek.emit(dayOfWeek)
+                if (_fullDaySelection.value) {
+                    _fullDaySelection.emit(false)
+                }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
     }
 
     fun openFullDaySelection() {
         viewModelScope.launch {
-            _fullDaySelection.emit(true)
+            try {
+                _fullDaySelection.emit(true)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun openSheet() {
         viewModelScope.launch {
-            _isSheetVisible.emit(true)
+            try {
+                _isSheetVisible.emit(true)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun closeSheet() {
         viewModelScope.launch {
-            _isSheetVisible.emit(false)
+            try {
+                _isSheetVisible.emit(false)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun addExercise(exercise: Exercise) {
         viewModelScope.launch {
-            repo.addItem(
-                PlanItem(
-                    dayOfWeek = _dayOfWeek.value,
-                    exercise = exercise,
-                    planId = planIdStream.value,
-                ),
-            )
+            try {
+                repo.addItem(
+                    PlanItem(
+                        dayOfWeek = _dayOfWeek.value,
+                        exercise = exercise,
+                        planId = planIdStream.value,
+                    ),
+                )
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun removeExercise(exercise: Exercise) {
         viewModelScope.launch {
-            exercise.id?.let { repo.removeItemById(it) }
+            try {
+                exercise.id?.let { repo.removeItemById(it) }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun updateOrder(exercises: List<Exercise>) {
         viewModelScope.launch {
-            repo.updateOrder(planIdStream.value, _dayOfWeek.value, exercises)
+            try {
+                repo.updateOrder(planIdStream.value, _dayOfWeek.value, exercises)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun onBackPress(stage: PlanEditStage, onBackPress: () -> Unit) {
         viewModelScope.launch {
-            if (stage == PlanEditStage.NameEdit) {
+            try {
+                if (stage == PlanEditStage.NameEdit) {
+                    onBackPress()
+                    return@launch
+                }
+                if (_isBackAlreadyPressedOnce.value) {
+                    repo.deletePlan(planIdStream.value)
+                    onBackPress()
+                    return@launch
+                }
+                if (repo.getPlanItems(planIdStream.value).isEmpty()) {
+                    _isBackAlreadyPressedOnce.emit(true)
+                    snackbarState.showSnackbar(stringHandler.getString(R.string.error_plan_empty_prompt))
+                    return@launch
+                }
                 onBackPress()
-                return@launch
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
-            if (_isBackAlreadyPressedOnce.value) {
-                repo.deletePlan(planIdStream.value)
-                onBackPress()
-                return@launch
-            }
-            if (repo.getPlanItems(planIdStream.value).isEmpty()) {
-                _isBackAlreadyPressedOnce.emit(true)
-                snackbarState.showSnackbar(stringHandler.getString(R.string.error_plan_empty_prompt))
-                return@launch
-            }
-            onBackPress()
         }
     }
 }

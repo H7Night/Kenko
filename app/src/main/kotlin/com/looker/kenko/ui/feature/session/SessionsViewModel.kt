@@ -27,7 +27,10 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -65,16 +68,27 @@ class SessionsViewModel @Inject constructor(
         )
     }.asStateFlow(SessionsUiData(emptyList(), false))
 
+    private val _snackbar = MutableSharedFlow<String>()
+    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
+
     fun addSession(date: LocalDate, day: DayOfWeek, onComplete: () -> Unit) {
         viewModelScope.launch {
-            repo.updatePlanDay(date, day)
-            onComplete()
+            try {
+                repo.updatePlanDay(date, day)
+                onComplete()
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun removeSession(session: Session) {
         viewModelScope.launch {
-            repo.deleteSession(session)
+            try {
+                repo.deleteSession(session)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 }
