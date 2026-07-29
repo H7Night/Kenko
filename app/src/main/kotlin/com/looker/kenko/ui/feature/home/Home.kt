@@ -76,6 +76,7 @@ import com.looker.kenko.ui.feature.session.components.SetItem
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.header
 import com.looker.kenko.ui.theme.numbers
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
