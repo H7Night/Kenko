@@ -68,6 +68,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -264,6 +265,12 @@ private fun PlanEdit(
     val localExercises = remember(state.exercises) { state.exercises.toMutableStateList() }
     var draggedItemIndex by remember { mutableIntStateOf(-1) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
+
+    // Cancel ongoing drag when the exercise list is replaced by a Room Flow update
+    LaunchedEffect(localExercises.size) {
+        draggedItemIndex = -1
+        dragOffset = 0f
+    }
 
     PlanExercise(
         modifier = Modifier.fillMaxSize(),
