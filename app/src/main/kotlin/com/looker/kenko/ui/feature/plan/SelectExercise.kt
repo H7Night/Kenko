@@ -300,7 +300,7 @@ private fun ExerciseSearchField(
             value = name,
             onValueChange = onNameChange,
             colors = kenkoTextFieldColor(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
             shape = MaterialTheme.shapes.large.end(8.dp),
             label = {
                 Text(text = stringResource(R.string.label_search_exercise))
