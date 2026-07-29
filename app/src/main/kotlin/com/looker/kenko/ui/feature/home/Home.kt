@@ -238,6 +238,7 @@ fun Home(
                         isPlanSelected = state.isPlanSelected,
                         planName = state.planName,
                         dayTitle = state.dayTitle,
+                        dayOfWeek = state.dayOfWeek,
                         onSelectPlanClick = onSelectPlanClick,
                     )
                 }
@@ -357,6 +358,7 @@ private fun PlanInfoCard(
     isPlanSelected: Boolean,
     planName: String?,
     dayTitle: String?,
+    dayOfWeek: DayOfWeek,
     onSelectPlanClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -396,7 +398,7 @@ private fun PlanInfoCard(
 
             // Today's training title
             Text(
-                text = "${stringResource(R.string.label_today_plan)}: ${dayTitle ?: "-"}",
+                text = "${stringResource(R.string.label_today_plan)}: ${dayTitle ?: dayName(dayOfWeek)}",
                 style = MaterialTheme.typography.titleMedium,
             )
         }

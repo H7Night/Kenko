@@ -139,9 +139,8 @@ class HomeViewModel @Inject constructor(
         val trainingState = array[5] as TrainingSessionState
 
         val isFirstSession = sessions.size <= 1 && sessions.firstOrNull()?.date == today()
-        val dayTitle = currentPlan?.titlesMap?.get(
-            currentSession?.planDayOverride ?: today().dayOfWeek
-        )
+        val dayOfWeek = currentSession?.planDayOverride ?: today().dayOfWeek
+        val dayTitle = currentPlan?.titlesMap?.get(dayOfWeek)
         HomeUiData(
             isPlanSelected = currentPlan != null,
             isSessionStarted = currentSession != null && currentSession.sets.isNotEmpty(),
@@ -149,6 +148,7 @@ class HomeViewModel @Inject constructor(
             isFirstSession = isFirstSession,
             currentPlanId = currentPlan?.id,
             sessionDates = sessions.map { it.date }.toSet(),
+            dayOfWeek = dayOfWeek,
             timerState = timerState,
             trainingState = trainingState,
             planName = currentPlan?.name,
@@ -225,5 +225,6 @@ data class HomeUiData(
     val trainingState: TrainingSessionState = TrainingSessionState.Idle,
     val planName: String? = null,
     val dayTitle: String? = null,
+    val dayOfWeek: DayOfWeek = today().dayOfWeek,
     val todayExercises: List<com.looker.kenko.domain.model.Exercise> = emptyList(),
 )
