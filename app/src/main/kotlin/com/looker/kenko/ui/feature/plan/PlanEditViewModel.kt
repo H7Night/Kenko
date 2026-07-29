@@ -75,6 +75,7 @@ class PlanEditViewModel @Inject constructor(
     val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
 
     private val _isBackAlreadyPressedOnce = MutableStateFlow(false)
+    private val _isSavingDayTitle = MutableStateFlow(false)
 
     private val _planItemsStream = planIdStream.flatMapLatest { repo.planItems(it) }
 
@@ -92,7 +93,7 @@ class PlanEditViewModel @Inject constructor(
                 combine(_planStream, _dayOfWeek) { plan, day ->
                     plan?.titlesMap?.get(day) ?: ""
                 }.collect { title ->
-                    if (dayTitleState.text.toString() != title) {
+                    if (!_isSavingDayTitle.value && dayTitleState.text.toString() != title) {
                         dayTitleState.edit {
                             replace(0, length, title)
                         }
@@ -122,10 +123,15 @@ class PlanEditViewModel @Inject constructor(
                 snapshotFlow { dayTitleState.text.toString() }
                     .debounce(200.milliseconds)
                     .collect { title ->
-                        val currentPlan = repo.plan(planIdStream.value) ?: return@collect
-                        val day = _dayOfWeek.value
-                        if (currentPlan.titlesMap[day] != title) {
-                            repo.updatePlan(currentPlan.withDayTitle(day, title))
+                        _isSavingDayTitle.value = true
+                        try {
+                            val currentPlan = repo.plan(planIdStream.value) ?: return@collect
+                            val day = _dayOfWeek.value
+                            if (currentPlan.titlesMap[day] != title) {
+                                repo.updatePlan(currentPlan.withDayTitle(day, title))
+                            }
+                        } finally {
+                            _isSavingDayTitle.value = false
                         }
                     }
             } catch (e: Exception) {
