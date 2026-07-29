@@ -50,14 +50,14 @@ fun KenkoBottomBar(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 48.dp, vertical = 8.dp)
+            .padding(horizontal = 48.dp, vertical = 5.dp)
             .shadow(elevation = 12.dp, shape = RoundedCornerShape(28.dp)),
         shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
         tonalElevation = 4.dp,
     ) {
         NavigationBar(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().height(72.dp),
             containerColor = androidx.compose.ui.graphics.Color.Transparent,
             tonalElevation = 0.dp,
             windowInsets = WindowInsets(0, 0, 0, 0),
