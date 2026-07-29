@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
@@ -78,6 +79,10 @@ fun SelectExercise(
 ) {
     val viewModel: SelectExerciseViewModel = hiltViewModel()
     val focusManager = LocalFocusManager.current
+
+    DisposableEffect(Unit) {
+        onDispose { viewModel.reset() }
+    }
 
     Column(
         modifier = Modifier

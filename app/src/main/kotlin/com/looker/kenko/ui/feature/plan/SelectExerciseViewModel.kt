@@ -101,4 +101,10 @@ class SelectExerciseViewModel @Inject constructor(
     fun setChildFilter(childId: Int?) {
         selectedChildId.value = childId
     }
+
+    fun reset() {
+        searchQuery.value = ""
+        selectedParentId.value = null
+        selectedChildId.value = null
+    }
 }
