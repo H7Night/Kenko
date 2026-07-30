@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -55,7 +54,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -63,7 +61,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.ui.component.disableScrollConnection
-import com.looker.kenko.ui.component.kenkoTextFieldColor
 import com.looker.kenko.ui.feature.plan.components.ExerciseItem
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
@@ -100,16 +97,19 @@ fun SelectExercise(
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        // Search field
-        ExerciseSearchField(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            name = viewModel.searchQuery.value,
-            onNameChange = viewModel::setSearch,
-            onAddClick = {
+        // Create exercise button
+        FilledTonalIconButton(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .size(56.dp),
+            shape = MaterialTheme.shapes.large,
+            onClick = {
                 focusManager.clearFocus()
-                onRequestNewExercise(viewModel.searchQuery.value.ifBlank { null })
+                onRequestNewExercise(null)
             },
-        )
+        ) {
+            Icon(painter = KenkoIcons.Add, contentDescription = null)
+        }
 
         Spacer(modifier = Modifier.height(4.dp))
 
@@ -285,39 +285,6 @@ private fun SearchNotFound(onAddNewExercise: () -> Unit, modifier: Modifier = Mo
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(text = stringResource(R.string.label_create_exercise))
             }
-        }
-    }
-}
-
-@Composable
-private fun ExerciseSearchField(
-    name: String,
-    onNameChange: (String) -> Unit,
-    onAddClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        OutlinedTextField(
-            modifier = Modifier.weight(1f),
-            value = name,
-            onValueChange = onNameChange,
-            colors = kenkoTextFieldColor(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-            shape = MaterialTheme.shapes.large.end(8.dp),
-            label = {
-                Text(text = stringResource(R.string.label_search_exercise))
-            },
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        FilledTonalIconButton(
-            modifier = Modifier.size(56.dp),
-            shape = MaterialTheme.shapes.large.start(8.dp),
-            onClick = onAddClick,
-        ) {
-            Icon(painter = KenkoIcons.Add, contentDescription = null)
         }
     }
 }

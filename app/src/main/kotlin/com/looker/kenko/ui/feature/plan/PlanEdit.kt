@@ -370,29 +370,31 @@ private fun PlanEdit(
                                         dragOffset += dragAmount.y
 
                                         val currentDraggedIndex = draggedItemIndex
-                                        if (currentDraggedIndex != -1) {
-                                            val layoutInfo = lazyListState.layoutInfo
-                                            // The item indices in layoutInfo are index+1 because of header
-                                            val draggedItemInfo = layoutInfo.visibleItemsInfo
-                                                .find { it.index == currentDraggedIndex + 1 }
+                                        if (currentDraggedIndex !in localExercises.indices) {
+                                            draggedItemIndex = -1
+                                            dragOffset = 0f
+                                            return@detectDragGesturesAfterLongPress
+                                        }
+                                        val layoutInfo = lazyListState.layoutInfo
+                                        // The item indices in layoutInfo are index+1 because of header
+                                        val draggedItemInfo = layoutInfo.visibleItemsInfo
+                                            .find { it.index == currentDraggedIndex + 1 }
 
-                                            if (draggedItemInfo != null) {
-                                                val threshold = draggedItemInfo.size / 2
-                                                if (dragOffset > threshold && currentDraggedIndex < localExercises.size - 1) {
-                                                    // Move down
-                                                    localExercises.apply {
-                                                        add(currentDraggedIndex + 1, removeAt(currentDraggedIndex))
-                                                    }
-                                                    draggedItemIndex = currentDraggedIndex + 1
-                                                    dragOffset -= draggedItemInfo.size
-                                                } else if (dragOffset < -threshold && currentDraggedIndex > 0) {
-                                                    // Move up
-                                                    localExercises.apply {
-                                                        add(currentDraggedIndex - 1, removeAt(currentDraggedIndex))
-                                                    }
-                                                    draggedItemIndex = currentDraggedIndex - 1
-                                                    dragOffset += draggedItemInfo.size
-                                                }
+                                        if (draggedItemInfo != null) {
+                                            val threshold = draggedItemInfo.size / 2
+                                            val targetIndex: Int
+                                            if (dragOffset > threshold && currentDraggedIndex < localExercises.lastIndex) {
+                                                targetIndex = currentDraggedIndex + 1
+                                            } else if (dragOffset < -threshold && currentDraggedIndex > 0) {
+                                                targetIndex = currentDraggedIndex - 1
+                                            } else {
+                                                return@detectDragGesturesAfterLongPress
+                                            }
+                                            // Re-verify indices are still valid before mutating
+                                            if (currentDraggedIndex in localExercises.indices && targetIndex in 0..localExercises.size) {
+                                                localExercises.add(targetIndex, localExercises.removeAt(currentDraggedIndex))
+                                                draggedItemIndex = targetIndex
+                                                dragOffset -= draggedItemInfo.size * (if (targetIndex > currentDraggedIndex) 1 else -1)
                                             }
                                         }
                                     },
