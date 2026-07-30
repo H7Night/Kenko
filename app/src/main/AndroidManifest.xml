@@ -48,6 +48,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.CrashSaveActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Kenko" />
+
         <!-- Disable default WorkManager initializer to use Hilt -->
         <provider
             android:name="androidx.startup.InitializationProvider"

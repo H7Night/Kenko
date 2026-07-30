@@ -17,14 +17,20 @@ package com.looker.kenko
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.looker.kenko.ui.CrashHandler
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
 @HiltAndroidApp
 class KenkoApp : Application(), Configuration.Provider {
 
-    @Inject
-    lateinit var workerFactory: HiltWorkerFactory
+    @Inject lateinit var workerFactory: HiltWorkerFactory
+    @Inject lateinit var crashHandler: CrashHandler
+
+    override fun onCreate() {
+        super.onCreate()
+        crashHandler.install()
+    }
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()

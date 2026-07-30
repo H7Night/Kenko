@@ -294,4 +294,13 @@
     </string-array>
     <string name="label_about">关于</string>
     <string name="label_view_source_on_github">在 GitHub 查看源代码</string>
+
+    <!-- Crash log -->
+    <string name="label_crash_dialog_title">程序崩溃</string>
+    <string name="label_crash_dialog_message">Kenko 遇到了意外错误，是否保存崩溃日志以便调试？</string>
+    <string name="label_crash_dialog_hint">日志将保存到你选择的位置。</string>
+    <string name="label_crash_save">保存日志</string>
+    <string name="label_crash_discard">不保存</string>
+    <string name="label_crash_log_saved">日志已保存</string>
+    <string name="label_crash_log_save_failed">日志保存失败</string>
 </resources>
