@@ -93,6 +93,7 @@ fun Home(
     val timerSeconds by viewModel.timerManager.elapsedSeconds.collectAsStateWithLifecycle()
     val allExercises by viewModel.allExercises.collectAsStateWithLifecycle()
     val availablePlanDays by viewModel.availablePlanDays.collectAsStateWithLifecycle()
+    val planDayTitles by viewModel.planDayTitles.collectAsStateWithLifecycle()
     val notifState = rememberNotificationPermissionState()
 
     LaunchedEffect(Unit) {
@@ -200,7 +201,9 @@ fun Home(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 4.dp),
                     ) {
-                        Text(text = dayName(day))
+                        val title = planDayTitles[day]
+                        val displayName = if (title.isNullOrBlank()) dayName(day) else "$title (${dayName(day)})"
+                        Text(text = displayName)
                     }
                 }
             }

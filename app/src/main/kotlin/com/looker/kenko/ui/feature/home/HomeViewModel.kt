@@ -94,6 +94,10 @@ class HomeViewModel @Inject constructor(
             items.groupBy { it.dayOfWeek }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
+    val planDayTitles: StateFlow<Map<DayOfWeek, String>> = planStream.map { plan ->
+        plan?.titlesMap ?: emptyMap()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
     val previousSessionDate: StateFlow<LocalDate?> = combine(
         planStream,
         sessionStream,

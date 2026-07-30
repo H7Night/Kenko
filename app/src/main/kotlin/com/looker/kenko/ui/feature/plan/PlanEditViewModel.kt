@@ -187,6 +187,7 @@ class PlanEditViewModel @Inject constructor(
             selectionMode = daySelection,
             exerciseSheetVisible = sheetVisible,
             exercises = items.filter { it.dayOfWeek == day }.map(PlanItem::exercise),
+            planTitles = plan?.titlesMap ?: emptyMap(),
         )
     }.asStateFlow(
         PlanEditState(
@@ -332,4 +333,5 @@ data class PlanEditState(
     val selectionMode: Boolean,
     val exerciseSheetVisible: Boolean,
     val exercises: List<Exercise>,
+    val planTitles: Map<DayOfWeek, String> = emptyMap(),
 )

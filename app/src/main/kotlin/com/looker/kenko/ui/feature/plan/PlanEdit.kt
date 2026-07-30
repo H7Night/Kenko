@@ -319,6 +319,7 @@ private fun PlanEdit(
                         onNext = { onSelectDay(state.currentDay + 1) },
                         onPrevious = { onSelectDay(state.currentDay - 1) },
                         onClick = onFullDaySelection,
+                        dayTitle = state.planTitles[state.currentDay],
                     )
                 },
             )

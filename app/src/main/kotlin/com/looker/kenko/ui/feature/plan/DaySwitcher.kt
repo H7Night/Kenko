@@ -64,6 +64,7 @@ fun DaySwitcher(
     onPrevious: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    dayTitle: String? = null,
 ) {
     Row(
         modifier = modifier.widthIn(max = 400.dp),
@@ -103,8 +104,9 @@ fun DaySwitcher(
                         ) using SizeTransform(clip = false)
                     },
                 ) { day ->
+                    val displayName = if (dayTitle.isNullOrBlank()) dayName(dayOfWeek = day) else "$dayTitle (${dayName(dayOfWeek = day)})"
                     Text(
-                        text = dayName(dayOfWeek = day),
+                        text = displayName,
                         style = MaterialTheme.typography.labelLarge,
                     )
                 }

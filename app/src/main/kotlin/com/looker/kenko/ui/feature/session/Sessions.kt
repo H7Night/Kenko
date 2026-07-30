@@ -307,6 +307,7 @@ private fun Sessions(
                         SessionCard(
                             session = session,
                             onClick = { onSessionClick(session.date) },
+                            dayTitles = state.dayTitles,
                         )
                     }
                 }
@@ -444,6 +445,7 @@ fun SessionCard(
     session: Session,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
+    dayTitles: Map<DayOfWeek, String> = emptyMap(),
 ) {
     val containerColor = if (session.date.isToday) {
         MaterialTheme.colorScheme.tertiaryContainer
@@ -465,14 +467,16 @@ fun SessionCard(
             val titleStyle = MaterialTheme.typography.titleLarge
             val secondaryEmphasis = MaterialTheme.colorScheme.outline
             val dayName = dayName(session.date.dayOfWeek)
-            val string = remember(session.date, dayName) {
+            val dayTitle = dayTitles[session.date.dayOfWeek]
+            val displayName = if (dayTitle.isNullOrBlank()) dayName else "$dayTitle ($dayName)"
+            val string = remember(session.date, dayName, dayTitle) {
                 buildAnnotatedString {
                     withStyle(titleStyle.toSpanStyle().copy(fontWeight = FontWeight.Bold)) {
                         append(formatDate(session.date, dateTimeFormat = DateFormat.YearMonthDay))
                     }
                     append(" ${Typography.bullet} ")
                     withStyle(titleStyle.toSpanStyle().copy(color = secondaryEmphasis)) {
-                        append(dayName)
+                        append(displayName)
                     }
                 }
             }
