@@ -263,14 +263,21 @@ private fun PlanEdit(
     val isCurrentDayBlank by remember(state.planItems) { derivedStateOf { state.planItems.isEmpty() } }
     val lazyListState = rememberLazyListState()
 
-    val localPlanItems = remember(state.planItems) { state.planItems.toMutableStateList() }
+    val localPlanItems = remember { state.planItems.toMutableStateList() }
     var draggedItemIndex by remember { mutableIntStateOf(-1) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
 
-    // Cancel ongoing drag when the plan item list is replaced by a Room Flow update
-    LaunchedEffect(localPlanItems.size) {
-        draggedItemIndex = -1
-        dragOffset = 0f
+    // Only sync from source when items are added/removed (structural change), not on reorder
+    val sourceIds = remember(state.planItems) { state.planItems.map { it.id }.toSet() }
+    LaunchedEffect(sourceIds) {
+        val localIds = localPlanItems.map { it.id }.toSet()
+        if (sourceIds != localIds) {
+            val dragged = draggedItemIndex
+            localPlanItems.clear()
+            localPlanItems.addAll(state.planItems)
+            draggedItemIndex = -1
+            dragOffset = 0f
+        }
     }
 
     PlanExercise(
