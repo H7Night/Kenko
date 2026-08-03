@@ -27,7 +27,6 @@ data class ExerciseEntity(
     val name: String,
     val countType: CountType = CountType.REPS,
     val reference: String? = null,
-    val isIsometric: Boolean = false,
     val isBodyweight: Boolean = false,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,

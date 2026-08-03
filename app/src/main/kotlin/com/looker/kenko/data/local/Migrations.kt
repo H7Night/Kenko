@@ -350,7 +350,7 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
 
         // 4. Insert child tags (specific muscles)
         // �?        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (8, '上胸', 1, 1)")
-        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (9, '中胸', 1, 2)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (9, '丄1�7��', 1, 2)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (10, '下胸', 1, 3)")
         // �?        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (11, '背阔�?, 2, 1)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (12, '斜方�?, 2, 2)")
@@ -359,9 +359,9 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
         // �?        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (15, '股四头肌', 3, 1)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (16, '腘绳�?, 3, 2)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (17, '小腿', 3, 3)")
-        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (18, '臀�?, 3, 4)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (18, '臢��?, 3, 4)")
         // �?        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (19, '前束', 4, 1)")
-        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (20, '中束', 4, 2)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (20, '丄1�7��', 4, 2)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (21, '后束', 4, 3)")
         // 手臂
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (22, '二头�?, 5, 1)")
@@ -371,8 +371,8 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (26, '下腹', 6, 2)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (27, '腹斜�?, 6, 3)")
         // 有氧
-        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (28, '跑步', 7, 1)")
-        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (29, '骑行', 7, 2)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (28, '跑�1�7', 7, 1)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (29, '骑�1�7', 7, 2)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (30, '划船', 7, 3)")
 
         // 5. Add countType column to exercises
@@ -383,13 +383,13 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
         // 6. Map existing exercises' target to tags in exercise_tags
         // Map each MuscleGroups value to the appropriate child tag
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 8 FROM `exercises` WHERE `target` = 'Chest'")    // 胸→上胸
-        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 11 FROM `exercises` WHERE `target` = 'Lats'")     // 背→背阔�?        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 11 FROM `exercises` WHERE `target` = 'Traps'")    // 斜方肌→背阔肌（最接近的匹配）
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 11 FROM `exercises` WHERE `target` = 'Lats'")     // 背→背阔�?        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 11 FROM `exercises` WHERE `target` = 'Traps'")    // 斜方肌→背阔肌（朢�接近的匹配）
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 13 FROM `exercises` WHERE `target` = 'UpperBack'") // 上背→竖脊肌
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 15 FROM `exercises` WHERE `target` = 'Quads'")    // 腿→股四头肌
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 16 FROM `exercises` WHERE `target` = 'Hamstrings'")
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 17 FROM `exercises` WHERE `target` = 'Calves'")
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 18 FROM `exercises` WHERE `target` = 'Glutes'")
-        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 20 FROM `exercises` WHERE `target` = 'Shoulders'") // 肩→中束
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 20 FROM `exercises` WHERE `target` = 'Shoulders'") // 肩→丄1�7��
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 22 FROM `exercises` WHERE `target` = 'Biceps'")
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 23 FROM `exercises` WHERE `target` = 'Triceps'")
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 25 FROM `exercises` WHERE `target` = 'Core'")     // 核心→上�?        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 28 FROM `exercises` WHERE `target` = 'Cardio'")   // 有氧→跑�?
@@ -404,5 +404,32 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
 val MIGRATION_8_9 = object : Migration(8, 9) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE `sessions` ADD COLUMN `durationSeconds` INTEGER DEFAULT NULL")
+    }
+}
+
+val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Drop isIsometric column from exercises (SQLite rebuild)
+        db.execSQL("ALTER TABLE `exercises` RENAME TO `exercises_old`")
+        db.execSQL(
+            """
+            CREATE TABLE `exercises` (
+            `name` TEXT NOT NULL,
+            `countType` TEXT NOT NULL,
+            `reference` TEXT,
+            `isBodyweight` INTEGER NOT NULL,
+            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            INSERT INTO `exercises` (`name`, `countType`, `reference`, `isBodyweight`, `id`)
+            SELECT `name`, `countType`, `reference`, `isBodyweight`, `id` FROM `exercises_old`
+            """.trimIndent(),
+        )
+        db.execSQL("DROP TABLE `exercises_old`")
+
+        // Drop unused set_type lookup table
+        db.execSQL("DROP TABLE IF EXISTS `set_type`")
     }
 }

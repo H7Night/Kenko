@@ -111,7 +111,7 @@ class RoomDatabaseTesting {
         assertTrue(currentPlanItems.all { it.exerciseId != 0 })
         assertContains(
             exercises,
-            ExerciseEntity("Pullups", isIsometric = false, id = 1),
+            ExerciseEntity("Pullups", id = 1),
         )
         assertEquals(planHistory.planId, 1)
         assertEquals(fullHistory.size, 1)

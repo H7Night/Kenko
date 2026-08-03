@@ -29,7 +29,6 @@ data class Exercise(
     val name: String,
     val tags: List<Tag> = emptyList(),
     val countType: CountType = CountType.REPS,
-    val isIsometric: Boolean = false,
     val isBodyweight: Boolean = false,
     val reference: String? = null,
     val id: Int? = null,
@@ -38,9 +37,8 @@ data class Exercise(
 @Stable
 val Exercise.repDurationStringRes: Int
     @StringRes
-    get() = when {
-        isIsometric -> R.string.label_duration
-        countType == CountType.MINUTES -> R.string.label_min
+    get() = when (countType) {
+        CountType.MINUTES -> R.string.label_min
         else -> R.string.label_reps
     }
 

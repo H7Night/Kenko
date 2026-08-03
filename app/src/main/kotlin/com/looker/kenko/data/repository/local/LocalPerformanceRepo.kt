@@ -15,7 +15,6 @@
 package com.looker.kenko.data.repository.local
 
 import com.looker.kenko.data.local.dao.PerformanceDao
-import com.looker.kenko.data.local.model.defaultSetTypes
 import com.looker.kenko.data.repository.Performance
 import com.looker.kenko.data.repository.PerformanceRepo
 import javax.inject.Inject
@@ -23,10 +22,6 @@ import javax.inject.Inject
 class LocalPerformanceRepo @Inject constructor(
     private val performanceDao: PerformanceDao,
 ) : PerformanceRepo {
-
-    override suspend fun updateModifiers() {
-        performanceDao.upsertSetTypeLookup(defaultSetTypes())
-    }
 
     override suspend fun getPerformance(exerciseId: Int?, planId: Int?): Performance? =
         performanceDao.getPerformance(exerciseId, planId)

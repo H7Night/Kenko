@@ -19,7 +19,6 @@ import androidx.lifecycle.viewModelScope
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.domain.model.today
-import com.looker.kenko.data.repository.PerformanceRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.utils.asStateFlow
@@ -29,13 +28,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.launch
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     repo: SettingsRepo,
     sessionRepo: SessionRepo,
-    performanceRepo: PerformanceRepo,
 ) : ViewModel() {
 
     val isReady: StateFlow<Boolean> = repo.stream
@@ -55,10 +52,4 @@ class MainViewModel @Inject constructor(
     val isExerciseVisible: StateFlow<Boolean> = sessionRepo.streamByDate(today())
         .map { it != null && it.sets.isNotEmpty() }
         .asStateFlow(false)
-
-    init {
-        viewModelScope.launch {
-            performanceRepo.updateModifiers()
-        }
-    }
 }

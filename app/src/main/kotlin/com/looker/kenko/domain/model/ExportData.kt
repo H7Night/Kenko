@@ -58,7 +58,6 @@ data class ExportExercise(
     val tags: List<String> = emptyList(),
     val countType: String = "REPS",
     val isBodyweight: Boolean = false,
-    val isIsometric: Boolean = false,
 )
 
 @Serializable

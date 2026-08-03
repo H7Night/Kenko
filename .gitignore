@@ -12,3 +12,7 @@ local.properties
 /.kotlin
 /kls_database.db
 *.zip
+*.db-shm
+*.db-wal
+*.db.bak
+*.db-*

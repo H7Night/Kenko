@@ -109,7 +109,6 @@ private fun Exercise.toExport(): ExportExercise = ExportExercise(
     tags = tags.map { it.name },
     countType = countType.name,
     isBodyweight = isBodyweight,
-    isIsometric = isIsometric,
 )
 
 private fun Weight.toExport(): ExportWeight = ExportWeight(

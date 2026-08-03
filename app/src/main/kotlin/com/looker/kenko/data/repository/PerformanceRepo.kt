@@ -18,8 +18,6 @@ import androidx.compose.runtime.Immutable
 
 interface PerformanceRepo {
 
-    suspend fun updateModifiers()
-
     suspend fun getPerformance(exerciseId: Int? = null, planId: Int? = null): Performance?
 
 }
