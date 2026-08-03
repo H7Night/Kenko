@@ -219,7 +219,7 @@ private fun ExerciseCard(
         Surface(
             modifier = Modifier.weight(1.5F),
             shape = surfaceShape,
-            border = OutlineBorder,
+            color = MaterialTheme.colorScheme.surfaceContainer,
             onClick = onExercisesClick,
         ) {
             Column(Modifier.padding(24.dp)) {
@@ -242,10 +242,6 @@ private fun ExerciseCard(
                 .fillMaxHeight()
                 .clip(buttonShape)
                 .clickable(onClick = onAddClick)
-                .border(
-                    border = SecondaryBorder,
-                    shape = buttonShape,
-                )
                 .background(MaterialTheme.colorScheme.secondaryContainer),
             contentAlignment = Alignment.Center,
         ) {
@@ -270,7 +266,7 @@ private fun WeightCard(
             .fillMaxWidth()
             .clickable(onClick = onAddClick),
         shape = MaterialTheme.shapes.extraLarge,
-        border = SecondaryBorder,
+        color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
