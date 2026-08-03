@@ -429,6 +429,7 @@ private fun SettingsPreview() {
                 backupMessage = null,
                 capitalizeExerciseName = true,
                 language = Language.System,
+                earliestSessionDate = null,
             ),
             onSelectLanguage = {},
             onSelectTheme = {},

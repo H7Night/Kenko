@@ -51,11 +51,11 @@ interface SessionDao {
 
     @Query(
         """
-        SELECT COUNT(*)
+        SELECT MIN(date)
         FROM sessions
         """,
     )
-    suspend fun getTotalSessions(): Int
+    suspend fun earliestSessionDate(): EpochDays?
 
     @Query(
         """

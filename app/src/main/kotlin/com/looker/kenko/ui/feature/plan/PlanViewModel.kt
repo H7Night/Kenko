@@ -65,15 +65,4 @@ class PlanViewModel @Inject constructor(
             }
         }
     }
-
-    fun cleanupPlans(onDone: () -> Unit) {
-        viewModelScope.launch {
-            try {
-                repo.deleteEmptyPlans()
-                onDone()
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
-        }
-    }
 }

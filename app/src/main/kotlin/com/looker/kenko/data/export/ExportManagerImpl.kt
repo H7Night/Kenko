@@ -55,7 +55,12 @@ class ExportManagerImpl @Inject constructor(
         return try {
             val data = ExportData(
                 sessions = if (options.exportSessions) {
-                    sessionRepo.stream.first().map { it.toExport() }
+                    val sessions = sessionRepo.stream.first().map { it.toExport() }
+                    if (options.startDate != null && options.endDate != null) {
+                        sessions.filter { it.date >= options.startDate && it.date <= options.endDate }
+                    } else {
+                        sessions
+                    }
                 } else null,
                 plans = if (options.exportPlans) {
                     planRepo.plans.first().map { it.toExport() }

@@ -17,11 +17,15 @@ package com.looker.kenko.data.export
 import android.net.Uri
 import com.looker.kenko.data.backup.BackupResult
 
+import kotlinx.datetime.LocalDate
+
 data class ExportOptions(
     val exportSessions: Boolean = true,
     val exportPlans: Boolean = true,
     val exportExercises: Boolean = true,
     val exportWeights: Boolean = true,
+    val startDate: LocalDate? = null,
+    val endDate: LocalDate? = null,
 ) {
     val hasSelection: Boolean get() = exportSessions || exportPlans || exportExercises || exportWeights
 }

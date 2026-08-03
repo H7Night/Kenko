@@ -28,6 +28,8 @@ interface SessionRepo {
 
     val setsCount: Flow<Int>
 
+    val earliestSessionDate: Flow<LocalDate?>
+
     suspend fun addSet(sessionId: Int, set: Set)
 
     suspend fun addSet(

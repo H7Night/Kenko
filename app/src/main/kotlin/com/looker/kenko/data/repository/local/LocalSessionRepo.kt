@@ -30,6 +30,7 @@ import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.utils.toLocalEpochDays
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -54,6 +55,10 @@ class LocalSessionRepo @Inject constructor(
         }
     override val setsCount: Flow<Int> =
         setsDao.totalSetCount()
+
+    override val earliestSessionDate: Flow<LocalDate?> = flow {
+        emit(dao.earliestSessionDate()?.let { LocalDate.fromEpochDays(it.value) })
+    }
 
     override suspend fun addSet(sessionId: Int, set: Set) = mutex.withLock {
         setsDao.insert(

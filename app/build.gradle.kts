@@ -36,7 +36,7 @@ android {
         applicationId = "com.looker.kenko"
         minSdk = 26
         targetSdk = 36
-        versionName = "1.5.0"
+        versionName = "1.6.0"
         versionCode = versionCodeFor(versionName)
 
         testInstrumentationRunner = "com.looker.kenko.KenkoTestRunner"

@@ -18,7 +18,7 @@ value class DateFormat(private val value: String) {
     }
 
     companion object {
-        val BackupName = DateFormat("yyyy-MM-dd")
+        val BackupName = DateFormat("yyyyMMdd")
         val YearMonthDay = DateFormat("yyyy-MM-dd")
     }
 }

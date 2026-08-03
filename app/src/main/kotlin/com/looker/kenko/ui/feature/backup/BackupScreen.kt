@@ -95,6 +95,7 @@ fun BackupScreen(
                 backupUri = state.backupUri,
                 backupInterval = state.backupInterval,
                 lastBackupTime = state.lastBackupTime,
+                earliestSessionDate = state.earliestSessionDate,
                 isBackingUp = state.isBackingUp,
                 isRestoring = state.isRestoring,
                 isExporting = state.isExporting,

@@ -234,9 +234,6 @@ interface PlanDao {
     @Query("DELETE FROM plans WHERE id = :planId")
     suspend fun deletePlan(planId: Int)
 
-    @Query("DELETE FROM plans WHERE id NOT IN (SELECT DISTINCT planId FROM plan_day)")
-    suspend fun deleteEmptyPlans()
-
     @Upsert
     suspend fun insertPlanItem(item: PlanDayEntity)
 

@@ -19,7 +19,7 @@ thought-out plans
 - **Body Weight Tracking**: Record your body weight and view progress on interactive line charts.
 - **Modern Navigation**: Effortlessly switch between Home, Training, and Profile using the new bottom navigation bar.
 - **Material Design 3**: Fully rounded and unified UI components following the latest MD3 guidelines.
-- **Backup & Restore**: Keep your data safe with local backup and restore.
+- **Backup & Export**: App backup (ZIP, auto-scheduled via WorkManager) and training data export (JSON, with date range filtering).
 - **Multi-language**: Support for English, Chinese, and Turkish.
 
 ## Screenshots

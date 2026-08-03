@@ -23,6 +23,7 @@ import com.looker.kenko.data.backup.BackupManager
 import com.looker.kenko.data.backup.BackupResult
 import com.looker.kenko.data.export.ExportManager
 import com.looker.kenko.data.export.ExportOptions
+import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
@@ -32,6 +33,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -40,13 +42,17 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val repo: SettingsRepo,
     private val backupManager: BackupManager,
     private val exportManager: ExportManager,
+    sessionRepo: SessionRepo,
 ) : ViewModel() {
+
+    private val earliestSessionDate: Flow<LocalDate?> = sessionRepo.earliestSessionDate
 
     private val _backupState = MutableStateFlow(BackupState())
 
@@ -56,7 +62,8 @@ class SettingsViewModel @Inject constructor(
     val state: StateFlow<SettingsUiData> = combine(
         repo.stream,
         _backupState,
-    ) { settings, backupState ->
+        earliestSessionDate,
+    ) { settings, backupState, earliestDate ->
         SettingsUiData(
             selectedTheme = settings.theme,
             backupUri = settings.backupUri,
@@ -68,6 +75,7 @@ class SettingsViewModel @Inject constructor(
             backupMessage = backupState.message,
             capitalizeExerciseName = settings.capitalizeExerciseName,
             language = settings.language,
+            earliestSessionDate = earliestDate,
         )
     }.asStateFlow(
         SettingsUiData(
@@ -81,6 +89,7 @@ class SettingsViewModel @Inject constructor(
             backupMessage = null,
             capitalizeExerciseName = true,
             language = Language.System,
+            earliestSessionDate = null,
         ),
     )
 
@@ -252,4 +261,5 @@ data class SettingsUiData(
     val backupMessage: BackupMessage?,
     val capitalizeExerciseName: Boolean,
     val language: Language,
+    val earliestSessionDate: LocalDate?,
 )

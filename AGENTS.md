@@ -72,6 +72,7 @@ The top-level nav graph is assembled in `ui/navigation/KenkoNavHost.kt`. Bottom-
 - **Kotlin context parameters**: enabled via `-Xcontext-parameters` compiler flag. `asStateFlow()` is a context-parameter function.
 - **`kotlinx.datetime.LocalDate`** is the canonical date type throughout the codebase, stored as epoch days in Room.
 - **Room database** is pre-populated from `app/src/main/assets/kenko.db` and uses incremental migrations (currently at version 6).
+- **Backup** has two modes: DB backup (ZIP, restore-capable, WorkManager-scheduled) and JSON export (selective data with date range). The backup UI lives in `ui/feature/backup/BackupScreen.kt` + `ui/feature/settings/BackupSection.kt`.
 
 ### Key dependencies
 

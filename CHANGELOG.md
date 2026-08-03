@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file atleast once
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-08-03
+
+### Changed
+- Backup page split into two sections: "程序备份" (App Backup) for full DB backup with auto-schedule, and "导出训练数据" (Export Training Data) for selective JSON export
+- JSON export now supports date range filtering with DatePicker, defaulting from first training session to today
+- Export date pickers are only active when "Training History" is selected
+
+### Added
+- `SessionDao.earliestSessionDate()` query to retrieve the date of the first recorded session
+- `SessionRepo.earliestSessionDate` flow for UI consumption
+
 ## [1.5.0] - 2026-07-26
 
 ### Added

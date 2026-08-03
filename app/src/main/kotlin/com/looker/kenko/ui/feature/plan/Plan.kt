@@ -18,23 +18,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,7 +43,6 @@ import com.looker.kenko.ui.component.endItem
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.KenkoAddButton
 import com.looker.kenko.ui.feature.plan.components.PlanItem
-import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 
 @Composable
@@ -60,39 +51,15 @@ fun Plan(
     onBackPress: () -> Unit,
     onPlanClick: (Int) -> Unit,
 ) {
-    var showHelpDialog by remember { mutableStateOf(false) }
     val plans: List<Plan> by viewModel.plans.collectAsStateWithLifecycle()
 
     Plan(
         plans = plans,
         onBackPress = onBackPress,
-        onInfoClick = { showHelpDialog = true },
         onSelectPlan = viewModel::switchPlan,
         onRemove = viewModel::removePlan,
         onPlanClick = onPlanClick,
     )
-
-    if (showHelpDialog) {
-        AlertDialog(
-            onDismissRequest = { showHelpDialog = false },
-            title = { Text(text = stringResource(R.string.label_clean_up)) },
-            text = { Text(text = stringResource(R.string.label_clean_up_plans)) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.cleanupPlans { showHelpDialog = false }
-                    },
-                ) {
-                    Text(text = stringResource(R.string.label_yes))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showHelpDialog = false }) {
-                    Text(text = stringResource(R.string.label_no))
-                }
-            }
-        )
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,7 +67,6 @@ fun Plan(
 private fun Plan(
     plans: List<Plan>,
     onBackPress: () -> Unit,
-    onInfoClick: () -> Unit,
     onSelectPlan: (Plan) -> Unit,
     onRemove: (Int) -> Unit,
     onPlanClick: (Int) -> Unit,
@@ -109,15 +75,7 @@ private fun Plan(
         topBar = {
             TopAppBar(
                 navigationIcon = { BackButton(onClick = onBackPress) },
-                title = { Text(text = stringResource(R.string.label_plans_title)) },
-                actions = {
-                    IconButton(onClick = onInfoClick) {
-                        Icon(
-                            painter = KenkoIcons.Info,
-                            contentDescription = "Info"
-                        )
-                    }
-                }
+                title = { Text(text = stringResource(R.string.label_plans_title)) }
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -157,7 +115,6 @@ private fun PlanPreview(
         Plan(
             plans = plans,
             onSelectPlan = {},
-            onInfoClick = {},
             onBackPress = {},
             onPlanClick = {},
             onRemove = {},

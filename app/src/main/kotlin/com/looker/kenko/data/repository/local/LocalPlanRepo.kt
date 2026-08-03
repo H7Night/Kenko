@@ -165,10 +165,6 @@ class LocalPlanRepo @Inject constructor(
         dao.deletePlan(id)
     }
 
-    override suspend fun deleteEmptyPlans() {
-        dao.deleteEmptyPlans()
-    }
-
     override suspend fun addItem(planItem: PlanItem) {
         dao.insertPlanItem(planItem.toEntity())
     }

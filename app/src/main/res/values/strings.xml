@@ -43,6 +43,7 @@
     <string name="label_export_markdown">Export as Markdown</string>
     <string name="label_confirm">Confirm</string>
     <string name="label_cancel">Cancel</string>
+    <string name="label_ok">OK</string>
     <string name="label_add_history">Add to History</string>
     <string name="label_add_to_history">Add Training History</string>
     <string name="label_select_date">Select Date</string>
@@ -63,8 +64,6 @@
     <string name="label_plans_title">Plans</string>
     <string name="label_edit_plan">Edit Plan</string>
     <string name="no_exercises_yet">No exercises yet</string>
-    <string name="label_clean_up">Clean up</string>
-    <string name="label_clean_up_plans">Clear empty plans?</string>
 
     <string name="heading_select_plan_name">Select a plan name</string>
     <string name="heading_select_plan_items">Select exercises</string>
@@ -188,6 +187,7 @@
     <string name="label_backup_weekly">Weekly</string>
     <string name="label_backup_monthly">Monthly</string>
     <string name="label_backup_now">Backup Now</string>
+    <string name="label_app_backup">App Backup</string>
     <string name="label_restore">Restore</string>
     <string name="label_last_backup">Last Backup: %s</string>
     <string name="label_last_backup_never">Never</string>
@@ -203,6 +203,9 @@
 
     <!--Export-->
     <string name="label_export_data">Export Data</string>
+    <string name="label_export_training_data">Export Training Data</string>
+    <string name="label_export_start_date">Start Date</string>
+    <string name="label_export_end_date">End Date</string>
     <string name="label_export_sessions">Training History</string>
     <string name="label_export_plans">Training Plans</string>
     <string name="label_export_exercises">Exercises</string>
