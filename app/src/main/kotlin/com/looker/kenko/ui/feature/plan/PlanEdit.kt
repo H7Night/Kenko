@@ -86,6 +86,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.BuildConfig
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.ExercisesPreviewParameter
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.DaySelectorChip
@@ -166,7 +167,7 @@ fun PlanEdit(
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     dayTitleState = viewModel.dayTitleState,
                     onSelectDay = viewModel::setCurrentDay,
-                    onRemoveExerciseClick = viewModel::removeExercise,
+                    onRemovePlanItemClick = viewModel::removePlanItem,
                     onFullDaySelection = viewModel::openFullDaySelection,
                     onReorder = viewModel::updateOrder,
                 )
@@ -253,21 +254,21 @@ private fun PlanEdit(
     state: PlanEditState,
     dayTitleState: TextFieldState,
     onSelectDay: (DayOfWeek) -> Unit,
-    onRemoveExerciseClick: (Exercise) -> Unit,
+    onRemovePlanItemClick: (Long) -> Unit,
     onFullDaySelection: () -> Unit,
     onReorder: (List<Exercise>) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val focusManager = LocalFocusManager.current
-    val isCurrentDayBlank by remember(state.exercises) { derivedStateOf { state.exercises.isEmpty() } }
+    val isCurrentDayBlank by remember(state.planItems) { derivedStateOf { state.planItems.isEmpty() } }
     val lazyListState = rememberLazyListState()
 
-    val localExercises = remember(state.exercises) { state.exercises.toMutableStateList() }
+    val localPlanItems = remember(state.planItems) { state.planItems.toMutableStateList() }
     var draggedItemIndex by remember { mutableIntStateOf(-1) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
 
-    // Cancel ongoing drag when the exercise list is replaced by a Room Flow update
-    LaunchedEffect(localExercises.size) {
+    // Cancel ongoing drag when the plan item list is replaced by a Room Flow update
+    LaunchedEffect(localPlanItems.size) {
         draggedItemIndex = -1
         dragOffset = 0f
     }
@@ -340,9 +341,9 @@ private fun PlanEdit(
                 }
             } else {
                 itemsIndexed(
-                    items = localExercises,
-                    key = { _, exercise -> exercise.id ?: exercise.hashCode() }
-                ) { index, exercise ->
+                    items = localPlanItems,
+                    key = { _, planItem -> planItem.id ?: planItem.hashCode().toLong() }
+                ) { index, planItem ->
                     val isDragged = draggedItemIndex == index
                     val scale by animateFloatAsState(if (isDragged) 1.05f else 1f, label = "scale")
                     val elevation by animateFloatAsState(
@@ -360,7 +361,7 @@ private fun PlanEdit(
                             .animateItem()
                             .zIndex(if (isDragged || elevation > 0.01f) 1f else 0f)
                             .scale(scale)
-                            .pointerInput(localExercises) {
+                            .pointerInput(localPlanItems) {
                                 detectDragGesturesAfterLongPress(
                                     onDragStart = { offset ->
                                         draggedItemIndex = index
@@ -371,7 +372,7 @@ private fun PlanEdit(
                                         dragOffset += dragAmount.y
 
                                         val currentDraggedIndex = draggedItemIndex
-                                        if (currentDraggedIndex !in localExercises.indices) {
+                                        if (currentDraggedIndex !in localPlanItems.indices) {
                                             draggedItemIndex = -1
                                             dragOffset = 0f
                                             return@detectDragGesturesAfterLongPress
@@ -384,7 +385,7 @@ private fun PlanEdit(
                                         if (draggedItemInfo != null) {
                                             val threshold = draggedItemInfo.size / 2
                                             val targetIndex: Int
-                                            if (dragOffset > threshold && currentDraggedIndex < localExercises.lastIndex) {
+                                            if (dragOffset > threshold && currentDraggedIndex < localPlanItems.lastIndex) {
                                                 targetIndex = currentDraggedIndex + 1
                                             } else if (dragOffset < -threshold && currentDraggedIndex > 0) {
                                                 targetIndex = currentDraggedIndex - 1
@@ -392,15 +393,15 @@ private fun PlanEdit(
                                                 return@detectDragGesturesAfterLongPress
                                             }
                                             // Re-verify indices are still valid before mutating
-                                            if (currentDraggedIndex in localExercises.indices && targetIndex in 0..localExercises.size) {
-                                                localExercises.add(targetIndex, localExercises.removeAt(currentDraggedIndex))
+                                            if (currentDraggedIndex in localPlanItems.indices && targetIndex in 0..localPlanItems.size) {
+                                                localPlanItems.add(targetIndex, localPlanItems.removeAt(currentDraggedIndex))
                                                 draggedItemIndex = targetIndex
                                                 dragOffset -= draggedItemInfo.size * (if (targetIndex > currentDraggedIndex) 1 else -1)
                                             }
                                         }
                                     },
                                     onDragEnd = {
-                                        onReorder(localExercises.toList())
+                                        onReorder(localPlanItems.map { it.exercise })
                                         draggedItemIndex = -1
                                         dragOffset = 0f
                                     },
@@ -410,7 +411,7 @@ private fun PlanEdit(
                                     }
                                 )
                             },
-                        exercise = exercise,
+                        exercise = planItem.exercise,
                         containerColor = animatedContainerColor,
                         shadowElevation = elevation.dp,
                     ) {
@@ -418,7 +419,7 @@ private fun PlanEdit(
                             index = index,
                             onRemove = {
                                 focusManager.clearFocus()
-                                onRemoveExerciseClick(exercise)
+                                planItem.id?.let { onRemovePlanItemClick(it) }
                             },
                         )
                     }

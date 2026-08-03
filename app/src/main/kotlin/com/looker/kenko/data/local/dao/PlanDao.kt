@@ -242,7 +242,4 @@ interface PlanDao {
 
     @Query("DELETE FROM plan_day WHERE id = :planDayId")
     suspend fun deleteItem(planDayId: Long)
-
-    @Query("DELETE FROM plan_day WHERE exerciseId = :exerciseId")
-    suspend fun deleteItemByExercise(exerciseId: Int)
 }

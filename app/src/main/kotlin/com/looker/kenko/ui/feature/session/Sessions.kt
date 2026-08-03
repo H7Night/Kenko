@@ -104,7 +104,7 @@ fun Sessions(
     if (showAddHistoryDialog) {
         AddHistoryDialog(
             availablePlanDays = state.availablePlanDays,
-            dayTitles = state.dayTitles,
+            dayTitles = state.plans.find { it.isActive }?.titlesMap ?: emptyMap(),
             onDismiss = { showAddHistoryDialog = false },
             onConfirm = { date, day ->
                 viewModel.addSession(date, day) {
@@ -141,7 +141,7 @@ private fun Sessions(
     var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
 
     val selectedPlanName = selectedPlan?.name ?: stringResource(R.string.label_select_plan_one)
-    val selectedDayName = selectedDay?.let { day -> state.dayTitles[day] ?: day.toString() } ?: stringResource(R.string.label_select_muscle)
+    val selectedDayName = selectedDay?.let { day -> selectedPlan?.titlesMap?.get(day) ?: dayName(day) } ?: stringResource(R.string.label_select_muscle)
     val availableDays: Map<DayOfWeek, String> = remember(selectedPlan) {
         selectedPlan?.titlesMap ?: emptyMap()
     }
@@ -445,7 +445,7 @@ fun SessionCard(
     session: Session,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
-    dayTitles: Map<DayOfWeek, String> = emptyMap(),
+    dayTitles: Map<Int?, Map<DayOfWeek, String>> = emptyMap(),
 ) {
     val containerColor = if (session.date.isToday) {
         MaterialTheme.colorScheme.tertiaryContainer
@@ -467,7 +467,7 @@ fun SessionCard(
             val titleStyle = MaterialTheme.typography.titleLarge
             val secondaryEmphasis = MaterialTheme.colorScheme.outline
             val dayName = dayName(session.date.dayOfWeek)
-            val dayTitle = dayTitles[session.date.dayOfWeek]
+            val dayTitle = dayTitles[session.planId]?.get(session.date.dayOfWeek)
             val displayName = if (dayTitle.isNullOrBlank()) dayName else "$dayTitle ($dayName)"
             val string = remember(session.date, dayName, dayTitle) {
                 buildAnnotatedString {

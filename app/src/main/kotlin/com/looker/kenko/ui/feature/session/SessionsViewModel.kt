@@ -57,13 +57,12 @@ class SessionsViewModel @Inject constructor(
         availablePlanItems,
         planRepo.plans,
     ) { sessions, isCurrentSessionActive, available, plans ->
-        val currentPlan = plans.find { it.isActive }
-        val currentPlanTitles = currentPlan?.titlesMap ?: emptyMap()
+        val planTitlesMap = plans.associate { it.id to it.titlesMap }
         SessionsUiData(
             sessions = sessions.filter { it.sets.isNotEmpty() },
             isCurrentSessionActive = isCurrentSessionActive,
             availablePlanDays = available,
-            dayTitles = currentPlanTitles,
+            dayTitles = planTitlesMap,
             plans = plans.filter { it.isActive || plans.indexOf(it) < 5 },
         )
     }.asStateFlow(SessionsUiData(emptyList(), false))
@@ -98,7 +97,7 @@ data class SessionsUiData(
     val sessions: List<Session>,
     val isCurrentSessionActive: Boolean,
     val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),
-    val dayTitles: Map<DayOfWeek, String> = emptyMap(),
+    val dayTitles: Map<Int?, Map<DayOfWeek, String>> = emptyMap(),
     val plans: List<Plan> = emptyList(),
 ) {
     val sessionDates: Set<LocalDate> get() = sessions.map { it.date }.toSet()

@@ -186,7 +186,7 @@ class PlanEditViewModel @Inject constructor(
             currentDay = day,
             selectionMode = daySelection,
             exerciseSheetVisible = sheetVisible,
-            exercises = items.filter { it.dayOfWeek == day }.map(PlanItem::exercise),
+            planItems = items.filter { it.dayOfWeek == day },
             planTitles = plan?.titlesMap ?: emptyMap(),
         )
     }.asStateFlow(
@@ -194,7 +194,7 @@ class PlanEditViewModel @Inject constructor(
             currentDay = today().dayOfWeek,
             selectionMode = false,
             exerciseSheetVisible = false,
-            exercises = emptyList(),
+            planItems = emptyList(),
         ),
     )
 
@@ -276,10 +276,10 @@ class PlanEditViewModel @Inject constructor(
         }
     }
 
-    fun removeExercise(exercise: Exercise) {
+    fun removePlanItem(planItemId: Long) {
         viewModelScope.launch {
             try {
-                exercise.id?.let { repo.removeItemById(it) }
+                repo.removeItem(planItemId)
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
             }
@@ -332,6 +332,6 @@ data class PlanEditState(
     val currentDay: DayOfWeek,
     val selectionMode: Boolean,
     val exerciseSheetVisible: Boolean,
-    val exercises: List<Exercise>,
+    val planItems: List<PlanItem>,
     val planTitles: Map<DayOfWeek, String> = emptyMap(),
 )
