@@ -17,10 +17,11 @@ thought-out plans
 - **Interactive Heatmap**: View your training consistency with a scrollable monthly/yearly heatmap and day-of-week labels.
 - **Progressive Overload**: Monitor your progress over time with detailed session history.
 - **Body Weight Tracking**: Record your body weight and view progress on interactive line charts.
+- **Safe Deletion**: Delete exercises, plans, sets, weight records, and sessions via explicit delete buttons with confirmation dialogs.
 - **Modern Navigation**: Effortlessly switch between Home, Training, and Profile using the new bottom navigation bar.
 - **Material Design 3**: Fully rounded and unified UI components following the latest MD3 guidelines.
 - **Backup & Export**: App backup (ZIP, auto-scheduled via WorkManager) and training data export (JSON, with date range filtering).
-- **Multi-language**: Support for English, Chinese, and Turkish.
+- **Multi-language**: Support for English and Chinese.
 
 ## Screenshots
 

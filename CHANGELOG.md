@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file atleast once
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Confirmation dialogs when deleting exercises, plans, weight records, and sets to prevent accidental deletion
+- Unified empty state component across exercises, plan edit, and session history screens
+- TimerCard can now resume a session that has accumulated time but hasn't started yet
+- Haptic feedback when dragging exercises to reorder in plan edit
+
+### Changed
+- Deletion switched from swipe-to-delete gesture to explicit delete button + confirmation dialog
+- Transparent scaffold/top bar container colors replaced with Material theme surface colors for consistent contrast
+- Set type indicator colors now follow the Material theme instead of hardcoded colors
+
+### Fixed
+- Drag-reorder animation replaying after release
+- Double animation and misplaced items when long-pressing to drag again
+
 ## [1.6.0] - 2026-08-03
 
 ### Changed
