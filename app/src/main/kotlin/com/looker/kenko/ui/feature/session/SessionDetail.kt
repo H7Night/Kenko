@@ -507,7 +507,7 @@ private fun SetsList(
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Delete,
-                                    contentDescription = "删除",
+                                    contentDescription = stringResource(R.string.label_delete),
                                     tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                                     modifier = Modifier.size(18.dp),
                                 )
@@ -522,13 +522,14 @@ private fun SetsList(
     }
 
     setToDelete?.let { setId ->
+        val deletedMessage = stringResource(R.string.label_deleted)
         ConfirmDialog(
-            title = "删除训练组",
-            message = "确定要删除这组训练数据吗？此操作不可撤销。",
-            confirmText = "删除",
+            title = stringResource(R.string.label_delete_set_title),
+            message = stringResource(R.string.label_delete_set_message),
+            confirmText = stringResource(R.string.label_delete),
             onConfirm = {
                 onRemoveSet(setId)
-                context.toast("已删除")
+                context.toast(deletedMessage)
                 setToDelete = null
             },
             onDismiss = { setToDelete = null },

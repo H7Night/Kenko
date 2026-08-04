@@ -160,6 +160,7 @@ private fun Sessions(
     }
 
     if (sessionToDelete != null) {
+        val deletedMessage = stringResource(R.string.label_deleted)
         AlertDialog(
             onDismissRequest = { sessionToDelete = null },
             title = { Text(text = stringResource(R.string.label_delete_session_title)) },
@@ -168,7 +169,7 @@ private fun Sessions(
                 Button(
                     onClick = {
                         sessionToDelete?.let { onRemoveSession(it) }
-                        context.toast("已删除")
+                        context.toast(deletedMessage)
                         sessionToDelete = null
                     },
                 ) {
@@ -518,7 +519,7 @@ fun SessionCard(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Delete,
-                        contentDescription = "删除",
+                        contentDescription = stringResource(R.string.label_delete),
                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                         modifier = Modifier.size(18.dp),
                     )

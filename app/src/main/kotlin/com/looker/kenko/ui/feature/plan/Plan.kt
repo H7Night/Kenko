@@ -70,13 +70,14 @@ fun Plan(
     )
 
     planToDelete?.let { plan ->
+        val deletedMessage = stringResource(R.string.label_deleted)
         ConfirmDialog(
-            title = "删除计划",
-            message = "确定要删除「${plan.name}」吗？此操作不可撤销。",
-            confirmText = "删除",
+            title = stringResource(R.string.label_delete_plan_title),
+            message = stringResource(R.string.label_delete_plan_message, plan.name),
+            confirmText = stringResource(R.string.label_delete),
             onConfirm = {
                 plan.id?.let { viewModel.removePlan(it) }
-                context.toast("已删除\"${plan.name}\"")
+                context.toast(deletedMessage)
                 planToDelete = null
             },
             onDismiss = { planToDelete = null },

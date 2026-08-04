@@ -109,7 +109,7 @@ fun PlanItem(
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Delete,
-                            contentDescription = "删除",
+                            contentDescription = stringResource(R.string.label_delete),
                             tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                             modifier = Modifier.size(18.dp),
                         )

@@ -36,6 +36,7 @@
     <string name="label_records">Records</string>
     <string name="label_delete_session_title">Delete Session?</string>
     <string name="label_delete_session_message">This will permanently delete this session and all its sets.</string>
+    <string name="label_deleted">Deleted</string>
     <string name="label_export">Export</string>
     <string name="label_select_date_range">Select Date Range</string>
     <string name="label_start_date">Start Date</string>
@@ -63,6 +64,8 @@
     <!--Plans-->
     <string name="label_plans_title">Plans</string>
     <string name="label_edit_plan">Edit Plan</string>
+    <string name="label_delete_plan_title">Delete Plan?</string>
+    <string name="label_delete_plan_message">Delete \"%1$s\"? This action cannot be undone.</string>
     <string name="no_exercises_yet">No exercises yet</string>
 
     <string name="heading_select_plan_name">Select a plan name</string>
@@ -117,9 +120,13 @@
     <string name="label_add_exercise_header">Add Exercise</string>
     <string name="label_search_exercise">Search Exercise</string>
     <string name="label_no_exercise_today">No exercises planned today</string>
+    <string name="label_delete_exercise_title">Delete Exercise?</string>
+    <string name="label_delete_exercise_message">This will delete this exercise. Related training records will be kept.</string>
 
     <!--Add Sets-->
     <string name="label_add_set_for">Add Set for</string>
+    <string name="label_delete_set_title">Delete Set?</string>
+    <string name="label_delete_set_message">This will permanently delete this set.</string>
     <string name="label_plus_int">+%s</string>
     <string name="label_minus_int">-%s</string>
 
@@ -129,6 +136,7 @@
     <string name="label_name">Name</string>
     <string name="label_add">Add</string>
     <string name="label_save">Save</string>
+    <string name="label_delete">Delete</string>
     <string name="label_yes">Yes</string>
     <string name="label_no">No</string>
 

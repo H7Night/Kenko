@@ -8,13 +8,15 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import com.looker.kenko.R
 
 @Composable
 fun ConfirmDialog(
     title: String,
     message: String,
     confirmText: String,
-    dismissText: String = "取消",
+    dismissText: String = stringResource(R.string.label_cancel),
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,

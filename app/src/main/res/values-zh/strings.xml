@@ -31,6 +31,7 @@
     <string name="label_records">记录</string>
     <string name="label_delete_session_title">删除记录？</string>
     <string name="label_delete_session_message">这将永久删除此条训练记录及其所有组数信息。</string>
+    <string name="label_deleted">已删除</string>
     <string name="label_export">导出</string>
     <string name="label_select_date_range">选择日期范围</string>
     <string name="label_start_date">开始日期</string>
@@ -55,6 +56,8 @@
     <!--Plans-->
     <string name="label_plans_title">计划</string>
     <string name="label_edit_plan">编辑计划</string>
+    <string name="label_delete_plan_title">删除计划</string>
+    <string name="label_delete_plan_message">确定要删除「%1$s」吗？此操作不可撤销。</string>
     <string name="no_exercises_yet">尚无动作</string>
     <string name="label_modify_plan">修改今日计划</string>
     <string name="label_modify_plan_message">是否要修改今日的训练计划？这将清空今天已有的训练数据。</string>
@@ -112,9 +115,13 @@
     <string name="label_add_exercise_header">添加动作</string>
     <string name="label_search_exercise">搜索动作</string>
     <string name="label_no_exercise_today">今日无计划动作</string>
+    <string name="label_delete_exercise_title">删除动作</string>
+    <string name="label_delete_exercise_message">确定要删除这个动作吗？删除后相关训练记录将保留。</string>
 
     <!--Add Sets-->
     <string name="label_add_set_for">添加组数：</string>
+    <string name="label_delete_set_title">删除训练组</string>
+    <string name="label_delete_set_message">确定要删除这组训练数据吗？此操作不可撤销。</string>
     <string name="label_plus_int">+%s</string>
     <string name="label_minus_int">-%s</string>
 
@@ -124,6 +131,7 @@
     <string name="label_name">名称</string>
     <string name="label_add">添加</string>
     <string name="label_save">保存</string>
+    <string name="label_delete">删除</string>
     <string name="label_yes">是</string>
     <string name="label_no">否</string>
 

@@ -276,14 +276,15 @@ private fun Exercises(
     }
 
     exerciseToDelete?.let { id ->
+        val deletedMessage = stringResource(R.string.label_deleted)
         ConfirmDialog(
-            title = "删除动作",
-            message = "确定要删除这个动作吗？删除后相关训练记录将保留。",
-            confirmText = "删除",
+            title = stringResource(R.string.label_delete_exercise_title),
+            message = stringResource(R.string.label_delete_exercise_message),
+            confirmText = stringResource(R.string.label_delete),
             onConfirm = {
                 onRemove(id)
                 exerciseToDelete = null
-                context.toast("已删除")
+                context.toast(deletedMessage)
             },
             onDismiss = { exerciseToDelete = null },
         )
@@ -351,7 +352,7 @@ private fun ExercisesList(
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Delete,
-                            contentDescription = "删除",
+                            contentDescription = stringResource(R.string.label_delete),
                             tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                             modifier = Modifier.size(18.dp),
                         )

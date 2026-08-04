@@ -110,7 +110,7 @@ fun WeightHistorySheet(
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Delete,
-                                    contentDescription = "删除",
+                                    contentDescription = stringResource(R.string.label_delete),
                                     tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                                     modifier = Modifier.size(18.dp),
                                 )
@@ -123,13 +123,14 @@ fun WeightHistorySheet(
     }
 
     weightToDelete?.let { id ->
+        val deletedMessage = stringResource(R.string.label_deleted)
         ConfirmDialog(
-            title = "删除体重记录",
-            message = "确定要删除这条体重记录吗？",
-            confirmText = "删除",
+            title = stringResource(R.string.label_delete_weight_title),
+            message = stringResource(R.string.label_delete_weight_message),
+            confirmText = stringResource(R.string.label_delete),
             onConfirm = {
                 onDelete(id)
-                context.toast("已删除")
+                context.toast(deletedMessage)
                 weightToDelete = null
             },
             onDismiss = { weightToDelete = null },
