@@ -38,7 +38,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.zIndex
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -50,6 +52,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
@@ -89,6 +93,7 @@ import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.ExercisesPreviewParameter
 import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.component.DaySelectorChip
 import com.looker.kenko.ui.component.ErrorSnackbar
 import com.looker.kenko.ui.component.HorizontalDaySelector
@@ -260,6 +265,7 @@ private fun PlanEdit(
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val focusManager = LocalFocusManager.current
+    val haptic = LocalHapticFeedback.current
     val isCurrentDayBlank by remember(state.planItems) { derivedStateOf { state.planItems.isEmpty() } }
     val lazyListState = rememberLazyListState()
 
@@ -339,16 +345,10 @@ private fun PlanEdit(
         items = {
             if (isCurrentDayBlank) {
                 item {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.no_exercises_yet),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
+                    EmptyState(
+                        icon = Icons.Outlined.FitnessCenter,
+                        text = stringResource(R.string.no_exercises_yet),
+                    )
                 }
             } else {
                 itemsIndexed(
@@ -376,6 +376,7 @@ private fun PlanEdit(
                             .pointerInput(localPlanItems) {
                                 detectDragGesturesAfterLongPress(
                                     onDragStart = { offset ->
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         draggedItemIndex = currentIndex
                                         dragOffset = 0f
                                     },
@@ -406,6 +407,7 @@ private fun PlanEdit(
                                             }
                                             // Re-verify indices are still valid before mutating
                                             if (currentDraggedIndex in localPlanItems.indices && targetIndex in 0..localPlanItems.size) {
+                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                                 localPlanItems.add(targetIndex, localPlanItems.removeAt(currentDraggedIndex))
                                                 draggedItemIndex = targetIndex
                                                 dragOffset -= draggedItemInfo.size * (if (targetIndex > currentDraggedIndex) 1 else -1)

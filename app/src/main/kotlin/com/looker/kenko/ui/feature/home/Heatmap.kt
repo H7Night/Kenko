@@ -250,7 +250,7 @@ private fun HeatmapGrid(
                         val color = when {
                             isTrained -> MaterialTheme.colorScheme.primary
                             isToday -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-                            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
                         }
                         Box(
                             modifier = Modifier

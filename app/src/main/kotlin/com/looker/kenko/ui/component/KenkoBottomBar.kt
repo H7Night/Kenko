@@ -58,7 +58,7 @@ fun KenkoBottomBar(
     ) {
         NavigationBar(
             modifier = Modifier.fillMaxWidth().height(72.dp),
-            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+            containerColor = MaterialTheme.colorScheme.surface,
             tonalElevation = 0.dp,
             windowInsets = WindowInsets(0, 0, 0, 0),
         ) {
@@ -66,8 +66,8 @@ fun KenkoBottomBar(
                 indicatorColor = MaterialTheme.colorScheme.primaryContainer,
                 selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
             )
 
             NavigationBarItem(

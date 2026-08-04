@@ -56,7 +56,7 @@ import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.ui.component.BackButton
-import com.looker.kenko.ui.component.EmptyPage
+import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.dayName
 import com.looker.kenko.ui.component.timer.TimerService
@@ -66,6 +66,7 @@ import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.utils.DateFormat
 import com.looker.kenko.utils.formatDate
 import com.looker.kenko.utils.isToday
+import com.looker.kenko.utils.toast
 import kotlinx.datetime.LocalDate
 
 import androidx.compose.material3.AlertDialog
@@ -73,7 +74,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.looker.kenko.ui.component.SwipeToDeleteBox
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.History
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -139,6 +142,7 @@ private fun Sessions(
     var dayExpanded by remember { mutableStateOf(false) }
     var selectedPlan by remember { mutableStateOf<Plan?>(null) }
     var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
+    val context = LocalContext.current
 
     val selectedPlanName = selectedPlan?.name ?: stringResource(R.string.label_select_plan_one)
     val selectedDayName = selectedDay?.let { day -> selectedPlan?.titlesMap?.get(day) ?: dayName(day) } ?: stringResource(R.string.label_select_muscle)
@@ -164,6 +168,7 @@ private fun Sessions(
                 Button(
                     onClick = {
                         sessionToDelete?.let { onRemoveSession(it) }
+                        context.toast("已删除")
                         sessionToDelete = null
                     },
                 ) {
@@ -198,10 +203,13 @@ private fun Sessions(
                 }
             )
         },
-        containerColor = androidx.compose.ui.graphics.Color.Transparent,
+        containerColor = MaterialTheme.colorScheme.surface,
     ) { padding ->
         if (state.sessions.isEmpty()) {
-            EmptyPage(stringResource(id = R.string.label_no_sessions))
+            EmptyState(
+                icon = Icons.Rounded.History,
+                text = stringResource(id = R.string.label_no_sessions),
+            )
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -300,16 +308,13 @@ private fun Sessions(
                     items = filteredSessions,
                     key = { it.id ?: it.hashCode() },
                 ) { session ->
-                    SwipeToDeleteBox(
+                    SessionCard(
                         modifier = Modifier.animateItem(),
-                        onDismiss = { sessionToDelete = session },
-                    ) {
-                        SessionCard(
-                            session = session,
-                            onClick = { onSessionClick(session.date) },
-                            dayTitles = state.dayTitles,
-                        )
-                    }
+                        session = session,
+                        onClick = { onSessionClick(session.date) },
+                        dayTitles = state.dayTitles,
+                        onDelete = { sessionToDelete = session },
+                    )
                 }
             }
         }
@@ -446,11 +451,12 @@ fun SessionCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
     dayTitles: Map<Int?, Map<DayOfWeek, String>> = emptyMap(),
+    onDelete: (() -> Unit)? = null,
 ) {
     val containerColor = if (session.date.isToday) {
         MaterialTheme.colorScheme.tertiaryContainer
     } else {
-        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
+        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f)
     }
     Surface(
         modifier = modifier,
@@ -458,12 +464,14 @@ fun SessionCard(
         shape = MaterialTheme.shapes.large,
         onClick = onClick,
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .padding(16.dp),
+                .padding(start = 16.dp, end = 4.dp, top = 16.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.Top,
         ) {
+            Column(modifier = Modifier.weight(1f)) {
             val titleStyle = MaterialTheme.typography.titleLarge
             val secondaryEmphasis = MaterialTheme.colorScheme.outline
             val effectiveDay = session.planDayOverride ?: session.date.dayOfWeek
@@ -502,6 +510,20 @@ fun SessionCard(
                 color = MaterialTheme.colorScheme.outline,
                 maxLines = 3,
             )
+            }
+            if (onDelete != null) {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(32.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Delete,
+                        contentDescription = "删除",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
         }
     }
 }

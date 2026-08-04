@@ -51,7 +51,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -127,10 +126,12 @@ private fun Settings(
 
     Scaffold(
         modifier = modifier,
-        containerColor = Color.Transparent,
+        containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
                 navigationIcon = { BackButton(onClick = onBackPress) },
                 title = { Text(text = stringResource(R.string.label_settings)) },
             )

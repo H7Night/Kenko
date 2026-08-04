@@ -52,7 +52,6 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.center
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.stringResource
@@ -350,6 +349,11 @@ private fun SetTypeIndicator(
     val morphAnimatable = remember { Animatable(0F) }
     val morph = remember { Morph(MaterialShapes.Circle, setTypeShape(type)) }
     val path = remember { Path() }
+    val typeColor = when (type) {
+        SetType.Standard -> MaterialTheme.colorScheme.primary
+        SetType.Drop -> MaterialTheme.colorScheme.tertiary
+        SetType.RestPause -> MaterialTheme.colorScheme.error
+    }
 
     LaunchedEffect(isPressed || selected) {
         launch {
@@ -363,7 +367,7 @@ private fun SetTypeIndicator(
 
     Canvas(modifier) {
         drawPath(
-            color = setTypeColor(type),
+            color = typeColor,
             path = processPath(
                 path = morph.toPath(progress = morphAnimatable.value, path = path),
                 size = size,
@@ -396,12 +400,6 @@ private fun setTypeShape(type: SetType): RoundedPolygon = when (type) {
     SetType.Standard -> MaterialShapes.Ghostish
     SetType.Drop -> MaterialShapes.Arrow
     SetType.RestPause -> MaterialShapes.Bun
-}
-
-private fun setTypeColor(type: SetType): Color = when (type) {
-    SetType.Standard -> Color(0xFF2196F3) // Blue
-    SetType.Drop -> Color(0xFFFFC107) // Amber/Yellow
-    SetType.RestPause -> Color(0xFFFF7043) // Red/Orange (Deep Orange)
 }
 
 private fun setTypeLabel(type: SetType): String = when (type) {

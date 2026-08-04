@@ -67,6 +67,7 @@ import com.looker.kenko.domain.model.Set
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.timer.TimerCard
+import com.looker.kenko.ui.component.timer.TimerState
 import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.ui.component.timer.rememberNotificationPermissionState
 import com.looker.kenko.ui.feature.plan.components.dayName
@@ -181,7 +182,7 @@ fun Home(
     if (showImportSheet) {
         ModalBottomSheet(
             onDismissRequest = { showImportSheet = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
             Text(
                 text = stringResource(R.string.label_import_plan),
@@ -221,6 +222,7 @@ fun Home(
                 timerState = state.timerState,
                 elapsedSeconds = timerSeconds,
                 notificationGranted = notifState.granted,
+                hasAccumulatedTime = state.timerState == TimerState.IDLE && timerSeconds > 0,
                 onStart = {
                     if (!notifState.granted) {
                         notifState.request()
@@ -262,7 +264,7 @@ fun Home(
             Text(
                 text = "Stick to the plan\nNot your mood.",
                 style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 80.dp, bottom = 16.dp),

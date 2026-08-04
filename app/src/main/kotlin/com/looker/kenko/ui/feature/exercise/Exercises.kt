@@ -25,8 +25,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -34,6 +38,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -50,6 +55,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -60,13 +66,15 @@ import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.ExercisesPreviewParameter
 import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.component.ErrorSnackbar
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.SecondaryKenkoButton
-import com.looker.kenko.ui.component.SwipeToDeleteBox
+import com.looker.kenko.ui.component.ConfirmDialog
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
+import com.looker.kenko.utils.toast
 
 @Composable
 fun Exercises(
@@ -118,6 +126,8 @@ private fun Exercises(
 ) {
     var parentExpanded by remember { mutableStateOf(false) }
     var childExpanded by remember { mutableStateOf(false) }
+    var exerciseToDelete by remember { mutableStateOf<Int?>(null) }
+    val context = LocalContext.current
 
     Scaffold(
         modifier = modifier.fillMaxWidth(),
@@ -249,7 +259,9 @@ private fun Exercises(
         },
     ) { innerPadding ->
         if (state.isEmpty()) {
-            EmptyExercises(
+            EmptyState(
+                icon = Icons.Rounded.FitnessCenter,
+                text = stringResource(R.string.label_no_exercise_today),
                 modifier = Modifier.padding(innerPadding + PaddingValues(bottom = 80.dp)),
             )
         } else {
@@ -258,20 +270,22 @@ private fun Exercises(
                 contentPadding = innerPadding + PaddingValues(bottom = 80.dp),
                 onExerciseClick = onExerciseClick,
                 onReferenceClick = onReferenceClick,
-                onRemove = onRemove,
+                onRequestRemove = { exerciseToDelete = it },
             )
         }
     }
-}
 
-@Composable
-private fun EmptyExercises(modifier: Modifier = Modifier) {
-    Surface(modifier = modifier) {
-        Text(
-            text = stringResource(R.string.label_no_exercise_today),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.outline,
-            modifier = Modifier.padding(32.dp),
+    exerciseToDelete?.let { id ->
+        ConfirmDialog(
+            title = "删除动作",
+            message = "确定要删除这个动作吗？删除后相关训练记录将保留。",
+            confirmText = "删除",
+            onConfirm = {
+                onRemove(id)
+                exerciseToDelete = null
+                context.toast("已删除")
+            },
+            onDismiss = { exerciseToDelete = null },
         )
     }
 }
@@ -282,7 +296,7 @@ private fun ExercisesList(
     exercises: List<Exercise>,
     contentPadding: PaddingValues,
     onExerciseClick: (id: Int?) -> Unit,
-    onRemove: (Int?) -> Unit,
+    onRequestRemove: (Int?) -> Unit,
     onReferenceClick: (String) -> Unit,
 ) {
     LazyColumn(
@@ -291,20 +305,19 @@ private fun ExercisesList(
     ) {
         items(exercises, key = { it.id ?: it.hashCode() }) { exercise ->
             val exerciseId by rememberUpdatedState(exercise.id)
-            SwipeToDeleteBox(
+            Surface(
                 modifier = Modifier.animateItem(),
-                onDismiss = { onRemove(exerciseId) }
+                onClick = { onExerciseClick(exerciseId) },
+                shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
             ) {
-                Surface(
-                    onClick = { onExerciseClick(exerciseId) },
-                    shape = MaterialTheme.shapes.extraLarge,
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 20.dp, end = 8.dp, top = 14.dp, bottom = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 14.dp),
-                    ) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = exercise.name,
                             style = MaterialTheme.typography.titleMedium,
@@ -331,6 +344,17 @@ private fun ExercisesList(
                                 }
                             }
                         }
+                    }
+                    IconButton(
+                        onClick = { onRequestRemove(exerciseId) },
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Delete,
+                            contentDescription = "删除",
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp),
+                        )
                     }
                 }
             }

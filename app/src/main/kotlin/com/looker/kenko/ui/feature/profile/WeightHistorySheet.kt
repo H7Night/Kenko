@@ -20,24 +20,35 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Weight
-import com.looker.kenko.ui.component.SwipeToDeleteBox
+import com.looker.kenko.ui.component.ConfirmDialog
 import com.looker.kenko.ui.theme.numbers
 import com.looker.kenko.utils.DateFormat
+import com.looker.kenko.utils.toast
 import com.looker.kenko.utils.formatDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,10 +60,12 @@ fun WeightHistorySheet(
     onDelete: (Int) -> Unit,
 ) {
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var weightToDelete by remember { mutableStateOf<Int?>(null) }
+    val context = LocalContext.current
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = state,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Column(
             modifier = Modifier
@@ -68,32 +81,38 @@ fun WeightHistorySheet(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(weights.reversed()) { weight ->
-                    SwipeToDeleteBox(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        onDismiss = { onDelete(weight.id) },
-                        showIcon = true
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceContainer,
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                            .clickable { onEdit(weight) }
                     ) {
-                        Surface(
-                            color = MaterialTheme.colorScheme.surfaceContainer,
-                            shape = MaterialTheme.shapes.medium,
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onEdit(weight) }
+                                .padding(start = 16.dp, end = 4.dp, top = 16.dp, bottom = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            Text(
+                                text = formatDate(weight.date, DateFormat.YearMonthDay),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                            Text(
+                                text = "${weight.value} ${stringResource(R.string.label_weight_unit)}",
+                                style = MaterialTheme.typography.titleMedium.numbers()
+                            )
+                            IconButton(
+                                onClick = { weightToDelete = weight.id },
+                                modifier = Modifier.size(32.dp),
                             ) {
-                                Text(
-                                    text = formatDate(weight.date, DateFormat.YearMonthDay),
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                                Spacer(modifier = Modifier.weight(1f))
-                                Text(
-                                    text = "${weight.value} ${stringResource(R.string.label_weight_unit)}",
-                                    style = MaterialTheme.typography.titleMedium.numbers()
+                                Icon(
+                                    imageVector = Icons.Rounded.Delete,
+                                    contentDescription = "删除",
+                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(18.dp),
                                 )
                             }
                         }
@@ -101,5 +120,19 @@ fun WeightHistorySheet(
                 }
             }
         }
+    }
+
+    weightToDelete?.let { id ->
+        ConfirmDialog(
+            title = "删除体重记录",
+            message = "确定要删除这条体重记录吗？",
+            confirmText = "删除",
+            onConfirm = {
+                onDelete(id)
+                context.toast("已删除")
+                weightToDelete = null
+            },
+            onDismiss = { weightToDelete = null },
+        )
     }
 }

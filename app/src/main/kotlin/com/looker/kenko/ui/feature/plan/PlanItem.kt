@@ -24,7 +24,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconToggleButton
 import androidx.compose.material3.Surface
@@ -53,6 +57,7 @@ fun PlanItem(
     onActiveChange: (Boolean) -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onDelete: (() -> Unit)? = null,
 ) {
     val transition = updateTransition(targetState = plan.isActive, label = null)
     val background by transition.animateColor(label = "background") {
@@ -96,6 +101,19 @@ fun PlanItem(
                     onCheckedChange = onActiveChange,
                 ) {
                     Icon(painter = KenkoIcons.Done, contentDescription = null)
+                }
+                if (onDelete != null) {
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Delete,
+                            contentDescription = "删除",
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
                 }
             }
             AnimatedVisibility(visible = plan.isActive) {

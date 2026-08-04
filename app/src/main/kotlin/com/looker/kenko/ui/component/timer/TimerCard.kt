@@ -43,6 +43,7 @@ fun TimerCard(
     timerState: TimerState,
     elapsedSeconds: Long,
     notificationGranted: Boolean,
+    hasAccumulatedTime: Boolean = false,
     onStart: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
@@ -87,7 +88,12 @@ fun TimerCard(
                             onClick = onStart,
                             enabled = notificationGranted,
                         ) {
-                            Text(stringResource(R.string.label_start_workout))
+                            Text(
+                                if (hasAccumulatedTime)
+                                    stringResource(R.string.label_continue_session)
+                                else
+                                    stringResource(R.string.label_start_workout)
+                            )
                         }
                     }
                     TimerState.RUNNING -> {

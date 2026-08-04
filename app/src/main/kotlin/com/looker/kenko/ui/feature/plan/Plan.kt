@@ -27,6 +27,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,11 +41,13 @@ import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanPreviewParameters
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.KenkoBorderWidth
-import com.looker.kenko.ui.component.SwipeToDeleteBox
+import com.looker.kenko.ui.component.ConfirmDialog
 import com.looker.kenko.ui.component.endItem
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.KenkoAddButton
 import com.looker.kenko.ui.feature.plan.components.PlanItem
+import androidx.compose.ui.platform.LocalContext
+import com.looker.kenko.utils.toast
 import com.looker.kenko.ui.theme.KenkoTheme
 
 @Composable
@@ -52,6 +57,8 @@ fun Plan(
     onPlanClick: (Int) -> Unit,
 ) {
     val plans: List<Plan> by viewModel.plans.collectAsStateWithLifecycle()
+    var planToDelete by remember { mutableStateOf<Plan?>(null) }
+    val context = LocalContext.current
 
     Plan(
         plans = plans,
@@ -59,7 +66,22 @@ fun Plan(
         onSelectPlan = viewModel::switchPlan,
         onRemove = viewModel::removePlan,
         onPlanClick = onPlanClick,
+        onRequestRemove = { planToDelete = it },
     )
+
+    planToDelete?.let { plan ->
+        ConfirmDialog(
+            title = "删除计划",
+            message = "确定要删除「${plan.name}」吗？此操作不可撤销。",
+            confirmText = "删除",
+            onConfirm = {
+                plan.id?.let { viewModel.removePlan(it) }
+                context.toast("已删除\"${plan.name}\"")
+                planToDelete = null
+            },
+            onDismiss = { planToDelete = null },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,6 +92,7 @@ private fun Plan(
     onSelectPlan: (Plan) -> Unit,
     onRemove: (Int) -> Unit,
     onPlanClick: (Int) -> Unit,
+    onRequestRemove: (Plan) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -90,16 +113,13 @@ private fun Plan(
                 items = plans,
                 key = { plan -> plan.id ?: plan.hashCode() },
             ) { plan ->
-                SwipeToDeleteBox(
+                PlanItem(
                     modifier = Modifier.animateItem(),
-                    onDismiss = { plan.id?.let { onRemove(it) } },
-                ) {
-                    PlanItem(
-                        plan = plan,
-                        onClick = { plan.id?.let { onPlanClick(it) } },
-                        onActiveChange = { onSelectPlan(plan) },
-                    )
-                }
+                    plan = plan,
+                    onClick = { plan.id?.let { onPlanClick(it) } },
+                    onActiveChange = { onSelectPlan(plan) },
+                    onDelete = { onRequestRemove(plan) },
+                )
             }
             endItem()
         }
