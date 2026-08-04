@@ -166,7 +166,9 @@ class LocalPlanRepo @Inject constructor(
     }
 
     override suspend fun addItem(planItem: PlanItem) {
-        dao.insertPlanItem(planItem.toEntity())
+        val items = dao.getPlanItemsByPlanIdAndDay(planItem.planId, planItem.dayOfWeek.isoDayNumber)
+        val nextOrder = (items.maxOfOrNull { it.sortOrder } ?: -1) + 1
+        dao.insertPlanItem(planItem.toEntity().copy(sortOrder = nextOrder))
     }
 
     override suspend fun removeItem(id: Long) {
@@ -177,8 +179,12 @@ class LocalPlanRepo @Inject constructor(
         val items = getPlanItems(planId, day)
         if (items.size != exercises.size) return
 
-        items.zip(exercises).forEach { (item, exercise) ->
-            dao.insertPlanItem(item.copy(exercise = exercise).toEntity())
+        // Update sortOrder in-place: existing row IDs stay the same,
+        // so Room Flow won't trigger a full sync in PlanEdit UI
+        val exerciseOrder = exercises.withIndex().associate { it.value.id to it.index }
+        items.forEach { item ->
+            val newOrder = exerciseOrder[item.exercise.id] ?: return
+            dao.updateItemSortOrder(requireNotNull(item.id), newOrder)
         }
     }
 }

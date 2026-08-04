@@ -263,16 +263,20 @@ private fun PlanEdit(
     val isCurrentDayBlank by remember(state.planItems) { derivedStateOf { state.planItems.isEmpty() } }
     val lazyListState = rememberLazyListState()
 
-    val localPlanItems = remember { state.planItems.toMutableStateList() }
+    val localPlanItems = remember { mutableStateListOf<PlanItem>() }
     var draggedItemIndex by remember { mutableIntStateOf(-1) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
+    var justReordered by remember { mutableStateOf(false) }
 
-    // Only sync from source when items are added/removed (structural change), not on reorder
-    val sourceIds = remember(state.planItems) { state.planItems.map { it.id }.toSet() }
-    LaunchedEffect(sourceIds) {
+    // Sync localPlanItems from source: skip when just reordered to avoid duplicate animation
+    LaunchedEffect(state.planItems, justReordered) {
+        if (justReordered) {
+            justReordered = false
+            return@LaunchedEffect
+        }
+        val sourceIds = state.planItems.map { it.id }.toSet()
         val localIds = localPlanItems.map { it.id }.toSet()
         if (sourceIds != localIds) {
-            val dragged = draggedItemIndex
             localPlanItems.clear()
             localPlanItems.addAll(state.planItems)
             draggedItemIndex = -1
@@ -352,6 +356,7 @@ private fun PlanEdit(
                     key = { _, planItem -> planItem.id ?: planItem.hashCode().toLong() }
                 ) { index, planItem ->
                     val isDragged = draggedItemIndex == index
+                    val currentIndex by rememberUpdatedState(index)
                     val scale by animateFloatAsState(if (isDragged) 1.05f else 1f, label = "scale")
                     val elevation by animateFloatAsState(
                         targetValue = if (isDragged) 6f else 0f,
@@ -371,7 +376,7 @@ private fun PlanEdit(
                             .pointerInput(localPlanItems) {
                                 detectDragGesturesAfterLongPress(
                                     onDragStart = { offset ->
-                                        draggedItemIndex = index
+                                        draggedItemIndex = currentIndex
                                         dragOffset = 0f
                                     },
                                     onDrag = { change, dragAmount ->
@@ -408,6 +413,7 @@ private fun PlanEdit(
                                         }
                                     },
                                     onDragEnd = {
+                                        justReordered = true
                                         onReorder(localPlanItems.map { it.exercise })
                                         draggedItemIndex = -1
                                         dragOffset = 0f

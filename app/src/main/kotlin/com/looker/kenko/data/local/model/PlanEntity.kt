@@ -67,6 +67,7 @@ data class PlanDayEntity(
     val planId: Int,
     val exerciseId: Int,
     val dayOfWeek: Int,
+    val sortOrder: Int = 0,
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 )
