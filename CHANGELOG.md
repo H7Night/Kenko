@@ -17,10 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deletion switched from swipe-to-delete gesture to explicit delete button + confirmation dialog
 - Transparent scaffold/top bar container colors replaced with Material theme surface colors for consistent contrast
 - Set type indicator colors now follow the Material theme instead of hardcoded colors
+- Weight input label color in Add Set now matches reps/sets inputs
+- Removed dot prefixes from reps/duration/weight/sets labels (`.reps` → `reps`, etc.)
+
+### Removed
+- Set type selector (Standard / Drop / Rest-Pause) and all related code, including the `type` column (database migration 11 → 12) and `setType` JSON export field
 
 ### Fixed
 - Drag-reorder animation replaying after release
 - Double animation and misplaced items when long-pressing to drag again
+- Session detail screen not adapting to dark mode (missing surface background)
 
 ## [1.6.0] - 2026-08-03
 
