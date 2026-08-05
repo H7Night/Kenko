@@ -110,9 +110,14 @@ fun SetItem(
                     onValueUpdate = { onRepsUpdate(it.toIntOrNull() ?: set.repsOrDuration) },
                 )
                 if (!isCardio) {
+                    val weightDisplay = if (set.exercise.isBodyweight) {
+                        stringResource(R.string.label_bodyweight_display)
+                    } else {
+                        "${set.weight} KG"
+                    }
                     PerformedItem(
                         title = stringResource(R.string.label_weight),
-                        performance = "${set.weight} KG",
+                        performance = weightDisplay,
                         isEditMode = isEditMode,
                         keyboardType = KeyboardType.Decimal,
                         onValueUpdate = { onWeightUpdate(it.toFloatOrNull() ?: set.weight) },

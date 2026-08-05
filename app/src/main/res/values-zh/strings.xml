@@ -56,6 +56,7 @@
     <!--Plans-->
     <string name="label_plans_title">计划</string>
     <string name="label_edit_plan">编辑计划</string>
+    <string name="label_selected">已选</string>
     <string name="label_delete_plan_title">删除计划</string>
     <string name="label_delete_plan_message">确定要删除「%1$s」吗？此操作不可撤销。</string>
     <string name="no_exercises_yet">尚无动作</string>
@@ -142,6 +143,7 @@
     <string name="label_duration">时长</string>
     <string name="label_weight">重量</string>
     <string name="label_bodyweight">自重</string>
+    <string name="label_bodyweight_display">自重</string>
     <string name="label_use_bodyweight">是否使用自重</string>
     <string name="label_sets">组数</string>
     <string name="label_coming_soon">敬请期待</string>

@@ -118,7 +118,7 @@ fun PlanItem(
             }
             AnimatedVisibility(visible = plan.isActive) {
                 Text(
-                    text = ".selected",
+                    text = stringResource(R.string.label_selected),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.outline,
                 )
