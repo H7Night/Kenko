@@ -22,7 +22,7 @@ import com.looker.kenko.data.backup.BackupResult
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Set
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
@@ -122,7 +122,7 @@ class BackupManagerTest {
         }
         planRepo.setCurrent(planId)
 
-        val sessionId = sessionRepo.getSessionIdOrCreate(localDate)
+        val sessionId = sessionRepo.getSessionIdOrCreate(today())
         val sets = (1..5).map {
             Set(
                 repsOrDuration = 12,
