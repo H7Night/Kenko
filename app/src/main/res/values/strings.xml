@@ -30,6 +30,7 @@
     <string name="label_add_new_exercises_home">Add\nExercise</string>
     <string name="label_session_history_home">Session\nHistory</string>
     <string name="label_current_plan_home">Current\nPlan</string>
+    <string name="home_text">Stick to the plan\nNot your mood.</string>
 
     <!--Sessions-->
     <string name="label_sessions_title">History</string>

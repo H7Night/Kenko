@@ -13,7 +13,7 @@ INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (2, '背', NUL
 INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (3, '腿', NULL, 3);
 INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (4, '肩', NULL, 4);
 INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (5, '手臂', NULL, 5);
-INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (6, '腹', NULL, 6);
+INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (6, '核心', NULL, 6);
 INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (7, '有氧', NULL, 7);
 
 -- 4. Insert child tags

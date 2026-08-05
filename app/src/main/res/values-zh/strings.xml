@@ -25,6 +25,7 @@
     <string name="label_explore_exercises">查看\n动作</string>
     <string name="label_add_new_exercises_home">添加\n动作</string>
     <string name="label_current_plan_home">当前\n计划</string>
+    <string name="home_text">坚持计划\n而非心情</string>
 
     <!--Sessions-->
     <string name="label_sessions_title">训练记录</string>

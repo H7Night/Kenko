@@ -75,7 +75,7 @@ The top-level nav graph is assembled in `ui/navigation/KenkoNavHost.kt`. Bottom-
 - **Destructive actions** (deleting exercises, plans, sets, weight records, sessions) use an explicit delete `IconButton` + `ConfirmDialog` (in `ui/component/ConfirmDialog.kt`) — never swipe-to-delete. Show feedback via `Context.toast()` (`utils/Toast.kt`) with `R.string.label_deleted`.
 - **Shared UI components**: `ConfirmDialog` (confirmation dialogs), `EmptyState` (empty list placeholder), `Toast.kt` (`Context.toast` helper). All user-facing strings go through `res/values/strings.xml` + `values-zh/` — no hardcoded text in composables.
 - **Backup** has two modes: DB backup (ZIP, restore-capable, WorkManager-scheduled) and JSON export (selective data with date range). The backup UI lives in `ui/feature/backup/BackupScreen.kt` + `ui/feature/settings/BackupSection.kt`.
-- **Build scripts** in `scripts/` mirror the three Gradle tasks (`build_debug`, `install_debug`, `build_and_install`) for Windows (`.bat`/`.ps1`) and Unix (`.sh`); ps1 scripts accept `-NoPause` for CI use. `scripts/changelog.sh <version>` prints a version's section from `CHANGELOG.md`. All project scripts live in `scripts/`.
+- **Build scripts** in `scripts/` mirror the three Gradle tasks (`build_debug`, `install_debug`, `build_and_install`) for Windows (`.bat`/`.ps1`) and Unix (`.sh`); ps1 scripts accept `-NoPause` for CI use. `scripts/changelog.sh <version>` prints a version's section from `CHANGELOG.md`. Manual SQL migration/seed scripts live in `scripts/sql/`. All project scripts and SQL files live under `scripts/`.
 
 ### Key dependencies
 

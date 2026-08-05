@@ -75,6 +75,7 @@ import com.looker.kenko.ui.feature.session.ExerciseSearchDialog
 import com.looker.kenko.ui.feature.session.AddSetSheet
 import com.looker.kenko.ui.feature.session.components.SetItem
 import com.looker.kenko.ui.theme.KenkoIcons
+import com.looker.kenko.ui.theme.bodyFont
 import com.looker.kenko.ui.theme.header
 import com.looker.kenko.ui.theme.numbers
 import kotlinx.datetime.LocalDate
@@ -262,8 +263,10 @@ fun Home(
 
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Stick to the plan\nNot your mood.",
-                style = MaterialTheme.typography.displaySmall,
+                text = stringResource(R.string.home_text),
+                style = MaterialTheme.typography.displaySmall.copy(
+                    fontFamily = bodyFont,
+                ),
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                 modifier = Modifier
                     .fillMaxWidth()
