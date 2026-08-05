@@ -19,11 +19,11 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteStatement
 import com.looker.kenko.data.local.model.ExerciseEntity
-import com.looker.kenko.domain.model.Set
 import com.looker.kenko.domain.model.today
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.serializers.DayOfWeekSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.json.Json
@@ -203,7 +203,7 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
             do {
                 val id = getInt(idIndex)
                 val exerciseMapString = getString(exerciseMapIndex)
-                val exerciseMap = Json.decodeFromString(exerciseMapSerializer, exerciseMapString)
+                val exerciseMap = Json { ignoreUnknownKeys = true }.decodeFromString(exerciseMapSerializer, exerciseMapString)
                 exerciseMap.forEach { (day, exercises) ->
                     exercises.forEach { exercise ->
                         insert.insertPlanDays(day, id, db.exerciseId(exercise.name))
@@ -239,7 +239,7 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
             do {
                 val sessionId = getInt(idIndex)
                 val setsString = getString(setsIndex)
-                val sets = Json.decodeFromString(setsSerializer, setsString)
+                val sets = Json { ignoreUnknownKeys = true }.decodeFromString(setsSerializer, setsString)
                 for (i in sets.indices) {
                     insert.insertSet(db, sets[i], sessionId, i)
                 }
@@ -248,16 +248,16 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 
     @Suppress("NOTHING_TO_INLINE")
-    private inline fun SupportSQLiteStatement.insertSet(
+    private fun SupportSQLiteStatement.insertSet(
         db: SupportSQLiteDatabase,
-        set: Set,
+        set: LegacySet,
         sessionId: Int,
         order: Int
     ) {
         clearBindings()
         bindLong(1, set.repsOrDuration.toLong())
         bindDouble(2, set.weight.toDouble())
-        bindString(3, set.type.name)
+        bindString(3, set.type)
         bindLong(4, order.toLong())
         bindLong(5, sessionId.toLong())
         val exerciseId = db.exerciseId(set.exercise.name)
@@ -291,8 +291,20 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     private val exerciseMapSerializer =
         MapSerializer(DayOfWeekSerializer, ListSerializer(ExerciseEntity.serializer()))
 
-    private val setsSerializer = ListSerializer(Set.serializer())
+    private val setsSerializer = ListSerializer(LegacySet.serializer())
 }
+
+/**
+ * Minimal model used only to deserialize legacy v1 JSON payloads that
+ * contained a `type` field, which no longer exists on the current Set model.
+ */
+@Serializable
+private data class LegacySet(
+    val repsOrDuration: Int,
+    val weight: Float,
+    val type: String = "Standard",
+    val exercise: ExerciseEntity,
+)
 
 val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -437,5 +449,34 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
 val MIGRATION_10_11 = object : Migration(10, 11) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE plan_day ADD COLUMN sortOrder INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
+val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Rebuild sets table without the unused `type` column (SetType feature removed)
+        db.execSQL("ALTER TABLE `sets` RENAME TO `sets_old`")
+        db.execSQL(
+            """
+            CREATE TABLE `sets` (
+            `reps` INTEGER NOT NULL,
+            `weight` REAL NOT NULL,
+            `order` INTEGER NOT NULL,
+            `sessionId` INTEGER NOT NULL,
+            `exerciseId` INTEGER NOT NULL,
+            `rir` INTEGER NOT NULL,
+            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+            FOREIGN KEY(`sessionId`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            INSERT INTO `sets` (`reps`, `weight`, `order`, `sessionId`, `exerciseId`, `rir`, `id`)
+            SELECT `reps`, `weight`, `order`, `sessionId`, `exerciseId`, `rir`, `id` FROM `sets_old`
+            """.trimIndent(),
+        )
+        db.execSQL("DROP TABLE `sets_old`")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_sets_sessionId_exerciseId` ON `sets` (`sessionId`, `exerciseId`)")
     }
 }

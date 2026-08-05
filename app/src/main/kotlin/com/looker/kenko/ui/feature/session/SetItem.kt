@@ -55,7 +55,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
-import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.ExercisesPreviewParameter
@@ -201,7 +200,7 @@ private fun SetItemPreview(
 ) {
     KenkoTheme {
         SetItem(
-            Set(12, 40F, SetType.Drop, exercises.first(), RepsInReserve(2)),
+            Set(12, 40F, exercises.first(), RepsInReserve(2)),
         ) {
             Text(text = "01")
         }

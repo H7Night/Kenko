@@ -44,7 +44,6 @@ data class SetEntity(
     @ColumnInfo("reps")
     val repsOrDuration: Int,
     val weight: Float,
-    val type: SetType,
     val order: Int,
     val sessionId: Int,
     val exerciseId: Int,

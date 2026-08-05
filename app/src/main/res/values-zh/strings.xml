@@ -138,12 +138,12 @@
     <!--Project Specific-->
     <string name="label_session">训练</string>
     <string name="label_exercise">动作</string>
-    <string name="label_reps">.次数</string>
-    <string name="label_duration">.时长</string>
-    <string name="label_weight">.重量</string>
+    <string name="label_reps">次数</string>
+    <string name="label_duration">时长</string>
+    <string name="label_weight">重量</string>
     <string name="label_bodyweight">自重</string>
     <string name="label_use_bodyweight">是否使用自重</string>
-    <string name="label_sets">.组数</string>
+    <string name="label_sets">组数</string>
     <string name="label_coming_soon">敬请期待</string>
 
     <!--Navigation-->

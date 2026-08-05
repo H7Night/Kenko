@@ -24,7 +24,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.looker.kenko.R
 import com.looker.kenko.data.StringHandler
-import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.RepsInReserve

@@ -22,7 +22,6 @@ import com.looker.kenko.domain.model.Set
 fun SetEntity.toExternal(exercise: Exercise): Set = Set(
     repsOrDuration = repsOrDuration,
     weight = weight,
-    type = type,
     exercise = exercise,
     rir = RepsInReserve(rir),
     id = id,
@@ -32,7 +31,6 @@ fun Set.toEntity(sessionId: Int, order: Int): SetEntity = SetEntity(
     id = id ?: 0,
     repsOrDuration = repsOrDuration,
     weight = weight,
-    type = type,
     order = order,
     sessionId = sessionId,
     exerciseId = requireNotNull(exercise.id),

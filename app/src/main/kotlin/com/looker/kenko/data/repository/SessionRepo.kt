@@ -14,7 +14,6 @@
 
 package com.looker.kenko.data.repository
 
-import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.Set
@@ -37,7 +36,6 @@ interface SessionRepo {
         exerciseId: Int,
         weight: Float,
         reps: Int,
-        setType: SetType,
         rir: RepsInReserve,
     )
 

@@ -165,7 +165,11 @@ private fun SessionDetail(
     showBackButton: Boolean = true,
     onAddExerciseClick: (String) -> Unit = {},
 ) {
-    when (state) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.surface,
+    ) {
+        when (state) {
         is SessionDetailState.Error.InvalidSession -> {
             Column(Modifier.statusBarsPadding()) {
                 TopAppBar(
@@ -289,6 +293,7 @@ private fun SessionDetail(
                 showBackButton = showBackButton,
                 onAddExerciseClick = onAddExerciseClick,
             )
+        }
         }
     }
 }

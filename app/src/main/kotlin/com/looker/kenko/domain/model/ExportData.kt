@@ -40,7 +40,6 @@ data class ExportSet(
     val exerciseName: String,
     val exerciseTarget: String,
     val rir: Int? = null,
-    val setType: String? = null,
 )
 
 @Serializable

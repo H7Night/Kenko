@@ -15,7 +15,6 @@
 package com.looker.kenko
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Set
@@ -83,7 +82,6 @@ class RepositoryTest {
             Set(
                 repsOrDuration = 12,
                 weight = 12F,
-                type = SetType.entries.random(),
                 exercise = exercises.random(),
                 rir = RepsInReserve(2)
             )

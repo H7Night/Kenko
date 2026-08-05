@@ -26,6 +26,7 @@ import com.looker.kenko.data.local.MIGRATION_3_4
 import com.looker.kenko.data.local.MIGRATION_4_5
 import com.looker.kenko.data.local.MIGRATION_5_6
 import com.looker.kenko.data.local.MIGRATION_6_7
+import com.looker.kenko.data.local.MIGRATION_11_12
 import com.looker.kenko.data.local.dao.ExerciseDao
 import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.model.ExerciseEntity
@@ -162,6 +163,13 @@ class RoomDatabaseTesting {
         val db = helper.createDatabase(DB_NAME, 6)
         db.execSQL("INSERT INTO exercises (name, target, isIsometric) VALUES ('Pushups', 'Chest', 0)")
         helper.runMigrationsAndValidate(DB_NAME, 7, true, MIGRATION_6_7)
+    }
+
+    @Test
+    fun schemaMigration11To12() = runTest {
+        val db = helper.createDatabase(DB_NAME, 11)
+        db.execSQL("INSERT INTO sets (reps, weight, type, \"order\", sessionId, exerciseId, rir) VALUES (10, 50.0, 'Standard', 0, 1, 1, 2)")
+        helper.runMigrationsAndValidate(DB_NAME, 12, true, MIGRATION_11_12)
     }
 
     private fun SupportSQLiteDatabase.addV1Data() = use { db ->
