@@ -60,6 +60,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
@@ -266,6 +267,8 @@ fun Home(
                 text = stringResource(R.string.home_text),
                 style = MaterialTheme.typography.displaySmall.copy(
                     fontFamily = bodyFont,
+                    fontSize = 24.sp,
+                    lineHeight = 30.sp,
                 ),
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                 modifier = Modifier
