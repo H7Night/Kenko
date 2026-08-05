@@ -31,7 +31,6 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import java.io.File
 import javax.inject.Inject
 import kotlin.random.Random
-import kotlin.test.Ignore
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
@@ -40,6 +39,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.DayOfWeek
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -110,7 +110,7 @@ class BackupManagerTest {
     fun backupAndRestore_preservesData() = runTest {
         // Create some test data
         val planId = planRepo.createPlan("backup_test_plan")
-        val exercises = (1..3).mapNotNull { exerciseRepo.get(it) }
+        val exercises = exerciseRepo.stream.first().take(3)
         exercises.forEach {
             planRepo.addItem(
                 PlanItem(

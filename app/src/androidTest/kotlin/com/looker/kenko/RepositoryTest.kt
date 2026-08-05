@@ -61,7 +61,7 @@ class RepositoryTest {
     @Test
     fun checkPlanDeletion() = runTest {
         val planId = planRepo.createPlan("test")
-        val exercises = (1..10).map { exerciseRepo.get(it)!! }
+        val exercises = exerciseRepo.stream.first().take(10)
         exercises.forEach {
             planRepo.addItem(
                 PlanItem(
