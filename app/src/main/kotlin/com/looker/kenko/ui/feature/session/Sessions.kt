@@ -142,6 +142,7 @@ private fun Sessions(
     var dayExpanded by remember { mutableStateOf(false) }
     var selectedPlan by remember { mutableStateOf<Plan?>(null) }
     var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
+    var selectedMonth by remember { mutableStateOf(today()) }
     val context = LocalContext.current
 
     val selectedPlanName = selectedPlan?.name ?: stringResource(R.string.label_select_plan_one)
@@ -150,12 +151,14 @@ private fun Sessions(
         selectedPlan?.titlesMap ?: emptyMap()
     }
 
-    val filteredSessions = remember(state.sessions, selectedPlan, selectedDay) {
+    val filteredSessions = remember(state.sessions, selectedPlan, selectedDay, selectedMonth) {
         val planId = selectedPlan?.id
         state.sessions.filter { session ->
             val planMatch = planId == null || session.planId == planId
             val dayMatch = selectedDay == null || session.planDayOverride == selectedDay
-            planMatch && dayMatch
+            val monthMatch =
+                session.date.year == selectedMonth.year && session.date.month == selectedMonth.month
+            planMatch && dayMatch && monthMatch
         }
     }
 
@@ -222,6 +225,7 @@ private fun Sessions(
                         TrainingHeatmap(
                             sessionDates = state.sessionDates,
                             onClick = { },
+                            onMonthChange = { selectedMonth = it },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 4.dp),

@@ -32,6 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -59,6 +60,7 @@ fun TrainingHeatmap(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     initialDate: LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
+    onMonthChange: (LocalDate) -> Unit = {},
 ) {
     val pagerState = rememberPagerState(
         initialPage = Int.MAX_VALUE / 2,
@@ -69,6 +71,10 @@ fun TrainingHeatmap(
     val offset = pagerState.currentPage - (Int.MAX_VALUE / 2)
     val displayedDate = remember(initialDate, offset) {
         initialDate.plus(offset, DateTimeUnit.MONTH)
+    }
+
+    LaunchedEffect(displayedDate) {
+        onMonthChange(displayedDate)
     }
 
     val showPreviousYear = remember(sessionDates, displayedDate) {
