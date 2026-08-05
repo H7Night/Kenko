@@ -49,7 +49,7 @@ Kenko 是一款健身日志应用，为你提供合适的渐进超负荷训练�
 ./gradlew connectedAndroidTest
 ```
 
-便捷脚本位于 [`scripts/`](scripts/)（`build_debug`、`install_debug`、`build_and_install`），提供 Windows（`.bat`/`.ps1`）与 Unix（`.sh`）版本。
+便捷脚本位于 [`scripts/`](scripts/)（`build_debug`、`install_debug`、`build_and_install`），提供 Windows（`.bat`/`.ps1`）与 Unix（`.sh`）版本。使用 `scripts/changelog.sh <版本>` 可输出指定版本的更新日志段落（如 `Unreleased`）。
 
 ## 截图
 

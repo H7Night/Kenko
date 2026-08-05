@@ -50,7 +50,7 @@ thought-out plans
 ./gradlew connectedAndroidTest
 ```
 
-Convenience scripts are available in [`scripts/`](scripts/) (`build_debug`, `install_debug`, `build_and_install`) for Windows (`.bat`/`.ps1`) and Unix (`.sh`).
+Convenience scripts are available in [`scripts/`](scripts/) (`build_debug`, `install_debug`, `build_and_install`) for Windows (`.bat`/`.ps1`) and Unix (`.sh`). Use `scripts/changelog.sh <version>` to print the changelog section for a given version (e.g. `Unreleased`).
 
 ## Screenshots
 
