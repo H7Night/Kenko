@@ -1,0 +1,63 @@
+name: Auto Build Release APK
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'apk/**'
+      - '.github/**'
+
+concurrency:
+  group: auto-build-main
+  cancel-in-progress: false
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'adopt'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease
+
+      - name: Signing APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_apk
+        env:
+          BUILD_TOOLS_VERSION: "36.0.0"
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.KEY_BASE64 }}
+          keyStorePassword: ${{ secrets.STORE_PASS }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyPassword: ${{ secrets.KEY_PASS }}
+
+      - name: Commit APK to main
+        run: |
+          git config user.name "H7Night"
+          git config user.email "h7night@gmail.com"
+          mkdir -p apk
+          cp "${{ steps.sign_apk.outputs.signedReleaseFile }}" "apk/Kenko-release.apk"
+          git add -f apk/Kenko-release.apk
+          if git diff --cached --quiet; then
+            echo "APK 无变化，跳过提交"
+          else
+            git commit -m "build: 自动构建签名 release APK（commit ${{ github.sha }}）"
+            git push origin main
+          fi
