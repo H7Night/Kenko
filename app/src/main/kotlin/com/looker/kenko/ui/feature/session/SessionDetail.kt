@@ -95,10 +95,11 @@ import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.ConfirmDialog
+import com.looker.kenko.ui.component.DeletableSetItem
+import com.looker.kenko.ui.component.SetItem
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.dayName
-import com.looker.kenko.ui.feature.session.components.SetItem
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.utils.DateFormat
@@ -485,42 +486,20 @@ private fun SetsList(
             }
             if (!isCollapsed) {
                 itemsIndexed(items = sets) { index, set ->
-                    val setItem = @Composable {
-                        SetItem(
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                            set = set,
-                            isToday = isToday,
-                            isEditMode = isEditMode,
-                            onRepsUpdate = { onUpdateSet(set.id, it, set.weight) },
-                            onWeightUpdate = { onUpdateSet(set.id, set.repsOrDuration, it) },
-                            title = {
-                                Text(normalizeInt(index + 1))
-                            },
-                        )
-                    }
-                    if (isEditMode) {
-                        Row(
-                            modifier = Modifier.animateItem(),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                setItem()
-                            }
-                            IconButton(
-                                onClick = { setToDelete = set.id },
-                                modifier = Modifier.size(32.dp),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Delete,
-                                    contentDescription = stringResource(R.string.label_delete),
-                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                                    modifier = Modifier.size(18.dp),
-                                )
-                            }
-                        }
-                    } else {
-                        setItem()
-                    }
+                    DeletableSetItem(
+                        modifier = Modifier
+                            .animateItem()
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                        set = set,
+                        isToday = isToday,
+                        isEditMode = isEditMode,
+                        onRepsUpdate = { onUpdateSet(set.id, it, set.weight) },
+                        onWeightUpdate = { onUpdateSet(set.id, set.repsOrDuration, it) },
+                        onDelete = if (isEditMode) { { setToDelete = set.id } } else null,
+                        title = {
+                            Text(normalizeInt(index + 1))
+                        },
+                    )
                 }
             }
         }

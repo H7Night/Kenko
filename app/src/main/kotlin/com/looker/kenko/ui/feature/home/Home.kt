@@ -56,6 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
@@ -66,6 +67,8 @@ import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Set
 import com.looker.kenko.domain.model.today
+import com.looker.kenko.ui.component.ConfirmDialog
+import com.looker.kenko.ui.component.DeletableSetItem
 import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.timer.TimerCard
 import com.looker.kenko.ui.component.timer.TimerState
@@ -74,11 +77,11 @@ import com.looker.kenko.ui.component.timer.rememberNotificationPermissionState
 import com.looker.kenko.ui.feature.plan.components.dayName
 import com.looker.kenko.ui.feature.session.ExerciseSearchDialog
 import com.looker.kenko.ui.feature.session.AddSetSheet
-import com.looker.kenko.ui.feature.session.components.SetItem
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.bodyFont
 import com.looker.kenko.ui.theme.header
 import com.looker.kenko.ui.theme.numbers
+import com.looker.kenko.utils.toast
 import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -258,6 +261,7 @@ fun Home(
                     InlineTrainingContent(
                         exerciseSets = sessionSets,
                         onAddSet = { exercise -> addSetExercise = exercise },
+                        onRemoveSet = viewModel::removeSet,
                     )
                 }
             }
@@ -318,9 +322,28 @@ private fun TrainingActionBar(
 private fun InlineTrainingContent(
     exerciseSets: Map<Exercise, List<Set>>,
     onAddSet: (Exercise) -> Unit,
+    onRemoveSet: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val collapsedExercises = remember { mutableStateListOf<Int>() }
+    var setToDelete by remember { mutableStateOf<Int?>(null) }
+    val context = LocalContext.current
+
+    setToDelete?.let { id ->
+        val deletedMessage = stringResource(R.string.label_deleted)
+        ConfirmDialog(
+            title = stringResource(R.string.label_delete_set_title),
+            message = stringResource(R.string.label_delete_set_message),
+            confirmText = stringResource(R.string.label_delete),
+            onConfirm = {
+                onRemoveSet(id)
+                context.toast(deletedMessage)
+                setToDelete = null
+            },
+            onDismiss = { setToDelete = null },
+        )
+    }
+
     Column(modifier = modifier.padding(horizontal = 12.dp)) {
         exerciseSets.forEach { (exercise, sets) ->
             val isCollapsed = exercise.id in collapsedExercises
@@ -348,8 +371,9 @@ private fun InlineTrainingContent(
             )
             if (!isCollapsed) {
                 sets.forEachIndexed { index, set ->
-                    SetItem(
+                    DeletableSetItem(
                         set = set,
+                        onDelete = { set.id?.let { setToDelete = it } },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         title = {
                             Text(

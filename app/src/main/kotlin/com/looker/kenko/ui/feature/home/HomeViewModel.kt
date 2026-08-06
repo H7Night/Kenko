@@ -215,6 +215,16 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+
+    fun removeSet(setId: Int) {
+        viewModelScope.launch {
+            try {
+                sessionRepo.removeSet(setId)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
+        }
+    }
 }
 
 @Immutable
