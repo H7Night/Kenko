@@ -8,6 +8,17 @@ Kenko 是一款健身日志应用，为你提供合适的渐进超负荷训练�
 
 <div align="left">
 
+## 构建包说明
+
+### 测试 / 日常使用（默认）
+- **本地构建 debug 包**：运行 `./gradlew assembleDebug`，产物位于 `app/build/outputs/apk/debug/`。
+- 使用 **debug 签名**（已入库的 `app/kenko-debug.keystore`，团队通用），所有开发者本地构建的调试包签名一致，覆盖安装不会出现 `INSTALL_FAILED_UPDATE_INCOMPATIBLE` 签名冲突。
+
+### main 分支（正式包）
+- 每次 push / merge 到 `main` 分支，GitHub Actions（`.github/workflows/auto-build.yml`）自动构建 **release 签名包**，并提交回仓库：
+  - 下载位置：`apk/Kenko-release.apk`（仓库根目录，自动更新）
+- 使用独立的 **release 签名**（凭证保存在 GitHub Secrets，与 debug 签名区分），用于正式安装与发布。
+
 ## 功能特性
 
 - **训练日志**：轻松记录训练组（抗阻训练与有氧训练）。

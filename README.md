@@ -1,3 +1,5 @@
+[简体中文 (Simplified Chinese)](README_cn.md) | [English](README.md)
+
 <div align="center">
 
 <img width="" src="metadata/en-US/images/featureGraphic.png" alt="Kenko" align="center">
