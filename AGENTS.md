@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 工作流要求（Workflow Requirements）
+
+- **禁止在 `main` 分支上直接修改代码，也禁止直接在 `main` 分支上提交**。
+- 所有代码/文档修改必须遵循以下流程：
+  1. 先切换到最新的 `main`（`git checkout main && git pull`）；
+  2. 从 `main` 创建 `feat/<描述>` 分支进行修改；
+  3. 在 `feat/*` 分支上完成修改并提交；
+  4. 将 `feat/*` 分支 merge 回 `main` 分支。
+- **当用户没有明确要求时**（例如分支命名、merge 方式、是否创建 PR、是否推送等），必须先询问用户确认信息，再执行操作。
+
 ## Build & Test Commands
 
 ```bash
