@@ -21,9 +21,14 @@ import android.content.Intent
 import androidx.compose.ui.platform.UriHandler
 import androidx.core.net.toUri
 import com.looker.kenko.R
+import com.looker.kenko.utils.isValidUrl
 
 class KenkoUriHandler(private val context: Context) : UriHandler {
     override fun openUri(uri: String) {
+        // 只允许 http/https，拒绝 file://、content://、intent:// 等任意 scheme
+        if (!uri.isValidUrl()) {
+            error(context.getString(R.string.error_invalid_url))
+        }
         try {
             val intent = Intent(
                 Intent.ACTION_VIEW,

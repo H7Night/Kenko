@@ -317,6 +317,7 @@
     <string name="label_view_source_on_github">View source on GitHub</string>
 
     <!-- Crash log -->
+    <string name="timer_service_subtype">Workout timer foreground service</string>
     <string name="label_crash_dialog_title">App Crashed</string>
     <string name="label_crash_dialog_message">Kenko encountered an unexpected error. Would you like to save the crash log for debugging?</string>
     <string name="label_crash_dialog_hint">The log will be saved to your chosen location.</string>

@@ -90,9 +90,23 @@ class BackupManagerImpl @Inject constructor(
 
                 database.close()
 
-                replaceDatabaseFiles(tempDir)
-                replaceDatastoreFile(tempDir)
-                tempDir.deleteRecursively()
+                // 恢复前先备份现有数据，失败时回滚到原状
+                val rollbackDir = File(context.cacheDir, "temp_restore_rollback")
+                rollbackDir.deleteRecursively()
+                rollbackDir.mkdirs()
+                backupCurrentData(rollbackDir)
+
+                try {
+                    replaceDatabaseFiles(tempDir)
+                    replaceDatastoreFile(tempDir)
+                } catch (e: Exception) {
+                    replaceDatabaseFiles(rollbackDir)
+                    replaceDatastoreFile(rollbackDir)
+                    throw e
+                } finally {
+                    rollbackDir.deleteRecursively()
+                    tempDir.deleteRecursively()
+                }
 
                 BackupResult.Success
             } catch (e: Exception) {
@@ -200,12 +214,16 @@ class BackupManagerImpl @Inject constructor(
         }
 
         ZipInputStream(inputStream).use { zipIn ->
+            val destCanonical = destDir.canonicalPath
             var entry = zipIn.nextEntry
             while (entry != null) {
-                val file = File(destDir, entry.name)
+                val targetFile = File(destDir, entry.name).normalize()
+                if (!targetFile.canonicalPath.startsWith(destCanonical + File.separator)) {
+                    throw SecurityException("Invalid backup entry: ${entry.name}")
+                }
                 if (!entry.isDirectory) {
-                    file.parentFile?.mkdirs()
-                    file.outputStream().use { output ->
+                    targetFile.parentFile?.mkdirs()
+                    targetFile.outputStream().use { output ->
                         zipIn.copyTo(output)
                     }
                 }
@@ -213,6 +231,14 @@ class BackupManagerImpl @Inject constructor(
                 entry = zipIn.nextEntry
             }
         }
+    }
+
+    private fun backupCurrentData(backupDir: File) {
+        databaseFiles().forEach { dbFile ->
+            if (dbFile.exists()) dbFile.copyTo(File(backupDir, dbFile.name), overwrite = true)
+        }
+        val datastore = datastoreFile()
+        if (datastore.exists()) datastore.copyTo(File(backupDir, datastore.name), overwrite = true)
     }
 
     private fun replaceDatabaseFiles(sourceDir: File) {
