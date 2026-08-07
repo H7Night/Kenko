@@ -9,6 +9,7 @@
 .cxx
 local.properties
 *.jks
+/keystore/
 /.kotlin
 /kls_database.db
 *.zip
