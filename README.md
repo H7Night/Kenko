@@ -54,6 +54,13 @@ thought-out plans
 
 Convenience scripts are available in [`scripts/`](scripts/) (`build_debug`, `install_debug`, `build_and_install`) for Windows (`.bat`/`.ps1`) and Unix (`.sh`). Use `scripts/changelog.sh <version>` to print the changelog section for a given version (e.g. `Unreleased`).
 
+## Release
+
+Releases are managed via GitHub Actions (`.github/workflows/prep_release.yml` + `release.yml`):
+
+1. Manually run the **Prepare Release** workflow with a version number (e.g. `1.7.0`) — it updates `versionName`, adds the CHANGELOG section and the Fastlane changelog, and opens a PR on a `release/<version>` branch.
+2. Merging that PR into `main` triggers the **Release** workflow, which builds and signs the release APK/AAB, creates a GitHub Release (draft), and publishes to the Play Store.
+
 ## Screenshots
 
 <img src="metadata/en-US/images/phoneScreenshots/1.png" width="25%" /><img src="metadata/en-US/images/phoneScreenshots/2.png" width="25%" /><img src="metadata/en-US/images/phoneScreenshots/3.png" width="25%" /><img src="metadata/en-US/images/phoneScreenshots/4.png" width="25%" />

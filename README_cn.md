@@ -15,9 +15,9 @@ Kenko 是一款健身日志应用，为你提供合适的渐进超负荷训练�
 - 使用 **debug 签名**（本地 `keystore/debug.keystore`，缺失时自动回退开发者本机默认 debug keystore；keystore 目录已被 .gitignore 忽略，不入库）。
 
 ### main 分支（正式包）
-- 每次 push / merge 到 `main` 分支，GitHub Actions（`.github/workflows/auto-build.yml`）自动构建 **release 签名包**，并提交回仓库：
-  - 下载位置：`apk/Kenko-release.apk`（仓库根目录，自动更新）
-- 使用独立的 **release 签名**（凭证保存在 GitHub Secrets，与 debug 签名区分），用于正式安装与发布。
+- 正式发布由 GitHub Actions 管理（`.github/workflows/prep_release.yml` + `release.yml`）：
+  1. 手动触发 **Prepare Release** workflow，输入版本号（如 `1.7.0`），自动更新 `versionName`、生成 CHANGELOG 版本区块与 Fastlane 更新日志，并创建 `release/<版本>` 分支的 PR；
+  2. 将该 PR 合并到 `main` 后，**Release** workflow 自动构建 **release 签名** APK / AAB（签名凭证保存在 GitHub Secrets，与 debug 签名区分），创建 GitHub Release（草稿）并发布到 Play Store。
 
 ## 功能特性
 
