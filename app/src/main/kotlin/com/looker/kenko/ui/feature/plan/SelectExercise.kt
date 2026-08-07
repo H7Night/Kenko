@@ -375,7 +375,7 @@ private fun SearchResult(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(searchResult.exercises) { exercise ->
+        items(searchResult.exercises, key = { it.id ?: it.hashCode() }) { exercise ->
             ExerciseItem(
                 exercise = exercise,
                 onClick = { onClick(exercise) },

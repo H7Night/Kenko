@@ -78,7 +78,7 @@ fun ExerciseItem(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.SpaceAround,
             ) {
-                val tagNames = remember { exercise.tags.joinToString(", ") { it.name } }
+                val tagNames = remember(exercise) { exercise.tags.joinToString(", ") { it.name } }
                 Text(
                     text = exercise.name,
                     maxLines = 2,
