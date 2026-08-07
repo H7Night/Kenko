@@ -16,13 +16,11 @@ jobs:
   build-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-        with:
-          persist-credentials: true
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -48,16 +46,9 @@ jobs:
           alias: ${{ secrets.KEY_ALIAS }}
           keyPassword: ${{ secrets.KEY_PASS }}
 
-      - name: Commit APK to main
-        run: |
-          git config user.name "H7Night"
-          git config user.email "h7night@gmail.com"
-          mkdir -p apk
-          cp "${{ steps.sign_apk.outputs.signedReleaseFile }}" "apk/Kenko-release.apk"
-          git add -f apk/Kenko-release.apk
-          if git diff --cached --quiet; then
-            echo "APK 无变化，跳过提交"
-          else
-            git commit -m "build: 自动构建签名 release APK（commit ${{ github.sha }}）"
-            git push origin main
-          fi
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kenko-release-apk
+          path: ${{ steps.sign_apk.outputs.signedReleaseFile }}
+          if-no-files-found: error
