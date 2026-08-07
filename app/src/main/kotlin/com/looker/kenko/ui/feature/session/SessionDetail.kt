@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -44,6 +45,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -79,6 +81,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -92,14 +95,16 @@ import com.looker.kenko.ui.feature.session.AddSet
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.StickyHeader
-import com.looker.kenko.ui.component.SwipeToDeleteBox
+import com.looker.kenko.ui.component.ConfirmDialog
+import com.looker.kenko.ui.component.DeletableSetItem
+import com.looker.kenko.ui.component.SetItem
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.dayName
-import com.looker.kenko.ui.feature.session.components.SetItem
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.utils.DateFormat
+import com.looker.kenko.utils.toast
 import com.looker.kenko.utils.formatDate
 import java.util.*
 import kotlin.time.Clock
@@ -139,7 +144,7 @@ fun SessionDetails(
     val exercise by viewModel.current.collectAsStateWithLifecycle()
     if (exercise != null) {
         AddSetSheet(
-            exercise = exercise!!,
+            exercise = exercise ?: return,
             date = (state as? SessionDetailState.Success)?.data?.date,
             onDismiss = viewModel::hideSheet,
         )
@@ -162,7 +167,11 @@ private fun SessionDetail(
     showBackButton: Boolean = true,
     onAddExerciseClick: (String) -> Unit = {},
 ) {
-    when (state) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.surface,
+    ) {
+        when (state) {
         is SessionDetailState.Error.InvalidSession -> {
             Column(Modifier.statusBarsPadding()) {
                 TopAppBar(
@@ -287,6 +296,7 @@ private fun SessionDetail(
                 onAddExerciseClick = onAddExerciseClick,
             )
         }
+        }
     }
 }
 
@@ -317,6 +327,8 @@ private fun SetsList(
     var showImportDialog by remember { mutableStateOf(false) }
     var showImportSheet by remember { mutableStateOf(false) }
     var showAddExerciseDialog by rememberSaveable { mutableStateOf(false) }
+    var setToDelete by remember { mutableStateOf<Int?>(null) }
+    val context = LocalContext.current
 
     if (showImportDialog) {
         AlertDialog(
@@ -345,7 +357,7 @@ private fun SetsList(
     if (showImportSheet) {
         ModalBottomSheet(
             onDismissRequest = { showImportSheet = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
             Text(
                 text = stringResource(R.string.label_import_plan),
@@ -454,9 +466,9 @@ private fun SetsList(
                     isCollapsed = isCollapsed,
                     onCollapseToggle = {
                         collapsedExercises = if (isCollapsed) {
-                            collapsedExercises - exercise.id!!
+                            exercise.id?.let { collapsedExercises - it } ?: collapsedExercises
                         } else {
-                            collapsedExercises + exercise.id!!
+                            exercise.id?.let { collapsedExercises + it } ?: collapsedExercises
                         }
                     }
                 ) {
@@ -475,32 +487,38 @@ private fun SetsList(
             }
             if (!isCollapsed) {
                 itemsIndexed(items = sets) { index, set ->
-                    val setItem = @Composable {
-                        SetItem(
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                            set = set,
-                            isToday = isToday,
-                            isEditMode = isEditMode,
-                            onRepsUpdate = { onUpdateSet(set.id, it, set.weight) },
-                            onWeightUpdate = { onUpdateSet(set.id, set.repsOrDuration, it) },
-                            title = {
-                                Text(normalizeInt(index + 1))
-                            },
-                        )
-                    }
-                    if (isEditMode) {
-                        SwipeToDeleteBox(
-                            modifier = Modifier.animateItem(),
-                            onDismiss = { onRemoveSet(set.id) },
-                            clipShape = MaterialTheme.shapes.large,
-                            content = setItem
-                        )
-                    } else {
-                        setItem()
-                    }
+                    DeletableSetItem(
+                        modifier = Modifier
+                            .animateItem()
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                        set = set,
+                        isToday = isToday,
+                        isEditMode = isEditMode,
+                        onRepsUpdate = { onUpdateSet(set.id, it, set.weight) },
+                        onWeightUpdate = { onUpdateSet(set.id, set.repsOrDuration, it) },
+                        onDelete = if (isEditMode) { { setToDelete = set.id } } else null,
+                        title = {
+                            Text(normalizeInt(index + 1))
+                        },
+                    )
                 }
             }
         }
+    }
+
+    setToDelete?.let { setId ->
+        val deletedMessage = stringResource(R.string.label_deleted)
+        ConfirmDialog(
+            title = stringResource(R.string.label_delete_set_title),
+            message = stringResource(R.string.label_delete_set_message),
+            confirmText = stringResource(R.string.label_delete),
+            onConfirm = {
+                onRemoveSet(setId)
+                context.toast(deletedMessage)
+                setToDelete = null
+            },
+            onDismiss = { setToDelete = null },
+        )
     }
 }
 
@@ -697,7 +715,7 @@ fun AddSetSheet(
     ModalBottomSheet(
         sheetState = state,
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         AddSet(
             exercise = exercise,

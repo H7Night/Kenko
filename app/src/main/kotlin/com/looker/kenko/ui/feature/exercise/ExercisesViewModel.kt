@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -29,8 +30,11 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -45,6 +49,9 @@ class ExercisesViewModel @Inject constructor(
 ) : ViewModel() {
 
     val snackbarState = SnackbarHostState()
+
+    private val _snackbar = MutableSharedFlow<String>()
+    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
 
     val selectedParentFilter = MutableStateFlow<Int?>(null)
     val selectedChildFilter = MutableStateFlow<Int?>(null)
@@ -91,11 +98,15 @@ class ExercisesViewModel @Inject constructor(
 
     fun removeExercise(id: Int?) {
         viewModelScope.launch {
-            if (id == null) {
-                snackbarState.showSnackbar(stringHandler.getString(R.string.error_unknown))
-                return@launch
+            try {
+                if (id == null) {
+                    snackbarState.showSnackbar(stringHandler.getString(R.string.error_unknown))
+                    return@launch
+                }
+                repo.remove(id)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
-            repo.remove(id)
         }
     }
 
@@ -103,7 +114,7 @@ class ExercisesViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 uriHandler.openUri(reference)
-            } catch (e: IllegalStateException) {
+            } catch (e: Exception) {
                 snackbarState.showSnackbar(
                     e.message ?: stringHandler.getString(R.string.error_invalid_url)
                 )

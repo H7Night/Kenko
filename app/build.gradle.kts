@@ -15,6 +15,7 @@
 import com.android.utils.text.dropPrefix
 import java.time.LocalDate
 import java.time.ZoneId
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
@@ -32,11 +33,20 @@ android {
     namespace = "com.looker.kenko"
     compileSdk = 36
 
+    // 签名文件位于本地 keystore/ 目录（已被 .gitignore 忽略，不入库）。
+    // debug 签名：优先使用 keystore/debug.keystore，缺失时回退开发者本机默认 debug keystore。
+    // release 签名：仅本地存在 keystore/release.keystore 时启用；CI 上由 workflow 用 Secrets 签名。
+    val keystoreDir = rootProject.file("keystore")
+    val signingProps = Properties().apply {
+        val propsFile = File(keystoreDir, "signing.properties")
+        if (propsFile.exists()) propsFile.inputStream().use { load(it) }
+    }
+
     defaultConfig {
         applicationId = "com.looker.kenko"
         minSdk = 26
         targetSdk = 36
-        versionName = "1.5.0"
+        versionName = "1.7.0"
         versionCode = versionCodeFor(versionName)
 
         testInstrumentationRunner = "com.looker.kenko.KenkoTestRunner"
@@ -52,18 +62,30 @@ android {
     }
 
     signingConfigs {
-        create("sharedDebug") {
-            storeFile = file("kenko-debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
+        create("debugSigning") {
+            val debugKeystore = File(keystoreDir, "debug.keystore")
+            storeFile = if (debugKeystore.exists()) {
+                debugKeystore
+            } else {
+                file(System.getProperty("user.home") + "/.android/debug.keystore")
+            }
+            storePassword = signingProps.getProperty("debug.storePassword", "android")
+            keyAlias = signingProps.getProperty("debug.keyAlias", "androiddebugkey")
+            keyPassword = signingProps.getProperty("debug.keyPassword", "android")
+        }
+
+        create("releaseSigning") {
+            storeFile = File(keystoreDir, "release.keystore")
+            storePassword = signingProps.getProperty("release.storePassword", "")
+            keyAlias = signingProps.getProperty("release.keyAlias", "kenko")
+            keyPassword = signingProps.getProperty("release.keyPassword", "")
         }
     }
 
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
-            signingConfig = signingConfigs.getByName("sharedDebug")
+            signingConfig = signingConfigs.getByName("debugSigning")
         }
         release {
             isMinifyEnabled = true
@@ -72,6 +94,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            if (File(keystoreDir, "release.keystore").exists()) {
+                signingConfig = signingConfigs.getByName("releaseSigning")
+            }
         }
     }
 

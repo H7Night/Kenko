@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -18,17 +19,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,12 +42,13 @@ import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanPreviewParameters
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.KenkoBorderWidth
-import com.looker.kenko.ui.component.SwipeToDeleteBox
+import com.looker.kenko.ui.component.ConfirmDialog
 import com.looker.kenko.ui.component.endItem
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.KenkoAddButton
 import com.looker.kenko.ui.feature.plan.components.PlanItem
-import com.looker.kenko.ui.theme.KenkoIcons
+import androidx.compose.ui.platform.LocalContext
+import com.looker.kenko.utils.toast
 import com.looker.kenko.ui.theme.KenkoTheme
 
 @Composable
@@ -60,37 +57,31 @@ fun Plan(
     onBackPress: () -> Unit,
     onPlanClick: (Int) -> Unit,
 ) {
-    var showHelpDialog by remember { mutableStateOf(false) }
     val plans: List<Plan> by viewModel.plans.collectAsStateWithLifecycle()
+    var planToDelete by remember { mutableStateOf<Plan?>(null) }
+    val context = LocalContext.current
 
     Plan(
         plans = plans,
         onBackPress = onBackPress,
-        onInfoClick = { showHelpDialog = true },
         onSelectPlan = viewModel::switchPlan,
         onRemove = viewModel::removePlan,
         onPlanClick = onPlanClick,
+        onRequestRemove = { planToDelete = it },
     )
 
-    if (showHelpDialog) {
-        AlertDialog(
-            onDismissRequest = { showHelpDialog = false },
-            title = { Text(text = stringResource(R.string.label_clean_up)) },
-            text = { Text(text = stringResource(R.string.label_clean_up_plans)) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.cleanupPlans { showHelpDialog = false }
-                    },
-                ) {
-                    Text(text = stringResource(R.string.label_yes))
-                }
+    planToDelete?.let { plan ->
+        val deletedMessage = stringResource(R.string.label_deleted)
+        ConfirmDialog(
+            title = stringResource(R.string.label_delete_plan_title),
+            message = stringResource(R.string.label_delete_plan_message, plan.name),
+            confirmText = stringResource(R.string.label_delete),
+            onConfirm = {
+                plan.id?.let { viewModel.removePlan(it) }
+                context.toast(deletedMessage)
+                planToDelete = null
             },
-            dismissButton = {
-                TextButton(onClick = { showHelpDialog = false }) {
-                    Text(text = stringResource(R.string.label_no))
-                }
-            }
+            onDismiss = { planToDelete = null },
         )
     }
 }
@@ -100,24 +91,16 @@ fun Plan(
 private fun Plan(
     plans: List<Plan>,
     onBackPress: () -> Unit,
-    onInfoClick: () -> Unit,
     onSelectPlan: (Plan) -> Unit,
     onRemove: (Int) -> Unit,
     onPlanClick: (Int) -> Unit,
+    onRequestRemove: (Plan) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 navigationIcon = { BackButton(onClick = onBackPress) },
-                title = { Text(text = stringResource(R.string.label_plans_title)) },
-                actions = {
-                    IconButton(onClick = onInfoClick) {
-                        Icon(
-                            painter = KenkoIcons.Info,
-                            contentDescription = "Info"
-                        )
-                    }
-                }
+                title = { Text(text = stringResource(R.string.label_plans_title)) }
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -130,18 +113,15 @@ private fun Plan(
         ) {
             items(
                 items = plans,
-                key = { plan -> plan.id!! },
+                key = { plan -> plan.id ?: plan.hashCode() },
             ) { plan ->
-                SwipeToDeleteBox(
+                PlanItem(
                     modifier = Modifier.animateItem(),
-                    onDismiss = { onRemove(plan.id!!) },
-                ) {
-                    PlanItem(
-                        plan = plan,
-                        onClick = { onPlanClick(plan.id!!) },
-                        onActiveChange = { onSelectPlan(plan) },
-                    )
-                }
+                    plan = plan,
+                    onClick = { plan.id?.let { onPlanClick(it) } },
+                    onActiveChange = { onSelectPlan(plan) },
+                    onDelete = { onRequestRemove(plan) },
+                )
             }
             endItem()
         }
@@ -157,7 +137,6 @@ private fun PlanPreview(
         Plan(
             plans = plans,
             onSelectPlan = {},
-            onInfoClick = {},
             onBackPress = {},
             onPlanClick = {},
             onRemove = {},

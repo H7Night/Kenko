@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -26,6 +27,11 @@ import com.looker.kenko.data.local.MIGRATION_3_4
 import com.looker.kenko.data.local.MIGRATION_4_5
 import com.looker.kenko.data.local.MIGRATION_5_6
 import com.looker.kenko.data.local.MIGRATION_6_7
+import com.looker.kenko.data.local.MIGRATION_7_8
+import com.looker.kenko.data.local.MIGRATION_8_9
+import com.looker.kenko.data.local.MIGRATION_9_10
+import com.looker.kenko.data.local.MIGRATION_10_11
+import com.looker.kenko.data.local.MIGRATION_11_12
 import com.looker.kenko.data.local.dao.ExerciseDao
 import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.model.ExerciseEntity
@@ -86,7 +92,19 @@ class RoomDatabaseTesting {
             InstrumentationRegistry.getInstrumentation().targetContext,
             KenkoDatabase::class.java,
             DB_NAME,
-        ).addMigrations(MIGRATION_1_2).build()
+        ).addMigrations(
+            MIGRATION_1_2,
+            MIGRATION_2_3,
+            MIGRATION_3_4,
+            MIGRATION_4_5,
+            MIGRATION_5_6,
+            MIGRATION_6_7,
+            MIGRATION_7_8,
+            MIGRATION_8_9,
+            MIGRATION_9_10,
+            MIGRATION_10_11,
+            MIGRATION_11_12,
+        ).build()
         val exercises = updatedDb.exerciseDao().stream().first()
         val planHistory = updatedDb.historyDao().getCurrent()
         assertNotNull(planHistory)
@@ -111,7 +129,7 @@ class RoomDatabaseTesting {
         assertTrue(currentPlanItems.all { it.exerciseId != 0 })
         assertContains(
             exercises,
-            ExerciseEntity("Pullups", isIsometric = false, id = 1),
+            ExerciseEntity("Pullups", id = 1),
         )
         assertEquals(planHistory.planId, 1)
         assertEquals(fullHistory.size, 1)
@@ -132,14 +150,14 @@ class RoomDatabaseTesting {
     @Test
     fun schemaMigration2To3() = runTest {
         val db = helper.createDatabase(DB_NAME, 2)
-        db.execSQL("INSERT INTO sets (reps, weight, type, ` + "`\"`" + @"order` + "`\"`" + @", sessionId, exerciseId) VALUES (10, 50.0, 'Standard', 0, 1, 1)")
+        db.execSQL("INSERT INTO sets (reps, weight, type, \"order\", sessionId, exerciseId) VALUES (10, 50.0, 'Standard', 0, 1, 1)")
         helper.runMigrationsAndValidate(DB_NAME, 3, true, MIGRATION_2_3)
     }
 
     @Test
     fun schemaMigration3To4() = runTest {
         val db = helper.createDatabase(DB_NAME, 3)
-        db.execSQL("INSERT INTO sets (reps, weight, type, ` + "`\"`" + @"order` + "`\"`" + @", sessionId, exerciseId, rir) VALUES (10, 50.0, 'Standard', 0, 1, 1, 2)")
+        db.execSQL("INSERT INTO sets (reps, weight, type, \"order\", sessionId, exerciseId, rir) VALUES (10, 50.0, 'Standard', 0, 1, 1, 2)")
         helper.runMigrationsAndValidate(DB_NAME, 4, true, MIGRATION_3_4)
     }
 
@@ -162,6 +180,13 @@ class RoomDatabaseTesting {
         val db = helper.createDatabase(DB_NAME, 6)
         db.execSQL("INSERT INTO exercises (name, target, isIsometric) VALUES ('Pushups', 'Chest', 0)")
         helper.runMigrationsAndValidate(DB_NAME, 7, true, MIGRATION_6_7)
+    }
+
+    @Test
+    fun schemaMigration11To12() = runTest {
+        val db = helper.createDatabase(DB_NAME, 11)
+        db.execSQL("INSERT INTO sets (reps, weight, type, \"order\", sessionId, exerciseId, rir) VALUES (10, 50.0, 'Standard', 0, 1, 1, 2)")
+        helper.runMigrationsAndValidate(DB_NAME, 12, true, MIGRATION_11_12)
     }
 
     private fun SupportSQLiteDatabase.addV1Data() = use { db ->

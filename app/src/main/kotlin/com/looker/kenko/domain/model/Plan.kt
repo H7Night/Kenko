@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -23,6 +24,7 @@ import com.looker.kenko.domain.model.Labels.Time
 import kotlin.time.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.toLocalDateTime
@@ -77,7 +79,7 @@ fun Plan.withDayTitle(dayOfWeek: DayOfWeek, title: String?): Plan {
     return copy(dayTitles = newDayTitles)
 }
 
-val localDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+fun today(): LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 
 val week = DatePeriod(days = 7)
 

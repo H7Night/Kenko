@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025. LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -15,11 +16,10 @@
 package com.looker.kenko
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Set
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
@@ -62,7 +62,7 @@ class RepositoryTest {
     @Test
     fun checkPlanDeletion() = runTest {
         val planId = planRepo.createPlan("test")
-        val exercises = (1..10).map { exerciseRepo.get(it)!! }
+        val exercises = exerciseRepo.stream.first().take(10)
         exercises.forEach {
             planRepo.addItem(
                 PlanItem(
@@ -75,15 +75,14 @@ class RepositoryTest {
         val planItems = planRepo.getPlanItems(planId)
         assertEquals(10, planItems.size)
         planRepo.setCurrent(planId)
-        val createdSessionId = sessionRepo.getSessionIdOrCreate(localDate)
-        val stream = sessionRepo.streamByDate(localDate)
+        val createdSessionId = sessionRepo.getSessionIdOrCreate(today())
+        val stream = sessionRepo.streamByDate(today())
         assertNotNull(stream.first())
         val sessionId = stream.first()!!.id!!
         val sets = (1..24).map {
             Set(
                 repsOrDuration = 12,
                 weight = 12F,
-                type = SetType.entries.random(),
                 exercise = exercises.random(),
                 rir = RepsInReserve(2)
             )

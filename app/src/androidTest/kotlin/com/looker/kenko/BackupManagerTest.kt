@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -19,11 +20,10 @@ import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import com.looker.kenko.data.backup.BackupManager
 import com.looker.kenko.data.backup.BackupResult
-import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Set
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
@@ -32,7 +32,6 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import java.io.File
 import javax.inject.Inject
 import kotlin.random.Random
-import kotlin.test.Ignore
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
@@ -41,6 +40,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.DayOfWeek
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -111,7 +111,7 @@ class BackupManagerTest {
     fun backupAndRestore_preservesData() = runTest {
         // Create some test data
         val planId = planRepo.createPlan("backup_test_plan")
-        val exercises = (1..3).mapNotNull { exerciseRepo.get(it) }
+        val exercises = exerciseRepo.stream.first().take(3)
         exercises.forEach {
             planRepo.addItem(
                 PlanItem(
@@ -123,12 +123,11 @@ class BackupManagerTest {
         }
         planRepo.setCurrent(planId)
 
-        val sessionId = sessionRepo.getSessionIdOrCreate(localDate)
+        val sessionId = sessionRepo.getSessionIdOrCreate(today())
         val sets = (1..5).map {
             Set(
                 repsOrDuration = 12,
                 weight = 50F,
-                type = SetType.Standard,
                 exercise = exercises.first(),
                 rir = RepsInReserve(2),
             )

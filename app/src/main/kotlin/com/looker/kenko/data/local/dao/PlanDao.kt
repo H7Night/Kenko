@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -47,7 +48,7 @@ interface PlanDao {
         FROM plan_history
         WHERE `end` IS NULL
         AND start IS NOT NULL)
-        ORDER BY id ASC
+        ORDER BY sortOrder ASC
         """,
     )
     fun currentPlanItemsFlow(): Flow<List<PlanDayEntity>>
@@ -63,7 +64,7 @@ interface PlanDao {
         WHERE `end` IS NULL
         AND start IS NOT NULL)
         AND dayOfWeek = :day
-        ORDER BY id ASC
+        ORDER BY sortOrder ASC
         """,
     )
     fun currentPlanItemsByDayFlow(day: Int): Flow<List<PlanDayEntity>>
@@ -92,7 +93,7 @@ interface PlanDao {
         SELECT *
         FROM plan_day
         WHERE planId = :planId
-        ORDER BY id ASC
+        ORDER BY sortOrder ASC
         """,
     )
     fun planItemsByPlanIdFlow(planId: Int): Flow<List<PlanDayEntity>>
@@ -102,7 +103,7 @@ interface PlanDao {
         SELECT *
         FROM plan_day
         WHERE planId = :planId
-        ORDER BY id ASC
+        ORDER BY sortOrder ASC
         """,
     )
     suspend fun getPlanItemsByPlanId(planId: Int): List<PlanDayEntity>
@@ -127,7 +128,7 @@ interface PlanDao {
         INNER JOIN plan_day
         ON exercises.id = plan_day.exerciseId
         WHERE plan_day.planId = :planId
-        ORDER BY plan_day.id ASC
+        ORDER BY plan_day.sortOrder ASC
         """,
     )
     fun exerciseByPlanIdFlow(planId: Int): Flow<List<ExerciseEntity>>
@@ -140,7 +141,7 @@ interface PlanDao {
         INNER JOIN plan_day
         ON exercises.id = plan_day.exerciseId
         WHERE plan_day.planId = :planId
-        ORDER BY plan_day.id ASC
+        ORDER BY plan_day.sortOrder ASC
         """,
     )
     suspend fun getExerciseByPlanId(planId: Int): List<ExerciseEntity>
@@ -151,7 +152,7 @@ interface PlanDao {
         FROM plan_day
         WHERE planId = :planId
         AND dayOfWeek = :day
-        ORDER BY id ASC
+        ORDER BY sortOrder ASC
         """,
     )
     fun planItemsByPlanIdAndDayFlow(planId: Int, day: Int): Flow<List<PlanDayEntity>>
@@ -162,7 +163,7 @@ interface PlanDao {
         FROM plan_day
         WHERE planId = :planId
         AND dayOfWeek = :day
-        ORDER BY id ASC
+        ORDER BY sortOrder ASC
         """,
     )
     suspend fun getPlanItemsByPlanIdAndDay(planId: Int, day: Int): List<PlanDayEntity>
@@ -234,15 +235,15 @@ interface PlanDao {
     @Query("DELETE FROM plans WHERE id = :planId")
     suspend fun deletePlan(planId: Int)
 
-    @Query("DELETE FROM plans WHERE id NOT IN (SELECT DISTINCT planId FROM plan_day)")
-    suspend fun deleteEmptyPlans()
-
     @Upsert
     suspend fun insertPlanItem(item: PlanDayEntity)
 
     @Query("DELETE FROM plan_day WHERE id = :planDayId")
     suspend fun deleteItem(planDayId: Long)
 
-    @Query("DELETE FROM plan_day WHERE exerciseId = :exerciseId")
-    suspend fun deleteItemByExercise(exerciseId: Int)
+    @Query("DELETE FROM plan_day WHERE planId = :planId AND dayOfWeek = :day")
+    suspend fun deleteItemsByPlanIdAndDay(planId: Int, day: Int)
+
+    @Query("UPDATE plan_day SET sortOrder = :order WHERE id = :id")
+    suspend fun updateItemSortOrder(id: Long, order: Int)
 }

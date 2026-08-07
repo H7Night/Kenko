@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -15,7 +16,6 @@
 package com.looker.kenko.domain.model
 
 import androidx.compose.runtime.Immutable
-import com.looker.kenko.data.local.model.SetType
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -23,12 +23,8 @@ import kotlinx.serialization.Serializable
 data class Set(
     val repsOrDuration: Int,
     val weight: Float,
-    val type: SetType,
     val exercise: Exercise,
     val rir: RepsInReserve,
     val id: Int? = null,
 )
-
-val Set.rating: Rating
-    get() = Rating(repsOrDuration * weight * type.ratingModifier * rir.modifier)
 

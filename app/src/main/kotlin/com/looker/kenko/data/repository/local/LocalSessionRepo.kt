@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +21,6 @@ import com.looker.kenko.data.local.dao.SessionDao
 import com.looker.kenko.data.local.dao.SetsDao
 import com.looker.kenko.data.local.model.SessionDataEntity
 import com.looker.kenko.data.local.model.SetEntity
-import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.data.mapper.toEntity
 import com.looker.kenko.data.mapper.toExternal
 import com.looker.kenko.domain.model.RepsInReserve
@@ -30,7 +30,10 @@ import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.utils.toLocalEpochDays
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.isoDayNumber
@@ -42,6 +45,8 @@ class LocalSessionRepo @Inject constructor(
     private val exerciseDao: ExerciseDao,
 ) : SessionRepo {
 
+    private val mutex = Mutex()
+
     override val stream: Flow<List<Session>> =
         dao.stream().map {
             it.map { session ->
@@ -51,7 +56,11 @@ class LocalSessionRepo @Inject constructor(
     override val setsCount: Flow<Int> =
         setsDao.totalSetCount()
 
-    override suspend fun addSet(sessionId: Int, set: Set) {
+    override val earliestSessionDate: Flow<LocalDate?> = flow {
+        emit(dao.earliestSessionDate()?.let { LocalDate.fromEpochDays(it.value) })
+    }
+
+    override suspend fun addSet(sessionId: Int, set: Set) = mutex.withLock {
         setsDao.insert(
             set.toEntity(
                 sessionId,
@@ -65,16 +74,14 @@ class LocalSessionRepo @Inject constructor(
         exerciseId: Int,
         weight: Float,
         reps: Int,
-        setType: SetType,
         rir: RepsInReserve,
-    ) {
+    ) = mutex.withLock {
         setsDao.insert(
             SetEntity(
                 repsOrDuration = reps,
                 weight = weight,
                 exerciseId = exerciseId,
                 sessionId = sessionId,
-                type = setType,
                 order = setsDao.getSetsCountBySessionId(sessionId) ?: 0,
                 rir = rir.value,
             ),
@@ -103,13 +110,13 @@ class LocalSessionRepo @Inject constructor(
         dao.updateDuration(sessionId, durationSeconds)
     }
 
-    override suspend fun getSessionIdOrCreate(date: LocalDate): Int {
+    override suspend fun getSessionIdOrCreate(date: LocalDate): Int = mutex.withLock {
         val currentPlanId = requireNotNull(historyDao.getCurrentId()) { "No plan active" }
         val existingId = dao.getSessionId(date.toLocalEpochDays())
         if (existingId != null) {
-            return existingId
+            return@withLock existingId
         }
-        return dao.insert(SessionDataEntity(date.toLocalEpochDays(), currentPlanId)).toInt()
+        return@withLock dao.insert(SessionDataEntity(date.toLocalEpochDays(), currentPlanId)).toInt()
     }
 
     override fun streamByDate(date: LocalDate): Flow<Session?> {

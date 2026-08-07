@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +21,7 @@ import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.ui.component.timer.TimerManager
 import com.looker.kenko.ui.component.timer.TimerState
@@ -30,13 +31,16 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -52,23 +56,30 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val planStream = planRepo.current
-    val sessionStream = sessionRepo.streamByDate(localDate)
+    val sessionStream = sessionRepo.streamByDate(today())
     private val sessionsStream = sessionRepo.stream
+
+    private val _snackbar = MutableSharedFlow<String>()
+    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
 
     private val planItemStream = combine(
         sessionStream,
         planRepo.planItems
     ) { session, planItems ->
-        val day = session?.planDayOverride ?: localDate.dayOfWeek
+        val day = session?.planDayOverride ?: today().dayOfWeek
         planItems.filter { it.dayOfWeek == day }
     }
 
     init {
         viewModelScope.launch {
-            val existingSession = sessionRepo.streamByDate(localDate).first()
-            val existingDuration = existingSession?.durationSeconds ?: 0L
-            if (existingDuration > 0 && timerManager.state.value == TimerState.IDLE) {
-                timerManager.setElapsedSeconds(existingDuration)
+            try {
+                val existingSession = sessionRepo.streamByDate(today()).first()
+                val existingDuration = existingSession?.durationSeconds ?: 0L
+                if (existingDuration > 0 && timerManager.state.value == TimerState.IDLE) {
+                    timerManager.setElapsedSeconds(existingDuration)
+                }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
     }
@@ -84,12 +95,16 @@ class HomeViewModel @Inject constructor(
             items.groupBy { it.dayOfWeek }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
+    val planDayTitles: StateFlow<Map<DayOfWeek, String>> = planStream.map { plan ->
+        plan?.titlesMap ?: emptyMap()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
     val previousSessionDate: StateFlow<LocalDate?> = combine(
         planStream,
         sessionStream,
     ) { plan, session ->
-        val day = session?.planDayOverride ?: localDate.dayOfWeek
-        sessionRepo.previousSessionDate(localDate, plan?.id, day)
+        val day = session?.planDayOverride ?: today().dayOfWeek
+        sessionRepo.previousSessionDate(today(), plan?.id, day)
     }.flatMapLatest { it }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
@@ -128,10 +143,9 @@ class HomeViewModel @Inject constructor(
         val timerState = array[4] as TimerState
         val trainingState = array[5] as TrainingSessionState
 
-        val isFirstSession = sessions.size <= 1 && sessions.firstOrNull()?.date == localDate
-        val dayTitle = currentPlan?.titlesMap?.get(
-            currentSession?.planDayOverride ?: localDate.dayOfWeek
-        )
+        val isFirstSession = sessions.size <= 1 && sessions.firstOrNull()?.date == today()
+        val dayOfWeek = currentSession?.planDayOverride ?: today().dayOfWeek
+        val dayTitle = currentPlan?.titlesMap?.get(dayOfWeek)
         HomeUiData(
             isPlanSelected = currentPlan != null,
             isSessionStarted = currentSession != null && currentSession.sets.isNotEmpty(),
@@ -139,6 +153,7 @@ class HomeViewModel @Inject constructor(
             isFirstSession = isFirstSession,
             currentPlanId = currentPlan?.id,
             sessionDates = sessions.map { it.date }.toSet(),
+            dayOfWeek = dayOfWeek,
             timerState = timerState,
             trainingState = trainingState,
             planName = currentPlan?.name,
@@ -183,14 +198,32 @@ class HomeViewModel @Inject constructor(
 
     fun importPlanFromDay(day: DayOfWeek) {
         viewModelScope.launch {
-            sessionRepo.clearSets(localDate)
-            sessionRepo.updatePlanDay(localDate, day)
+            try {
+                sessionRepo.clearSets(today())
+                sessionRepo.updatePlanDay(today(), day)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun clearTodaySets() {
         viewModelScope.launch {
-            sessionRepo.clearSets(localDate)
+            try {
+                sessionRepo.clearSets(today())
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
+        }
+    }
+
+    fun removeSet(setId: Int) {
+        viewModelScope.launch {
+            try {
+                sessionRepo.removeSet(setId)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 }
@@ -207,5 +240,6 @@ data class HomeUiData(
     val trainingState: TrainingSessionState = TrainingSessionState.Idle,
     val planName: String? = null,
     val dayTitle: String? = null,
+    val dayOfWeek: DayOfWeek = today().dayOfWeek,
     val todayExercises: List<com.looker.kenko.domain.model.Exercise> = emptyList(),
 )

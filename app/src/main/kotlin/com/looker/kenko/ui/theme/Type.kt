@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -23,7 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.looker.kenko.R
 
 val FontFamily.Companion.Numbers
-    get() = FontFamily(Font(R.font.spacemono_bold))
+    get() = FontFamily(Font(R.font.maplemono_bold))
 
 val displayFont = FontFamily(
     Font(R.font.darkergrotesque_bold, weight = FontWeight.Bold),
@@ -31,8 +32,8 @@ val displayFont = FontFamily(
 )
 
 val bodyFont = FontFamily(
-    Font(R.font.spacemono_bold, weight = FontWeight.Bold),
-    Font(R.font.spacemono_normal, weight = FontWeight.Normal),
+    Font(R.font.maplemono_bold, weight = FontWeight.Bold),
+    Font(R.font.maplemono_regular, weight = FontWeight.Normal),
 )
 
 fun Typography.header() = displayLarge.copy(

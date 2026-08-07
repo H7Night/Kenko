@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -26,10 +27,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.domain.model.RepsInReserve
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.ui.feature.session.components.BoundReached
@@ -38,6 +38,9 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -61,23 +64,23 @@ class AddSetViewModel @AssistedInject constructor(
     val weights: TextFieldState = TextFieldState("20.0")
     val setsCount: TextFieldState = TextFieldState("2")
 
-    var selectedSetType by mutableStateOf(SetType.Standard)
-        private set
-
     private var isCardio by mutableStateOf(false)
+
+    private val _snackbar = MutableSharedFlow<String>()
+    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
 
     init {
         viewModelScope.launch {
-            val exercise = exerciseRepo.get(id)
-            isCardio = exercise?.countType == CountType.MINUTES
-            if (isCardio) {
-                reps.setTextAndPlaceCursorAtEnd("20")
+            try {
+                val exercise = exerciseRepo.get(id)
+                isCardio = exercise?.countType == CountType.MINUTES
+                if (isCardio) {
+                    reps.setTextAndPlaceCursorAtEnd("20")
+                }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
-    }
-
-    fun setSetType(type: SetType) {
-        selectedSetType = type
     }
 
     fun addRep(value: Int) {
@@ -123,16 +126,19 @@ class AddSetViewModel @AssistedInject constructor(
 
     fun addSet() {
         viewModelScope.launch {
-            val sessionId = sessionRepo.getSessionIdOrCreate(date ?: localDate)
-            repeat(setsInt) {
-                sessionRepo.addSet(
-                    sessionId = sessionId,
-                    exerciseId = id,
-                    weight = weightFloat,
-                    reps = repInt,
-                    setType = selectedSetType,
-                    rir = RepsInReserve(2),
-                )
+            try {
+                val sessionId = sessionRepo.getSessionIdOrCreate(date ?: today())
+                repeat(setsInt) {
+                    sessionRepo.addSet(
+                        sessionId = sessionId,
+                        exerciseId = id,
+                        weight = weightFloat,
+                        reps = repInt,
+                        rir = RepsInReserve(2),
+                    )
+                }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
     }

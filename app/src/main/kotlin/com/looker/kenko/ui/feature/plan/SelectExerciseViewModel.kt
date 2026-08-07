@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -63,8 +64,9 @@ class SelectExerciseViewModel @Inject constructor(
     val searchResult: StateFlow<SearchResult> = combine(
         repo.stream,
         searchQuery,
+        selectedParentId,
         selectedChildId,
-    ) { exercises, query, childId ->
+    ) { exercises, query, parentId, childId ->
         var filtered = exercises
 
         // Filter by tag (child/specific muscle)
@@ -72,10 +74,10 @@ class SelectExerciseViewModel @Inject constructor(
             filtered = filtered.filter { exercise ->
                 exercise.tags.any { it.id == childId }
             }
-        } else if (selectedParentId.value != null) {
+        } else if (parentId != null) {
             // If only parent selected, show all exercises under that parent
             filtered = filtered.filter { exercise ->
-                exercise.tags.any { it.parentId == selectedParentId.value }
+                exercise.tags.any { it.parentId == parentId }
             }
         }
 
@@ -96,9 +98,16 @@ class SelectExerciseViewModel @Inject constructor(
 
     fun setParentFilter(parentId: Int?) {
         selectedParentId.value = parentId
+        selectedChildId.value = null
     }
 
     fun setChildFilter(childId: Int?) {
         selectedChildId.value = childId
+    }
+
+    fun reset() {
+        searchQuery.value = ""
+        selectedParentId.value = null
+        selectedChildId.value = null
     }
 }

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -18,8 +19,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
-import com.looker.kenko.domain.model.localDate
-import com.looker.kenko.data.repository.PerformanceRepo
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.utils.asStateFlow
@@ -29,13 +29,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.launch
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     repo: SettingsRepo,
     sessionRepo: SessionRepo,
-    performanceRepo: PerformanceRepo,
 ) : ViewModel() {
 
     val isReady: StateFlow<Boolean> = repo.stream
@@ -52,13 +50,7 @@ class MainViewModel @Inject constructor(
     val language: StateFlow<Language> = repo.get { language }
         .asStateFlow(Language.System)
 
-    val isExerciseVisible: StateFlow<Boolean> = sessionRepo.streamByDate(localDate)
+    val isExerciseVisible: StateFlow<Boolean> = sessionRepo.streamByDate(today())
         .map { it != null && it.sets.isNotEmpty() }
         .asStateFlow(false)
-
-    init {
-        viewModelScope.launch {
-            performanceRepo.updateModifiers()
-        }
-    }
 }

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -22,25 +23,31 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.navigation.compose.rememberNavController
-import androidx.compose.foundation.layout.padding
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
+import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.ui.component.KenkoBottomBar
+import com.looker.kenko.ui.component.timer.TimerManager
+import com.looker.kenko.ui.component.timer.TimerState
+import com.looker.kenko.ui.component.timer.TrainingSessionManager
+import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.ui.feature.home.navigation.HomeRoute
 import com.looker.kenko.ui.feature.home.navigation.navigateToHome
 import com.looker.kenko.ui.feature.profile.navigation.ProfileRoute
@@ -51,14 +58,47 @@ import com.looker.kenko.ui.feature.session.navigation.SessionRoute
 import com.looker.kenko.ui.feature.session.navigation.navigateToSessions
 import com.looker.kenko.ui.navigation.KenkoNavHost
 import com.looker.kenko.ui.theme.KenkoTheme
+import dagger.hilt.EntryPoint
+import dagger.hilt.EntryPoints
+import dagger.hilt.InstallIn
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.components.ActivityComponent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
+    @EntryPoint
+    @InstallIn(ActivityComponent::class)
+    interface SessionObserverEntryPoint {
+        fun timerManager(): TimerManager
+        fun trainingSessionManager(): TrainingSessionManager
+        fun sessionRepo(): SessionRepo
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        val entryPoint = EntryPoints.get(this, SessionObserverEntryPoint::class.java)
+        val timerManager = entryPoint.timerManager()
+        val trainingSessionManager = entryPoint.trainingSessionManager()
+        val sessionRepo = entryPoint.sessionRepo()
+
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStop(owner: LifecycleOwner) {
+                val timerState = timerManager.state.value
+                if (timerState != TimerState.RUNNING && timerState != TimerState.PAUSED) return
+                val sessionState = trainingSessionManager.sessionState.value
+                val sessionId = (sessionState as? TrainingSessionState.Active)?.sessionId ?: return
+                val elapsed = timerManager.elapsedSeconds.value
+                if (elapsed > 0) {
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        sessionRepo.updateSessionDuration(sessionId, elapsed)
+                    }
+                }
+            }
+        })
         installSplashScreen().apply {
             setKeepOnScreenCondition { !viewModel.isReady.value }
         }

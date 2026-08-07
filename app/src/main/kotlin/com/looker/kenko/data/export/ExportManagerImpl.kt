@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -55,7 +56,12 @@ class ExportManagerImpl @Inject constructor(
         return try {
             val data = ExportData(
                 sessions = if (options.exportSessions) {
-                    sessionRepo.stream.first().map { it.toExport() }
+                    val sessions = sessionRepo.stream.first().map { it.toExport() }
+                    if (options.startDate != null && options.endDate != null) {
+                        sessions.filter { it.date >= options.startDate && it.date <= options.endDate }
+                    } else {
+                        sessions
+                    }
                 } else null,
                 plans = if (options.exportPlans) {
                     planRepo.plans.first().map { it.toExport() }
@@ -89,7 +95,6 @@ private fun Session.toExport(): ExportSession = ExportSession(
             exerciseName = set.exercise.name,
             exerciseTarget = set.exercise.tags.firstOrNull()?.parentName ?: "",
             rir = set.rir.value,
-            setType = set.type.name,
         )
     },
     planId = planId,
@@ -109,7 +114,6 @@ private fun Exercise.toExport(): ExportExercise = ExportExercise(
     tags = tags.map { it.name },
     countType = countType.name,
     isBodyweight = isBodyweight,
-    isIsometric = isIsometric,
 )
 
 private fun Weight.toExport(): ExportWeight = ExportWeight(

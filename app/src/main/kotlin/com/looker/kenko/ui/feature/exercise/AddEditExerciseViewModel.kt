@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -36,7 +37,10 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
@@ -70,6 +74,9 @@ class AddEditExerciseViewModel @Inject constructor(
     val showRenameConfirmation = MutableStateFlow(false)
 
     val snackbarState = SnackbarHostState()
+
+    private val _snackbar = MutableSharedFlow<String>()
+    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
 
     val tagState = combine(
         tagRepo.streamParents,
@@ -136,27 +143,35 @@ class AddEditExerciseViewModel @Inject constructor(
 
     fun saveExercise(onDone: () -> Unit) {
         viewModelScope.launch {
-            val name = exerciseName.value
-            if (name.isBlank()) {
-                snackbarState.showSnackbar(stringHandler.getString(R.string.error_exercise_name_empty))
-                return@launch
+            try {
+                val name = exerciseName.value
+                if (name.isBlank()) {
+                    snackbarState.showSnackbar(stringHandler.getString(R.string.error_exercise_name_empty))
+                    return@launch
+                }
+                if (selectedTags.value.isEmpty()) {
+                    snackbarState.showSnackbar(stringHandler.getString(R.string.label_at_least_one_tag))
+                    return@launch
+                }
+                if (exerciseId != null && name != originalName && repo.hasHistory(exerciseId)) {
+                    showRenameConfirmation.value = true
+                    return@launch
+                }
+                commitSave(onDone)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
-            if (selectedTags.value.isEmpty()) {
-                snackbarState.showSnackbar(stringHandler.getString(R.string.label_at_least_one_tag))
-                return@launch
-            }
-            if (exerciseId != null && name != originalName && repo.hasHistory(exerciseId)) {
-                showRenameConfirmation.value = true
-                return@launch
-            }
-            commitSave(onDone)
         }
     }
 
     fun confirmRename(onDone: () -> Unit) {
         viewModelScope.launch {
-            showRenameConfirmation.value = false
-            commitSave(onDone)
+            try {
+                showRenameConfirmation.value = false
+                commitSave(onDone)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
@@ -186,17 +201,21 @@ class AddEditExerciseViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            if (exerciseId != null) {
-                val exercise = repo.get(exerciseId)
-                exercise?.let {
-                    originalName = it.name
-                    exerciseName.value = it.name
-                    isBodyweightFlow.value = it.isBodyweight
-                    countTypeFlow.value = it.countType
-                    selectedTags.value = it.tags
+            try {
+                if (exerciseId != null) {
+                    val exercise = repo.get(exerciseId)
+                    exercise?.let {
+                        originalName = it.name
+                        exerciseName.value = it.name
+                        isBodyweightFlow.value = it.isBodyweight
+                        countTypeFlow.value = it.countType
+                        selectedTags.value = it.tags
+                    }
+                } else {
+                    if (routeData.name != null) exerciseName.value = routeData.name
                 }
-            } else {
-                if (routeData.name != null) exerciseName.value = routeData.name
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
     }

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -17,11 +18,15 @@ package com.looker.kenko.data.export
 import android.net.Uri
 import com.looker.kenko.data.backup.BackupResult
 
+import kotlinx.datetime.LocalDate
+
 data class ExportOptions(
     val exportSessions: Boolean = true,
     val exportPlans: Boolean = true,
     val exportExercises: Boolean = true,
     val exportWeights: Boolean = true,
+    val startDate: LocalDate? = null,
+    val endDate: LocalDate? = null,
 ) {
     val hasSelection: Boolean get() = exportSessions || exportPlans || exportExercises || exportWeights
 }

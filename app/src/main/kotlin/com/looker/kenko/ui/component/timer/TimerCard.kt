@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -43,6 +44,7 @@ fun TimerCard(
     timerState: TimerState,
     elapsedSeconds: Long,
     notificationGranted: Boolean,
+    hasAccumulatedTime: Boolean = false,
     onStart: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
@@ -87,7 +89,12 @@ fun TimerCard(
                             onClick = onStart,
                             enabled = notificationGranted,
                         ) {
-                            Text(stringResource(R.string.label_start_workout))
+                            Text(
+                                if (hasAccumulatedTime)
+                                    stringResource(R.string.label_continue_session)
+                                else
+                                    stringResource(R.string.label_start_workout)
+                            )
                         }
                     }
                     TimerState.RUNNING -> {

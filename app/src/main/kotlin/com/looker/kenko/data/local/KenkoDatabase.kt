@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -33,12 +34,11 @@ import com.looker.kenko.data.local.model.PlanEntity
 import com.looker.kenko.data.local.model.PlanHistoryEntity
 import com.looker.kenko.data.local.model.SessionDataEntity
 import com.looker.kenko.data.local.model.SetEntity
-import com.looker.kenko.data.local.model.SetTypeEntity
 import com.looker.kenko.data.local.model.TagEntity
 import com.looker.kenko.data.local.model.WeightEntity
 
 @Database(
-    version = 9,
+    version = 12,
     entities = [
         SessionDataEntity::class,
         ExerciseEntity::class,
@@ -46,7 +46,6 @@ import com.looker.kenko.data.local.model.WeightEntity
         PlanHistoryEntity::class,
         PlanDayEntity::class,
         SetEntity::class,
-        SetTypeEntity::class,
         WeightEntity::class,
         TagEntity::class,
         ExerciseTagEntity::class,
@@ -79,5 +78,8 @@ fun kenkoDatabase(context: Context) = Room
         MIGRATION_6_7,
         MIGRATION_7_8,
         MIGRATION_8_9,
+        MIGRATION_9_10,
+        MIGRATION_10_11,
+        MIGRATION_11_12,
     )
     .build()

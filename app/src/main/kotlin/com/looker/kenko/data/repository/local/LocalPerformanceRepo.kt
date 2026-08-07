@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -15,7 +16,6 @@
 package com.looker.kenko.data.repository.local
 
 import com.looker.kenko.data.local.dao.PerformanceDao
-import com.looker.kenko.data.local.model.defaultSetTypes
 import com.looker.kenko.data.repository.Performance
 import com.looker.kenko.data.repository.PerformanceRepo
 import javax.inject.Inject
@@ -23,10 +23,6 @@ import javax.inject.Inject
 class LocalPerformanceRepo @Inject constructor(
     private val performanceDao: PerformanceDao,
 ) : PerformanceRepo {
-
-    override suspend fun updateModifiers() {
-        performanceDao.upsertSetTypeLookup(defaultSetTypes())
-    }
 
     override suspend fun getPerformance(exerciseId: Int?, planId: Int?): Performance? =
         performanceDao.getPerformance(exerciseId, planId)

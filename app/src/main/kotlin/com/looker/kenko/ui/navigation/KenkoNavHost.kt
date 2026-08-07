@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -14,6 +15,8 @@
 
 package com.looker.kenko.ui.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
@@ -61,6 +64,15 @@ fun KenkoNavHost(
         modifier = modifier,
         navController = navController as NavHostController,
         startDestination = startDestination,
+        // Disable the default crossfade transitions (fadeIn/fadeOut ~700ms).
+        // During a pop the outgoing page stays composed on top and still
+        // receives clicks, so a fast tap right after back can hit the
+        // previous screen's elements (e.g. opening the exercise editor
+        // instead of the plan). Instant swaps avoid that click-through.
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None },
     ) {
         home(
             onProfileClick = {

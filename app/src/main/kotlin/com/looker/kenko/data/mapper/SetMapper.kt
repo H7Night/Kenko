@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -22,7 +23,6 @@ import com.looker.kenko.domain.model.Set
 fun SetEntity.toExternal(exercise: Exercise): Set = Set(
     repsOrDuration = repsOrDuration,
     weight = weight,
-    type = type,
     exercise = exercise,
     rir = RepsInReserve(rir),
     id = id,
@@ -32,7 +32,6 @@ fun Set.toEntity(sessionId: Int, order: Int): SetEntity = SetEntity(
     id = id ?: 0,
     repsOrDuration = repsOrDuration,
     weight = weight,
-    type = type,
     order = order,
     sessionId = sessionId,
     exerciseId = requireNotNull(exercise.id),

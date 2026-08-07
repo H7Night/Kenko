@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -52,10 +53,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.ui.component.BackButton
-import com.looker.kenko.ui.component.EmptyPage
+import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.dayName
 import com.looker.kenko.ui.component.timer.TimerService
@@ -65,6 +67,7 @@ import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.utils.DateFormat
 import com.looker.kenko.utils.formatDate
 import com.looker.kenko.utils.isToday
+import com.looker.kenko.utils.toast
 import kotlinx.datetime.LocalDate
 
 import androidx.compose.material3.AlertDialog
@@ -72,7 +75,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.looker.kenko.ui.component.SwipeToDeleteBox
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.History
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -103,7 +108,7 @@ fun Sessions(
     if (showAddHistoryDialog) {
         AddHistoryDialog(
             availablePlanDays = state.availablePlanDays,
-            dayTitles = state.dayTitles,
+            dayTitles = state.plans.find { it.isActive }?.titlesMap ?: emptyMap(),
             onDismiss = { showAddHistoryDialog = false },
             onConfirm = { date, day ->
                 viewModel.addSession(date, day) {
@@ -138,23 +143,28 @@ private fun Sessions(
     var dayExpanded by remember { mutableStateOf(false) }
     var selectedPlan by remember { mutableStateOf<Plan?>(null) }
     var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
+    var selectedMonth by remember { mutableStateOf(today()) }
+    val context = LocalContext.current
 
     val selectedPlanName = selectedPlan?.name ?: stringResource(R.string.label_select_plan_one)
-    val selectedDayName = selectedDay?.let { day -> state.dayTitles[day] ?: day.toString() } ?: stringResource(R.string.label_select_muscle)
+    val selectedDayName = selectedDay?.let { day -> selectedPlan?.titlesMap?.get(day) ?: dayName(day) } ?: stringResource(R.string.label_select_muscle)
     val availableDays: Map<DayOfWeek, String> = remember(selectedPlan) {
         selectedPlan?.titlesMap ?: emptyMap()
     }
 
-    val filteredSessions = remember(state.sessions, selectedPlan, selectedDay) {
+    val filteredSessions = remember(state.sessions, selectedPlan, selectedDay, selectedMonth) {
         val planId = selectedPlan?.id
         state.sessions.filter { session ->
             val planMatch = planId == null || session.planId == planId
             val dayMatch = selectedDay == null || session.planDayOverride == selectedDay
-            planMatch && dayMatch
+            val monthMatch =
+                session.date.year == selectedMonth.year && session.date.month == selectedMonth.month
+            planMatch && dayMatch && monthMatch
         }
     }
 
     if (sessionToDelete != null) {
+        val deletedMessage = stringResource(R.string.label_deleted)
         AlertDialog(
             onDismissRequest = { sessionToDelete = null },
             title = { Text(text = stringResource(R.string.label_delete_session_title)) },
@@ -162,7 +172,8 @@ private fun Sessions(
             confirmButton = {
                 Button(
                     onClick = {
-                        onRemoveSession(sessionToDelete!!)
+                        sessionToDelete?.let { onRemoveSession(it) }
+                        context.toast(deletedMessage)
                         sessionToDelete = null
                     },
                 ) {
@@ -197,10 +208,13 @@ private fun Sessions(
                 }
             )
         },
-        containerColor = androidx.compose.ui.graphics.Color.Transparent,
+        containerColor = MaterialTheme.colorScheme.surface,
     ) { padding ->
         if (state.sessions.isEmpty()) {
-            EmptyPage(stringResource(id = R.string.label_no_sessions))
+            EmptyState(
+                icon = Icons.Rounded.History,
+                text = stringResource(id = R.string.label_no_sessions),
+            )
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -212,6 +226,7 @@ private fun Sessions(
                         TrainingHeatmap(
                             sessionDates = state.sessionDates,
                             onClick = { },
+                            onMonthChange = { selectedMonth = it },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 4.dp),
@@ -297,17 +312,15 @@ private fun Sessions(
                 }
                 items(
                     items = filteredSessions,
-                    key = { it.id!! },
+                    key = { it.id ?: it.hashCode() },
                 ) { session ->
-                    SwipeToDeleteBox(
+                    SessionCard(
                         modifier = Modifier.animateItem(),
-                        onDismiss = { sessionToDelete = session },
-                    ) {
-                        SessionCard(
-                            session = session,
-                            onClick = { onSessionClick(session.date) },
-                        )
-                    }
+                        session = session,
+                        onClick = { onSessionClick(session.date) },
+                        dayTitles = state.dayTitles,
+                        onDelete = { sessionToDelete = session },
+                    )
                 }
             }
         }
@@ -321,7 +334,7 @@ private fun AddHistoryDialog(
     onDismiss: () -> Unit,
     onConfirm: (LocalDate, DayOfWeek) -> Unit,
 ) {
-    var date by remember { mutableStateOf(com.looker.kenko.domain.model.localDate) }
+    var date by remember { mutableStateOf<LocalDate>(today()) }
     var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
 
     LaunchedEffect(date) {
@@ -443,11 +456,13 @@ fun SessionCard(
     session: Session,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
+    dayTitles: Map<Int?, Map<DayOfWeek, String>> = emptyMap(),
+    onDelete: (() -> Unit)? = null,
 ) {
     val containerColor = if (session.date.isToday) {
         MaterialTheme.colorScheme.tertiaryContainer
     } else {
-        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
+        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f)
     }
     Surface(
         modifier = modifier,
@@ -455,23 +470,28 @@ fun SessionCard(
         shape = MaterialTheme.shapes.large,
         onClick = onClick,
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .padding(16.dp),
+                .padding(start = 16.dp, end = 4.dp, top = 16.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.Top,
         ) {
+            Column(modifier = Modifier.weight(1f)) {
             val titleStyle = MaterialTheme.typography.titleLarge
             val secondaryEmphasis = MaterialTheme.colorScheme.outline
-            val dayName = dayName(session.date.dayOfWeek)
-            val string = remember(session.date, dayName) {
+            val effectiveDay = session.planDayOverride ?: session.date.dayOfWeek
+            val dayName = dayName(effectiveDay)
+            val dayTitle = dayTitles[session.planId]?.get(effectiveDay)
+            val displayName = if (dayTitle.isNullOrBlank()) dayName else "$dayTitle ($dayName)"
+            val string = remember(session.date, dayName, dayTitle) {
                 buildAnnotatedString {
                     withStyle(titleStyle.toSpanStyle().copy(fontWeight = FontWeight.Bold)) {
                         append(formatDate(session.date, dateTimeFormat = DateFormat.YearMonthDay))
                     }
                     append(" ${Typography.bullet} ")
                     withStyle(titleStyle.toSpanStyle().copy(color = secondaryEmphasis)) {
-                        append(dayName)
+                        append(displayName)
                     }
                 }
             }
@@ -496,6 +516,20 @@ fun SessionCard(
                 color = MaterialTheme.colorScheme.outline,
                 maxLines = 3,
             )
+            }
+            if (onDelete != null) {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(32.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Delete,
+                        contentDescription = stringResource(R.string.label_delete),
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
         }
     }
 }

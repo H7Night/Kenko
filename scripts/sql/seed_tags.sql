@@ -8,7 +8,7 @@ INSERT OR IGNORE INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (2, 
 INSERT OR IGNORE INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (3, '腿', NULL, 3);
 INSERT OR IGNORE INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (4, '肩', NULL, 4);
 INSERT OR IGNORE INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (5, '手臂', NULL, 5);
-INSERT OR IGNORE INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (6, '腹', NULL, 6);
+INSERT OR IGNORE INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (6, '核心', NULL, 6);
 INSERT OR IGNORE INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (7, '有氧', NULL, 7);
 
 -- Insert child tags (specific muscles) under 胸 (id=1)

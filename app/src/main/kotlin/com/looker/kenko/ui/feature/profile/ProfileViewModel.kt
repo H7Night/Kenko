@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +21,7 @@ import androidx.lifecycle.viewModelScope
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanStat
 import com.looker.kenko.domain.model.Weight
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.WeightRepo
@@ -28,7 +29,10 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
@@ -55,21 +59,36 @@ class ProfileViewModel @Inject constructor(
         )
     }.asStateFlow(ProfileUiState())
 
+    private val _snackbar = MutableSharedFlow<String>()
+    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
+
     fun addWeight(value: Float) {
         viewModelScope.launch {
-            weightRepo.addWeight(Weight(localDate, value))
+            try {
+                weightRepo.addWeight(Weight(today(), value))
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun updateWeight(weight: Weight) {
         viewModelScope.launch {
-            weightRepo.updateWeight(weight)
+            try {
+                weightRepo.updateWeight(weight)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun deleteWeight(id: Int) {
         viewModelScope.launch {
-            weightRepo.deleteWeight(id)
+            try {
+                weightRepo.deleteWeight(id)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 }

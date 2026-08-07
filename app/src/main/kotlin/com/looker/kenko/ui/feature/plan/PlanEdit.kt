@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -38,7 +39,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.zIndex
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -50,6 +53,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
@@ -68,6 +73,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -85,8 +91,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.BuildConfig
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.ExercisesPreviewParameter
 import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.component.DaySelectorChip
 import com.looker.kenko.ui.component.ErrorSnackbar
 import com.looker.kenko.ui.component.HorizontalDaySelector
@@ -165,7 +173,7 @@ fun PlanEdit(
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     dayTitleState = viewModel.dayTitleState,
                     onSelectDay = viewModel::setCurrentDay,
-                    onRemoveExerciseClick = viewModel::removeExercise,
+                    onRemovePlanItemClick = viewModel::removePlanItem,
                     onFullDaySelection = viewModel::openFullDaySelection,
                     onReorder = viewModel::updateOrder,
                 )
@@ -252,18 +260,36 @@ private fun PlanEdit(
     state: PlanEditState,
     dayTitleState: TextFieldState,
     onSelectDay: (DayOfWeek) -> Unit,
-    onRemoveExerciseClick: (Exercise) -> Unit,
+    onRemovePlanItemClick: (Long) -> Unit,
     onFullDaySelection: () -> Unit,
     onReorder: (List<Exercise>) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val focusManager = LocalFocusManager.current
-    val isCurrentDayBlank by remember(state.exercises) { derivedStateOf { state.exercises.isEmpty() } }
+    val haptic = LocalHapticFeedback.current
+    val isCurrentDayBlank by remember(state.planItems) { derivedStateOf { state.planItems.isEmpty() } }
     val lazyListState = rememberLazyListState()
 
-    val localExercises = remember(state.exercises) { state.exercises.toMutableStateList() }
+    val localPlanItems = remember { mutableStateListOf<PlanItem>() }
     var draggedItemIndex by remember { mutableIntStateOf(-1) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
+    var justReordered by remember { mutableStateOf(false) }
+
+    // Sync localPlanItems from source: skip when just reordered to avoid duplicate animation
+    LaunchedEffect(state.planItems, justReordered) {
+        if (justReordered) {
+            justReordered = false
+            return@LaunchedEffect
+        }
+        val sourceIds = state.planItems.map { it.id }.toSet()
+        val localIds = localPlanItems.map { it.id }.toSet()
+        if (sourceIds != localIds) {
+            localPlanItems.clear()
+            localPlanItems.addAll(state.planItems)
+            draggedItemIndex = -1
+            dragOffset = 0f
+        }
+    }
 
     PlanExercise(
         modifier = Modifier.fillMaxSize(),
@@ -312,6 +338,7 @@ private fun PlanEdit(
                         onNext = { onSelectDay(state.currentDay + 1) },
                         onPrevious = { onSelectDay(state.currentDay - 1) },
                         onClick = onFullDaySelection,
+                        dayTitle = state.planTitles[state.currentDay],
                     )
                 },
             )
@@ -319,23 +346,18 @@ private fun PlanEdit(
         items = {
             if (isCurrentDayBlank) {
                 item {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.no_exercises_yet),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
+                    EmptyState(
+                        icon = Icons.Outlined.FitnessCenter,
+                        text = stringResource(R.string.no_exercises_yet),
+                    )
                 }
             } else {
                 itemsIndexed(
-                    items = localExercises,
-                    key = { _, exercise -> exercise.id!! }
-                ) { index, exercise ->
+                    items = localPlanItems,
+                    key = { _, planItem -> planItem.id ?: planItem.hashCode().toLong() }
+                ) { index, planItem ->
                     val isDragged = draggedItemIndex == index
+                    val currentIndex by rememberUpdatedState(index)
                     val scale by animateFloatAsState(if (isDragged) 1.05f else 1f, label = "scale")
                     val elevation by animateFloatAsState(
                         targetValue = if (isDragged) 6f else 0f,
@@ -352,10 +374,11 @@ private fun PlanEdit(
                             .animateItem()
                             .zIndex(if (isDragged || elevation > 0.01f) 1f else 0f)
                             .scale(scale)
-                            .pointerInput(localExercises) {
+                            .pointerInput(localPlanItems) {
                                 detectDragGesturesAfterLongPress(
                                     onDragStart = { offset ->
-                                        draggedItemIndex = index
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        draggedItemIndex = currentIndex
                                         dragOffset = 0f
                                     },
                                     onDrag = { change, dragAmount ->
@@ -363,34 +386,38 @@ private fun PlanEdit(
                                         dragOffset += dragAmount.y
 
                                         val currentDraggedIndex = draggedItemIndex
-                                        if (currentDraggedIndex != -1) {
-                                            val layoutInfo = lazyListState.layoutInfo
-                                            // The item indices in layoutInfo are index+1 because of header
-                                            val draggedItemInfo = layoutInfo.visibleItemsInfo
-                                                .find { it.index == currentDraggedIndex + 1 }
+                                        if (currentDraggedIndex !in localPlanItems.indices) {
+                                            draggedItemIndex = -1
+                                            dragOffset = 0f
+                                            return@detectDragGesturesAfterLongPress
+                                        }
+                                        val layoutInfo = lazyListState.layoutInfo
+                                        // The item indices in layoutInfo are index+1 because of header
+                                        val draggedItemInfo = layoutInfo.visibleItemsInfo
+                                            .find { it.index == currentDraggedIndex + 1 }
 
-                                            if (draggedItemInfo != null) {
-                                                val threshold = draggedItemInfo.size / 2
-                                                if (dragOffset > threshold && currentDraggedIndex < localExercises.size - 1) {
-                                                    // Move down
-                                                    localExercises.apply {
-                                                        add(currentDraggedIndex + 1, removeAt(currentDraggedIndex))
-                                                    }
-                                                    draggedItemIndex = currentDraggedIndex + 1
-                                                    dragOffset -= draggedItemInfo.size
-                                                } else if (dragOffset < -threshold && currentDraggedIndex > 0) {
-                                                    // Move up
-                                                    localExercises.apply {
-                                                        add(currentDraggedIndex - 1, removeAt(currentDraggedIndex))
-                                                    }
-                                                    draggedItemIndex = currentDraggedIndex - 1
-                                                    dragOffset += draggedItemInfo.size
-                                                }
+                                        if (draggedItemInfo != null) {
+                                            val threshold = draggedItemInfo.size / 2
+                                            val targetIndex: Int
+                                            if (dragOffset > threshold && currentDraggedIndex < localPlanItems.lastIndex) {
+                                                targetIndex = currentDraggedIndex + 1
+                                            } else if (dragOffset < -threshold && currentDraggedIndex > 0) {
+                                                targetIndex = currentDraggedIndex - 1
+                                            } else {
+                                                return@detectDragGesturesAfterLongPress
+                                            }
+                                            // Re-verify indices are still valid before mutating
+                                            if (currentDraggedIndex in localPlanItems.indices && targetIndex in 0..localPlanItems.size) {
+                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                localPlanItems.add(targetIndex, localPlanItems.removeAt(currentDraggedIndex))
+                                                draggedItemIndex = targetIndex
+                                                dragOffset -= draggedItemInfo.size * (if (targetIndex > currentDraggedIndex) 1 else -1)
                                             }
                                         }
                                     },
                                     onDragEnd = {
-                                        onReorder(localExercises.toList())
+                                        justReordered = true
+                                        onReorder(localPlanItems.map { it.exercise })
                                         draggedItemIndex = -1
                                         dragOffset = 0f
                                     },
@@ -400,7 +427,7 @@ private fun PlanEdit(
                                     }
                                 )
                             },
-                        exercise = exercise,
+                        exercise = planItem.exercise,
                         containerColor = animatedContainerColor,
                         shadowElevation = elevation.dp,
                     ) {
@@ -408,7 +435,7 @@ private fun PlanEdit(
                             index = index,
                             onRemove = {
                                 focusManager.clearFocus()
-                                onRemoveExerciseClick(exercise)
+                                planItem.id?.let { onRemovePlanItemClick(it) }
                             },
                         )
                     }
@@ -450,19 +477,14 @@ private fun AddExerciseSheet(
     onDone: (Exercise) -> Unit,
     onAddNewExerciseClick: (name: String?) -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(sheetState = state, onDismissRequest = onDismiss) {
         SelectExercise(
             title = title,
             onRequestNewExercise = onAddNewExerciseClick,
             onDone = { exercise ->
-                scope.launch {
-                    onDone(exercise)
-                    state.hide()
-                }.invokeOnCompletion {
-                    if (!state.isVisible) onDismiss()
-                }
+                onDone(exercise)
+                onDismiss()
             },
         )
     }

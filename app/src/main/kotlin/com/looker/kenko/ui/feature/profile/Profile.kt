@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -124,7 +125,7 @@ private fun Profile(
             },
             onConfirm = { value ->
                 if (weightToEdit != null) {
-                    onUpdateWeight(weightToEdit!!.copy(value = value))
+                    weightToEdit?.copy(value = value)?.let(onUpdateWeight)
                 } else {
                     onAddWeight(value)
                 }
@@ -174,9 +175,9 @@ private fun Profile(
                         Text(
                             text = stringResource(
                                 R.string.label_plan_description,
-                                state.planStat!!.exercises,
-                                normalizeInt(state.planStat.workDays),
-                                normalizeInt(state.planStat.restDays),
+                                state.planStat?.exercises ?: 0,
+                                normalizeInt(state.planStat?.workDays ?: 0),
+                                normalizeInt(state.planStat?.restDays ?: 0),
                             ),
                         )
                     },

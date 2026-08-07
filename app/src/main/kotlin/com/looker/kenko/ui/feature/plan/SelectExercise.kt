@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -30,14 +31,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -54,7 +60,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -62,7 +67,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.ui.component.disableScrollConnection
-import com.looker.kenko.ui.component.kenkoTextFieldColor
 import com.looker.kenko.ui.feature.plan.components.ExerciseItem
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
@@ -78,6 +82,10 @@ fun SelectExercise(
 ) {
     val viewModel: SelectExerciseViewModel = hiltViewModel()
     val focusManager = LocalFocusManager.current
+
+    DisposableEffect(Unit) {
+        onDispose { viewModel.reset() }
+    }
 
     Column(
         modifier = Modifier
@@ -95,22 +103,25 @@ fun SelectExercise(
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        // Search field
-        ExerciseSearchField(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            name = viewModel.searchQuery.value,
-            onNameChange = viewModel::setSearch,
-            onAddClick = {
+        // Create exercise button
+        FilledTonalIconButton(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .size(56.dp),
+            shape = MaterialTheme.shapes.large,
+            onClick = {
                 focusManager.clearFocus()
-                onRequestNewExercise(viewModel.searchQuery.value.ifBlank { null })
+                onRequestNewExercise(null)
             },
-        )
+        ) {
+            Icon(painter = KenkoIcons.Add, contentDescription = null)
+        }
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Two-level filter side by side
-        var parentExpanded by remember { mutableStateOf(false) }
-        var childExpanded by remember { mutableStateOf(false) }
+        // Filter selectors — tap to open modal picker
+        var showParentSheet by remember { mutableStateOf(false) }
+        var showChildSheet by remember { mutableStateOf(false) }
 
         Row(
             modifier = Modifier
@@ -118,91 +129,214 @@ fun SelectExercise(
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Parent dropdown (body part filter)
-            ExposedDropdownMenuBox(
-                expanded = parentExpanded,
-                onExpandedChange = { parentExpanded = it },
-                modifier = Modifier.weight(1f),
-            ) {
-                val parentName = selectedParentId?.let { id ->
-                    parentTags.find { it.id == id }?.name
-                        ?: stringResource(R.string.label_select_body_part)
-                } ?: stringResource(R.string.label_select_body_part)
+            // Body part selector
+            val parentName = selectedParentId?.let { id ->
+                parentTags.find { it.id == id }?.name
+            } ?: stringResource(R.string.label_select_body_part)
+            Box(modifier = Modifier.weight(1f)) {
                 OutlinedTextField(
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     value = parentName,
                     onValueChange = {},
+                    enabled = false,
                     readOnly = true,
                     label = { Text(stringResource(R.string.label_select_body_part)) },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = parentExpanded) },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    },
                     singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        disabledBorderColor = MaterialTheme.colorScheme.outline,
+                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
                 )
-                ExposedDropdownMenu(
-                    expanded = parentExpanded,
-                    onDismissRequest = { parentExpanded = false },
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.label_all_muscle_groups)) },
-                        onClick = {
-                            viewModel.setParentFilter(null)
-                            viewModel.setChildFilter(null)
-                            parentExpanded = false
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { showParentSheet = true },
+                )
+            }
+
+            // Muscle selector (only visible when body part is selected)
+            if (selectedParentId != null) {
+                val childName = selectedChildId?.let { id ->
+                    children.find { it.id == id }?.name
+                } ?: stringResource(R.string.label_select_muscle)
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = childName,
+                        onValueChange = {},
+                        enabled = false,
+                        readOnly = true,
+                        label = { Text(stringResource(R.string.label_select_muscle)) },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                            )
                         },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledBorderColor = MaterialTheme.colorScheme.outline,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
                     )
-                    parentTags.forEach { parent ->
-                        DropdownMenuItem(
-                            text = { Text(parent.name) },
-                            onClick = {
-                                viewModel.setParentFilter(parent.id)
-                                viewModel.setChildFilter(null)
-                                parentExpanded = false
-                                childExpanded = true
-                            },
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { showChildSheet = true },
+                    )
+                }
+            }
+        }
+
+        // --- Parent (body part) picker sheet ---
+        if (showParentSheet) {
+            val parentSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            ModalBottomSheet(
+                sheetState = parentSheetState,
+                onDismissRequest = { showParentSheet = false },
+            ) {
+                Text(
+                    text = stringResource(R.string.label_select_body_part),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                )
+                HorizontalDivider()
+                // "All muscle groups" option
+                Surface(
+                    onClick = {
+                        viewModel.setParentFilter(null)
+                        showParentSheet = false
+                    },
+                    color = if (selectedParentId == null)
+                        MaterialTheme.colorScheme.primaryContainer
+                    else
+                        MaterialTheme.colorScheme.surface,
+                    shape = MaterialTheme.shapes.extraSmall,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.label_all_muscle_groups),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (selectedParentId == null)
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        else
+                            MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                    )
+                }
+                parentTags.forEach { parent ->
+                    val isSelected = parent.id == selectedParentId
+                    Surface(
+                        onClick = {
+                            viewModel.setParentFilter(parent.id)
+                            showParentSheet = false
+                        },
+                        color = if (isSelected)
+                            MaterialTheme.colorScheme.primaryContainer
+                        else
+                            MaterialTheme.colorScheme.surface,
+                        shape = MaterialTheme.shapes.extraSmall,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                    ) {
+                        Text(
+                            text = parent.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (isSelected)
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            else
+                                MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                         )
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
+        }
 
-            // Child dropdown (specific muscle filter)
-            if (selectedParentId != null) {
-                ExposedDropdownMenuBox(
-                    expanded = childExpanded && children.isNotEmpty(),
-                    onExpandedChange = { childExpanded = it },
-                    modifier = Modifier.weight(1f),
+        // --- Child (muscle) picker sheet ---
+        if (showChildSheet && children.isNotEmpty()) {
+            val childSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            ModalBottomSheet(
+                sheetState = childSheetState,
+                onDismissRequest = { showChildSheet = false },
+            ) {
+                Text(
+                    text = stringResource(R.string.label_select_muscle),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                )
+                HorizontalDivider()
+                // "All muscles" option — clear child filter
+                val allSelected = selectedChildId == null
+                Surface(
+                    onClick = {
+                        viewModel.setChildFilter(null)
+                        showChildSheet = false
+                    },
+                    color = if (allSelected)
+                        MaterialTheme.colorScheme.primaryContainer
+                    else
+                        MaterialTheme.colorScheme.surface,
+                    shape = MaterialTheme.shapes.extraSmall,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
                 ) {
-                    val childName = selectedChildId?.let { id ->
-                        children.find { it.id == id }?.name
-                            ?: stringResource(R.string.label_select_muscle)
-                    } ?: stringResource(R.string.label_select_muscle)
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth(),
-                        value = childName,
-                        onValueChange = {},
-                        readOnly = true,
-                        enabled = children.isNotEmpty(),
-                        label = { Text(stringResource(R.string.label_select_muscle)) },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = childExpanded) },
-                        singleLine = true,
+                    Text(
+                        text = stringResource(R.string.label_all_muscle_groups),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (allSelected)
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        else
+                            MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                     )
-                    ExposedDropdownMenu(
-                        expanded = childExpanded && children.isNotEmpty(),
-                        onDismissRequest = { childExpanded = false },
+                }
+                children.forEach { child ->
+                    val isSelected = child.id == selectedChildId
+                    Surface(
+                        onClick = {
+                            viewModel.setChildFilter(child.id)
+                            showChildSheet = false
+                        },
+                        color = if (isSelected)
+                            MaterialTheme.colorScheme.primaryContainer
+                        else
+                            MaterialTheme.colorScheme.surface,
+                        shape = MaterialTheme.shapes.extraSmall,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
                     ) {
-                        children.forEach { child ->
-                            DropdownMenuItem(
-                                text = { Text(child.name) },
-                                onClick = {
-                                    viewModel.setChildFilter(child.id)
-                                    childExpanded = false
-                                },
-                            )
-                        }
+                        val parentLabel = child.parentName?.let { "$it  " } ?: ""
+                        Text(
+                            text = "$parentLabel${child.name}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (isSelected)
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            else
+                                MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                        )
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
 
@@ -280,39 +414,6 @@ private fun SearchNotFound(onAddNewExercise: () -> Unit, modifier: Modifier = Mo
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(text = stringResource(R.string.label_create_exercise))
             }
-        }
-    }
-}
-
-@Composable
-private fun ExerciseSearchField(
-    name: String,
-    onNameChange: (String) -> Unit,
-    onAddClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        OutlinedTextField(
-            modifier = Modifier.weight(1f),
-            value = name,
-            onValueChange = onNameChange,
-            colors = kenkoTextFieldColor(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-            shape = MaterialTheme.shapes.large.end(8.dp),
-            label = {
-                Text(text = stringResource(R.string.label_search_exercise))
-            },
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        FilledTonalIconButton(
-            modifier = Modifier.size(56.dp),
-            shape = MaterialTheme.shapes.large.start(8.dp),
-            onClick = onAddClick,
-        ) {
-            Icon(painter = KenkoIcons.Add, contentDescription = null)
         }
     }
 }

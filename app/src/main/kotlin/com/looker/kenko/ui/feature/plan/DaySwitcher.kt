@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -64,6 +65,7 @@ fun DaySwitcher(
     onPrevious: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    dayTitle: String? = null,
 ) {
     Row(
         modifier = modifier.widthIn(max = 400.dp),
@@ -103,8 +105,9 @@ fun DaySwitcher(
                         ) using SizeTransform(clip = false)
                     },
                 ) { day ->
+                    val displayName = if (dayTitle.isNullOrBlank()) dayName(dayOfWeek = day) else "$dayTitle (${dayName(dayOfWeek = day)})"
                     Text(
-                        text = dayName(dayOfWeek = day),
+                        text = displayName,
                         style = MaterialTheme.typography.labelLarge,
                     )
                 }

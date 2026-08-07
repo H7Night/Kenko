@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -51,11 +52,11 @@ interface SessionDao {
 
     @Query(
         """
-        SELECT COUNT(*)
+        SELECT MIN(date)
         FROM sessions
         """,
     )
-    suspend fun getTotalSessions(): Int
+    suspend fun earliestSessionDate(): EpochDays?
 
     @Query(
         """

@@ -13,6 +13,10 @@
 #
 
 VERSION=$1
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CHANGELOG="$SCRIPT_DIR/../CHANGELOG.md"
+
 # Extract changelog content for this version (Keep a Changelog format: ## [Version])
 # Match from ## [VERSION] to the next ## [ version section
 awk -v version="$VERSION" '
@@ -27,4 +31,4 @@ awk -v version="$VERSION" '
   in_section {
     print
   }
-' CHANGELOG.md
+' "$CHANGELOG"

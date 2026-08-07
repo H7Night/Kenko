@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -19,11 +20,11 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteStatement
 import com.looker.kenko.data.local.model.ExerciseEntity
-import com.looker.kenko.domain.model.Set
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.serializers.DayOfWeekSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.json.Json
@@ -203,7 +204,7 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
             do {
                 val id = getInt(idIndex)
                 val exerciseMapString = getString(exerciseMapIndex)
-                val exerciseMap = Json.decodeFromString(exerciseMapSerializer, exerciseMapString)
+                val exerciseMap = Json { ignoreUnknownKeys = true }.decodeFromString(exerciseMapSerializer, exerciseMapString)
                 exerciseMap.forEach { (day, exercises) ->
                     exercises.forEach { exercise ->
                         insert.insertPlanDays(day, id, db.exerciseId(exercise.name))
@@ -239,7 +240,7 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
             do {
                 val sessionId = getInt(idIndex)
                 val setsString = getString(setsIndex)
-                val sets = Json.decodeFromString(setsSerializer, setsString)
+                val sets = Json { ignoreUnknownKeys = true }.decodeFromString(setsSerializer, setsString)
                 for (i in sets.indices) {
                     insert.insertSet(db, sets[i], sessionId, i)
                 }
@@ -248,16 +249,16 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 
     @Suppress("NOTHING_TO_INLINE")
-    private inline fun SupportSQLiteStatement.insertSet(
+    private fun SupportSQLiteStatement.insertSet(
         db: SupportSQLiteDatabase,
-        set: Set,
+        set: LegacySet,
         sessionId: Int,
         order: Int
     ) {
         clearBindings()
         bindLong(1, set.repsOrDuration.toLong())
         bindDouble(2, set.weight.toDouble())
-        bindString(3, set.type.name)
+        bindString(3, set.type)
         bindLong(4, order.toLong())
         bindLong(5, sessionId.toLong())
         val exerciseId = db.exerciseId(set.exercise.name)
@@ -269,7 +270,7 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     private inline fun SupportSQLiteStatement.insertPlanHistory(id: Int) {
         clearBindings()
         bindLong(1, id.toLong())
-        bindLong(2, localDate.toEpochDays().toLong())
+        bindLong(2, today().toEpochDays().toLong())
         executeInsert()
     }
 
@@ -291,8 +292,20 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     private val exerciseMapSerializer =
         MapSerializer(DayOfWeekSerializer, ListSerializer(ExerciseEntity.serializer()))
 
-    private val setsSerializer = ListSerializer(Set.serializer())
+    private val setsSerializer = ListSerializer(LegacySet.serializer())
 }
+
+/**
+ * Minimal model used only to deserialize legacy v1 JSON payloads that
+ * contained a `type` field, which no longer exists on the current Set model.
+ */
+@Serializable
+private data class LegacySet(
+    val repsOrDuration: Int,
+    val weight: Float,
+    val type: String = "Standard",
+    val exercise: ExerciseEntity,
+)
 
 val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -340,42 +353,34 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `exercise_tags` (`exerciseId` INTEGER NOT NULL, `tagId` INTEGER NOT NULL, PRIMARY KEY(`exerciseId`, `tagId`), FOREIGN KEY(`tagId`) REFERENCES `tags`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
 
         // 3. Insert parent tags (body parts)
+        // 4. Insert child tags (specific muscles)
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (1, '胸', NULL, 1)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (2, '背', NULL, 2)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (3, '腿', NULL, 3)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (4, '肩', NULL, 4)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (5, '手臂', NULL, 5)")
-        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (6, '腹', NULL, 6)")
+        db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (6, '核心', NULL, 6)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (7, '有氧', NULL, 7)")
-
-        // 4. Insert child tags (specific muscles)
-        // 胸
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (8, '上胸', 1, 1)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (9, '中胸', 1, 2)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (10, '下胸', 1, 3)")
-        // 背
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (11, '背阔肌', 2, 1)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (12, '斜方肌', 2, 2)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (13, '竖脊肌', 2, 3)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (14, '菱形肌', 2, 4)")
-        // 腿
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (15, '股四头肌', 3, 1)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (16, '腘绳肌', 3, 2)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (17, '小腿', 3, 3)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (18, '臀肌', 3, 4)")
-        // 肩
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (19, '前束', 4, 1)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (20, '中束', 4, 2)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (21, '后束', 4, 3)")
-        // 手臂
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (22, '二头肌', 5, 1)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (23, '三头肌', 5, 2)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (24, '前臂', 5, 3)")
-        // 腹
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (25, '上腹', 6, 1)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (26, '下腹', 6, 2)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (27, '腹斜肌', 6, 3)")
-        // 有氧
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (28, '跑步', 7, 1)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (29, '骑行', 7, 2)")
         db.execSQL("INSERT INTO `tags` (`id`, `name`, `parentId`, `sortOrder`) VALUES (30, '划船', 7, 3)")
@@ -387,20 +392,19 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
 
         // 6. Map existing exercises' target to tags in exercise_tags
         // Map each MuscleGroups value to the appropriate child tag
-        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 8 FROM `exercises` WHERE `target` = 'Chest'")    // 胸→上胸
-        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 11 FROM `exercises` WHERE `target` = 'Lats'")     // 背→背阔肌
-        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 11 FROM `exercises` WHERE `target` = 'Traps'")    // 斜方肌→背阔肌（最接近的匹配）
-        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 13 FROM `exercises` WHERE `target` = 'UpperBack'") // 上背→竖脊肌
-        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 15 FROM `exercises` WHERE `target` = 'Quads'")    // 腿→股四头肌
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 8 FROM `exercises` WHERE `target` = 'Chest'")
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 11 FROM `exercises` WHERE `target` = 'Lats'")
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 11 FROM `exercises` WHERE `target` = 'Traps'")
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 13 FROM `exercises` WHERE `target` = 'UpperBack'")
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 15 FROM `exercises` WHERE `target` = 'Quads'")
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 16 FROM `exercises` WHERE `target` = 'Hamstrings'")
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 17 FROM `exercises` WHERE `target` = 'Calves'")
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 18 FROM `exercises` WHERE `target` = 'Glutes'")
-        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 20 FROM `exercises` WHERE `target` = 'Shoulders'") // 肩→中束
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 20 FROM `exercises` WHERE `target` = 'Shoulders'")
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 22 FROM `exercises` WHERE `target` = 'Biceps'")
         db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 23 FROM `exercises` WHERE `target` = 'Triceps'")
-        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 25 FROM `exercises` WHERE `target` = 'Core'")     // 核心→上腹
-        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 28 FROM `exercises` WHERE `target` = 'Cardio'")   // 有氧→跑步
-
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 25 FROM `exercises` WHERE `target` = 'Core'")
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `id`, 28 FROM `exercises` WHERE `target` = 'Cardio'")
         // 7. Remove target column from exercises
         db.execSQL("CREATE TABLE IF NOT EXISTS `exercises_new` (`name` TEXT NOT NULL, `countType` TEXT NOT NULL, `reference` TEXT, `isIsometric` INTEGER NOT NULL, `isBodyweight` INTEGER NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
         db.execSQL("INSERT INTO `exercises_new` (`name`, `countType`, `reference`, `isIsometric`, `isBodyweight`, `id`) SELECT `name`, `countType`, `reference`, `isIsometric`, `isBodyweight`, `id` FROM `exercises`")
@@ -412,5 +416,119 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
 val MIGRATION_8_9 = object : Migration(8, 9) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE `sessions` ADD COLUMN `durationSeconds` INTEGER DEFAULT NULL")
+    }
+}
+
+val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Drop isIsometric column from exercises (SQLite rebuild)
+        db.execSQL("ALTER TABLE `exercises` RENAME TO `exercises_old`")
+        db.execSQL(
+            """
+            CREATE TABLE `exercises` (
+            `name` TEXT NOT NULL,
+            `countType` TEXT NOT NULL,
+            `reference` TEXT,
+            `isBodyweight` INTEGER NOT NULL,
+            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            INSERT INTO `exercises` (`name`, `countType`, `reference`, `isBodyweight`, `id`)
+            SELECT `name`, `countType`, `reference`, `isBodyweight`, `id` FROM `exercises_old`
+            """.trimIndent(),
+        )
+        db.execSQL("DROP TABLE `exercises_old`")
+
+        // Drop unused set_type lookup table
+        db.execSQL("DROP TABLE IF EXISTS `set_type`")
+
+        // SQLite rewrites FK references that point at `exercises` to `exercises_old`
+        // during the RENAME above, so rebuild the dependent tables to restore them.
+        db.execSQL("ALTER TABLE `plan_day` RENAME TO `plan_day_old`")
+        db.execSQL(
+            """
+            CREATE TABLE `plan_day` (
+            `planId` INTEGER NOT NULL,
+            `exerciseId` INTEGER NOT NULL,
+            `dayOfWeek` INTEGER NOT NULL,
+            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            FOREIGN KEY(`planId`) REFERENCES `plans`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+            FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)
+            """.trimIndent(),
+        )
+        db.execSQL("INSERT INTO `plan_day` (`planId`, `exerciseId`, `dayOfWeek`, `id`) SELECT `planId`, `exerciseId`, `dayOfWeek`, `id` FROM `plan_day_old`")
+        db.execSQL("DROP TABLE `plan_day_old`")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_plan_day_planId_exerciseId` ON `plan_day` (`planId`, `exerciseId`)")
+
+        db.execSQL("ALTER TABLE `sets` RENAME TO `sets_old`")
+        db.execSQL(
+            """
+            CREATE TABLE `sets` (
+            `reps` INTEGER NOT NULL,
+            `weight` REAL NOT NULL,
+            `type` TEXT NOT NULL,
+            `order` INTEGER NOT NULL,
+            `sessionId` INTEGER NOT NULL,
+            `exerciseId` INTEGER NOT NULL,
+            `rir` INTEGER NOT NULL,
+            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+            FOREIGN KEY(`sessionId`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)
+            """.trimIndent(),
+        )
+        db.execSQL("INSERT INTO `sets` (`reps`, `weight`, `type`, `order`, `sessionId`, `exerciseId`, `rir`, `id`) SELECT `reps`, `weight`, `type`, `order`, `sessionId`, `exerciseId`, `rir`, `id` FROM `sets_old`")
+        db.execSQL("DROP TABLE `sets_old`")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_sets_sessionId_exerciseId` ON `sets` (`sessionId`, `exerciseId`)")
+
+        db.execSQL("ALTER TABLE `exercise_tags` RENAME TO `exercise_tags_old`")
+        db.execSQL(
+            """
+            CREATE TABLE `exercise_tags` (
+            `exerciseId` INTEGER NOT NULL,
+            `tagId` INTEGER NOT NULL,
+            PRIMARY KEY(`exerciseId`, `tagId`),
+            FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+            FOREIGN KEY(`tagId`) REFERENCES `tags`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)
+            """.trimIndent(),
+        )
+        db.execSQL("INSERT INTO `exercise_tags` (`exerciseId`, `tagId`) SELECT `exerciseId`, `tagId` FROM `exercise_tags_old`")
+        db.execSQL("DROP TABLE `exercise_tags_old`")
+    }
+}
+
+val MIGRATION_10_11 = object : Migration(10, 11) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE plan_day ADD COLUMN sortOrder INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
+val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Rebuild sets table without the unused `type` column (SetType feature removed)
+        db.execSQL("ALTER TABLE `sets` RENAME TO `sets_old`")
+        db.execSQL(
+            """
+            CREATE TABLE `sets` (
+            `reps` INTEGER NOT NULL,
+            `weight` REAL NOT NULL,
+            `order` INTEGER NOT NULL,
+            `sessionId` INTEGER NOT NULL,
+            `exerciseId` INTEGER NOT NULL,
+            `rir` INTEGER NOT NULL,
+            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+            FOREIGN KEY(`sessionId`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            INSERT INTO `sets` (`reps`, `weight`, `order`, `sessionId`, `exerciseId`, `rir`, `id`)
+            SELECT `reps`, `weight`, `order`, `sessionId`, `exerciseId`, `rir`, `id` FROM `sets_old`
+            """.trimIndent(),
+        )
+        db.execSQL("DROP TABLE `sets_old`")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_sets_sessionId_exerciseId` ON `sets` (`sessionId`, `exerciseId`)")
     }
 }

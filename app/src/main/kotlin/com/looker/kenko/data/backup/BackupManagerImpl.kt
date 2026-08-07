@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -23,7 +24,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.looker.kenko.data.local.KenkoDatabase
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.di.IoDispatcher
 import com.looker.kenko.utils.DateFormat
@@ -89,9 +90,23 @@ class BackupManagerImpl @Inject constructor(
 
                 database.close()
 
-                replaceDatabaseFiles(tempDir)
-                replaceDatastoreFile(tempDir)
-                tempDir.deleteRecursively()
+                // 恢复前先备份现有数据，失败时回滚到原状
+                val rollbackDir = File(context.cacheDir, "temp_restore_rollback")
+                rollbackDir.deleteRecursively()
+                rollbackDir.mkdirs()
+                backupCurrentData(rollbackDir)
+
+                try {
+                    replaceDatabaseFiles(tempDir)
+                    replaceDatastoreFile(tempDir)
+                } catch (e: Exception) {
+                    replaceDatabaseFiles(rollbackDir)
+                    replaceDatastoreFile(rollbackDir)
+                    throw e
+                } finally {
+                    rollbackDir.deleteRecursively()
+                    tempDir.deleteRecursively()
+                }
 
                 BackupResult.Success
             } catch (e: Exception) {
@@ -159,7 +174,7 @@ class BackupManagerImpl @Inject constructor(
         val treeDoc = DocumentFile.fromTreeUri(context, treeUri)
             ?: error("Cannot access directory: $treeUri")
 
-        val fileName = backupFileName(localDate)
+        val fileName = backupFileName(today())
         val backupFile = treeDoc.findFile(fileName)
             ?: treeDoc.createFile("application/zip", fileName)
             ?: error("Cannot create backup file in: $treeUri")
@@ -199,12 +214,16 @@ class BackupManagerImpl @Inject constructor(
         }
 
         ZipInputStream(inputStream).use { zipIn ->
+            val destCanonical = destDir.canonicalPath
             var entry = zipIn.nextEntry
             while (entry != null) {
-                val file = File(destDir, entry.name)
+                val targetFile = File(destDir, entry.name).normalize()
+                if (!targetFile.canonicalPath.startsWith(destCanonical + File.separator)) {
+                    throw SecurityException("Invalid backup entry: ${entry.name}")
+                }
                 if (!entry.isDirectory) {
-                    file.parentFile?.mkdirs()
-                    file.outputStream().use { output ->
+                    targetFile.parentFile?.mkdirs()
+                    targetFile.outputStream().use { output ->
                         zipIn.copyTo(output)
                     }
                 }
@@ -212,6 +231,14 @@ class BackupManagerImpl @Inject constructor(
                 entry = zipIn.nextEntry
             }
         }
+    }
+
+    private fun backupCurrentData(backupDir: File) {
+        databaseFiles().forEach { dbFile ->
+            if (dbFile.exists()) dbFile.copyTo(File(backupDir, dbFile.name), overwrite = true)
+        }
+        val datastore = datastoreFile()
+        if (datastore.exists()) datastore.copyTo(File(backupDir, datastore.name), overwrite = true)
     }
 
     private fun replaceDatabaseFiles(sourceDir: File) {

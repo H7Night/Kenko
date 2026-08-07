@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -64,6 +65,7 @@ import com.looker.kenko.ui.theme.start
 import com.looker.kenko.utils.toFormat
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
@@ -72,6 +74,7 @@ internal fun BackupSection(
     backupUri: String?,
     backupInterval: BackupInterval,
     lastBackupTime: Instant?,
+    earliestSessionDate: LocalDate?,
     isBackingUp: Boolean,
     isRestoring: Boolean,
     isExporting: Boolean,
@@ -113,8 +116,8 @@ internal fun BackupSection(
     val jsonFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json"),
     ) { uri ->
-        if (uri != null && pendingExportOptions != null) {
-            onExport(pendingExportOptions!!, uri!!)
+        if (uri != null) {
+            pendingExportOptions?.let { onExport(it, uri) }
             pendingExportOptions = null
         }
     }
@@ -135,6 +138,7 @@ internal fun BackupSection(
 
     if (showExportDialog) {
         ExportDataDialog(
+            earliestSessionDate = earliestSessionDate,
             onDismiss = { showExportDialog = false },
             onConfirm = { options ->
                 pendingExportOptions = options
@@ -148,6 +152,9 @@ internal fun BackupSection(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        // 程序备份
+        SectionTitle(title = stringResource(R.string.label_app_backup))
+
         BackupSettingRow(
             title = stringResource(R.string.label_backup_location),
             value = backupUri?.let { extractFolderName(it) }
@@ -226,6 +233,9 @@ internal fun BackupSection(
             }
         }
 
+        // 导出训练数据
+        SectionTitle(title = stringResource(R.string.label_export_training_data))
+
         OutlinedButton(
             onClick = { showExportDialog = true },
             enabled = !isBackingUp && !isRestoring && !isExporting,
@@ -245,6 +255,19 @@ internal fun BackupSection(
             )
         }
     }
+}
+
+@Composable
+private fun SectionTitle(
+    title: String,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+    )
 }
 
 @Composable
@@ -336,7 +359,7 @@ internal fun RestoreConfirmationDialog(
 
 private fun buildExportFileName(): String {
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-    val datePart = "${now.year}${now.monthNumber.toString().padStart(2, '0')}${now.dayOfMonth.toString().padStart(2, '0')}"
+    val datePart = "${now.year}-${now.monthNumber.toString().padStart(2, '0')}-${now.dayOfMonth.toString().padStart(2, '0')}"
     val timePart = "${now.hour.toString().padStart(2, '0')}${now.minute.toString().padStart(2, '0')}${now.second.toString().padStart(2, '0')}"
     return "kenko-export-$datePart-$timePart"
 }
@@ -366,6 +389,7 @@ private fun BackupSectionPreview() {
             backupUri = "content://com.android.providers.downloads/tree/downloads",
             backupInterval = BackupInterval.Daily,
             lastBackupTime = null,
+            earliestSessionDate = null,
             isBackingUp = false,
             isRestoring = false,
             isExporting = false,

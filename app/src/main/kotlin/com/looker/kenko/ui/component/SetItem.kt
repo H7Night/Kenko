@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -12,7 +13,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.looker.kenko.ui.feature.session.components
+package com.looker.kenko.ui.component
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -48,6 +49,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -55,7 +57,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
-import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.ExercisesPreviewParameter
@@ -63,6 +64,7 @@ import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Set
 import com.looker.kenko.domain.model.repDurationStringRes
 import com.looker.kenko.ui.theme.KenkoTheme
+import com.looker.kenko.ui.theme.bodyFont
 import com.looker.kenko.ui.theme.numbers
 
 @Composable
@@ -111,9 +113,14 @@ fun SetItem(
                     onValueUpdate = { onRepsUpdate(it.toIntOrNull() ?: set.repsOrDuration) },
                 )
                 if (!isCardio) {
+                    val weightDisplay = if (set.exercise.isBodyweight) {
+                        stringResource(R.string.label_bodyweight_display)
+                    } else {
+                        "${set.weight} KG"
+                    }
                     PerformedItem(
                         title = stringResource(R.string.label_weight),
-                        performance = "${set.weight} KG",
+                        performance = weightDisplay,
                         isEditMode = isEditMode,
                         keyboardType = KeyboardType.Decimal,
                         onValueUpdate = { onWeightUpdate(it.toFloatOrNull() ?: set.weight) },
@@ -188,7 +195,10 @@ private fun PerformedItem(
         } else {
             Text(
                 text = performance,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontFamily = bodyFont,
+                    fontWeight = FontWeight.Normal,
+                ),
             )
         }
     }
@@ -201,7 +211,7 @@ private fun SetItemPreview(
 ) {
     KenkoTheme {
         SetItem(
-            Set(12, 40F, SetType.Drop, exercises.first(), RepsInReserve(2)),
+            Set(12, 40F, exercises.first(), RepsInReserve(2)),
         ) {
             Text(text = "01")
         }

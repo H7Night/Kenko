@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -15,6 +16,7 @@
 package com.looker.kenko.ui.theme
 
 import android.app.Activity
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.view.View
 import androidx.annotation.ChecksSdkIntAtLeast
@@ -28,6 +30,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -63,6 +66,13 @@ fun KenkoTheme(
     }
 
     val localView = LocalView.current
+    SideEffect {
+        // Keep the window background in sync with the theme so page transitions
+        // don't flash a mismatched (e.g. white) background under dark themes.
+        (localView.context as Activity).window.setBackgroundDrawable(
+            ColorDrawable(colorScheme.surface.toArgb()),
+        )
+    }
     SideEffect { setupSystemBar(localView, isDarkTheme) }
 
     MaterialExpressiveTheme(

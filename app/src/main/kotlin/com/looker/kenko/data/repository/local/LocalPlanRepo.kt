@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -26,7 +27,7 @@ import com.looker.kenko.domain.model.Labels
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.PlanStat
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.utils.toLocalEpochDays
 import javax.inject.Inject
@@ -34,6 +35,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.isoDayNumber
 
@@ -42,6 +45,8 @@ class LocalPlanRepo @Inject constructor(
     private val exerciseDao: ExerciseDao,
     private val historyDao: PlanHistoryDao,
 ) : PlanRepo {
+
+    private val mutex = Mutex()
 
     override val plans: Flow<List<Plan>> =
         combine(dao.plansFlow(), historyDao.currentIdFlow()) { plans, current ->
@@ -149,40 +154,38 @@ class LocalPlanRepo @Inject constructor(
         dao.upsertPlan(plan.toEntity())
     }
 
-    override suspend fun setCurrent(id: Int) {
+    override suspend fun setCurrent(id: Int) = mutex.withLock {
         val current = historyDao.getCurrent()
         if (current != null) {
-            historyDao.upsert(current.copy(end = localDate.toLocalEpochDays()))
+            historyDao.upsert(current.copy(end = today().toLocalEpochDays()))
         }
-        historyDao.upsert(PlanHistoryEntity(planId = id, start = localDate.toLocalEpochDays()))
+        historyDao.upsert(PlanHistoryEntity(planId = id, start = today().toLocalEpochDays()))
     }
 
     override suspend fun deletePlan(id: Int) {
         dao.deletePlan(id)
     }
 
-    override suspend fun deleteEmptyPlans() {
-        dao.deleteEmptyPlans()
-    }
-
     override suspend fun addItem(planItem: PlanItem) {
-        dao.insertPlanItem(planItem.toEntity())
+        val items = dao.getPlanItemsByPlanIdAndDay(planItem.planId, planItem.dayOfWeek.isoDayNumber)
+        val nextOrder = (items.maxOfOrNull { it.sortOrder } ?: -1) + 1
+        dao.insertPlanItem(planItem.toEntity().copy(sortOrder = nextOrder))
     }
 
     override suspend fun removeItem(id: Long) {
         dao.deleteItem(id)
     }
 
-    override suspend fun removeItemById(exerciseId: Int) {
-        dao.deleteItemByExercise(exerciseId)
-    }
-
     override suspend fun updateOrder(planId: Int, day: DayOfWeek, exercises: List<Exercise>) {
         val items = getPlanItems(planId, day)
         if (items.size != exercises.size) return
 
-        items.zip(exercises).forEach { (item, exercise) ->
-            dao.insertPlanItem(item.copy(exercise = exercise).toEntity())
+        // Update sortOrder in-place: existing row IDs stay the same,
+        // so Room Flow won't trigger a full sync in PlanEdit UI
+        val exerciseOrder = exercises.withIndex().associate { it.value.id to it.index }
+        items.forEach { item ->
+            val newOrder = exerciseOrder[item.exercise.id] ?: return
+            dao.updateItemSortOrder(requireNotNull(item.id), newOrder)
         }
     }
 }

@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
+   Health data (workout/weight database and settings datastore) is excluded from
+   system cloud backup; other app data (e.g. UI preferences) is still backed up.
    See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older that API 31
-   See https://developer.android.com/about/versions/12/backup-restore
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <exclude domain="database" path="kenko_database" />
+    <exclude domain="database" path="kenko_database-shm" />
+    <exclude domain="database" path="kenko_database-wal" />
+    <exclude domain="file" path="datastore/" />
 </full-backup-content>

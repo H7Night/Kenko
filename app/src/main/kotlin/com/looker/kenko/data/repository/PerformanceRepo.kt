@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -17,8 +18,6 @@ package com.looker.kenko.data.repository
 import androidx.compose.runtime.Immutable
 
 interface PerformanceRepo {
-
-    suspend fun updateModifiers()
 
     suspend fun getPerformance(exerciseId: Int? = null, planId: Int? = null): Performance?
 

@@ -30,12 +30,14 @@
     <string name="label_add_new_exercises_home">Add\nExercise</string>
     <string name="label_session_history_home">Session\nHistory</string>
     <string name="label_current_plan_home">Current\nPlan</string>
+    <string name="home_text">Stick to the plan\nNot your mood.</string>
 
     <!--Sessions-->
     <string name="label_sessions_title">History</string>
     <string name="label_records">Records</string>
     <string name="label_delete_session_title">Delete Session?</string>
     <string name="label_delete_session_message">This will permanently delete this session and all its sets.</string>
+    <string name="label_deleted">Deleted</string>
     <string name="label_export">Export</string>
     <string name="label_select_date_range">Select Date Range</string>
     <string name="label_start_date">Start Date</string>
@@ -43,6 +45,7 @@
     <string name="label_export_markdown">Export as Markdown</string>
     <string name="label_confirm">Confirm</string>
     <string name="label_cancel">Cancel</string>
+    <string name="label_ok">OK</string>
     <string name="label_add_history">Add to History</string>
     <string name="label_add_to_history">Add Training History</string>
     <string name="label_select_date">Select Date</string>
@@ -62,9 +65,10 @@
     <!--Plans-->
     <string name="label_plans_title">Plans</string>
     <string name="label_edit_plan">Edit Plan</string>
+    <string name="label_selected">Selected</string>
+    <string name="label_delete_plan_title">Delete Plan?</string>
+    <string name="label_delete_plan_message">Delete \"%1$s\"? This action cannot be undone.</string>
     <string name="no_exercises_yet">No exercises yet</string>
-    <string name="label_clean_up">Clean up</string>
-    <string name="label_clean_up_plans">Clear empty plans?</string>
 
     <string name="heading_select_plan_name">Select a plan name</string>
     <string name="heading_select_plan_items">Select exercises</string>
@@ -118,9 +122,13 @@
     <string name="label_add_exercise_header">Add Exercise</string>
     <string name="label_search_exercise">Search Exercise</string>
     <string name="label_no_exercise_today">No exercises planned today</string>
+    <string name="label_delete_exercise_title">Delete Exercise?</string>
+    <string name="label_delete_exercise_message">This will delete this exercise. Related training records will be kept.</string>
 
     <!--Add Sets-->
     <string name="label_add_set_for">Add Set for</string>
+    <string name="label_delete_set_title">Delete Set?</string>
+    <string name="label_delete_set_message">This will permanently delete this set.</string>
     <string name="label_plus_int">+%s</string>
     <string name="label_minus_int">-%s</string>
 
@@ -130,18 +138,20 @@
     <string name="label_name">Name</string>
     <string name="label_add">Add</string>
     <string name="label_save">Save</string>
+    <string name="label_delete">Delete</string>
     <string name="label_yes">Yes</string>
     <string name="label_no">No</string>
 
     <!--Project Specific-->
     <string name="label_session">Session</string>
     <string name="label_exercise">Exercise</string>
-    <string name="label_reps">.reps</string>
-    <string name="label_duration">.duration</string>
-    <string name="label_weight">.weight</string>
+    <string name="label_reps">reps</string>
+    <string name="label_duration">duration</string>
+    <string name="label_weight">weight</string>
     <string name="label_bodyweight">BW</string>
+    <string name="label_bodyweight_display">Body Weight</string>
     <string name="label_use_bodyweight">Use Body Weight</string>
-    <string name="label_sets">.sets</string>
+    <string name="label_sets">sets</string>
     <string name="label_coming_soon">Coming Soon</string>
 
     <!--Navigation-->
@@ -188,6 +198,7 @@
     <string name="label_backup_weekly">Weekly</string>
     <string name="label_backup_monthly">Monthly</string>
     <string name="label_backup_now">Backup Now</string>
+    <string name="label_app_backup">App Backup</string>
     <string name="label_restore">Restore</string>
     <string name="label_last_backup">Last Backup: %s</string>
     <string name="label_last_backup_never">Never</string>
@@ -203,6 +214,9 @@
 
     <!--Export-->
     <string name="label_export_data">Export Data</string>
+    <string name="label_export_training_data">Export Training Data</string>
+    <string name="label_export_start_date">Start Date</string>
+    <string name="label_export_end_date">End Date</string>
     <string name="label_export_sessions">Training History</string>
     <string name="label_export_plans">Training Plans</string>
     <string name="label_export_exercises">Exercises</string>
@@ -303,6 +317,7 @@
     <string name="label_view_source_on_github">View source on GitHub</string>
 
     <!-- Crash log -->
+    <string name="timer_service_subtype">Workout timer foreground service</string>
     <string name="label_crash_dialog_title">App Crashed</string>
     <string name="label_crash_dialog_message">Kenko encountered an unexpected error. Would you like to save the crash log for debugging?</string>
     <string name="label_crash_dialog_hint">The log will be saved to your chosen location.</string>

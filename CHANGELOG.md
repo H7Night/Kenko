@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file atleast once
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.7.0] - 2026-08-07
+
+### Added
+- Confirmation dialogs when deleting exercises, plans, weight records, and sets to prevent accidental deletion
+- Unified empty state component across exercises, plan edit, and session history screens
+- TimerCard can now resume a session that has accumulated time but hasn't started yet
+- Haptic feedback when dragging exercises to reorder in plan edit
+
+### Changed
+- Deletion switched from swipe-to-delete gesture to explicit delete button + confirmation dialog
+- Transparent scaffold/top bar container colors replaced with Material theme surface colors for consistent contrast
+- Set type indicator colors now follow the Material theme instead of hardcoded colors
+- Weight input label color in Add Set now matches reps/sets inputs
+- Removed dot prefixes from reps/duration/weight/sets labels (`.reps` → `reps`, etc.)
+
+### Removed
+- Set type selector (Standard / Drop / Rest-Pause) and all related code, including the `type` column (database migration 11 → 12) and `setType` JSON export field
+
+### Fixed
+- Drag-reorder animation replaying after release
+- Double animation and misplaced items when long-pressing to drag again
+- Session detail screen not adapting to dark mode (missing surface background)
+
+## [1.6.0] - 2026-08-03
+
+### Changed
+- Backup page split into two sections: "程序备份" (App Backup) for full DB backup with auto-schedule, and "导出训练数据" (Export Training Data) for selective JSON export
+- JSON export now supports date range filtering with DatePicker, defaulting from first training session to today
+- Export date pickers are only active when "Training History" is selected
+
+### Added
+- `SessionDao.earliestSessionDate()` query to retrieve the date of the first recorded session
+- `SessionRepo.earliestSessionDate` flow for UI consumption
+
 ## [1.5.0] - 2026-07-26
 
 ### Added

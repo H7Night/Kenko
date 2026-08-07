@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -25,7 +26,7 @@ import androidx.compose.ui.graphics.vector.path
 val Stack: ImageVector
     get() {
         if (_stack != null) {
-            return _stack!!
+            return _stack ?: error("Stack icon not initialized")
         }
         _stack = icon(
             name = "Stack",
@@ -166,7 +167,7 @@ val Stack: ImageVector
                 close()
             }
         }
-        return _stack!!
+        return _stack ?: error("Stack icon not initialized")
     }
 
 private var _stack: ImageVector? = null

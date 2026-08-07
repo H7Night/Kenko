@@ -10,7 +10,16 @@
 local.properties
 *.jks
 *.keystore
+/keystore/
 /.kotlin
 /kls_database.db
 *.zip
-/keystore/
+
+# 本地个人环境配置（不上传仓库）
+/AGENTS.md
+/reasonix.toml
+/docs/superpower/
+*.db-shm
+*.db-wal
+*.db.bak
+*.db-*

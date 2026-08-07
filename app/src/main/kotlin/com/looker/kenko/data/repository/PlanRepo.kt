@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -63,13 +64,9 @@ interface PlanRepo {
 
     suspend fun deletePlan(id: Int)
 
-    suspend fun deleteEmptyPlans()
-
     suspend fun addItem(planItem: PlanItem)
 
     suspend fun removeItem(id: Long)
-
-    suspend fun removeItemById(exerciseId: Int)
 
     suspend fun updateOrder(planId: Int, day: DayOfWeek, exercises: List<Exercise>)
 }

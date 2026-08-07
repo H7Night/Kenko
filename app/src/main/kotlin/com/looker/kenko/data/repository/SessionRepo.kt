@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -14,7 +15,6 @@
 
 package com.looker.kenko.data.repository
 
-import com.looker.kenko.data.local.model.SetType
 import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.Set
@@ -28,6 +28,8 @@ interface SessionRepo {
 
     val setsCount: Flow<Int>
 
+    val earliestSessionDate: Flow<LocalDate?>
+
     suspend fun addSet(sessionId: Int, set: Set)
 
     suspend fun addSet(
@@ -35,7 +37,6 @@ interface SessionRepo {
         exerciseId: Int,
         weight: Float,
         reps: Int,
-        setType: SetType,
         rir: RepsInReserve,
     )
 

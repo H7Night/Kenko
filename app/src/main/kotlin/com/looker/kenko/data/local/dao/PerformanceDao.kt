@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -17,16 +18,11 @@ package com.looker.kenko.data.local.dao
 import androidx.room.Dao
 import androidx.room.RawQuery
 import androidx.room.Transaction
-import androidx.room.Upsert
 import androidx.sqlite.db.SimpleSQLiteQuery
-import com.looker.kenko.data.local.model.SetTypeEntity
 import com.looker.kenko.data.repository.Performance
 
 @Dao
 interface PerformanceDao {
-
-    @Upsert
-    suspend fun upsertSetTypeLookup(type: List<SetTypeEntity>)
 
     @RawQuery
     suspend fun _rawQueryRatingWrappers(query: SimpleSQLiteQuery): List<RatingWrapper>?
@@ -39,10 +35,9 @@ interface PerformanceDao {
             // Sum of all ratings
             append("SUM(")
 
-            // Ratings = reps * weight * set_type_modifier * rir_modifier
+            // Ratings = reps * weight * rir_modifier
             append("sets.reps * ")
             append("sets.weight * ")
-            append("set_type.modifier * ")
 
             // RIR modifier
             append("CASE WHEN sets.rir <= 0 ")
@@ -53,7 +48,6 @@ interface PerformanceDao {
             append("THEN 0.88 ELSE 0.80 END")
 
             append(") AS rating FROM sets ")
-            append("INNER JOIN set_type ON sets.type = set_type.type ")
             append("INNER JOIN sessions ON sets.sessionId = sessions.id ")
             if (exerciseId != null) {
                 append("WHERE (sets.exerciseId = ?) ")

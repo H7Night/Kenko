@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -40,7 +41,6 @@ data class ExportSet(
     val exerciseName: String,
     val exerciseTarget: String,
     val rir: Int? = null,
-    val setType: String? = null,
 )
 
 @Serializable
@@ -58,7 +58,6 @@ data class ExportExercise(
     val tags: List<String> = emptyList(),
     val countType: String = "REPS",
     val isBodyweight: Boolean = false,
-    val isIsometric: Boolean = false,
 )
 
 @Serializable

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -48,6 +49,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import kotlinx.datetime.DayOfWeek
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -55,26 +57,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Set
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
+import com.looker.kenko.ui.component.ConfirmDialog
+import com.looker.kenko.ui.component.DeletableSetItem
 import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.timer.TimerCard
+import com.looker.kenko.ui.component.timer.TimerState
 import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.ui.component.timer.rememberNotificationPermissionState
 import com.looker.kenko.ui.feature.plan.components.dayName
 import com.looker.kenko.ui.feature.session.ExerciseSearchDialog
 import com.looker.kenko.ui.feature.session.AddSetSheet
-import com.looker.kenko.ui.feature.session.components.SetItem
 import com.looker.kenko.ui.theme.KenkoIcons
+import com.looker.kenko.ui.theme.bodyFont
 import com.looker.kenko.ui.theme.header
 import com.looker.kenko.ui.theme.numbers
+import com.looker.kenko.utils.toast
 import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,6 +100,7 @@ fun Home(
     val timerSeconds by viewModel.timerManager.elapsedSeconds.collectAsStateWithLifecycle()
     val allExercises by viewModel.allExercises.collectAsStateWithLifecycle()
     val availablePlanDays by viewModel.availablePlanDays.collectAsStateWithLifecycle()
+    val planDayTitles by viewModel.planDayTitles.collectAsStateWithLifecycle()
     val notifState = rememberNotificationPermissionState()
 
     LaunchedEffect(Unit) {
@@ -135,7 +144,7 @@ fun Home(
     addSetExercise?.let { exercise ->
         AddSetSheet(
             exercise = exercise,
-            date = localDate,
+            date = today(),
             onDismiss = { addSetExercise = null },
         )
     }
@@ -179,7 +188,7 @@ fun Home(
     if (showImportSheet) {
         ModalBottomSheet(
             onDismissRequest = { showImportSheet = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
             Text(
                 text = stringResource(R.string.label_import_plan),
@@ -199,7 +208,9 @@ fun Home(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 4.dp),
                     ) {
-                        Text(text = dayName(day))
+                        val title = planDayTitles[day]
+                        val displayName = if (title.isNullOrBlank()) dayName(day) else "$title (${dayName(day)})"
+                        Text(text = displayName)
                     }
                 }
             }
@@ -217,6 +228,7 @@ fun Home(
                 timerState = state.timerState,
                 elapsedSeconds = timerSeconds,
                 notificationGranted = notifState.granted,
+                hasAccumulatedTime = state.timerState == TimerState.IDLE && timerSeconds > 0,
                 onStart = {
                     if (!notifState.granted) {
                         notifState.request()
@@ -237,6 +249,7 @@ fun Home(
                         isPlanSelected = state.isPlanSelected,
                         planName = state.planName,
                         dayTitle = state.dayTitle,
+                        dayOfWeek = state.dayOfWeek,
                         onSelectPlanClick = onSelectPlanClick,
                     )
                 }
@@ -249,15 +262,20 @@ fun Home(
                     InlineTrainingContent(
                         exerciseSets = sessionSets,
                         onAddSet = { exercise -> addSetExercise = exercise },
+                        onRemoveSet = viewModel::removeSet,
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Stick to the plan\nNot your mood.",
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                text = stringResource(R.string.home_text),
+                style = MaterialTheme.typography.displaySmall.copy(
+                    fontFamily = bodyFont,
+                    fontSize = 24.sp,
+                    lineHeight = 30.sp,
+                ),
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 80.dp, bottom = 16.dp),
@@ -305,9 +323,28 @@ private fun TrainingActionBar(
 private fun InlineTrainingContent(
     exerciseSets: Map<Exercise, List<Set>>,
     onAddSet: (Exercise) -> Unit,
+    onRemoveSet: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val collapsedExercises = remember { mutableStateListOf<Int>() }
+    var setToDelete by remember { mutableStateOf<Int?>(null) }
+    val context = LocalContext.current
+
+    setToDelete?.let { id ->
+        val deletedMessage = stringResource(R.string.label_deleted)
+        ConfirmDialog(
+            title = stringResource(R.string.label_delete_set_title),
+            message = stringResource(R.string.label_delete_set_message),
+            confirmText = stringResource(R.string.label_delete),
+            onConfirm = {
+                onRemoveSet(id)
+                context.toast(deletedMessage)
+                setToDelete = null
+            },
+            onDismiss = { setToDelete = null },
+        )
+    }
+
     Column(modifier = modifier.padding(horizontal = 12.dp)) {
         exerciseSets.forEach { (exercise, sets) ->
             val isCollapsed = exercise.id in collapsedExercises
@@ -317,9 +354,9 @@ private fun InlineTrainingContent(
                 isCollapsed = isCollapsed,
                 onCollapseToggle = {
                     if (isCollapsed) {
-                        collapsedExercises.remove(exercise.id!!)
+                        exercise.id?.let { collapsedExercises.remove(it) }
                     } else {
-                        collapsedExercises.add(exercise.id!!)
+                        exercise.id?.let { collapsedExercises.add(it) }
                     }
                 },
                 actions = {
@@ -335,8 +372,9 @@ private fun InlineTrainingContent(
             )
             if (!isCollapsed) {
                 sets.forEachIndexed { index, set ->
-                    SetItem(
+                    DeletableSetItem(
                         set = set,
+                        onDelete = { set.id?.let { setToDelete = it } },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         title = {
                             Text(
@@ -356,6 +394,7 @@ private fun PlanInfoCard(
     isPlanSelected: Boolean,
     planName: String?,
     dayTitle: String?,
+    dayOfWeek: DayOfWeek,
     onSelectPlanClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -383,8 +422,8 @@ private fun PlanInfoCard(
             }
 
             // Date and day of week
-            val dateStr = localDate.toString()
-            val dayStr = dayName(localDate.dayOfWeek)
+            val dateStr = today().toString()
+            val dayStr = dayName(today().dayOfWeek)
             Text(
                 text = "$dateStr $dayStr",
                 style = MaterialTheme.typography.bodyMedium,
@@ -395,7 +434,7 @@ private fun PlanInfoCard(
 
             // Today's training title
             Text(
-                text = "${stringResource(R.string.label_today_plan)}: ${dayTitle ?: "-"}",
+                text = "${stringResource(R.string.label_today_plan)}: ${dayTitle ?: dayName(dayOfWeek)}",
                 style = MaterialTheme.typography.titleMedium,
             )
         }

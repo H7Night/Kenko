@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -32,6 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -59,6 +61,7 @@ fun TrainingHeatmap(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     initialDate: LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
+    onMonthChange: (LocalDate) -> Unit = {},
 ) {
     val pagerState = rememberPagerState(
         initialPage = Int.MAX_VALUE / 2,
@@ -69,6 +72,10 @@ fun TrainingHeatmap(
     val offset = pagerState.currentPage - (Int.MAX_VALUE / 2)
     val displayedDate = remember(initialDate, offset) {
         initialDate.plus(offset, DateTimeUnit.MONTH)
+    }
+
+    LaunchedEffect(displayedDate) {
+        onMonthChange(displayedDate)
     }
 
     val showPreviousYear = remember(sessionDates, displayedDate) {
@@ -250,7 +257,7 @@ private fun HeatmapGrid(
                         val color = when {
                             isTrained -> MaterialTheme.colorScheme.primary
                             isToday -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-                            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
                         }
                         Box(
                             modifier = Modifier

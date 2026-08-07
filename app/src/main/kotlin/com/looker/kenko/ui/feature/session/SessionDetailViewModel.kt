@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -26,7 +27,7 @@ import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.Set
-import com.looker.kenko.domain.model.localDate
+import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.week
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
@@ -42,7 +43,10 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -70,7 +74,7 @@ class SessionDetailViewModel @Inject constructor(
 
     private val sessionDate: LocalDate = epochDays?.let {
         LocalDate.fromEpochDays(it)
-    } ?: localDate
+    } ?: today()
 
     private val isTodaySession = epochDays == null
 
@@ -145,6 +149,9 @@ class SessionDetailViewModel @Inject constructor(
     private val _isEditMode: MutableStateFlow<Boolean> = MutableStateFlow(isTodaySession)
     val isEditMode: StateFlow<Boolean> = _isEditMode
 
+    private val _snackbar = MutableSharedFlow<String>()
+    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
+
     private val _currentExercise: MutableStateFlow<Exercise?> = MutableStateFlow(null)
     val current: StateFlow<Exercise?> = _currentExercise
 
@@ -209,40 +216,64 @@ class SessionDetailViewModel @Inject constructor(
 
     fun importPlanFromDay(day: DayOfWeek) {
         viewModelScope.launch {
-            repo.updatePlanDay(sessionDate, day)
+            try {
+                repo.updatePlanDay(sessionDate, day)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun clearTodaySets() {
         viewModelScope.launch {
-            repo.clearSets(sessionDate)
+            try {
+                repo.clearSets(sessionDate)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun removeSet(setId: Int?) {
         if (setId == null) return
         viewModelScope.launch {
-            repo.removeSet(setId)
+            try {
+                repo.removeSet(setId)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun updateSet(setId: Int?, reps: Int, weight: Float) {
         if (setId == null) return
         viewModelScope.launch {
-            repo.updateSet(setId, reps, weight)
+            try {
+                repo.updateSet(setId, reps, weight)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun showBottomSheet(exercise: Exercise) {
         if (!isEditMode.value) return
         viewModelScope.launch {
-            _currentExercise.emit(exercise)
+            try {
+                _currentExercise.emit(exercise)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun hideSheet() {
         viewModelScope.launch {
-            _currentExercise.emit(null)
+            try {
+                _currentExercise.emit(null)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
@@ -250,8 +281,8 @@ class SessionDetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 uriHandler.openUri(reference)
-            } catch (e: IllegalStateException) {
-                e.printStackTrace()
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
     }

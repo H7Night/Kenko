@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -22,6 +23,9 @@ import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -33,29 +37,33 @@ class PlanViewModel @Inject constructor(
 
     val plans = repo.plans.asStateFlow(emptyList())
 
+    private val _snackbar = MutableSharedFlow<String>()
+    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
+
     fun removePlan(id: Int) {
         viewModelScope.launch {
-            repo.deletePlan(id)
+            try {
+                repo.deletePlan(id)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
         }
     }
 
     fun switchPlan(plan: Plan) {
         viewModelScope.launch {
-            if (!plan.isActive) {
-                repo.setCurrent(plan.id!!)
-            } else {
-                repo.updatePlan(plan.copy(isActive = false))
+            try {
+                if (!plan.isActive) {
+                    plan.id?.let { repo.setCurrent(it) }
+                } else {
+                    repo.updatePlan(plan.copy(isActive = false))
+                }
+                if (repo.current.first() != null) {
+                    settingsRepo.setOnboardingDone()
+                }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
             }
-            if (repo.current.first() != null) {
-                settingsRepo.setOnboardingDone()
-            }
-        }
-    }
-
-    fun cleanupPlans(onDone: () -> Unit) {
-        viewModelScope.launch {
-            repo.deleteEmptyPlans()
-            onDone()
         }
     }
 }

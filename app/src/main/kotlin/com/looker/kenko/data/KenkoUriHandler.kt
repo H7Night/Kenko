@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,9 +21,14 @@ import android.content.Intent
 import androidx.compose.ui.platform.UriHandler
 import androidx.core.net.toUri
 import com.looker.kenko.R
+import com.looker.kenko.utils.isValidUrl
 
 class KenkoUriHandler(private val context: Context) : UriHandler {
     override fun openUri(uri: String) {
+        // 只允许 http/https，拒绝 file://、content://、intent:// 等任意 scheme
+        if (!uri.isValidUrl()) {
+            error(context.getString(R.string.error_invalid_url))
+        }
         try {
             val intent = Intent(
                 Intent.ACTION_VIEW,

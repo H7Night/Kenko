@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -29,7 +30,6 @@ data class Exercise(
     val name: String,
     val tags: List<Tag> = emptyList(),
     val countType: CountType = CountType.REPS,
-    val isIsometric: Boolean = false,
     val isBodyweight: Boolean = false,
     val reference: String? = null,
     val id: Int? = null,
@@ -38,9 +38,8 @@ data class Exercise(
 @Stable
 val Exercise.repDurationStringRes: Int
     @StringRes
-    get() = when {
-        isIsometric -> R.string.label_duration
-        countType == CountType.MINUTES -> R.string.label_min
+    get() = when (countType) {
+        CountType.MINUTES -> R.string.label_min
         else -> R.string.label_reps
     }
 
