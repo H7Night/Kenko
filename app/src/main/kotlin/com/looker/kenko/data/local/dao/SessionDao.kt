@@ -21,6 +21,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.looker.kenko.data.local.model.SessionDataEntity
+import com.looker.kenko.data.local.model.SessionDateEntity
 import com.looker.kenko.data.local.model.SessionEntity
 import com.looker.kenko.utils.EpochDays
 import kotlinx.coroutines.flow.Flow
@@ -94,6 +95,16 @@ interface SessionDao {
         """,
     )
     fun stream(): Flow<List<SessionEntity>>
+
+    /** 轻量查询：仅 date + planId，用于计算计划训练日期区间（避免加载全部 sets）。 */
+    @Query(
+        """
+        SELECT date, planId
+        FROM sessions
+        ORDER BY date
+        """,
+    )
+    fun streamPlanDates(): Flow<List<SessionDateEntity>>
 
     @Transaction
     @Query(

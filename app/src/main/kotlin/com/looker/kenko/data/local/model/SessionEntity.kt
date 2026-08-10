@@ -53,3 +53,9 @@ data class SessionDataEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 )
+
+/** 轻量投影：仅 date + planId（供计划训练日期区间计算，不加载 sets）。 */
+data class SessionDateEntity(
+    val date: EpochDays,
+    val planId: Int?,
+)

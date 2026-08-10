@@ -26,6 +26,9 @@ interface SessionRepo {
 
     val stream: Flow<List<Session>>
 
+    /** 每个计划的训练日期区间（首 session 日期 ~ 末 session 日期），仅依赖轻量查询。 */
+    val planDateRanges: Flow<Map<Int, Pair<LocalDate, LocalDate>>>
+
     val setsCount: Flow<Int>
 
     val earliestSessionDate: Flow<LocalDate?>

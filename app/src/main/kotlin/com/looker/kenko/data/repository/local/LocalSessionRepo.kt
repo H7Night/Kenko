@@ -53,6 +53,17 @@ class LocalSessionRepo @Inject constructor(
                 session.toExternal(session.sets.toExternal())
             }
         }
+
+    override val planDateRanges: Flow<Map<Int, Pair<LocalDate, LocalDate>>> =
+        dao.streamPlanDates().map { list ->
+            list.mapNotNull { entry ->
+                entry.planId?.let { it to LocalDate.fromEpochDays(entry.date.value.toLong()) }
+            }
+                .groupBy({ it.first }, { it.second })
+                .mapValues { (_, dates) ->
+                    (dates.minOrNull()!!) to (dates.maxOrNull()!!)
+                }
+        }
     override val setsCount: Flow<Int> =
         setsDao.totalSetCount()
 

@@ -54,14 +54,8 @@ class ProfileViewModel @Inject constructor(
     val plans: StateFlow<List<Plan>> = planRepo.plans
         .asStateFlow(emptyList())
 
-    private val planDateRanges: Flow<Map<Int, Pair<LocalDate, LocalDate>>> = sessionRepo.stream
-        .map { sessions ->
-            sessions.mapNotNull { session -> session.planId?.let { it to session.date } }
-                .groupBy({ it.first }, { it.second })
-                .mapValues { (_, dates) ->
-                    (dates.minOrNull()!!) to (dates.maxOrNull()!!)
-                }
-        }
+    private val planDateRanges: Flow<Map<Int, Pair<LocalDate, LocalDate>>> =
+        sessionRepo.planDateRanges
 
     private val _selectedPlanId = MutableStateFlow<Int?>(null)
     val selectedPlanId: StateFlow<Int?> = _selectedPlanId.asStateFlow()
