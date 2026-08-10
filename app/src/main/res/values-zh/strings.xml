@@ -79,6 +79,7 @@
     <string name="label_body_weight">体重记录</string>
     <string name="label_body_weight_history">体重历史</string>
     <string name="label_add_body_weight">添加体重</string>
+    <string name="label_no_weight_in_period">该时间段无体重记录</string>
     <string name="label_edit_body_weight">编辑体重</string>
     <string name="placeholder_set_day_title">设置标题（如：胸部训练）</string>
     <string name="label_weight_unit">kg</string>

@@ -24,40 +24,99 @@ import com.looker.kenko.domain.model.Weight
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
+import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.WeightRepo
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     planRepo: PlanRepo,
     private val weightRepo: WeightRepo,
     exerciseRepo: ExerciseRepo,
+    sessionRepo: SessionRepo,
 ) : ViewModel() {
 
     private val currentPlan: Flow<Plan?> = planRepo.current
 
+    val plans: StateFlow<List<Plan>> = planRepo.plans
+        .asStateFlow(emptyList())
+
+    private val planDateRanges: Flow<Map<Int, Pair<LocalDate, LocalDate>>> = sessionRepo.stream
+        .map { sessions ->
+            sessions.mapNotNull { session -> session.planId?.let { it to session.date } }
+                .groupBy({ it.first }, { it.second })
+                .mapValues { (_, dates) ->
+                    (dates.minOrNull()!!) to (dates.maxOrNull()!!)
+                }
+        }
+
+    private val _selectedPlanId = MutableStateFlow<Int?>(null)
+    val selectedPlanId: StateFlow<Int?> = _selectedPlanId.asStateFlow()
+
+    private val _selectedMonth = MutableStateFlow<Pair<Int, Int>?>(null)
+    val selectedMonth: StateFlow<Pair<Int, Int>?> = _selectedMonth.asStateFlow()
+
+    private data class Bundle(
+        val plan: Plan?,
+        val weights: List<Weight>,
+        val numberOfExercises: Int,
+        val plans: List<Plan>,
+        val planDateRanges: Map<Int, Pair<LocalDate, LocalDate>>,
+    )
+
     val state: StateFlow<ProfileUiState> = combine(
-        currentPlan,
-        weightRepo.weights,
-        exerciseRepo.numberOfExercise,
-    ) { plan, weights, number ->
+        combine(
+            currentPlan,
+            weightRepo.weights,
+            exerciseRepo.numberOfExercise,
+            plans,
+            planDateRanges,
+        ) { plan, weights, number, allPlans, ranges ->
+            Bundle(plan, weights, number, allPlans, ranges)
+        },
+        _selectedPlanId,
+        _selectedMonth,
+    ) { bundle, planId, month ->
+        val view = computeWeightChartView(bundle.weights, bundle.planDateRanges, planId, month)
         ProfileUiState(
-            numberOfExercises = number,
-            weights = weights,
-            isPlanAvailable = plan != null,
-            planName = plan?.name ?: "",
-            planStat = plan?.stat,
+            numberOfExercises = bundle.numberOfExercises,
+            weights = bundle.weights,
+            isPlanAvailable = bundle.plan != null,
+            planName = bundle.plan?.name ?: "",
+            planStat = bundle.plan?.stat,
+            plans = bundle.plans,
+            filteredWeights = view.visibleWeights,
+            selectedMonthLabel = view.monthLabel,
+            canGoPrev = view.canGoPrev,
+            canGoNext = view.canGoNext,
         )
     }.asStateFlow(ProfileUiState())
+
+    fun prevMonth() {
+        _selectedMonth.value = _selectedMonth.value?.let { (year, month) -> addMonths(year, month, -1) }
+    }
+
+    fun nextMonth() {
+        _selectedMonth.value = _selectedMonth.value?.let { (year, month) -> addMonths(year, month, 1) }
+    }
+
+    fun selectPlan(planId: Int?) {
+        _selectedPlanId.value = planId
+        _selectedMonth.value = null
+    }
 
     private val _snackbar = MutableSharedFlow<String>()
     val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
@@ -100,4 +159,9 @@ data class ProfileUiState(
     val planName: String = "",
     val weights: List<Weight> = emptyList(),
     val planStat: PlanStat? = null,
+    val plans: List<Plan> = emptyList(),
+    val filteredWeights: List<Weight> = emptyList(),
+    val selectedMonthLabel: String? = null,
+    val canGoPrev: Boolean = false,
+    val canGoNext: Boolean = false,
 )

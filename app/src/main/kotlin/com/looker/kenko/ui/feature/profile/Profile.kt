@@ -31,12 +31,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -54,6 +62,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
+import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanStat
 import com.looker.kenko.domain.model.Weight
 import com.looker.kenko.ui.component.BackButton
@@ -79,8 +88,10 @@ fun Profile(
     showBackButton: Boolean = false,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val selectedPlanId by viewModel.selectedPlanId.collectAsStateWithLifecycle()
     Profile(
         state = state,
+        selectedPlanId = selectedPlanId,
         onBackPress = onBackPress,
         onSettingsClick = onSettingsClick,
         onPlanClick = onPlanClick,
@@ -89,6 +100,9 @@ fun Profile(
         onAddWeight = viewModel::addWeight,
         onUpdateWeight = viewModel::updateWeight,
         onDeleteWeight = viewModel::deleteWeight,
+        onPrevMonth = viewModel::prevMonth,
+        onNextMonth = viewModel::nextMonth,
+        onPlanSelect = viewModel::selectPlan,
         showBackButton = showBackButton,
     )
 }
@@ -97,6 +111,7 @@ fun Profile(
 @Composable
 private fun Profile(
     state: ProfileUiState,
+    selectedPlanId: Int?,
     onBackPress: () -> Unit,
     onSettingsClick: () -> Unit,
     onPlanClick: () -> Unit,
@@ -105,6 +120,9 @@ private fun Profile(
     onAddWeight: (Float) -> Unit,
     onUpdateWeight: (Weight) -> Unit,
     onDeleteWeight: (Int) -> Unit,
+    onPrevMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    onPlanSelect: (Int?) -> Unit,
     modifier: Modifier = Modifier,
     showBackButton: Boolean = false,
 ) {
@@ -194,6 +212,15 @@ private fun Profile(
             Spacer(modifier = Modifier.height(12.dp))
             WeightCard(
                 weights = state.weights,
+                filteredWeights = state.filteredWeights,
+                plans = state.plans,
+                selectedPlanId = selectedPlanId,
+                selectedMonthLabel = state.selectedMonthLabel,
+                canGoPrev = state.canGoPrev,
+                canGoNext = state.canGoNext,
+                onPrevMonth = onPrevMonth,
+                onNextMonth = onNextMonth,
+                onPlanSelect = onPlanSelect,
                 onAddClick = { showWeightDialog = true },
                 onHistoryClick = { showWeightHistory = true }
             )
@@ -255,13 +282,29 @@ private fun ExerciseCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WeightCard(
     weights: List<Weight>,
+    filteredWeights: List<Weight>,
+    plans: List<Plan>,
+    selectedPlanId: Int?,
+    selectedMonthLabel: String?,
+    canGoPrev: Boolean,
+    canGoNext: Boolean,
+    onPrevMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    onPlanSelect: (Int?) -> Unit,
     onAddClick: () -> Unit,
     onHistoryClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var planExpanded by remember { mutableStateOf(false) }
+    val selectedPlanName = selectedPlanId?.let { id ->
+        plans.find { it.id == id }?.name
+            ?: stringResource(R.string.label_select_plan_one)
+    } ?: stringResource(R.string.label_all_muscle_groups)
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -294,25 +337,128 @@ private fun WeightCard(
                 }
             }
 
-            if (weights.size >= 2) {
-                WeightLineChart(
-                    weights = weights,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp)
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp),
-                    contentAlignment = Alignment.Center
+            // Filter row: month switcher + plan dropdown (only when there is any record)
+            if (weights.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    IconButton(
+                        onClick = onPrevMonth,
+                        enabled = canGoPrev,
+                        modifier = Modifier.size(28.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowLeft,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
                     Text(
-                        text = weights.lastOrNull()?.let { "${it.value} ${stringResource(R.string.label_weight_unit)}" }
-                            ?: stringResource(R.string.label_add_body_weight),
-                        style = MaterialTheme.typography.displaySmall.numbers()
+                        text = selectedMonthLabel.orEmpty(),
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(horizontal = 2.dp),
                     )
+                    IconButton(
+                        onClick = onNextMonth,
+                        enabled = canGoNext,
+                        modifier = Modifier.size(28.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    ExposedDropdownMenuBox(
+                        expanded = planExpanded,
+                        onExpandedChange = { planExpanded = it },
+                    ) {
+                        OutlinedTextField(
+                            value = selectedPlanName,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text(stringResource(R.string.label_select_plan_one)) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = planExpanded) },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .width(132.dp),
+                            singleLine = true,
+                        )
+                        ExposedDropdownMenu(
+                            expanded = planExpanded,
+                            onDismissRequest = { planExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                                onClick = {
+                                    onPlanSelect(null)
+                                    planExpanded = false
+                                },
+                            )
+                            plans.forEach { plan ->
+                                DropdownMenuItem(
+                                    text = { Text(plan.name) },
+                                    onClick = {
+                                        onPlanSelect(plan.id)
+                                        planExpanded = false
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            when {
+                weights.isEmpty() -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.label_add_body_weight),
+                            style = MaterialTheme.typography.displaySmall.numbers()
+                        )
+                    }
+                }
+                filteredWeights.size >= 2 -> {
+                    WeightLineChart(
+                        weights = filteredWeights,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp)
+                    )
+                }
+                filteredWeights.size == 1 -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "${filteredWeights[0].value} ${stringResource(R.string.label_weight_unit)}",
+                            style = MaterialTheme.typography.displaySmall.numbers()
+                        )
+                    }
+                }
+                else -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.label_no_weight_in_period),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.outline,
+                        )
+                    }
                 }
             }
         }
@@ -333,6 +479,7 @@ private fun ProfileNoPlanPreview() {
     KenkoTheme {
         Profile(
             state = ProfileUiState(12, false, "Push-Pull-Leg", emptyList(), PlanStat(12, 5)),
+            selectedPlanId = null,
             onBackPress = { },
             onSettingsClick = { },
             onPlanClick = { },
@@ -341,6 +488,9 @@ private fun ProfileNoPlanPreview() {
             onAddWeight = {},
             onUpdateWeight = {},
             onDeleteWeight = {},
+            onPrevMonth = {},
+            onNextMonth = {},
+            onPlanSelect = {},
         )
     }
 }
@@ -351,6 +501,7 @@ private fun ProfilePreview() {
     KenkoTheme {
         Profile(
             state = ProfileUiState(12, true, "Push-Pull-Leg", emptyList(), PlanStat(12, 5)),
+            selectedPlanId = null,
             onBackPress = { },
             onSettingsClick = { },
             onPlanClick = { },
@@ -359,6 +510,9 @@ private fun ProfilePreview() {
             onAddWeight = {},
             onUpdateWeight = {},
             onDeleteWeight = {},
+            onPrevMonth = {},
+            onNextMonth = {},
+            onPlanSelect = {},
         )
     }
 }
