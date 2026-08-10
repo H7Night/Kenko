@@ -23,6 +23,8 @@ data class WeightChartView(
     val visibleWeights: List<Weight>,
     /** yyyy-MM；null 表示当前无任何可展示的数据（无体重记录 / 所选计划无 session）。 */
     val monthLabel: String?,
+    /** 当前展示月份 (year, month)；null 表示无数据。 */
+    val currentMonth: Pair<Int, Int>?,
     val canGoPrev: Boolean,
     val canGoNext: Boolean,
 )
@@ -48,12 +50,12 @@ fun computeWeightChartView(
     selectedMonth: Pair<Int, Int>?,
 ): WeightChartView {
     if (weights.isEmpty()) {
-        return WeightChartView(emptyList(), null, canGoPrev = false, canGoNext = false)
+        return WeightChartView(emptyList(), null, null, canGoPrev = false, canGoNext = false)
     }
 
     val planRange: Pair<LocalDate, LocalDate>? = selectedPlanId?.let { planDateRanges[it] }
     if (selectedPlanId != null && planRange == null) {
-        return WeightChartView(emptyList(), null, canGoPrev = false, canGoNext = false)
+        return WeightChartView(emptyList(), null, null, canGoPrev = false, canGoNext = false)
     }
 
     val (firstY, firstM) = planRange?.let { (start, _) -> start.year to start.monthNumber } ?: run {
@@ -83,6 +85,7 @@ fun computeWeightChartView(
     return WeightChartView(
         visibleWeights = visible,
         monthLabel = "%04d-%02d".format(current.first, current.second),
+        currentMonth = current,
         canGoPrev = compareMonth(current.first, current.second, firstY, firstM) > 0,
         canGoNext = compareMonth(current.first, current.second, lastY, lastM) < 0,
     )

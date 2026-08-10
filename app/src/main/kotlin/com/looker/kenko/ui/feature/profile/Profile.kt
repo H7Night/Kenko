@@ -306,9 +306,7 @@ private fun WeightCard(
     } ?: stringResource(R.string.label_all_muscle_groups)
 
     Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onAddClick),
+        modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
@@ -326,12 +324,12 @@ private fun WeightCard(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(
-                    onClick = onHistoryClick,
+                    onClick = onAddClick,
                     modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
-                        painter = KenkoIcons.Rename,
-                        contentDescription = stringResource(R.string.label_body_weight_history),
+                        painter = KenkoIcons.Add,
+                        contentDescription = stringResource(R.string.label_add),
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -416,7 +414,8 @@ private fun WeightCard(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(100.dp),
+                            .height(100.dp)
+                            .clickable(onClick = onAddClick),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -426,18 +425,26 @@ private fun WeightCard(
                     }
                 }
                 filteredWeights.size >= 2 -> {
-                    WeightLineChart(
-                        weights = filteredWeights,
+                    // Tap the chart to open the weight history/edit sheet
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(120.dp)
-                    )
+                            .clickable(onClick = onHistoryClick),
+                    ) {
+                        WeightLineChart(
+                            weights = filteredWeights,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                        )
+                    }
                 }
                 filteredWeights.size == 1 -> {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(100.dp),
+                            .height(100.dp)
+                            .clickable(onClick = onAddClick),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -450,7 +457,8 @@ private fun WeightCard(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(100.dp),
+                            .height(100.dp)
+                            .clickable(onClick = onAddClick),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(

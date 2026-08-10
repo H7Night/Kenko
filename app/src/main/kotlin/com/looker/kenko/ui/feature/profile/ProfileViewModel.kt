@@ -100,17 +100,20 @@ class ProfileViewModel @Inject constructor(
             plans = bundle.plans,
             filteredWeights = view.visibleWeights,
             selectedMonthLabel = view.monthLabel,
+            currentMonth = view.currentMonth,
             canGoPrev = view.canGoPrev,
             canGoNext = view.canGoNext,
         )
     }.asStateFlow(ProfileUiState())
 
     fun prevMonth() {
-        _selectedMonth.value = _selectedMonth.value?.let { (year, month) -> addMonths(year, month, -1) }
+        val current = state.value.currentMonth ?: return
+        _selectedMonth.value = addMonths(current.first, current.second, -1)
     }
 
     fun nextMonth() {
-        _selectedMonth.value = _selectedMonth.value?.let { (year, month) -> addMonths(year, month, 1) }
+        val current = state.value.currentMonth ?: return
+        _selectedMonth.value = addMonths(current.first, current.second, 1)
     }
 
     fun selectPlan(planId: Int?) {
@@ -162,6 +165,7 @@ data class ProfileUiState(
     val plans: List<Plan> = emptyList(),
     val filteredWeights: List<Weight> = emptyList(),
     val selectedMonthLabel: String? = null,
+    val currentMonth: Pair<Int, Int>? = null,
     val canGoPrev: Boolean = false,
     val canGoNext: Boolean = false,
 )
