@@ -59,3 +59,15 @@ data class SessionDateEntity(
     val date: EpochDays,
     val planId: Int?,
 )
+
+/** 轻量投影：会话概要 + 去重动作名（GROUP_CONCAT），供 Records 列表页一次查询取回。 */
+data class SessionSummaryEntity(
+    val date: EpochDays,
+    val planId: Int?,
+    val planDayOverride: Int? = null,
+    val durationSeconds: Long? = null,
+    val exerciseNames: String? = null,
+    val setCount: Int = 0,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+)

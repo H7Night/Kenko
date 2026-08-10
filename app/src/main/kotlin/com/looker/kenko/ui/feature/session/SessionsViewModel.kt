@@ -23,6 +23,7 @@ import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Plan
+import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -43,7 +44,7 @@ class SessionsViewModel @Inject constructor(
     private val repo: SessionRepo,
     private val planRepo: PlanRepo,
 ) : ViewModel() {
-    private val sessionsStream = repo.stream
+    private val sessionsStream = repo.streamSummaries
     private val isCurrentSessionActive = repo.streamByDate(today()).map { it != null }
 
     private val availablePlanItems = planRepo.planItems
@@ -60,7 +61,7 @@ class SessionsViewModel @Inject constructor(
     ) { sessions, isCurrentSessionActive, available, plans ->
         val planTitlesMap = plans.associate { it.id to it.titlesMap }
         SessionsUiData(
-            sessions = sessions.filter { it.sets.isNotEmpty() },
+            sessions = sessions.filter { it.setCount > 0 },
             hasAnySessions = sessions.isNotEmpty(),
             isCurrentSessionActive = isCurrentSessionActive,
             availablePlanDays = available,
@@ -83,10 +84,11 @@ class SessionsViewModel @Inject constructor(
         }
     }
 
-    fun removeSession(session: Session) {
+    fun removeSession(session: SessionSummary) {
         viewModelScope.launch {
             try {
-                repo.deleteSession(session)
+                val id = session.id ?: return@launch
+                repo.deleteSessionById(id)
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
             }
@@ -96,7 +98,7 @@ class SessionsViewModel @Inject constructor(
 
 @Stable
 data class SessionsUiData(
-    val sessions: List<Session>,
+    val sessions: List<SessionSummary>,
     val isCurrentSessionActive: Boolean,
     val hasAnySessions: Boolean = false,
     val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),

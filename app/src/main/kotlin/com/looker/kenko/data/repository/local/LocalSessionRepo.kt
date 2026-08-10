@@ -25,6 +25,7 @@ import com.looker.kenko.data.mapper.toEntity
 import com.looker.kenko.data.mapper.toExternal
 import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.Set
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.utils.toLocalEpochDays
@@ -63,6 +64,24 @@ class LocalSessionRepo @Inject constructor(
                 .mapValues { (_, dates) ->
                     (dates.minOrNull()!!) to (dates.maxOrNull()!!)
                 }
+        }
+
+    override val streamSummaries: Flow<List<SessionSummary>> =
+        dao.streamSummaries().map { list ->
+            list.map { entity ->
+                SessionSummary(
+                    date = LocalDate.fromEpochDays(entity.date.value.toLong()),
+                    planId = entity.planId,
+                    planDayOverride = entity.planDayOverride?.let { DayOfWeek(it) },
+                    durationSeconds = entity.durationSeconds,
+                    exerciseNames = entity.exerciseNames
+                        ?.split(",")
+                        ?.filter { it.isNotBlank() }
+                        ?: emptyList(),
+                    setCount = entity.setCount,
+                    id = entity.id,
+                )
+            }
         }
     override val setsCount: Flow<Int> =
         setsDao.totalSetCount()
@@ -151,6 +170,11 @@ class LocalSessionRepo @Inject constructor(
         val sessionId = session.id ?: return
         setsDao.deleteBySessionId(sessionId)
         dao.delete(sessionId)
+    }
+
+    override suspend fun deleteSessionById(id: Int) {
+        setsDao.deleteBySessionId(id)
+        dao.delete(id)
     }
 
     private suspend fun List<SetEntity>.toExternal(): List<Set> = mapNotNull {

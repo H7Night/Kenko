@@ -52,7 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Plan
-import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.Exercise
@@ -133,12 +133,12 @@ fun Sessions(
 private fun Sessions(
     state: SessionsUiData,
     onSessionClick: (LocalDate?) -> Unit,
-    onRemoveSession: (Session) -> Unit,
+    onRemoveSession: (SessionSummary) -> Unit,
     onBackPress: () -> Unit,
     onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var sessionToDelete by remember { mutableStateOf<Session?>(null) }
+    var sessionToDelete by remember { mutableStateOf<SessionSummary?>(null) }
     var planExpanded by remember { mutableStateOf(false) }
     var dayExpanded by remember { mutableStateOf(false) }
     var selectedPlan by remember { mutableStateOf<Plan?>(null) }
@@ -455,7 +455,7 @@ private fun DateSelectionRow(
 
 @Composable
 fun SessionCard(
-    session: Session,
+    session: SessionSummary,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
     dayTitles: Map<Int?, Map<DayOfWeek, String>> = emptyMap(),
@@ -509,8 +509,8 @@ fun SessionCard(
                 )
             }
 
-            val exerciseNames = remember(session.performExercises) {
-                session.performExercises.joinToString { it.name }
+            val exerciseNames = remember(session.exerciseNames) {
+                session.exerciseNames.joinToString { it }
             }
             Text(
                 text = exerciseNames,
@@ -541,10 +541,10 @@ fun SessionCard(
 private fun SessionCardPreview() {
     KenkoTheme {
         SessionCard(
-            session = Session(
-                planId = 1,
+            session = SessionSummary(
                 date = LocalDate(2024, 4, 15),
-                sets = emptyList(),
+                planId = 1,
+                exerciseNames = listOf("Bench Press", "Curls"),
             ),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -557,7 +557,13 @@ private fun SessionsPreview() {
     KenkoTheme {
         Sessions(
             state = SessionsUiData(
-                sessions = listOf(Session(1, emptyList())),
+                sessions = listOf(
+                    SessionSummary(
+                        date = LocalDate(2024, 4, 15),
+                        planId = 1,
+                        exerciseNames = listOf("Bench Press"),
+                    )
+                ),
                 isCurrentSessionActive = false,
                 hasAnySessions = true,
             ),

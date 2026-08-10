@@ -23,6 +23,7 @@ import androidx.room.Transaction
 import com.looker.kenko.data.local.model.SessionDataEntity
 import com.looker.kenko.data.local.model.SessionDateEntity
 import com.looker.kenko.data.local.model.SessionEntity
+import com.looker.kenko.data.local.model.SessionSummaryEntity
 import com.looker.kenko.utils.EpochDays
 import kotlinx.coroutines.flow.Flow
 
@@ -105,6 +106,24 @@ interface SessionDao {
         """,
     )
     fun streamPlanDates(): Flow<List<SessionDateEntity>>
+
+    /**
+     * 轻量查询：会话概要 + 去重动作名（单条 JOIN + GROUP_CONCAT），
+     * 供 Records 列表页使用，避免逐 session 加载 sets 与逐 set 加载 exercise 的 N+1。
+     */
+    @Query(
+        """
+        SELECT s.id, s.date, s.planId, s.planDayOverride, s.durationSeconds,
+               GROUP_CONCAT(DISTINCT e.name) AS exerciseNames,
+               COUNT(st.id) AS setCount
+        FROM sessions s
+        LEFT JOIN sets st ON st.sessionId = s.id
+        LEFT JOIN exercises e ON e.id = st.exerciseId
+        GROUP BY s.id
+        ORDER BY s.date DESC
+        """,
+    )
+    fun streamSummaries(): Flow<List<SessionSummaryEntity>>
 
     @Transaction
     @Query(

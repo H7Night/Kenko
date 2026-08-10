@@ -17,6 +17,7 @@ package com.looker.kenko.data.repository
 
 import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.Set
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.DayOfWeek
@@ -25,6 +26,9 @@ import kotlinx.datetime.LocalDate
 interface SessionRepo {
 
     val stream: Flow<List<Session>>
+
+    /** 会话概要流（Records 列表页用）：轻量 JOIN 一次取回，不含组详情。 */
+    val streamSummaries: Flow<List<SessionSummary>>
 
     /** 每个计划的训练日期区间（首 session 日期 ~ 末 session 日期），仅依赖轻量查询。 */
     val planDateRanges: Flow<Map<Int, Pair<LocalDate, LocalDate>>>
@@ -62,4 +66,6 @@ interface SessionRepo {
     suspend fun getSets(sessionId: Int): List<Set>
 
     suspend fun deleteSession(session: Session)
+
+    suspend fun deleteSessionById(id: Int)
 }
