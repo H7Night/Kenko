@@ -241,6 +241,7 @@
     <string name="label_parent_tag">Body Part</string>
     <string name="label_select_body_part">Select Body Part</string>
     <string name="label_select_muscle">Select Muscle</string>
+    <string name="label_select_day">Select Day</string>
     <string name="label_selected_tags">Selected Tags</string>
     <string name="label_at_least_one_tag">Select at least one tag</string>
     <string name="label_delete_tag_warning">%d exercise(s) are using this tag. Deleting will remove it from those exercises.</string>

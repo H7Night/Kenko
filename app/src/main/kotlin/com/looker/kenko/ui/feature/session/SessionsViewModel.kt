@@ -21,17 +21,21 @@ import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.PlanRepo
+import com.looker.kenko.data.repository.TagRepo
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Plan
+import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -42,6 +46,7 @@ import kotlinx.datetime.LocalDate
 class SessionsViewModel @Inject constructor(
     private val repo: SessionRepo,
     private val planRepo: PlanRepo,
+    private val tagRepo: TagRepo,
 ) : ViewModel() {
     private val sessionsStream = repo.stream
     private val isCurrentSessionActive = repo.streamByDate(today()).map { it != null }
@@ -52,21 +57,49 @@ class SessionsViewModel @Inject constructor(
                 .mapValues { entry -> entry.value.map { it.exercise } }
         }
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _selectedBodyPart = MutableStateFlow<Int?>(null)
+    val selectedBodyPart: StateFlow<Int?> = _selectedBodyPart.asStateFlow()
+
+    val parentTags: StateFlow<List<Tag>> = tagRepo.streamParents
+        .asStateFlow(emptyList())
+
     val state: StateFlow<SessionsUiData> = combine(
         sessionsStream,
         isCurrentSessionActive,
         availablePlanItems,
         planRepo.plans,
-    ) { sessions, isCurrentSessionActive, available, plans ->
+        combine(_searchQuery, _selectedBodyPart) { query, bodyPartId -> query to bodyPartId },
+    ) { sessions, isCurrentSessionActive, available, plans, (query, bodyPartId) ->
         val planTitlesMap = plans.associate { it.id to it.titlesMap }
+        val filtered = sessions.filter { session ->
+            val nameMatch = query.isBlank() || session.performExercises.any {
+                it.name.contains(query, ignoreCase = true)
+            }
+            val partMatch = bodyPartId == null || session.performExercises.any { exercise ->
+                exercise.tags.any { it.parentId == bodyPartId }
+            }
+            nameMatch && partMatch
+        }
         SessionsUiData(
-            sessions = sessions.filter { it.sets.isNotEmpty() },
+            sessions = filtered.filter { it.sets.isNotEmpty() },
+            hasAnySessions = sessions.isNotEmpty(),
             isCurrentSessionActive = isCurrentSessionActive,
             availablePlanDays = available,
             dayTitles = planTitlesMap,
             plans = plans.filter { it.isActive || plans.indexOf(it) < 5 },
         )
     }.asStateFlow(SessionsUiData(emptyList(), false))
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun setBodyPartFilter(bodyPartId: Int?) {
+        _selectedBodyPart.value = bodyPartId
+    }
 
     private val _snackbar = MutableSharedFlow<String>()
     val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
@@ -97,6 +130,7 @@ class SessionsViewModel @Inject constructor(
 data class SessionsUiData(
     val sessions: List<Session>,
     val isCurrentSessionActive: Boolean,
+    val hasAnySessions: Boolean = false,
     val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),
     val dayTitles: Map<Int?, Map<DayOfWeek, String>> = emptyMap(),
     val plans: List<Plan> = emptyList(),

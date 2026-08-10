@@ -86,11 +86,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Set
-import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.feature.session.AddSet
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.KenkoBorderWidth
@@ -591,26 +591,45 @@ fun ExerciseSearchDialog(
     onCreateNew: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var selectedExercise by remember { mutableStateOf<Exercise?>(null) }
-    var selectedTag by remember { mutableStateOf<Tag?>(null) }
-    var tagExpanded by remember { mutableStateOf(false) }
+    val viewModel: ExerciseSearchViewModel = hiltViewModel()
+    val parentTags by viewModel.parentTags.collectAsStateWithLifecycle()
+    val allTags by viewModel.allTags.collectAsStateWithLifecycle()
 
-    val allTags = remember(exercises) {
-        exercises.flatMap { it.tags }
-            .distinctBy { it.id }
-            .sortedBy { it.sortOrder }
+    var selectedExercise by remember { mutableStateOf<Exercise?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedParentId by remember { mutableStateOf<Int?>(null) }
+    var selectedChildId by remember { mutableStateOf<Int?>(null) }
+    var parentExpanded by remember { mutableStateOf(false) }
+    var childExpanded by remember { mutableStateOf(false) }
+
+    val children = remember(allTags, selectedParentId) {
+        val parentId = selectedParentId
+        if (parentId == null) emptyList()
+        else allTags.filter { it.parentId == parentId }
     }
 
-    val filteredExercises = remember(selectedTag, exercises) {
+    val filteredExercises = remember(exercises, searchQuery, selectedParentId, selectedChildId) {
         var filtered = exercises
-        val currentTag = selectedTag
-        if (currentTag != null) {
-            val tagId = currentTag.id
+        val parentId = selectedParentId
+        val childId = selectedChildId
+        if (childId != null) {
             filtered = filtered.filter { exercise ->
-                exercise.tags.any { it.id == tagId }
+                exercise.tags.any { it.id == childId }
+            }
+        } else if (parentId != null) {
+            filtered = filtered.filter { exercise ->
+                exercise.tags.any { it.parentId == parentId }
             }
         }
+        if (searchQuery.isNotBlank()) {
+            filtered = filtered.filter { it.name.contains(searchQuery, ignoreCase = true) }
+        }
         filtered
+    }
+
+    // Clear the pending selection when the visible result set changes
+    LaunchedEffect(searchQuery, selectedParentId, selectedChildId) {
+        selectedExercise = null
     }
 
     AlertDialog(
@@ -618,41 +637,109 @@ fun ExerciseSearchDialog(
         title = { Text(stringResource(R.string.label_select_exercise)) },
         text = {
             Column {
-                ExposedDropdownMenuBox(
-                    expanded = tagExpanded,
-                    onExpandedChange = { tagExpanded = it },
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text(stringResource(R.string.label_search_exercise)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    OutlinedTextField(
-                        value = selectedTag?.name
-                            ?: stringResource(R.string.label_search_tag),
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = tagExpanded) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth(),
-                        singleLine = true,
-                    )
-                    ExposedDropdownMenu(
-                        expanded = tagExpanded,
-                        onDismissRequest = { tagExpanded = false },
+                    // Body part dropdown
+                    ExposedDropdownMenuBox(
+                        expanded = parentExpanded,
+                        onExpandedChange = { parentExpanded = it },
+                        modifier = Modifier.weight(1f),
                     ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.label_all_muscle_groups)) },
-                            onClick = {
-                                selectedTag = null
-                                tagExpanded = false
-                            },
+                        val parentName = selectedParentId?.let { id ->
+                            parentTags.find { it.id == id }?.name
+                                ?: stringResource(R.string.label_select_body_part)
+                        } ?: stringResource(R.string.label_all_muscle_groups)
+                        OutlinedTextField(
+                            value = parentName,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text(stringResource(R.string.label_select_body_part)) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = parentExpanded) },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth(),
+                            singleLine = true,
                         )
-                        allTags.forEach { tag ->
-                            val label = tag.parentName?.let { "${it} → ${tag.name}" } ?: tag.name
+                        ExposedDropdownMenu(
+                            expanded = parentExpanded,
+                            onDismissRequest = { parentExpanded = false },
+                        ) {
                             DropdownMenuItem(
-                                text = { Text(label) },
+                                text = { Text(stringResource(R.string.label_all_muscle_groups)) },
                                 onClick = {
-                                    selectedTag = tag
-                                    tagExpanded = false
+                                    selectedParentId = null
+                                    selectedChildId = null
+                                    parentExpanded = false
                                 },
                             )
+                            parentTags.forEach { parent ->
+                                DropdownMenuItem(
+                                    text = { Text(parent.name) },
+                                    onClick = {
+                                        selectedParentId = parent.id
+                                        selectedChildId = null
+                                        parentExpanded = false
+                                        childExpanded = true
+                                    },
+                                )
+                            }
+                        }
+                    }
+                    // Muscle dropdown — only visible when a body part is selected
+                    if (selectedParentId != null) {
+                        ExposedDropdownMenuBox(
+                            expanded = childExpanded && children.isNotEmpty(),
+                            onExpandedChange = { childExpanded = it },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            val childName = selectedChildId?.let { id ->
+                                children.find { it.id == id }?.name
+                                    ?: stringResource(R.string.label_select_muscle)
+                            } ?: stringResource(R.string.label_select_muscle)
+                            OutlinedTextField(
+                                value = childName,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text(stringResource(R.string.label_select_muscle)) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = childExpanded && children.isNotEmpty()) },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth(),
+                                singleLine = true,
+                            )
+                            ExposedDropdownMenu(
+                                expanded = childExpanded && children.isNotEmpty(),
+                                onDismissRequest = { childExpanded = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                                    onClick = {
+                                        selectedChildId = null
+                                        childExpanded = false
+                                    },
+                                )
+                                children.forEach { child ->
+                                    val label = parentTags.find { it.id == child.parentId }?.name
+                                        ?.let { "$it → ${child.name}" } ?: child.name
+                                    DropdownMenuItem(
+                                        text = { Text(label) },
+                                        onClick = {
+                                            selectedChildId = child.id
+                                            childExpanded = false
+                                        },
+                                    )
+                                }
+                            }
                         }
                     }
                 }
