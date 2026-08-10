@@ -53,7 +53,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.Session
-import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.Exercise
@@ -103,8 +102,6 @@ fun Sessions(
     onBackPress: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val parentTags by viewModel.parentTags.collectAsStateWithLifecycle()
-    val selectedBodyPart by viewModel.selectedBodyPart.collectAsStateWithLifecycle()
 
     var showAddHistoryDialog by remember { mutableStateOf(false) }
 
@@ -124,9 +121,6 @@ fun Sessions(
 
     Sessions(
         state = state,
-        parentTags = parentTags,
-        selectedBodyPart = selectedBodyPart,
-        onBodyPartSelect = viewModel::setBodyPartFilter,
         onSessionClick = onSessionClick,
         onRemoveSession = viewModel::removeSession,
         onBackPress = onBackPress,
@@ -138,9 +132,6 @@ fun Sessions(
 @Composable
 private fun Sessions(
     state: SessionsUiData,
-    parentTags: List<Tag>,
-    selectedBodyPart: Int?,
-    onBodyPartSelect: (Int?) -> Unit,
     onSessionClick: (LocalDate?) -> Unit,
     onRemoveSession: (Session) -> Unit,
     onBackPress: () -> Unit,
@@ -150,7 +141,6 @@ private fun Sessions(
     var sessionToDelete by remember { mutableStateOf<Session?>(null) }
     var planExpanded by remember { mutableStateOf(false) }
     var dayExpanded by remember { mutableStateOf(false) }
-    var bodyPartExpanded by remember { mutableStateOf(false) }
     var selectedPlan by remember { mutableStateOf<Plan?>(null) }
     var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
     var selectedMonth by remember { mutableStateOf(today()) }
@@ -249,47 +239,6 @@ private fun Sessions(
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            // Body part dropdown
-                            ExposedDropdownMenuBox(
-                                expanded = bodyPartExpanded,
-                                onExpandedChange = { bodyPartExpanded = it },
-                                modifier = Modifier.weight(1f),
-                            ) {
-                                val bodyPartName = selectedBodyPart?.let { id ->
-                                    parentTags.find { it.id == id }?.name
-                                        ?: stringResource(R.string.label_select_body_part)
-                                } ?: stringResource(R.string.label_all_muscle_groups)
-                                OutlinedTextField(
-                                    value = bodyPartName,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    label = { Text(stringResource(R.string.label_select_body_part)) },
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = bodyPartExpanded) },
-                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                    singleLine = true,
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = bodyPartExpanded,
-                                    onDismissRequest = { bodyPartExpanded = false },
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.label_all_muscle_groups)) },
-                                        onClick = {
-                                            onBodyPartSelect(null)
-                                            bodyPartExpanded = false
-                                        },
-                                    )
-                                    parentTags.forEach { parent ->
-                                        DropdownMenuItem(
-                                            text = { Text(parent.name) },
-                                            onClick = {
-                                                onBodyPartSelect(parent.id)
-                                                bodyPartExpanded = false
-                                            },
-                                        )
-                                    }
-                                }
-                            }
                             ExposedDropdownMenuBox(
                                 expanded = planExpanded,
                                 onExpandedChange = { planExpanded = it },
@@ -328,37 +277,35 @@ private fun Sessions(
                                     }
                                 }
                             }
-                        }
-                        // Day dropdown — shown when a plan is selected
-                        if (selectedPlan != null) {
-                            ExposedDropdownMenuBox(
-                                expanded = dayExpanded,
-                                onExpandedChange = { dayExpanded = it },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                            ) {
-                                OutlinedTextField(
-                                    value = selectedDayName,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    label = { Text("Day") },
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dayExpanded) },
-                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                    singleLine = true,
-                                )
-                                ExposedDropdownMenu(
+                            // Day dropdown — shown when a plan is selected
+                            if (selectedPlan != null) {
+                                ExposedDropdownMenuBox(
                                     expanded = dayExpanded,
-                                    onDismissRequest = { dayExpanded = false },
+                                    onExpandedChange = { dayExpanded = it },
+                                    modifier = Modifier.weight(1f),
                                 ) {
-                                    availableDays.forEach { (day, title) ->
-                                        DropdownMenuItem(
-                                            text = { Text(title) },
-                                            onClick = {
-                                                selectedDay = day
-                                                dayExpanded = false
-                                            },
-                                        )
+                                    OutlinedTextField(
+                                        value = selectedDayName,
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        label = { Text("Day") },
+                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dayExpanded) },
+                                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                        singleLine = true,
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = dayExpanded,
+                                        onDismissRequest = { dayExpanded = false },
+                                    ) {
+                                        availableDays.forEach { (day, title) ->
+                                            DropdownMenuItem(
+                                                text = { Text(title) },
+                                                onClick = {
+                                                    selectedDay = day
+                                                    dayExpanded = false
+                                                },
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -614,9 +561,6 @@ private fun SessionsPreview() {
                 isCurrentSessionActive = false,
                 hasAnySessions = true,
             ),
-            parentTags = emptyList(),
-            selectedBodyPart = null,
-            onBodyPartSelect = {},
             onBackPress = {},
             onSessionClick = {},
             onRemoveSession = {},
