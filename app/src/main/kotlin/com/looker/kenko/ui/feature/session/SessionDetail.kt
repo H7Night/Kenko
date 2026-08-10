@@ -66,9 +66,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
@@ -93,6 +90,7 @@ import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Set
 import com.looker.kenko.ui.feature.session.AddSet
 import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.ui.component.BodyPartMuscleFilter
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.ConfirmDialog
@@ -598,14 +596,6 @@ fun ExerciseSearchDialog(
     var selectedExercise by remember { mutableStateOf<Exercise?>(null) }
     var selectedParentId by remember { mutableStateOf<Int?>(null) }
     var selectedChildId by remember { mutableStateOf<Int?>(null) }
-    var parentExpanded by remember { mutableStateOf(false) }
-    var childExpanded by remember { mutableStateOf(false) }
-
-    val children = remember(allTags, selectedParentId) {
-        val parentId = selectedParentId
-        if (parentId == null) emptyList()
-        else allTags.filter { it.parentId == parentId }
-    }
 
     val filteredExercises = remember(exercises, selectedParentId, selectedChildId) {
         var filtered = exercises
@@ -633,104 +623,19 @@ fun ExerciseSearchDialog(
         title = { Text(stringResource(R.string.label_select_exercise)) },
         text = {
             Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    // Body part dropdown
-                    ExposedDropdownMenuBox(
-                        expanded = parentExpanded,
-                        onExpandedChange = { parentExpanded = it },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        val parentName = selectedParentId?.let { id ->
-                            parentTags.find { it.id == id }?.name
-                                ?: stringResource(R.string.label_select_body_part)
-                        } ?: stringResource(R.string.label_all_muscle_groups)
-                        OutlinedTextField(
-                            value = parentName,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text(stringResource(R.string.label_select_body_part)) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = parentExpanded) },
-                            modifier = Modifier
-                                .menuAnchor()
-                                .fillMaxWidth(),
-                            singleLine = true,
-                        )
-                        ExposedDropdownMenu(
-                            expanded = parentExpanded,
-                            onDismissRequest = { parentExpanded = false },
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.label_all_muscle_groups)) },
-                                onClick = {
-                                    selectedParentId = null
-                                    selectedChildId = null
-                                    parentExpanded = false
-                                },
-                            )
-                            parentTags.forEach { parent ->
-                                DropdownMenuItem(
-                                    text = { Text(parent.name) },
-                                    onClick = {
-                                        selectedParentId = parent.id
-                                        selectedChildId = null
-                                        parentExpanded = false
-                                        childExpanded = true
-                                    },
-                                )
-                            }
-                        }
-                    }
-                    // Muscle dropdown — only visible when a body part is selected
-                    if (selectedParentId != null) {
-                        ExposedDropdownMenuBox(
-                            expanded = childExpanded && children.isNotEmpty(),
-                            onExpandedChange = { childExpanded = it },
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            val childName = selectedChildId?.let { id ->
-                                children.find { it.id == id }?.name
-                                    ?: stringResource(R.string.label_select_muscle)
-                            } ?: stringResource(R.string.label_select_muscle)
-                            OutlinedTextField(
-                                value = childName,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text(stringResource(R.string.label_select_muscle)) },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = childExpanded && children.isNotEmpty()) },
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth(),
-                                singleLine = true,
-                            )
-                            ExposedDropdownMenu(
-                                expanded = childExpanded && children.isNotEmpty(),
-                                onDismissRequest = { childExpanded = false },
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.label_all_muscle_groups)) },
-                                    onClick = {
-                                        selectedChildId = null
-                                        childExpanded = false
-                                    },
-                                )
-                                children.forEach { child ->
-                                    val label = parentTags.find { it.id == child.parentId }?.name
-                                        ?.let { "$it → ${child.name}" } ?: child.name
-                                    DropdownMenuItem(
-                                        text = { Text(label) },
-                                        onClick = {
-                                            selectedChildId = child.id
-                                            childExpanded = false
-                                        },
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                BodyPartMuscleFilter(
+                    parentTags = parentTags,
+                    allTags = allTags,
+                    selectedParentId = selectedParentId,
+                    selectedChildId = selectedChildId,
+                    onParentSelect = { parentId ->
+                        selectedParentId = parentId
+                        selectedChildId = null
+                    },
+                    onChildSelect = { childId ->
+                        selectedChildId = childId
+                    },
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyColumn(
                     modifier = Modifier.height(300.dp),

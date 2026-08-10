@@ -59,13 +59,8 @@ class ExercisesViewModel @Inject constructor(
     val parentTags: StateFlow<List<Tag>> = tagRepo.streamParents
         .asStateFlow(emptyList())
 
-    val children: StateFlow<List<Tag>> = combine(
-        tagRepo.stream,
-        selectedParentFilter,
-    ) { all, parentId ->
-        if (parentId == null) emptyList()
-        else all.filter { it.parentId == parentId }
-    }.asStateFlow(emptyList())
+    val allTags: StateFlow<List<Tag>> = tagRepo.stream
+        .asStateFlow(emptyList())
 
     val exercises: StateFlow<List<Exercise>> = combine(
         repo.stream,
@@ -89,7 +84,7 @@ class ExercisesViewModel @Inject constructor(
 
     fun setParentFilter(parentId: Int?) {
         selectedParentFilter.value = parentId
-        if (parentId == null) selectedChildFilter.value = null
+        selectedChildFilter.value = null
     }
 
     fun setChildFilter(childId: Int?) {
