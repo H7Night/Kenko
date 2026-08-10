@@ -135,7 +135,7 @@ fun WeightLineChart(
         }
         xLabelIndices.forEach { index ->
             val layout = textMeasurer.measure(
-                text = "%02d-%02d".format(weights[index].date.month, weights[index].date.day),
+                text = "%02d-%02d".format(weights[index].date.monthNumber, weights[index].date.day),
                 style = textStyle,
             )
             drawText(
