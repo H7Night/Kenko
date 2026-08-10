@@ -182,7 +182,7 @@ private fun Profile(
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(innerPadding + PaddingValues(horizontal = 16.dp))
+                .padding(innerPadding + PaddingValues(start = 16.dp, end = 16.dp, bottom = 96.dp))
                 .verticalScroll(rememberScrollState()),
         ) {
             if (state.isPlanAvailable) {
@@ -430,7 +430,7 @@ private fun WeightCard(
                         weights = filteredWeights,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(160.dp)
+                            .height(120.dp)
                     )
                 }
                 filteredWeights.size == 1 -> {
