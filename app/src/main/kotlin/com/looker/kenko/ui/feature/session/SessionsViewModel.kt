@@ -57,9 +57,6 @@ class SessionsViewModel @Inject constructor(
                 .mapValues { entry -> entry.value.map { it.exercise } }
         }
 
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-
     private val _selectedBodyPart = MutableStateFlow<Int?>(null)
     val selectedBodyPart: StateFlow<Int?> = _selectedBodyPart.asStateFlow()
 
@@ -71,17 +68,14 @@ class SessionsViewModel @Inject constructor(
         isCurrentSessionActive,
         availablePlanItems,
         planRepo.plans,
-        combine(_searchQuery, _selectedBodyPart) { query, bodyPartId -> query to bodyPartId },
-    ) { sessions, isCurrentSessionActive, available, plans, (query, bodyPartId) ->
+        _selectedBodyPart,
+    ) { sessions, isCurrentSessionActive, available, plans, bodyPartId ->
         val planTitlesMap = plans.associate { it.id to it.titlesMap }
-        val filtered = sessions.filter { session ->
-            val nameMatch = query.isBlank() || session.performExercises.any {
-                it.name.contains(query, ignoreCase = true)
-            }
-            val partMatch = bodyPartId == null || session.performExercises.any { exercise ->
+        val filtered = if (bodyPartId == null) sessions
+        else sessions.filter { session ->
+            session.performExercises.any { exercise ->
                 exercise.tags.any { it.parentId == bodyPartId }
             }
-            nameMatch && partMatch
         }
         SessionsUiData(
             sessions = filtered.filter { it.sets.isNotEmpty() },
@@ -92,10 +86,6 @@ class SessionsViewModel @Inject constructor(
             plans = plans.filter { it.isActive || plans.indexOf(it) < 5 },
         )
     }.asStateFlow(SessionsUiData(emptyList(), false))
-
-    fun setSearchQuery(query: String) {
-        _searchQuery.value = query
-    }
 
     fun setBodyPartFilter(bodyPartId: Int?) {
         _selectedBodyPart.value = bodyPartId

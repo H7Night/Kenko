@@ -104,7 +104,6 @@ fun Sessions(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val parentTags by viewModel.parentTags.collectAsStateWithLifecycle()
-    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val selectedBodyPart by viewModel.selectedBodyPart.collectAsStateWithLifecycle()
 
     var showAddHistoryDialog by remember { mutableStateOf(false) }
@@ -126,9 +125,7 @@ fun Sessions(
     Sessions(
         state = state,
         parentTags = parentTags,
-        searchQuery = searchQuery,
         selectedBodyPart = selectedBodyPart,
-        onSearchQueryChange = viewModel::setSearchQuery,
         onBodyPartSelect = viewModel::setBodyPartFilter,
         onSessionClick = onSessionClick,
         onRemoveSession = viewModel::removeSession,
@@ -142,9 +139,7 @@ fun Sessions(
 private fun Sessions(
     state: SessionsUiData,
     parentTags: List<Tag>,
-    searchQuery: String,
     selectedBodyPart: Int?,
-    onSearchQueryChange: (String) -> Unit,
     onBodyPartSelect: (Int?) -> Unit,
     onSessionClick: (LocalDate?) -> Unit,
     onRemoveSession: (Session) -> Unit,
@@ -246,16 +241,6 @@ private fun Sessions(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 4.dp),
-                        )
-                        // Search field
-                        OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = onSearchQueryChange,
-                            label = { Text(stringResource(R.string.label_search)) },
-                            singleLine = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
                         )
                         // Filter row: body part + plan dropdowns
                         Row(
@@ -630,9 +615,7 @@ private fun SessionsPreview() {
                 hasAnySessions = true,
             ),
             parentTags = emptyList(),
-            searchQuery = "",
             selectedBodyPart = null,
-            onSearchQueryChange = {},
             onBodyPartSelect = {},
             onBackPress = {},
             onSessionClick = {},

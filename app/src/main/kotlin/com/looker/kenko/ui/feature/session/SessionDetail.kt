@@ -596,7 +596,6 @@ fun ExerciseSearchDialog(
     val allTags by viewModel.allTags.collectAsStateWithLifecycle()
 
     var selectedExercise by remember { mutableStateOf<Exercise?>(null) }
-    var searchQuery by remember { mutableStateOf("") }
     var selectedParentId by remember { mutableStateOf<Int?>(null) }
     var selectedChildId by remember { mutableStateOf<Int?>(null) }
     var parentExpanded by remember { mutableStateOf(false) }
@@ -608,7 +607,7 @@ fun ExerciseSearchDialog(
         else allTags.filter { it.parentId == parentId }
     }
 
-    val filteredExercises = remember(exercises, searchQuery, selectedParentId, selectedChildId) {
+    val filteredExercises = remember(exercises, selectedParentId, selectedChildId) {
         var filtered = exercises
         val parentId = selectedParentId
         val childId = selectedChildId
@@ -621,14 +620,11 @@ fun ExerciseSearchDialog(
                 exercise.tags.any { it.parentId == parentId }
             }
         }
-        if (searchQuery.isNotBlank()) {
-            filtered = filtered.filter { it.name.contains(searchQuery, ignoreCase = true) }
-        }
         filtered
     }
 
     // Clear the pending selection when the visible result set changes
-    LaunchedEffect(searchQuery, selectedParentId, selectedChildId) {
+    LaunchedEffect(selectedParentId, selectedChildId) {
         selectedExercise = null
     }
 
@@ -637,14 +633,6 @@ fun ExerciseSearchDialog(
         title = { Text(stringResource(R.string.label_select_exercise)) },
         text = {
             Column {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    label = { Text(stringResource(R.string.label_search_exercise)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
