@@ -24,7 +24,6 @@ import androidx.navigation.toRoute
 import com.looker.kenko.R
 import com.looker.kenko.data.StringHandler
 import com.looker.kenko.data.repository.ExerciseRepo
-import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.data.repository.TagRepo
 import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.domain.model.Exercise
@@ -32,7 +31,6 @@ import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.feature.exercise.navigation.AddEditExerciseRoute
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.util.Locale
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,7 +41,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 
@@ -53,7 +50,6 @@ class AddEditExerciseViewModel @Inject constructor(
     private val repo: ExerciseRepo,
     private val tagRepo: TagRepo,
     private val stringHandler: StringHandler,
-    private val settingsRepo: SettingsRepo,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -176,11 +172,7 @@ class AddEditExerciseViewModel @Inject constructor(
     }
 
     private suspend fun commitSave(onDone: () -> Unit) {
-        val name = if (settingsRepo.stream.first().capitalizeExerciseName) {
-            exerciseName.value.titleCase()
-        } else {
-            exerciseName.value
-        }
+        val name = exerciseName.value
         repo.upsert(
             Exercise(
                 name = name,
@@ -192,12 +184,6 @@ class AddEditExerciseViewModel @Inject constructor(
         )
         onDone()
     }
-
-    private fun String.titleCase(): String =
-        trim()
-            .split(" ")
-            .filter { it.isNotEmpty() }
-            .joinToString(" ") { it.replaceFirstChar { char -> char.titlecase(Locale.getDefault()) } }
 
     init {
         viewModelScope.launch {

@@ -183,8 +183,6 @@
     <string name="label_language_en">English</string>
     <string name="label_language_zh">中文</string>
 
-    <string name="label_capitalize_exercise_name">Capitalize Exercise Name</string>
-
     <!--Color Schemes-->
     <string name="label_color_palettes">Color Palettes</string>
     <string name="label_color_scheme_dynamic">Dynamic</string>
