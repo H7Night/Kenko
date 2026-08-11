@@ -36,6 +36,8 @@ import com.looker.kenko.domain.model.settings.Theme
 /**
  * Catppuccin Latte — light color scheme.
  * Palette: https://catppuccin.com/palette (Latte)
+ * Latte has no suitable in-palette container colors, so container roles follow the
+ * community-standard mix(base, accent, 20%) approach (equivalent to M3 tone 90).
  */
 private val CatppuccinLatteColorScheme: ColorScheme = lightColorScheme(
     primary = Color(0xFF1E66F5),
@@ -78,24 +80,26 @@ private val CatppuccinLatteColorScheme: ColorScheme = lightColorScheme(
 /**
  * Catppuccin Mocha — dark color scheme.
  * Palette: https://catppuccin.com/palette (Mocha)
+ * Container roles use the brighter accent variants (Sapphire/Sky/Lavender/Maroon)
+ * with Base as the on-color, all straight from the official palette.
  */
 private val CatppuccinMochaColorScheme: ColorScheme = darkColorScheme(
     primary = Color(0xFF89B4FA),
     onPrimary = Color(0xFF1E1E2E),
-    primaryContainer = Color(0xFF394461),
-    onPrimaryContainer = Color(0xFFBED6FC),
+    primaryContainer = Color(0xFF74C7EC), // Sapphire
+    onPrimaryContainer = Color(0xFF1E1E2E), // Base
     secondary = Color(0xFF94E2D5),
     onSecondary = Color(0xFF1E1E2E),
-    secondaryContainer = Color(0xFF3C4F58),
-    onSecondaryContainer = Color(0xFFC4EFE8),
+    secondaryContainer = Color(0xFF89DCEB), // Sky
+    onSecondaryContainer = Color(0xFF1E1E2E), // Base
     tertiary = Color(0xFFCBA6F7),
     onTertiary = Color(0xFF1E1E2E),
-    tertiaryContainer = Color(0xFF494060),
-    onTertiaryContainer = Color(0xFFE2CEFB),
+    tertiaryContainer = Color(0xFFB4BEFE), // Lavender
+    onTertiaryContainer = Color(0xFF1E1E2E), // Base
     error = Color(0xFFF38BA8),
     onError = Color(0xFF1E1E2E),
-    errorContainer = Color(0xFF53394C),
-    onErrorContainer = Color(0xFFF8BFCF),
+    errorContainer = Color(0xFFEBA0AC), // Maroon
+    onErrorContainer = Color(0xFF1E1E2E), // Base
     background = Color(0xFF1E1E2E),
     onBackground = Color(0xFFCDD6F4),
     surface = Color(0xFF1E1E2E),
