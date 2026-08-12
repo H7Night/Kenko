@@ -30,9 +30,6 @@ value class PlanStat(private val packedInt: Long) {
 
     @Stable
     val workDays: Int get() = unpackInt2(packedInt)
-
-    @Stable
-    val restDays: Int get() = 7 - workDays
 }
 
 fun PlanStat(exercises: Int, workDays: Int): PlanStat {

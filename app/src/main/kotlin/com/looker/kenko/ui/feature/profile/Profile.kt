@@ -195,7 +195,10 @@ private fun Profile(
                                 R.string.label_plan_description,
                                 state.planStat?.exercises ?: 0,
                                 normalizeInt(state.planStat?.workDays ?: 0),
-                                normalizeInt(state.planStat?.restDays ?: 0),
+                                normalizeInt(
+                                    (state.planDayCount - (state.planStat?.workDays ?: 0))
+                                        .coerceAtLeast(0),
+                                ),
                             ),
                         )
                     },
