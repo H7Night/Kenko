@@ -37,7 +37,6 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.DayOfWeek
 import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
@@ -115,7 +114,7 @@ class BackupManagerTest {
         exercises.forEach {
             planRepo.addItem(
                 PlanItem(
-                    dayOfWeek = DayOfWeek(Random.nextInt(1, 5)),
+                    dayIndex = Random.nextInt(1, 5),
                     exercise = it,
                     planId = planId,
                 ),

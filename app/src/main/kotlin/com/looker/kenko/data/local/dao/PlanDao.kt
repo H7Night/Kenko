@@ -246,4 +246,54 @@ interface PlanDao {
 
     @Query("UPDATE plan_day SET sortOrder = :order WHERE id = :id")
     suspend fun updateItemSortOrder(id: Long, order: Int)
+
+    @Query("UPDATE plans SET currentDayIndex = :dayIndex WHERE id = :planId")
+    suspend fun updateCurrentDayIndex(planId: Int, dayIndex: Int)
+
+    @Query("UPDATE plans SET dayCount = dayCount + 1 WHERE id = :planId")
+    suspend fun incrementDayCount(planId: Int)
+
+    @Query("UPDATE plan_day SET dayIndex = dayIndex - 1 WHERE planId = :planId AND dayIndex > :day")
+    suspend fun decrementDayIndexes(planId: Int, day: Int)
+
+    @Query(
+        """
+        UPDATE plans SET
+        dayCount = dayCount - 1,
+        currentDayIndex = CASE
+            WHEN currentDayIndex = :day THEN 1
+            WHEN currentDayIndex > :day THEN currentDayIndex - 1
+            ELSE currentDayIndex END
+        WHERE id = :planId
+        """,
+    )
+    suspend fun decrementDayCount(planId: Int, day: Int)
+
+    @Query("UPDATE plan_day SET dayIndex = :to WHERE planId = :planId AND dayIndex = :from")
+    suspend fun setDayIndex(planId: Int, from: Int, to: Int)
+
+    @Query("UPDATE plan_day SET dayIndex = dayIndex - 1 WHERE planId = :planId AND dayIndex > :from AND dayIndex <= :to")
+    suspend fun decrementDayRange(planId: Int, from: Int, to: Int)
+
+    @Query("UPDATE plan_day SET dayIndex = dayIndex + 1 WHERE planId = :planId AND dayIndex >= :from AND dayIndex < :to")
+    suspend fun incrementDayRange(planId: Int, from: Int, to: Int)
+
+    @Transaction
+    suspend fun deleteDay(planId: Int, day: Int) {
+        deleteItemsByPlanIdAndDay(planId, day)
+        decrementDayIndexes(planId, day)
+        decrementDayCount(planId, day)
+    }
+
+    @Transaction
+    suspend fun moveDay(planId: Int, from: Int, to: Int) {
+        if (from == to) return
+        if (from < to) {
+            decrementDayRange(planId, from + 1, to)
+            setDayIndex(planId, from, to)
+        } else {
+            incrementDayRange(planId, to, from - 1)
+            setDayIndex(planId, from, to)
+        }
+    }
 }

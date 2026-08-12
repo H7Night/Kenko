@@ -25,8 +25,10 @@ import com.looker.kenko.data.mapper.toExternal
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Labels
 import com.looker.kenko.domain.model.Plan
+import com.looker.kenko.domain.model.PlanCycle
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.PlanStat
+import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.utils.toLocalEpochDays
@@ -37,6 +39,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class LocalPlanRepo @Inject constructor(
     private val dao: PlanDao,
@@ -185,5 +189,40 @@ class LocalPlanRepo @Inject constructor(
             val newOrder = exerciseOrder[item.exercise.id] ?: return
             dao.updateItemSortOrder(requireNotNull(item.id), newOrder)
         }
+    }
+
+    override suspend fun updateDayIndex(planId: Int, dayIndex: Int) {
+        val plan = dao.getPlanById(planId) ?: return
+        dao.updateCurrentDayIndex(planId, dayIndex.coerceIn(1, plan.dayCount))
+    }
+
+    override suspend fun advanceDay(planId: Int, actualDayIndex: Int) {
+        val plan = dao.getPlanById(planId) ?: return
+        dao.updateCurrentDayIndex(planId, PlanCycle.nextDayIndex(actualDayIndex, plan.dayCount))
+    }
+
+    override suspend fun addDay(planId: Int) {
+        dao.incrementDayCount(planId)
+    }
+
+    override suspend fun deleteDay(planId: Int, dayIndex: Int) {
+        dao.deleteDay(planId, dayIndex)
+    }
+
+    override suspend fun moveDay(planId: Int, from: Int, to: Int) {
+        val plan = dao.getPlanById(planId) ?: return
+        dao.moveDay(planId, from, to)
+        // dayTitles 的 key 同步搬移
+        val shifted = plan.toExternal(isActive = false, stat = PlanStat(0, 0)).titlesMap.entries.mapNotNull { (day, title) ->
+            val newDay = when {
+                day == from -> to
+                from < to && day in (from + 1)..to -> day - 1
+                from > to && day in to until from -> day + 1
+                else -> null
+            }
+            newDay?.let { it to title }
+        }.toMap()
+        val newDayTitles = if (shifted.isEmpty()) null else Json.encodeToString(shifted)
+        dao.upsertPlan(plan.copy(dayTitles = newDayTitles))
     }
 }

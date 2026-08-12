@@ -68,4 +68,14 @@ interface PlanRepo {
     suspend fun removeItem(id: Long)
 
     suspend fun updateOrder(planId: Int, day: Int, exercises: List<Exercise>)
+
+    suspend fun updateDayIndex(planId: Int, dayIndex: Int)
+
+    suspend fun advanceDay(planId: Int, actualDayIndex: Int)
+
+    suspend fun addDay(planId: Int)
+
+    suspend fun deleteDay(planId: Int, dayIndex: Int)
+
+    suspend fun moveDay(planId: Int, from: Int, to: Int)
 }

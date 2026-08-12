@@ -32,7 +32,6 @@ import kotlin.test.assertFails
 import kotlin.test.assertNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.DayOfWeek
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -66,7 +65,7 @@ class RepositoryTest {
         exercises.forEach {
             planRepo.addItem(
                 PlanItem(
-                    dayOfWeek = DayOfWeek(Random.nextInt(1, 5)),
+                    dayIndex = Random.nextInt(1, 5),
                     exercise = it,
                     planId = planId,
                 ),
@@ -101,7 +100,7 @@ class RepositoryTest {
         assertFails {
             planRepo.addItem(
                 PlanItem(
-                    dayOfWeek = DayOfWeek(Random.nextInt(1, 5)),
+                    dayIndex = Random.nextInt(1, 5),
                     exercise = randomPerformedExercise,
                     planId = planId,
                 ),
@@ -110,5 +109,20 @@ class RepositoryTest {
         assertEquals(null, stream.first()!!.planId)
         val planItemsAfter = planRepo.getPlanItems(planId)
         assertEquals(0, planItemsAfter.size)
+    }
+
+    @Test
+    fun planCycleAdvanceAndOverride() = runTest {
+        val planId = planRepo.createPlan("cycle")
+        assertEquals(7, planRepo.plan(planId)?.dayCount)
+        assertEquals(1, planRepo.plan(planId)?.currentDayIndex)
+        planRepo.advanceDay(planId, 7)
+        assertEquals(1, planRepo.plan(planId)?.currentDayIndex) // 回绕
+        planRepo.updateDayIndex(planId, 3)
+        assertEquals(3, planRepo.plan(planId)?.currentDayIndex)
+        planRepo.addDay(planId)
+        assertEquals(8, planRepo.plan(planId)?.dayCount)
+        planRepo.deleteDay(planId, 2)
+        assertEquals(7, planRepo.plan(planId)?.dayCount)
     }
 }
