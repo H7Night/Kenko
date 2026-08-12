@@ -19,6 +19,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -63,6 +64,10 @@ class CrashSaveActivity : ComponentActivity() {
 
         logFilePath = intent.getStringExtra(EXTRA_LOG_FILE_PATH)
 
+        // Ignore back press — user must make a choice
+        // (also covers predictive back gestures; avoids overriding onBackPressed)
+        onBackPressedDispatcher.addCallback(this) { }
+
         setContent {
             MaterialTheme {
                 CrashSaveDialog(
@@ -74,10 +79,6 @@ class CrashSaveActivity : ComponentActivity() {
                 )
             }
         }
-    }
-
-    override fun onBackPressed() {
-        // Ignore back press — user must make a choice
     }
 
     private fun launchFilePicker() {
