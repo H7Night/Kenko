@@ -255,6 +255,21 @@
     <string name="label_change_plan">更改计划</string>
     <string name="label_training_session">训练中</string>
 
+    <!--Training Cycle-->
+    <string name="label_day_n">第 %1$d 天</string>
+    <string name="label_day_progress">第 %1$d/%2$d 天</string>
+    <string name="label_rest_day">休息日</string>
+    <string name="label_rest_short">休</string>
+    <string name="label_today_rest">今日休息 — 可从菜单选择其他训练日训练</string>
+    <string name="label_switch_training_day">切换训练日</string>
+    <string name="label_add_day">新增训练日</string>
+    <string name="label_rename_day">重命名</string>
+    <string name="label_move_day_backward">前移</string>
+    <string name="label_move_day_forward">后移</string>
+    <string name="label_set_as_rest_day">设为休息日</string>
+    <string name="label_delete_day">删除该训练日</string>
+    <string name="label_train_other_day">选择训练日训练</string>
+
     <!--Day of Week-->
     <string name="label_today">.今天</string>
     <string name="label_plan">计划</string>
@@ -272,26 +287,6 @@
         <item>数据统计</item>
         <item>计划管理</item>
         <item>快速反馈</item>
-    </string-array>
-
-    <string-array name="kenko_day_of_week">
-        <item>.周一</item>
-        <item>.周二</item>
-        <item>.周三</item>
-        <item>.周四</item>
-        <item>.周五</item>
-        <item>.周六</item>
-        <item>.周日</item>
-    </string-array>
-
-    <string-array name="day_of_week">
-        <item>星期一</item>
-        <item>星期二</item>
-        <item>星期三</item>
-        <item>星期四</item>
-        <item>星期五</item>
-        <item>星期六</item>
-        <item>星期日</item>
     </string-array>
 
     <string-array name="day_of_week_short">

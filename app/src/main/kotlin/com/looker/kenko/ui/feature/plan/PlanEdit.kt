@@ -39,6 +39,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -95,23 +97,16 @@ import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.ExercisesPreviewParameter
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.EmptyState
-import com.looker.kenko.ui.component.DaySelectorChip
 import com.looker.kenko.ui.component.ErrorSnackbar
-import com.looker.kenko.ui.component.HorizontalDaySelector
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.extension.plus
-import com.looker.kenko.ui.feature.plan.components.DaySwitcher
-import com.looker.kenko.ui.feature.plan.components.ExerciseItem
-import com.looker.kenko.ui.feature.plan.components.dayName
-import com.looker.kenko.ui.feature.plan.components.kenkoDayName
 import com.looker.kenko.ui.feature.plan.SelectExercise
+import com.looker.kenko.ui.feature.plan.components.ExerciseItem
+import com.looker.kenko.ui.feature.plan.components.TrainingDayBar
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.ui.theme.numbers
-import com.looker.kenko.utils.minus
-import com.looker.kenko.utils.plus
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DayOfWeek
 
 @Composable
 fun PlanEdit(
@@ -174,7 +169,11 @@ fun PlanEdit(
                     dayTitleState = viewModel.dayTitleState,
                     onSelectDay = viewModel::setCurrentDay,
                     onRemovePlanItemClick = viewModel::removePlanItem,
-                    onFullDaySelection = viewModel::openFullDaySelection,
+                    onAddDay = viewModel::addDay,
+                    onDeleteDay = viewModel::deleteDay,
+                    onSetAsRest = viewModel::setDayAsRest,
+                    onRename = viewModel::renameDay,
+                    onMoveDay = viewModel::moveDay,
                     onReorder = viewModel::updateOrder,
                 )
             }
@@ -182,7 +181,7 @@ fun PlanEdit(
     }
 
     if (state.exerciseSheetVisible) {
-        val name = dayName(state.currentDay)
+        val name = stringResource(R.string.label_day_n, state.currentDay)
         AddExerciseSheet(
             title = viewModel.dayTitleState.text.ifBlank { name }.toString(),
             onDismiss = viewModel::closeSheet,
@@ -259,14 +258,19 @@ private fun NameEdit(
 private fun PlanEdit(
     state: PlanEditState,
     dayTitleState: TextFieldState,
-    onSelectDay: (DayOfWeek) -> Unit,
+    onSelectDay: (Int) -> Unit,
     onRemovePlanItemClick: (Long) -> Unit,
-    onFullDaySelection: () -> Unit,
+    onAddDay: () -> Unit,
+    onRename: (Int) -> Unit,
+    onSetAsRest: (Int) -> Unit,
+    onDeleteDay: (Int) -> Unit,
+    onMoveDay: (Int, Int) -> Unit,
     onReorder: (List<Exercise>) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val focusManager = LocalFocusManager.current
     val haptic = LocalHapticFeedback.current
+    val dayTitleFocusRequester = remember { FocusRequester() }
     val isCurrentDayBlank by remember(state.planItems) { derivedStateOf { state.planItems.isEmpty() } }
     val lazyListState = rememberLazyListState()
 
@@ -296,12 +300,14 @@ private fun PlanEdit(
         state = lazyListState,
         contentPadding = contentPadding,
         header = {
-            val name = dayName(state.currentDay)
+            val name = stringResource(R.string.label_day_n, state.currentDay)
             Header(
                 title = {
                     androidx.compose.foundation.text.BasicTextField(
                         state = dayTitleState,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(dayTitleFocusRequester),
                         textStyle = MaterialTheme.typography.displayMedium.copy(
                             color = MaterialTheme.colorScheme.secondary,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Start
@@ -319,26 +325,23 @@ private fun PlanEdit(
                         }
                     )
                 },
-                isExpandedView = state.selectionMode,
                 daySelector = {
-                    HorizontalDaySelector(
-                        item = { dayOfWeek ->
-                            DaySelectorChip(
-                                selected = dayOfWeek == state.currentDay,
-                                onClick = { onSelectDay(dayOfWeek) },
-                            ) {
-                                Text(dayName(dayOfWeek))
-                            }
+                    TrainingDayBar(
+                        dayCount = state.dayCount,
+                        selectedDay = state.currentDay,
+                        titles = state.planTitles,
+                        restDays = (1..state.dayCount).filter { day ->
+                            state.allItems.none { it.dayIndex == day }
+                        }.toSet(),
+                        onSelectDay = onSelectDay,
+                        onAddDay = onAddDay,
+                        onMoveDay = onMoveDay,
+                        onRename = { day ->
+                            onRename(day)
+                            dayTitleFocusRequester.requestFocus()
                         },
-                    )
-                },
-                daySwitcher = {
-                    DaySwitcher(
-                        selected = state.currentDay,
-                        onNext = { onSelectDay(state.currentDay + 1) },
-                        onPrevious = { onSelectDay(state.currentDay - 1) },
-                        onClick = onFullDaySelection,
-                        dayTitle = state.planTitles[state.currentDay],
+                        onSetAsRest = onSetAsRest,
+                        onDeleteDay = onDeleteDay,
                     )
                 },
             )

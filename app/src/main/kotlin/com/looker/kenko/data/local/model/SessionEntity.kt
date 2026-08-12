@@ -48,7 +48,7 @@ data class SessionDataEntity(
     val date: EpochDays,
     @ColumnInfo(index = true)
     val planId: Int?,
-    val planDayOverride: Int? = null,
+    val dayIndexOverride: Int? = null,
     val durationSeconds: Long? = null,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
@@ -64,7 +64,7 @@ data class SessionDateEntity(
 data class SessionSummaryEntity(
     val date: EpochDays,
     val planId: Int?,
-    val planDayOverride: Int? = null,
+    val dayIndexOverride: Int? = null,
     val durationSeconds: Long? = null,
     val exerciseNames: String? = null,
     val setCount: Int = 0,

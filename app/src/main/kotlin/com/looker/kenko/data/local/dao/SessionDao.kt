@@ -72,11 +72,11 @@ interface SessionDao {
     @Query(
         """
         UPDATE sessions
-        SET planDayOverride = :day
+        SET dayIndexOverride = :dayIndex
         WHERE date = :date
         """,
     )
-    suspend fun updatePlanDayOverride(date: EpochDays, day: Int)
+    suspend fun updateDayIndexOverride(date: EpochDays, dayIndex: Int)
 
     @Query(
         """
@@ -113,7 +113,7 @@ interface SessionDao {
      */
     @Query(
         """
-        SELECT s.id, s.date, s.planId, s.planDayOverride, s.durationSeconds,
+        SELECT s.id, s.date, s.planId, s.dayIndexOverride, s.durationSeconds,
                GROUP_CONCAT(DISTINCT e.name) AS exerciseNames,
                COUNT(st.id) AS setCount
         FROM sessions s
@@ -150,13 +150,13 @@ interface SessionDao {
         SELECT date
         FROM sessions
         WHERE (planId = :planId OR :planId IS NULL)
-        AND (COALESCE(planDayOverride, (date + 3) % 7 + 1) = :day)
+        AND dayIndexOverride = :dayIndex
         AND date < :date
         ORDER BY date DESC
         LIMIT 1
         """
     )
-    fun getPreviousSessionDate(date: Int, planId: Int?, day: Int): Flow<Int?>
+    fun getPreviousSessionDate(date: Int, planId: Int?, dayIndex: Int): Flow<Int?>
 
     @Query(
         """

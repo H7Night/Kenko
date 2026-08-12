@@ -35,9 +35,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.isoDayNumber
 
 class LocalSessionRepo @Inject constructor(
     private val dao: SessionDao,
@@ -72,7 +70,7 @@ class LocalSessionRepo @Inject constructor(
                 SessionSummary(
                     date = LocalDate.fromEpochDays(entity.date.value.toLong()),
                     planId = entity.planId,
-                    planDayOverride = entity.planDayOverride?.let { DayOfWeek(it) },
+                    dayIndexOverride = entity.dayIndexOverride,
                     durationSeconds = entity.durationSeconds,
                     exerciseNames = entity.exerciseNames
                         ?.split(",")
@@ -131,9 +129,9 @@ class LocalSessionRepo @Inject constructor(
         setsDao.deleteBySessionId(sessionId)
     }
 
-    override suspend fun updatePlanDay(date: LocalDate, day: DayOfWeek) {
+    override suspend fun updateDayIndex(date: LocalDate, dayIndex: Int) {
         getSessionIdOrCreate(date)
-        dao.updatePlanDayOverride(date.toLocalEpochDays(), day.isoDayNumber)
+        dao.updateDayIndexOverride(date.toLocalEpochDays(), dayIndex)
     }
 
     override suspend fun updateSessionDuration(sessionId: Int, durationSeconds: Long) {
@@ -158,8 +156,8 @@ class LocalSessionRepo @Inject constructor(
             }
     }
 
-    override fun previousSessionDate(date: LocalDate, planId: Int?, day: DayOfWeek): Flow<LocalDate?> {
-        return dao.getPreviousSessionDate(date.toLocalEpochDays().value, planId, day.isoDayNumber)
+    override fun previousSessionDate(date: LocalDate, planId: Int?, dayIndex: Int): Flow<LocalDate?> {
+        return dao.getPreviousSessionDate(date.toLocalEpochDays().value, planId, dayIndex)
             .map { it?.let(LocalDate::fromEpochDays) }
     }
 

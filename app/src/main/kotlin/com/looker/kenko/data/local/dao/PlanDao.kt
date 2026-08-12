@@ -63,7 +63,7 @@ interface PlanDao {
         FROM plan_history
         WHERE `end` IS NULL
         AND start IS NOT NULL)
-        AND dayOfWeek = :day
+        AND dayIndex = :day
         ORDER BY sortOrder ASC
         """,
     )
@@ -151,7 +151,7 @@ interface PlanDao {
         SELECT *
         FROM plan_day
         WHERE planId = :planId
-        AND dayOfWeek = :day
+        AND dayIndex = :day
         ORDER BY sortOrder ASC
         """,
     )
@@ -162,7 +162,7 @@ interface PlanDao {
         SELECT *
         FROM plan_day
         WHERE planId = :planId
-        AND dayOfWeek = :day
+        AND dayIndex = :day
         ORDER BY sortOrder ASC
         """,
     )
@@ -179,7 +179,7 @@ interface PlanDao {
 
     @Query(
         """
-        SELECT COUNT(DISTINCT dayOfWeek)
+        SELECT COUNT(DISTINCT dayIndex)
         FROM plan_day
         WHERE planId = :planId
         """,
@@ -241,9 +241,81 @@ interface PlanDao {
     @Query("DELETE FROM plan_day WHERE id = :planDayId")
     suspend fun deleteItem(planDayId: Long)
 
-    @Query("DELETE FROM plan_day WHERE planId = :planId AND dayOfWeek = :day")
+    @Query("DELETE FROM plan_day WHERE planId = :planId AND dayIndex = :day")
     suspend fun deleteItemsByPlanIdAndDay(planId: Int, day: Int)
 
     @Query("UPDATE plan_day SET sortOrder = :order WHERE id = :id")
     suspend fun updateItemSortOrder(id: Long, order: Int)
+
+    @Query("UPDATE plans SET currentDayIndex = :dayIndex WHERE id = :planId")
+    suspend fun updateCurrentDayIndex(planId: Int, dayIndex: Int)
+
+    @Query("UPDATE plans SET dayCount = dayCount + 1 WHERE id = :planId")
+    suspend fun incrementDayCount(planId: Int)
+
+    @Query("UPDATE plan_day SET dayIndex = dayIndex - 1 WHERE planId = :planId AND dayIndex > :day")
+    suspend fun decrementDayIndexes(planId: Int, day: Int)
+
+    @Query(
+        """
+        UPDATE plans SET
+        dayCount = dayCount - 1,
+        currentDayIndex = CASE
+            WHEN currentDayIndex = :day THEN 1
+            WHEN currentDayIndex > :day THEN currentDayIndex - 1
+            ELSE currentDayIndex END
+        WHERE id = :planId
+        """,
+    )
+    suspend fun decrementDayCount(planId: Int, day: Int)
+
+    @Query(
+        """
+        UPDATE plan_day SET dayIndex = CASE
+            WHEN dayIndex = :from THEN :to
+            WHEN dayIndex > :from AND dayIndex <= :to THEN dayIndex - 1
+            ELSE dayIndex END
+        WHERE planId = :planId AND dayIndex >= :from AND dayIndex <= :to
+        """,
+    )
+    suspend fun moveDayForward(planId: Int, from: Int, to: Int)
+
+    @Query(
+        """
+        UPDATE plan_day SET dayIndex = CASE
+            WHEN dayIndex = :from THEN :to
+            WHEN dayIndex >= :to AND dayIndex < :from THEN dayIndex + 1
+            ELSE dayIndex END
+        WHERE planId = :planId AND dayIndex >= :to AND dayIndex <= :from
+        """,
+    )
+    suspend fun moveDayBackward(planId: Int, from: Int, to: Int)
+
+    @Query("UPDATE plans SET dayTitles = :dayTitles WHERE id = :planId")
+    suspend fun updatePlanDayTitles(planId: Int, dayTitles: String?)
+
+    @Transaction
+    suspend fun deleteDay(planId: Int, day: Int) {
+        deleteItemsByPlanIdAndDay(planId, day)
+        decrementDayIndexes(planId, day)
+        decrementDayCount(planId, day)
+    }
+
+    @Transaction
+    suspend fun deleteDayWithTitles(planId: Int, day: Int, dayTitles: String?) {
+        deleteDay(planId, day)
+        updatePlanDayTitles(planId, dayTitles)
+    }
+
+    @Transaction
+    suspend fun moveDay(planId: Int, from: Int, to: Int) {
+        if (from == to) return
+        if (from < to) moveDayForward(planId, from, to) else moveDayBackward(planId, from, to)
+    }
+
+    @Transaction
+    suspend fun moveDayWithTitles(planId: Int, from: Int, to: Int, dayTitles: String?) {
+        moveDay(planId, from, to)
+        updatePlanDayTitles(planId, dayTitles)
+    }
 }

@@ -261,6 +261,21 @@
     <string name="label_change_plan">Change Plan</string>
     <string name="label_training_session">Training Session</string>
 
+    <!--Training Cycle-->
+    <string name="label_day_n">Day %1$d</string>
+    <string name="label_day_progress">Day %1$d/%2$d</string>
+    <string name="label_rest_day">Rest Day</string>
+    <string name="label_rest_short">Rest</string>
+    <string name="label_today_rest">Rest Day — train another day from the menu</string>
+    <string name="label_switch_training_day">Switch training day</string>
+    <string name="label_add_day">Add training day</string>
+    <string name="label_rename_day">Rename</string>
+    <string name="label_move_day_backward">Move day earlier</string>
+    <string name="label_move_day_forward">Move day later</string>
+    <string name="label_set_as_rest_day">Set as rest day</string>
+    <string name="label_delete_day">Delete this day</string>
+    <string name="label_train_other_day">Train another day</string>
+
     <!--Day of Week-->
     <string name="label_today">.today</string>
     <string name="label_plan">Plan</string>
@@ -278,26 +293,6 @@
         <item>Statistics</item>
         <item>Plan Management</item>
         <item>Fast Feedback</item>
-    </string-array>
-
-    <string-array name="kenko_day_of_week">
-        <item>.mon</item>
-        <item>.tue</item>
-        <item>.wed</item>
-        <item>.thu</item>
-        <item>.fri</item>
-        <item>.sat</item>
-        <item>.sun</item>
-    </string-array>
-
-    <string-array name="day_of_week">
-        <item>Monday</item>
-        <item>Tuesday</item>
-        <item>Wednesday</item>
-        <item>Thursday</item>
-        <item>Friday</item>
-        <item>Saturday</item>
-        <item>Sunday</item>
     </string-array>
 
     <string-array name="day_of_week_short">

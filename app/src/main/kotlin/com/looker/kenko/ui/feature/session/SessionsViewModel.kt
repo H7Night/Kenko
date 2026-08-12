@@ -36,7 +36,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 
 @HiltViewModel
@@ -49,7 +48,7 @@ class SessionsViewModel @Inject constructor(
 
     private val availablePlanItems = planRepo.planItems
         .map { items ->
-            items.groupBy { it.dayOfWeek }
+            items.groupBy { it.dayIndex }
                 .mapValues { entry -> entry.value.map { it.exercise } }
         }
 
@@ -73,10 +72,10 @@ class SessionsViewModel @Inject constructor(
     private val _snackbar = MutableSharedFlow<String>()
     val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
 
-    fun addSession(date: LocalDate, day: DayOfWeek, onComplete: () -> Unit) {
+    fun addSession(date: LocalDate, dayIndex: Int, onComplete: () -> Unit) {
         viewModelScope.launch {
             try {
-                repo.updatePlanDay(date, day)
+                repo.updateDayIndex(date, dayIndex)
                 onComplete()
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
@@ -101,8 +100,8 @@ data class SessionsUiData(
     val sessions: List<SessionSummary>,
     val isCurrentSessionActive: Boolean,
     val hasAnySessions: Boolean = false,
-    val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),
-    val dayTitles: Map<Int?, Map<DayOfWeek, String>> = emptyMap(),
+    val availablePlanDays: Map<Int, List<Exercise>> = emptyMap(),
+    val dayTitles: Map<Int?, Map<Int, String>> = emptyMap(),
     val plans: List<Plan> = emptyList(),
 ) {
     val sessionDates: Set<LocalDate> get() = sessions.map { it.date }.toSet()

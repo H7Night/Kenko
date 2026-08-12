@@ -32,6 +32,7 @@ import com.looker.kenko.data.local.MIGRATION_8_9
 import com.looker.kenko.data.local.MIGRATION_9_10
 import com.looker.kenko.data.local.MIGRATION_10_11
 import com.looker.kenko.data.local.MIGRATION_11_12
+import com.looker.kenko.data.local.MIGRATION_12_13
 import com.looker.kenko.data.local.dao.ExerciseDao
 import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.model.ExerciseEntity
@@ -104,6 +105,7 @@ class RoomDatabaseTesting {
             MIGRATION_9_10,
             MIGRATION_10_11,
             MIGRATION_11_12,
+            MIGRATION_12_13,
         ).build()
         val exercises = updatedDb.exerciseDao().stream().first()
         val planHistory = updatedDb.historyDao().getCurrent()
@@ -187,6 +189,36 @@ class RoomDatabaseTesting {
         val db = helper.createDatabase(DB_NAME, 11)
         db.execSQL("INSERT INTO sets (reps, weight, type, \"order\", sessionId, exerciseId, rir) VALUES (10, 50.0, 'Standard', 0, 1, 1, 2)")
         helper.runMigrationsAndValidate(DB_NAME, 12, true, MIGRATION_11_12)
+    }
+
+    @Test
+    fun schemaMigration12To13() = runTest {
+        val db = helper.createDatabase(DB_NAME, 12)
+        db.execSQL("INSERT INTO plans (name, dayTitles) VALUES ('Test Plan', '{\"1\":\"Chest\"}')")
+        db.execSQL("INSERT INTO plan_day (planId, exerciseId, dayOfWeek, sortOrder) VALUES (1, 1, 3, 0)")
+        db.execSQL("INSERT INTO sessions (date, planId, planDayOverride) VALUES (20000, 1, 5)")
+        helper.runMigrationsAndValidate(DB_NAME, 13, true, MIGRATION_12_13)
+    }
+
+    @Test
+    fun dataMigration12To13() = runTest {
+        val db = helper.createDatabase(DB_NAME, 12)
+        db.execSQL("INSERT INTO plans (name, dayTitles) VALUES ('Test Plan', '{\"1\":\"Chest\"}')")
+        db.execSQL("INSERT INTO plan_day (planId, exerciseId, dayOfWeek, sortOrder) VALUES (1, 1, 3, 0)")
+        db.execSQL("INSERT INTO sessions (date, planId, planDayOverride) VALUES (20000, 1, 5)")
+        val updatedDb = Room.databaseBuilder(
+            InstrumentationRegistry.getInstrumentation().targetContext,
+            KenkoDatabase::class.java,
+            DB_NAME,
+        ).addMigrations(MIGRATION_12_13).build()
+        val plan = updatedDb.planDao().getPlanById(1)
+        assertEquals(7, plan?.dayCount)
+        assertEquals(1, plan?.currentDayIndex)
+        val items = updatedDb.planDao().getPlanItemsByPlanId(1)
+        assertEquals(3, items.single().dayIndex)
+        val session = updatedDb.sessionDao().getSession(EpochDays(20000))
+        assertEquals(5, session?.data?.dayIndexOverride)
+        updatedDb.close()
     }
 
     private fun SupportSQLiteDatabase.addV1Data() = use { db ->

@@ -20,7 +20,6 @@ import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.Set
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 
 interface SessionRepo {
@@ -53,7 +52,7 @@ interface SessionRepo {
 
     suspend fun clearSets(date: LocalDate)
 
-    suspend fun updatePlanDay(date: LocalDate, day: DayOfWeek)
+    suspend fun updateDayIndex(date: LocalDate, dayIndex: Int)
 
     suspend fun updateSessionDuration(sessionId: Int, durationSeconds: Long)
 
@@ -61,7 +60,7 @@ interface SessionRepo {
 
     fun streamByDate(date: LocalDate): Flow<Session?>
 
-    fun previousSessionDate(date: LocalDate, planId: Int?, day: DayOfWeek): Flow<LocalDate?>
+    fun previousSessionDate(date: LocalDate, planId: Int?, dayIndex: Int): Flow<LocalDate?>
 
     suspend fun getSets(sessionId: Int): List<Set>
 

@@ -16,7 +16,6 @@
 package com.looker.kenko.domain.model
 
 import androidx.compose.runtime.Immutable
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 
 @Immutable
@@ -24,7 +23,7 @@ data class Session(
     val date: LocalDate,
     val sets: List<Set>,
     val planId: Int?,
-    val planDayOverride: DayOfWeek? = null,
+    val dayIndexOverride: Int? = null,
     val durationSeconds: Long? = null,
     val id: Int? = null,
 ) {
@@ -42,7 +41,7 @@ fun Session(planId: Int, sets: List<Set>) = Session(planId = planId, date = toda
 data class SessionSummary(
     val date: LocalDate,
     val planId: Int?,
-    val planDayOverride: DayOfWeek? = null,
+    val dayIndexOverride: Int? = null,
     val durationSeconds: Long? = null,
     val exerciseNames: List<String> = emptyList(),
     val setCount: Int = 0,

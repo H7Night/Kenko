@@ -22,11 +22,8 @@ import com.looker.kenko.domain.model.Labels.Equipment
 import com.looker.kenko.domain.model.Labels.Focus
 import com.looker.kenko.domain.model.Labels.Time
 import kotlin.time.Clock
-import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -42,46 +39,39 @@ data class Plan(
     val isActive: Boolean,
     val stat: PlanStat = PlanStat(0, 0),
     val dayTitles: String? = null,
+    val dayCount: Int = 7,
+    val currentDayIndex: Int = 1,
     val id: Int? = null,
 )
 
 @Immutable
 data class PlanItem(
-    val dayOfWeek: DayOfWeek,
+    val dayIndex: Int,
     val exercise: Exercise,
     val planId: Int,
     val id: Long? = null,
 )
 
-val Plan.titlesMap: Map<DayOfWeek, String>
+val Plan.titlesMap: Map<Int, String>
     get() = try {
         if (dayTitles.isNullOrBlank()) emptyMap()
-        else {
-            val map = Json.decodeFromString<Map<Int, String>>(dayTitles)
-            map.mapKeys { DayOfWeek(it.key) }
-        }
+        else Json.decodeFromString<Map<Int, String>>(dayTitles)
     } catch (e: Exception) {
         emptyMap()
     }
 
-fun Plan.withDayTitle(dayOfWeek: DayOfWeek, title: String?): Plan {
+fun Plan.withDayTitle(dayIndex: Int, title: String?): Plan {
     val currentMap = titlesMap.toMutableMap()
     if (title.isNullOrBlank()) {
-        currentMap.remove(dayOfWeek)
+        currentMap.remove(dayIndex)
     } else {
-        currentMap[dayOfWeek] = title
+        currentMap[dayIndex] = title
     }
-    val newDayTitles = if (currentMap.isEmpty()) null
-    else {
-        val jsonMap = currentMap.mapKeys { it.key.isoDayNumber }
-        Json.encodeToString(jsonMap)
-    }
+    val newDayTitles = if (currentMap.isEmpty()) null else Json.encodeToString(currentMap)
     return copy(dayTitles = newDayTitles)
 }
 
 fun today(): LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-
-val week = DatePeriod(days = 7)
 
 class PlanPreviewParameters : PreviewParameterProvider<List<Plan>> {
     override val values: Sequence<List<Plan>> = sequenceOf(

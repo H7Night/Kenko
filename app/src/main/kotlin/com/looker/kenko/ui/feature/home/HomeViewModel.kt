@@ -39,16 +39,16 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel @Inject constructor(
-    planRepo: PlanRepo,
+    private val planRepo: PlanRepo,
     private val sessionRepo: SessionRepo,
     exerciseRepo: ExerciseRepo,
     val timerManager: TimerManager,
@@ -64,10 +64,11 @@ class HomeViewModel @Inject constructor(
 
     private val planItemStream = combine(
         sessionStream,
+        planStream,
         planRepo.planItems
-    ) { session, planItems ->
-        val day = session?.planDayOverride ?: today().dayOfWeek
-        planItems.filter { it.dayOfWeek == day }
+    ) { session, plan, planItems ->
+        val day = session?.dayIndexOverride ?: plan?.currentDayIndex
+        planItems.filter { day != null && it.dayIndex == day }
     }
 
     init {
@@ -90,12 +91,12 @@ class HomeViewModel @Inject constructor(
     val allExercises: StateFlow<List<com.looker.kenko.domain.model.Exercise>> = exerciseRepo.stream
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val availablePlanDays: StateFlow<Map<DayOfWeek, List<com.looker.kenko.domain.model.PlanItem>>> =
+    val availablePlanDays: StateFlow<Map<Int, List<com.looker.kenko.domain.model.PlanItem>>> =
         planRepo.planItems.map { items ->
-            items.groupBy { it.dayOfWeek }
+            items.groupBy { it.dayIndex }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    val planDayTitles: StateFlow<Map<DayOfWeek, String>> = planStream.map { plan ->
+    val planDayTitles: StateFlow<Map<Int, String>> = planStream.map { plan ->
         plan?.titlesMap ?: emptyMap()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
@@ -103,9 +104,9 @@ class HomeViewModel @Inject constructor(
         planStream,
         sessionStream,
     ) { plan, session ->
-        val day = session?.planDayOverride ?: today().dayOfWeek
-        sessionRepo.previousSessionDate(today(), plan?.id, day)
-    }.flatMapLatest { it }
+        val day = session?.dayIndexOverride ?: plan?.currentDayIndex
+        if (day == null) null else sessionRepo.previousSessionDate(today(), plan?.id, day)
+    }.flatMapLatest { it ?: flowOf(null) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val planExercises: StateFlow<List<com.looker.kenko.domain.model.PlanItem>> = planItemStream
@@ -144,8 +145,10 @@ class HomeViewModel @Inject constructor(
         val trainingState = array[5] as TrainingSessionState
 
         val isFirstSession = sessions.size <= 1 && sessions.firstOrNull()?.date == today()
-        val dayOfWeek = currentSession?.planDayOverride ?: today().dayOfWeek
-        val dayTitle = currentPlan?.titlesMap?.get(dayOfWeek)
+        val dayIndex = currentSession?.dayIndexOverride ?: currentPlan?.currentDayIndex
+        val dayCount = currentPlan?.dayCount ?: 7
+        val dayTitle = dayIndex?.let { currentPlan?.titlesMap?.get(it) }
+        val isRestDay = dayIndex != null && planItems.isEmpty()
         HomeUiData(
             isPlanSelected = currentPlan != null,
             isSessionStarted = currentSession != null && currentSession.sets.isNotEmpty(),
@@ -153,10 +156,12 @@ class HomeViewModel @Inject constructor(
             isFirstSession = isFirstSession,
             currentPlanId = currentPlan?.id,
             sessionDates = sessions.map { it.date }.toSet(),
-            dayOfWeek = dayOfWeek,
             timerState = timerState,
             trainingState = trainingState,
             planName = currentPlan?.name,
+            dayIndex = dayIndex,
+            dayCount = dayCount,
+            isRestDay = isRestDay,
             dayTitle = dayTitle,
             todayExercises = planItems.mapNotNull { it.exercise },
         )
@@ -171,7 +176,6 @@ class HomeViewModel @Inject constructor(
             timerState = TimerState.IDLE,
             trainingState = TrainingSessionState.Idle,
             planName = null,
-            dayTitle = null,
             todayExercises = emptyList(),
         ),
     )
@@ -190,17 +194,31 @@ class HomeViewModel @Inject constructor(
 
     fun endWorkout() {
         trainingSessionManager.endTraining()
+        viewModelScope.launch {
+            try {
+                val plan = planStream.first() ?: return@launch
+                val session = sessionStream.first()
+                if (session?.sets?.isNotEmpty() == true) {
+                    val day = session.dayIndexOverride ?: plan.currentDayIndex
+                    sessionRepo.updateDayIndex(today(), day)
+                    planRepo.advanceDay(requireNotNull(plan.id), day)
+                }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
+        }
     }
 
     fun dismissEndedSession() {
         trainingSessionManager.reset()
     }
 
-    fun importPlanFromDay(day: DayOfWeek) {
+    fun selectTrainingDay(dayIndex: Int) {
         viewModelScope.launch {
             try {
-                sessionRepo.clearSets(today())
-                sessionRepo.updatePlanDay(today(), day)
+                val planId = planStream.first()?.id ?: return@launch
+                sessionRepo.updateDayIndex(today(), dayIndex)
+                planRepo.updateDayIndex(planId, dayIndex)
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
             }
@@ -239,7 +257,9 @@ data class HomeUiData(
     val timerState: TimerState = TimerState.IDLE,
     val trainingState: TrainingSessionState = TrainingSessionState.Idle,
     val planName: String? = null,
+    val dayIndex: Int? = null,
+    val dayCount: Int = 7,
+    val isRestDay: Boolean = false,
     val dayTitle: String? = null,
-    val dayOfWeek: DayOfWeek = today().dayOfWeek,
     val todayExercises: List<com.looker.kenko.domain.model.Exercise> = emptyList(),
 )
