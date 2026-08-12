@@ -269,14 +269,30 @@ interface PlanDao {
     )
     suspend fun decrementDayCount(planId: Int, day: Int)
 
-    @Query("UPDATE plan_day SET dayIndex = :to WHERE planId = :planId AND dayIndex = :from")
-    suspend fun setDayIndex(planId: Int, from: Int, to: Int)
+    @Query(
+        """
+        UPDATE plan_day SET dayIndex = CASE
+            WHEN dayIndex = :from THEN :to
+            WHEN dayIndex > :from AND dayIndex <= :to THEN dayIndex - 1
+            ELSE dayIndex END
+        WHERE planId = :planId AND dayIndex >= :from AND dayIndex <= :to
+        """,
+    )
+    suspend fun moveDayForward(planId: Int, from: Int, to: Int)
 
-    @Query("UPDATE plan_day SET dayIndex = dayIndex - 1 WHERE planId = :planId AND dayIndex > :from AND dayIndex <= :to")
-    suspend fun decrementDayRange(planId: Int, from: Int, to: Int)
+    @Query(
+        """
+        UPDATE plan_day SET dayIndex = CASE
+            WHEN dayIndex = :from THEN :to
+            WHEN dayIndex >= :to AND dayIndex < :from THEN dayIndex + 1
+            ELSE dayIndex END
+        WHERE planId = :planId AND dayIndex >= :to AND dayIndex <= :from
+        """,
+    )
+    suspend fun moveDayBackward(planId: Int, from: Int, to: Int)
 
-    @Query("UPDATE plan_day SET dayIndex = dayIndex + 1 WHERE planId = :planId AND dayIndex >= :from AND dayIndex < :to")
-    suspend fun incrementDayRange(planId: Int, from: Int, to: Int)
+    @Query("UPDATE plans SET dayTitles = :dayTitles WHERE id = :planId")
+    suspend fun updatePlanDayTitles(planId: Int, dayTitles: String?)
 
     @Transaction
     suspend fun deleteDay(planId: Int, day: Int) {
@@ -288,12 +304,12 @@ interface PlanDao {
     @Transaction
     suspend fun moveDay(planId: Int, from: Int, to: Int) {
         if (from == to) return
-        if (from < to) {
-            decrementDayRange(planId, from + 1, to)
-            setDayIndex(planId, from, to)
-        } else {
-            incrementDayRange(planId, to, from - 1)
-            setDayIndex(planId, from, to)
-        }
+        if (from < to) moveDayForward(planId, from, to) else moveDayBackward(planId, from, to)
+    }
+
+    @Transaction
+    suspend fun moveDayWithTitles(planId: Int, from: Int, to: Int, dayTitles: String?) {
+        moveDay(planId, from, to)
+        updatePlanDayTitles(planId, dayTitles)
     }
 }

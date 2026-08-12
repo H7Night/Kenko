@@ -206,23 +206,24 @@ class LocalPlanRepo @Inject constructor(
     }
 
     override suspend fun deleteDay(planId: Int, dayIndex: Int) {
+        val plan = dao.getPlanById(planId) ?: return
+        if (dayIndex !in 1..plan.dayCount) return
         dao.deleteDay(planId, dayIndex)
     }
 
     override suspend fun moveDay(planId: Int, from: Int, to: Int) {
         val plan = dao.getPlanById(planId) ?: return
-        dao.moveDay(planId, from, to)
-        // dayTitles 的 key 同步搬移
-        val shifted = plan.toExternal(isActive = false, stat = PlanStat(0, 0)).titlesMap.entries.mapNotNull { (day, title) ->
+        // dayTitles 的 key 同步搬移:范围外条目保留,只移动 from→to 与区间内条目
+        val shifted = plan.toExternal(isActive = false, stat = PlanStat(0, 0)).titlesMap.map { (day, title) ->
             val newDay = when {
                 day == from -> to
                 from < to && day in (from + 1)..to -> day - 1
                 from > to && day in to until from -> day + 1
-                else -> null
+                else -> day
             }
-            newDay?.let { it to title }
+            newDay to title
         }.toMap()
         val newDayTitles = if (shifted.isEmpty()) null else Json.encodeToString(shifted)
-        dao.upsertPlan(plan.copy(dayTitles = newDayTitles))
+        dao.moveDayWithTitles(planId, from, to, newDayTitles)
     }
 }

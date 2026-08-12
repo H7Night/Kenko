@@ -19,6 +19,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Set
+import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
@@ -124,5 +125,31 @@ class RepositoryTest {
         assertEquals(8, planRepo.plan(planId)?.dayCount)
         planRepo.deleteDay(planId, 2)
         assertEquals(7, planRepo.plan(planId)?.dayCount)
+
+        // —— moveDay:dayIndex 分布与 titlesMap 联动(修正后计划 Step 4)——
+        // 给 day 1/2/3/6 各放一个动作,并命名 day 1/6
+        val exercisePool = exerciseRepo.stream.first().take(4)
+        listOf(1, 2, 3, 6).forEachIndexed { i, day ->
+            planRepo.addItem(PlanItem(dayIndex = day, exercise = exercisePool[i], planId = planId))
+        }
+        planRepo.updatePlan(
+            planRepo.plan(planId)!!
+                .withDayTitle(1, "Push")
+                .withDayTitle(6, "Legs"),
+        )
+        // 向后移动:6 → 2,区间 [2,5] 顺移一格,1 不变
+        planRepo.moveDay(planId, from = 6, to = 2)
+        assertEquals(listOf(1, 2, 3, 4), planRepo.getPlanItems(planId).map { it.dayIndex }.sorted())
+        val titlesAfterMove = planRepo.plan(planId)?.titlesMap
+        assertEquals("Push", titlesAfterMove?.get(1)) // 1 在移动区间外,保留
+        assertEquals("Legs", titlesAfterMove?.get(2)) // 6 → 2
+        assertEquals(2, titlesAfterMove?.size) // 范围外标题不丢失
+        // 向前移动:1 → 4,区间 (1,4] 左移一格
+        planRepo.moveDay(planId, from = 1, to = 4)
+        assertEquals(listOf(1, 2, 3, 4), planRepo.getPlanItems(planId).map { it.dayIndex }.sorted())
+        val titlesAfterForward = planRepo.plan(planId)?.titlesMap
+        assertEquals("Legs", titlesAfterForward?.get(1)) // 2 → 1
+        assertEquals("Push", titlesAfterForward?.get(4)) // 1 → 4
+        assertEquals(2, titlesAfterForward?.size)
     }
 }
