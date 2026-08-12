@@ -182,6 +182,7 @@ dependencies {
     implementation(libs.bundles.work)
 
     implementation(libs.bundles.room)
+    implementation(libs.sqlite.bundled)
     ksp(libs.room.compiler)
 
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:${libs.versions.kotlin.get()}")
