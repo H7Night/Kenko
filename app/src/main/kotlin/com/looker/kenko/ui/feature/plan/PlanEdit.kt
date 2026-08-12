@@ -170,8 +170,9 @@ fun PlanEdit(
                     onSelectDay = viewModel::setCurrentDay,
                     onRemovePlanItemClick = viewModel::removePlanItem,
                     onAddDay = viewModel::addDay,
-                    onDeleteDay = viewModel::deleteCurrentDay,
+                    onDeleteDay = viewModel::deleteDay,
                     onSetAsRest = viewModel::setDayAsRest,
+                    onRename = viewModel::renameDay,
                     onMoveDay = viewModel::moveDay,
                     onReorder = viewModel::updateOrder,
                 )
@@ -260,8 +261,9 @@ private fun PlanEdit(
     onSelectDay: (Int) -> Unit,
     onRemovePlanItemClick: (Long) -> Unit,
     onAddDay: () -> Unit,
-    onDeleteDay: () -> Unit,
-    onSetAsRest: () -> Unit,
+    onRename: (Int) -> Unit,
+    onSetAsRest: (Int) -> Unit,
+    onDeleteDay: (Int) -> Unit,
     onMoveDay: (Int, Int) -> Unit,
     onReorder: (List<Exercise>) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
@@ -334,7 +336,10 @@ private fun PlanEdit(
                         onSelectDay = onSelectDay,
                         onAddDay = onAddDay,
                         onMoveDay = onMoveDay,
-                        onRename = { dayTitleFocusRequester.requestFocus() },
+                        onRename = { day ->
+                            onRename(day)
+                            dayTitleFocusRequester.requestFocus()
+                        },
                         onSetAsRest = onSetAsRest,
                         onDeleteDay = onDeleteDay,
                     )

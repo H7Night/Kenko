@@ -288,10 +288,21 @@ class PlanEditViewModel @Inject constructor(
         }
     }
 
-    fun deleteCurrentDay() {
+    fun renameDay(dayIndex: Int) {
         viewModelScope.launch {
             try {
-                repo.deleteDay(planIdStream.value, _dayIndex.value)
+                // 切换到该天,使标题输入框(dayTitleState)聚焦到对应天的标题
+                _dayIndex.emit(dayIndex)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
+        }
+    }
+
+    fun deleteDay(dayIndex: Int) {
+        viewModelScope.launch {
+            try {
+                repo.deleteDay(planIdStream.value, dayIndex)
                 _dayIndex.emit(1)
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
@@ -299,11 +310,11 @@ class PlanEditViewModel @Inject constructor(
         }
     }
 
-    fun setDayAsRest() {
+    fun setDayAsRest(dayIndex: Int) {
         viewModelScope.launch {
             try {
-                // 清空当天动作即成为休息日
-                repo.getPlanItems(planIdStream.value, _dayIndex.value)
+                // 清空该天动作即成为休息日
+                repo.getPlanItems(planIdStream.value, dayIndex)
                     .forEach { repo.removeItem(requireNotNull(it.id)) }
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
