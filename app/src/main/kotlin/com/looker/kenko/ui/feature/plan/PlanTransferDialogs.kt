@@ -31,7 +31,8 @@ fun ExportPlanDialog(
     onDismiss: () -> Unit,
 ) {
     var selectedIds by remember { mutableStateOf(setOf<Int>()) }
-    var selectAll by remember { mutableStateOf(false) }
+    val planIds = plans.mapNotNull { it.id }.toSet()
+    val allSelected = planIds.isNotEmpty() && selectedIds.containsAll(planIds)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -43,11 +44,10 @@ fun ExportPlanDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            selectAll = !selectAll
-                            selectedIds = if (selectAll) plans.mapNotNull { it.id }.toSet() else emptySet()
+                            selectedIds = if (allSelected) emptySet() else planIds
                         },
                 ) {
-                    Checkbox(checked = selectAll, onCheckedChange = null)
+                    Checkbox(checked = allSelected, onCheckedChange = null)
                     Text(stringResource(R.string.label_select_all))
                 }
                 LazyColumn(modifier = Modifier.heightIn(max = 360.dp)) {
