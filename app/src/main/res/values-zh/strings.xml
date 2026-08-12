@@ -53,6 +53,17 @@
     <string name="label_missed_day">你错过今天了吗？</string>
     <string name="label_import_from_other_day">从其他计划日导入：</string>
 
+    <!--Plan Import/Export-->
+    <string name="label_export_plan">导出计划</string>
+    <string name="label_import_plan_file">导入计划</string>
+    <string name="label_select_all">全选</string>
+    <string name="label_plan_days_summary">%1$s 天训练 %2$s 天休息</string>
+    <string name="label_import_confirm">将导入 %1$s 个计划？</string>
+    <string name="label_import_success">已导入 %1$s 个计划</string>
+    <string name="label_import_partial">成功导入 %1$s 个，失败 %2$s 个</string>
+    <string name="label_export_success">已导出 %1$s 个计划</string>
+    <string name="label_plan_file_invalid">无效的计划文件</string>
+
     <!--Plans-->
     <string name="label_plans_title">计划</string>
     <string name="label_edit_plan">编辑计划</string>
@@ -210,7 +221,7 @@
     <string name="label_export_plans">训练计划</string>
     <string name="label_export_exercises">动作</string>
     <string name="label_export_weights">体重记录</string>
-    <string name="label_export_success">导出完成</string>
+    <string name="label_backup_export_success">导出完成</string>
     <string name="error_export_failed">导出失败</string>
 
 

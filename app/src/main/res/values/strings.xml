@@ -62,6 +62,17 @@
     <string name="label_modify_plan_message">Do you want to modify today\'s training plan? This will clear all existing sets for today.</string>
     <string name="label_import_plan">Import Plan</string>
 
+    <!--Plan Import/Export-->
+    <string name="label_export_plan">Export plans</string>
+    <string name="label_import_plan_file">Import plan</string>
+    <string name="label_select_all">Select all</string>
+    <string name="label_plan_days_summary">%1$s training days · %2$s rest days</string>
+    <string name="label_import_confirm">Import %1$s plan(s)?</string>
+    <string name="label_import_success">Imported %1$s plan(s)</string>
+    <string name="label_import_partial">Imported %1$s, failed %2$s</string>
+    <string name="label_export_success">Exported %1$s plan(s)</string>
+    <string name="label_plan_file_invalid">Invalid plan file</string>
+
     <!--Plans-->
     <string name="label_plans_title">Plans</string>
     <string name="label_edit_plan">Edit Plan</string>
@@ -216,7 +227,7 @@
     <string name="label_export_plans">Training Plans</string>
     <string name="label_export_exercises">Exercises</string>
     <string name="label_export_weights">Body Weight</string>
-    <string name="label_export_success">Export completed</string>
+    <string name="label_backup_export_success">Export completed</string>
     <string name="error_export_failed">Export failed</string>
 
 

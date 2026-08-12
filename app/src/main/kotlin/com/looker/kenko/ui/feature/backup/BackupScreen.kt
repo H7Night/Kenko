@@ -65,7 +65,7 @@ fun BackupScreen(
                 BackupMessage.BackupFailed -> context.getString(R.string.error_backup_failed)
                 BackupMessage.RestoreSuccess -> context.getString(R.string.label_restore_success)
                 BackupMessage.RestoreFailed -> context.getString(R.string.error_restore_failed)
-                BackupMessage.ExportSuccess -> context.getString(R.string.label_export_success)
+                BackupMessage.ExportSuccess -> context.getString(R.string.label_backup_export_success)
                 BackupMessage.ExportFailed -> context.getString(R.string.error_export_failed)
             }
             snackbarHostState.showSnackbar(text)
