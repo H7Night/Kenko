@@ -40,6 +40,10 @@ data class PlanEntity(
     val time: Time?,
     @ColumnInfo(defaultValue = "NULL")
     val dayTitles: String? = null,
+    @ColumnInfo(defaultValue = "7")
+    val dayCount: Int = 7,
+    @ColumnInfo(defaultValue = "1")
+    val currentDayIndex: Int = 1,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 )
@@ -67,7 +71,7 @@ data class PlanEntity(
 data class PlanDayEntity(
     val planId: Int,
     val exerciseId: Int,
-    val dayOfWeek: Int,
+    val dayIndex: Int,
     val sortOrder: Int = 0,
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

@@ -21,8 +21,6 @@ import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.PlanStat
-import kotlinx.datetime.DayOfWeek
-import kotlinx.datetime.isoDayNumber
 
 fun PlanEntity.toExternal(isActive: Boolean, stat: PlanStat) = Plan(
     id = id,
@@ -35,6 +33,8 @@ fun PlanEntity.toExternal(isActive: Boolean, stat: PlanStat) = Plan(
     stat = stat,
     isActive = isActive,
     dayTitles = dayTitles,
+    dayCount = dayCount,
+    currentDayIndex = currentDayIndex,
 )
 
 fun Plan.toEntity(): PlanEntity = PlanEntity(
@@ -46,18 +46,20 @@ fun Plan.toEntity(): PlanEntity = PlanEntity(
     equipment = equipment,
     time = time,
     dayTitles = dayTitles,
+    dayCount = dayCount,
+    currentDayIndex = currentDayIndex,
 )
 
 fun PlanItem.toEntity() = PlanDayEntity(
     id = id ?: 0,
     planId = planId,
     exerciseId = requireNotNull(exercise.id) { "Exercise id cannot be null" },
-    dayOfWeek = dayOfWeek.isoDayNumber,
+    dayIndex = dayIndex,
 )
 
 inline fun PlanDayEntity.toExternal(block: (exerciseId: Int) -> Exercise?) = PlanItem(
     planId = planId,
-    dayOfWeek = DayOfWeek(dayOfWeek),
+    dayIndex = dayIndex,
     exercise = block(exerciseId) ?: DefaultExercise,
     id = id,
 )

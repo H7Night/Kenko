@@ -63,7 +63,7 @@ interface PlanDao {
         FROM plan_history
         WHERE `end` IS NULL
         AND start IS NOT NULL)
-        AND dayOfWeek = :day
+        AND dayIndex = :day
         ORDER BY sortOrder ASC
         """,
     )
@@ -151,7 +151,7 @@ interface PlanDao {
         SELECT *
         FROM plan_day
         WHERE planId = :planId
-        AND dayOfWeek = :day
+        AND dayIndex = :day
         ORDER BY sortOrder ASC
         """,
     )
@@ -162,7 +162,7 @@ interface PlanDao {
         SELECT *
         FROM plan_day
         WHERE planId = :planId
-        AND dayOfWeek = :day
+        AND dayIndex = :day
         ORDER BY sortOrder ASC
         """,
     )
@@ -179,7 +179,7 @@ interface PlanDao {
 
     @Query(
         """
-        SELECT COUNT(DISTINCT dayOfWeek)
+        SELECT COUNT(DISTINCT dayIndex)
         FROM plan_day
         WHERE planId = :planId
         """,
@@ -241,7 +241,7 @@ interface PlanDao {
     @Query("DELETE FROM plan_day WHERE id = :planDayId")
     suspend fun deleteItem(planDayId: Long)
 
-    @Query("DELETE FROM plan_day WHERE planId = :planId AND dayOfWeek = :day")
+    @Query("DELETE FROM plan_day WHERE planId = :planId AND dayIndex = :day")
     suspend fun deleteItemsByPlanIdAndDay(planId: Int, day: Int)
 
     @Query("UPDATE plan_day SET sortOrder = :order WHERE id = :id")
