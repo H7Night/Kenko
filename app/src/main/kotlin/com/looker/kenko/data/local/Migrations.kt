@@ -532,3 +532,12 @@ val MIGRATION_11_12 = object : Migration(11, 12) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_sets_sessionId_exerciseId` ON `sets` (`sessionId`, `exerciseId`)")
     }
 }
+
+val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE plans ADD COLUMN dayCount INTEGER NOT NULL DEFAULT 7")
+        db.execSQL("ALTER TABLE plans ADD COLUMN currentDayIndex INTEGER NOT NULL DEFAULT 1")
+        db.execSQL("ALTER TABLE plan_day RENAME COLUMN dayOfWeek TO dayIndex")
+        db.execSQL("ALTER TABLE sessions RENAME COLUMN planDayOverride TO dayIndexOverride")
+    }
+}
