@@ -179,7 +179,7 @@ internal fun BackupSection(
             Text(
                 text = stringResource(R.string.label_last_backup, lastBackupTime.toFormat()),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
@@ -293,13 +293,13 @@ internal fun BackupSettingRow(
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Icon(
             painter = KenkoIcons.ArrowForward,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.outline,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

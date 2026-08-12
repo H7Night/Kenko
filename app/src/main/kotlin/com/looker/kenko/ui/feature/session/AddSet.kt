@@ -225,7 +225,7 @@ private fun AddSetHeader(
             Text(
                 text = stringResource(R.string.label_add_set_for).uppercase(),
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.outline,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
                 text = exerciseName,

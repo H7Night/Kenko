@@ -94,7 +94,7 @@ fun SetItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CompositionLocalProvider(
-                LocalContentColor provides MaterialTheme.colorScheme.outline,
+                LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
                 LocalTextStyle provides MaterialTheme.typography.displayMedium.numbers(),
             ) {
                 Box(modifier = Modifier.padding(end = 16.dp)) {
@@ -165,7 +165,7 @@ private fun PerformedItem(
         Text(
             text = title,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         if (isEditing) {
             BasicTextField(

@@ -121,7 +121,7 @@ fun PlanItem(
                 Text(
                     text = stringResource(R.string.label_selected),
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.outline,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             if (plan.isActive) {

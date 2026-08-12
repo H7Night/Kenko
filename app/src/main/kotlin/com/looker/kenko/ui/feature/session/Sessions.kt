@@ -481,7 +481,8 @@ fun SessionCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
             val titleStyle = MaterialTheme.typography.titleLarge
-            val secondaryEmphasis = MaterialTheme.colorScheme.outline
+            val onContainer = MaterialTheme.colorScheme.onTertiaryContainer
+            val secondaryEmphasis = onContainer.copy(alpha = 0.75f)
             val effectiveDay = session.planDayOverride ?: session.date.dayOfWeek
             val dayName = dayName(effectiveDay)
             val dayTitle = dayTitles[session.planId]?.get(effectiveDay)
@@ -505,7 +506,7 @@ fun SessionCard(
                 Text(
                     text = durationText,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
+                    color = onContainer.copy(alpha = 0.75f),
                 )
             }
 
@@ -515,7 +516,7 @@ fun SessionCard(
             Text(
                 text = exerciseNames,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.outline,
+                color = onContainer.copy(alpha = 0.9f),
                 maxLines = 3,
             )
             }

@@ -181,7 +181,7 @@ private fun AddEditExercise(
                 Text(
                     text = stringResource(R.string.label_use_bodyweight),
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.outline,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Switch(
                     checked = state.isBodyweight,
@@ -198,7 +198,7 @@ private fun AddEditExercise(
             Text(
                 text = stringResource(R.string.label_count_type),
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.outline,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(8.dp))
             SingleChoiceSegmentedButtonRow(

@@ -102,7 +102,7 @@ fun DigitPicker(
                             else MaterialTheme.typography.titleMedium.numbers(),
                         color = if (index == listState.firstVisibleItemIndex)
                             MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.outline
+                            else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

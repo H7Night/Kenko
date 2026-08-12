@@ -71,7 +71,7 @@ fun WeightDialog(
                 Text(
                     text = stringResource(R.string.label_weight_unit),
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.outline
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         },

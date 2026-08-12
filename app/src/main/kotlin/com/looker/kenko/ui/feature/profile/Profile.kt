@@ -464,7 +464,7 @@ private fun WeightCard(
                         Text(
                             text = stringResource(R.string.label_no_weight_in_period),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.outline,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

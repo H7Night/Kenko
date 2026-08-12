@@ -113,7 +113,7 @@ fun CurrentPlanCard(
                     Spacer(modifier = Modifier.height(8.dp))
                     CompositionLocalProvider(
                         LocalTextStyle provides MaterialTheme.typography.bodyLarge,
-                        LocalContentColor provides MaterialTheme.colorScheme.outline,
+                        LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
                     ) {
                         content()
                     }

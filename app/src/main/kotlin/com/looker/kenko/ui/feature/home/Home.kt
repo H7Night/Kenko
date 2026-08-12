@@ -275,7 +275,7 @@ fun Home(
                     fontSize = 24.sp,
                     lineHeight = 30.sp,
                 ),
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 80.dp, bottom = 16.dp),

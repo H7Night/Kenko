@@ -167,7 +167,7 @@ private fun HeatmapHeader(
                     Icon(
                         painter = KenkoIcons.ArrowBack,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.outline
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -175,7 +175,7 @@ private fun HeatmapHeader(
                 Icon(
                     painter = KenkoIcons.KeyboardArrowLeft,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.outline
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -184,7 +184,7 @@ private fun HeatmapHeader(
             text = monthLabel,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.outline
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Row {
@@ -192,7 +192,7 @@ private fun HeatmapHeader(
                 Icon(
                     painter = KenkoIcons.KeyboardArrowRight,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.outline
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             if (showNextYear) {
@@ -200,7 +200,7 @@ private fun HeatmapHeader(
                     Icon(
                         painter = KenkoIcons.ArrowForward,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.outline
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -293,7 +293,7 @@ private fun DayOfWeekLabels(modifier: Modifier = Modifier) {
                 modifier = Modifier.weight(1f),
                 text = day,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.outline,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )

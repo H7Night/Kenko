@@ -70,12 +70,12 @@ fun StickyHeader(
                     Text(
                         text = normalizeInt(setCount),
                         style = MaterialTheme.typography.titleMedium.numbers(),
-                        color = MaterialTheme.colorScheme.outline,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Icon(
                         modifier = Modifier.rotate(if (isCollapsed) 180F else 90F),
                         painter = KenkoIcons.KeyboardArrowRight,
-                        tint = MaterialTheme.colorScheme.outline,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         contentDescription = null,
                     )
                 }
