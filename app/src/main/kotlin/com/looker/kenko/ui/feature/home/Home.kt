@@ -237,6 +237,21 @@ fun Home(
                         onSelectPlanClick = onSelectPlanClick,
                         onSwitchTrainingDay = { showTrainingDayPicker = true },
                     )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = stringResource(R.string.home_text),
+                        style = MaterialTheme.typography.displaySmall.copy(
+                            fontFamily = bodyFont,
+                            fontSize = 24.sp,
+                            lineHeight = 30.sp,
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 80.dp, bottom = 16.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    )
                 }
                 is TrainingSessionState.Active -> {
                     TrainingActionBar(
@@ -251,21 +266,6 @@ fun Home(
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = stringResource(R.string.home_text),
-                style = MaterialTheme.typography.displaySmall.copy(
-                    fontFamily = bodyFont,
-                    fontSize = 24.sp,
-                    lineHeight = 30.sp,
-                ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 80.dp, bottom = 16.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            )
         }
     }
 }
