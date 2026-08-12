@@ -21,6 +21,7 @@ import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Set
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.today
+import com.looker.kenko.domain.model.withDayTitle
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
