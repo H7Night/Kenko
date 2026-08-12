@@ -55,6 +55,7 @@ import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.titlesMap
+import com.looker.kenko.domain.model.TrainingDayMatch
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.EmptyState
@@ -318,6 +319,7 @@ private fun Sessions(
                         session = session,
                         onClick = { onSessionClick(session.date) },
                         dayTitles = state.dayTitles,
+                        planDayExerciseNames = state.planDayExerciseNames,
                         onDelete = { sessionToDelete = session },
                     )
                 }
@@ -452,6 +454,7 @@ fun SessionCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
     dayTitles: Map<Int?, Map<Int, String>> = emptyMap(),
+    planDayExerciseNames: Map<Int, Map<Int, kotlin.collections.Set<String>>> = emptyMap(),
     onDelete: (() -> Unit)? = null,
 ) {
     val containerColor = if (session.date.isToday) {
@@ -477,8 +480,16 @@ fun SessionCard(
             val onContainer = MaterialTheme.colorScheme.onTertiaryContainer
             val secondaryEmphasis = onContainer.copy(alpha = 0.75f)
             val effectiveDay = session.dayIndexOverride
-            val dayTitle = dayTitles[session.planId]?.get(effectiveDay)
-            val displayName = dayTitle ?: effectiveDay?.let { stringResource(R.string.label_day_n, it) } ?: ""
+            // 无 dayIndexOverride 的老记录:按动作名反查所属训练日,还原训练日名称
+            val inferredDay = effectiveDay ?: session.planId?.let { planId ->
+                TrainingDayMatch.matchDayIndex(
+                    session.exerciseNames.map { it.trim() }.toSet(),
+                    planDayExerciseNames[planId] ?: emptyMap(),
+                )
+            }
+            val day = effectiveDay ?: inferredDay
+            val dayTitle = dayTitles[session.planId]?.get(day)
+            val displayName = dayTitle ?: day?.let { stringResource(R.string.label_day_n, it) } ?: ""
             val string = remember(session.date, displayName, dayTitle) {
                 buildAnnotatedString {
                     withStyle(titleStyle.toSpanStyle().copy(fontWeight = FontWeight.Bold)) {

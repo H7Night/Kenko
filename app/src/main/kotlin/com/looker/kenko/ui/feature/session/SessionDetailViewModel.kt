@@ -33,6 +33,7 @@ import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.domain.model.titlesMap
+import com.looker.kenko.domain.model.TrainingDayMatch
 import com.looker.kenko.ui.feature.session.navigation.SessionDetailRoute
 import com.looker.kenko.utils.asStateFlow
 import com.looker.kenko.utils.isToday
@@ -45,13 +46,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
@@ -93,6 +96,25 @@ class SessionDetailViewModel @Inject constructor(
             items.groupBy { it.dayIndex }
                 .mapValues { entry -> entry.value.map { it.exercise } }
         }
+
+    /** 每个计划的训练日 → 动作名集合,用于无 dayIndexOverride 的历史记录反查训练日。 */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val planDayExerciseNames: StateFlow<Map<Int, Map<Int, kotlin.collections.Set<String>>>> =
+        planRepo.plans
+            .flatMapLatest { plans ->
+                val flows = plans.map { plan ->
+                    planRepo.planItems(requireNotNull(plan.id)).map { items ->
+                        plan.id to items.groupBy({ it.dayIndex }, { it.exercise.name })
+                            .mapValues { it.value.toSet() }
+                    }
+                }
+                if (flows.isEmpty()) flowOf(emptyMap())
+                else combine(flows) { array ->
+                    @Suppress("UNCHECKED_CAST")
+                    array.map { it as Pair<Int, Map<Int, kotlin.collections.Set<String>>> }.toMap()
+                }
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     val allExercises: StateFlow<List<Exercise>> = exerciseRepo.stream
         .asStateFlow(initial = emptyList())
@@ -191,7 +213,17 @@ class SessionDetailViewModel @Inject constructor(
             }
 
             val currentSession = session ?: Session(-1, emptyList())
-            val dayIndex = currentSession.dayIndexOverride ?: currentPlan?.currentDayIndex
+            // 无 dayIndexOverride:今天回退当前训练日;历史记录按动作名反查所属训练日
+            val dayIndex = currentSession.dayIndexOverride ?: if (sessionDate.isToday) {
+                currentPlan?.currentDayIndex
+            } else {
+                currentSession.planId?.let { planId ->
+                    TrainingDayMatch.matchDayIndex(
+                        currentSession.performExercises.map { it.name }.toSet(),
+                        planDayExerciseNames.value[planId] ?: emptyMap(),
+                    )
+                }
+            }
             val dayTitle = dayIndex?.let { day ->
                 plans.find { it.id == currentSession.planId }?.titlesMap?.get(day)
                     ?: currentPlanTitles[day]
