@@ -15,6 +15,7 @@
 
 package com.looker.kenko.ui.feature.plan
 
+import android.net.Uri
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Stable
@@ -25,9 +26,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.looker.kenko.R
 import com.looker.kenko.data.StringHandler
-import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.PlanItem
+import com.looker.kenko.data.plan.PlanTransferManager
 import com.looker.kenko.data.repository.PlanRepo
+import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.Plan
+import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.withDayTitle
 import com.looker.kenko.ui.feature.plan.navigation.PlanEditRoute
@@ -44,6 +47,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -54,6 +58,7 @@ class PlanEditViewModel @Inject constructor(
     private val repo: PlanRepo,
     private val stringHandler: StringHandler,
     private val sessionRepo: com.looker.kenko.data.repository.SessionRepo,
+    private val transferManager: PlanTransferManager,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -192,6 +197,59 @@ class PlanEditViewModel @Inject constructor(
             planItems = emptyList(),
         ),
     )
+
+    val plansForExport: StateFlow<List<Plan>> = repo.plans
+        .asStateFlow(emptyList())
+
+    private val _importPreview = MutableStateFlow<ImportPreview?>(null)
+    val importPreview: StateFlow<ImportPreview?> = _importPreview.asStateFlow()
+
+    fun previewImport(uri: Uri) {
+        viewModelScope.launch {
+            try {
+                val plans = transferManager.readPlans(uri)
+                _importPreview.value = ImportPreview(uri, plans.size)
+            } catch (e: Exception) {
+                snackbarState.showSnackbar(stringHandler.getString(R.string.label_plan_file_invalid))
+            }
+        }
+    }
+
+    fun dismissImportPreview() {
+        _importPreview.value = null
+    }
+
+    fun confirmImport() {
+        val preview = _importPreview.value ?: return
+        viewModelScope.launch {
+            try {
+                val summary = transferManager.importPlans(preview.uri)
+                val message = if (summary.failed == 0) {
+                    stringHandler.getString(R.string.label_import_success, summary.imported)
+                } else {
+                    stringHandler.getString(R.string.label_import_partial, summary.imported, summary.failed)
+                }
+                snackbarState.showSnackbar(message)
+            } catch (e: Exception) {
+                snackbarState.showSnackbar(e.message ?: "An error occurred")
+            } finally {
+                _importPreview.value = null
+            }
+        }
+    }
+
+    fun exportPlans(planIds: List<Int>, destinationUri: Uri) {
+        viewModelScope.launch {
+            try {
+                transferManager.exportPlans(planIds, destinationUri)
+                snackbarState.showSnackbar(
+                    stringHandler.getString(R.string.label_export_success, planIds.size),
+                )
+            } catch (e: Exception) {
+                snackbarState.showSnackbar(e.message ?: "An error occurred")
+            }
+        }
+    }
 
     fun saveName() {
         viewModelScope.launch {
@@ -357,6 +415,12 @@ class PlanEditViewModel @Inject constructor(
         }
     }
 }
+
+@Stable
+data class ImportPreview(
+    val uri: Uri,
+    val planCount: Int,
+)
 
 @Stable
 enum class PlanEditStage {
