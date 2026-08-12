@@ -16,6 +16,7 @@
 package com.looker.kenko.ui.feature.home
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -32,13 +33,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -49,7 +54,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import kotlinx.datetime.DayOfWeek
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -75,7 +79,6 @@ import com.looker.kenko.ui.component.timer.TimerCard
 import com.looker.kenko.ui.component.timer.TimerState
 import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.ui.component.timer.rememberNotificationPermissionState
-import com.looker.kenko.ui.feature.plan.components.dayName
 import com.looker.kenko.ui.feature.session.ExerciseSearchDialog
 import com.looker.kenko.ui.feature.session.AddSetSheet
 import com.looker.kenko.ui.theme.KenkoIcons
@@ -113,7 +116,7 @@ fun Home(
     var addSetExercise by remember { mutableStateOf<Exercise?>(null) }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showImportConfirm by remember { mutableStateOf(false) }
-    var showImportSheet by remember { mutableStateOf(false) }
+    var showTrainingDayPicker by remember { mutableStateOf(false) }
 
     if (showEndConfirm) {
         AlertDialog(
@@ -172,7 +175,7 @@ fun Home(
             confirmButton = {
                 Button(onClick = {
                     showImportConfirm = false
-                    showImportSheet = true
+                    showTrainingDayPicker = true
                 }) {
                     Text(stringResource(R.string.label_yes))
                 }
@@ -185,36 +188,15 @@ fun Home(
         )
     }
 
-    if (showImportSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showImportSheet = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        ) {
-            Text(
-                text = stringResource(R.string.label_import_plan),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(16.dp),
-            )
-            Column(modifier = Modifier.padding(bottom = 32.dp)) {
-                availablePlanDays.toSortedMap().forEach { (day, _) ->
-                    Button(
-                        onClick = {
-                            viewModel.importPlanFromDay(day)
-                            showImportSheet = false
-                        },
-                        shape = MaterialTheme.shapes.large,
-                        contentPadding = PaddingValues(vertical = 12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp),
-                    ) {
-                        val title = planDayTitles[day]
-                        val displayName = if (title.isNullOrBlank()) dayName(day) else "$title (${dayName(day)})"
-                        Text(text = displayName)
-                    }
-                }
-            }
-        }
+    if (showTrainingDayPicker) {
+        TrainingDayPickerDialog(
+            availableDays = availablePlanDays.keys.associateWith { planDayTitles[it].orEmpty() },
+            onSelect = { day ->
+                showTrainingDayPicker = false
+                viewModel.selectTrainingDay(day)
+            },
+            onDismiss = { showTrainingDayPicker = false },
+        )
     }
 
     Scaffold { innerPadding ->
@@ -249,8 +231,11 @@ fun Home(
                         isPlanSelected = state.isPlanSelected,
                         planName = state.planName,
                         dayTitle = state.dayTitle,
-                        dayOfWeek = state.dayOfWeek,
+                        dayIndex = state.dayIndex,
+                        dayCount = state.dayCount,
+                        isRestDay = state.isRestDay,
                         onSelectPlanClick = onSelectPlanClick,
+                        onSwitchTrainingDay = { showTrainingDayPicker = true },
                     )
                 }
                 is TrainingSessionState.Active -> {
@@ -394,8 +379,11 @@ private fun PlanInfoCard(
     isPlanSelected: Boolean,
     planName: String?,
     dayTitle: String?,
-    dayOfWeek: DayOfWeek,
+    dayIndex: Int?,
+    dayCount: Int,
+    isRestDay: Boolean,
     onSelectPlanClick: () -> Unit,
+    onSwitchTrainingDay: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (!isPlanSelected) {
@@ -410,33 +398,112 @@ private fun PlanInfoCard(
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Plan name
-            if (planName != null) {
+        Row(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.weight(1f)) {
+                // Plan name
+                if (planName != null) {
+                    Text(
+                        text = planName,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+
+                // Date
                 Text(
-                    text = planName,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
+                    text = today().toString(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+
                 Spacer(modifier = Modifier.height(4.dp))
+
+                // Day progress
+                Text(
+                    text = stringResource(R.string.label_day_progress, dayIndex ?: 1, dayCount),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Today's training title
+                val trainingTitle = dayTitle ?: stringResource(R.string.label_day_n, dayIndex ?: 1)
+                Text(
+                    text = when {
+                        isRestDay -> stringResource(R.string.label_today_rest)
+                        else -> "${stringResource(R.string.label_today_plan)}: $trainingTitle"
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                )
+
+                if (isRestDay) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(onClick = onSwitchTrainingDay) {
+                        Text(stringResource(R.string.label_train_other_day))
+                    }
+                }
             }
 
-            // Date and day of week
-            val dateStr = today().toString()
-            val dayStr = dayName(today().dayOfWeek)
-            Text(
-                text = "$dateStr $dayStr",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (!isRestDay) {
+                var menuExpanded by remember { mutableStateOf(false) }
+                Box {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = null)
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.label_switch_training_day)) },
+                            onClick = {
+                                menuExpanded = false
+                                onSwitchTrainingDay()
+                            },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Today's training title
-            Text(
-                text = "${stringResource(R.string.label_today_plan)}: ${dayTitle ?: dayName(dayOfWeek)}",
-                style = MaterialTheme.typography.titleMedium,
-            )
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TrainingDayPickerDialog(
+    availableDays: Map<Int, String>,
+    onSelect: (Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Text(
+            text = stringResource(R.string.label_switch_training_day),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(16.dp),
+        )
+        Column(modifier = Modifier.padding(bottom = 32.dp)) {
+            availableDays.toSortedMap().forEach { (day, title) ->
+                Button(
+                    onClick = { onSelect(day) },
+                    shape = MaterialTheme.shapes.large,
+                    contentPadding = PaddingValues(vertical = 12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                ) {
+                    val displayName = if (title.isNullOrBlank()) {
+                        stringResource(R.string.label_day_n, day)
+                    } else {
+                        title
+                    }
+                    Text(text = displayName)
+                }
+            }
         }
     }
 }

@@ -259,6 +259,19 @@
     <string name="label_change_plan">更改计划</string>
     <string name="label_training_session">训练中</string>
 
+    <!--Training Cycle-->
+    <string name="label_day_n">第 %1$d 天</string>
+    <string name="label_day_progress">第 %1$d/%2$d 天</string>
+    <string name="label_rest_day">休息日</string>
+    <string name="label_rest_short">休</string>
+    <string name="label_today_rest">今日休息 — 可从菜单选择其他训练日训练</string>
+    <string name="label_switch_training_day">切换训练日</string>
+    <string name="label_add_day">新增训练日</string>
+    <string name="label_rename_day">重命名</string>
+    <string name="label_set_as_rest_day">设为休息日</string>
+    <string name="label_delete_day">删除该训练日</string>
+    <string name="label_train_other_day">选择训练日训练</string>
+
     <!--Day of Week-->
     <string name="label_today">.今天</string>
     <string name="label_plan">计划</string>
