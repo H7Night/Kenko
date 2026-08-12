@@ -268,6 +268,8 @@
     <string name="label_switch_training_day">切换训练日</string>
     <string name="label_add_day">新增训练日</string>
     <string name="label_rename_day">重命名</string>
+    <string name="label_move_day_backward">前移</string>
+    <string name="label_move_day_forward">后移</string>
     <string name="label_set_as_rest_day">设为休息日</string>
     <string name="label_delete_day">删除该训练日</string>
     <string name="label_train_other_day">选择训练日训练</string>

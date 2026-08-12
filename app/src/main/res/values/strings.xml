@@ -274,6 +274,8 @@
     <string name="label_switch_training_day">Switch training day</string>
     <string name="label_add_day">Add training day</string>
     <string name="label_rename_day">Rename</string>
+    <string name="label_move_day_backward">Move day earlier</string>
+    <string name="label_move_day_forward">Move day later</string>
     <string name="label_set_as_rest_day">Set as rest day</string>
     <string name="label_delete_day">Delete this day</string>
     <string name="label_train_other_day">Train another day</string>

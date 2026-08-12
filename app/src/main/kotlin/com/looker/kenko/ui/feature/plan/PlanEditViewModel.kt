@@ -27,8 +27,6 @@ import com.looker.kenko.R
 import com.looker.kenko.data.StringHandler
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.PlanItem
-import com.looker.kenko.domain.model.RepsInReserve
-import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.withDayTitle
@@ -49,7 +47,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DayOfWeek
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -77,21 +74,21 @@ class PlanEditViewModel @Inject constructor(
     private val _isBackAlreadyPressedOnce = MutableStateFlow(false)
     private val _isSavingDayTitle = MutableStateFlow(false)
 
-    private val _planItemsStream = planIdStream.flatMapLatest { repo.planItems(it) }
+    private val _planItemsStream = planIdStream.flatMapLatest { repo.planItemsByPlan(it) }
 
     private val _planStream = planIdStream.flatMapLatest { id ->
         repo.plans.map { plans -> plans.find { it.id == id } }
     }
 
-    private val _dayOfWeek: MutableStateFlow<DayOfWeek> = MutableStateFlow(today().dayOfWeek)
+    private val _dayIndex: MutableStateFlow<Int> = MutableStateFlow(1)
 
     val dayTitleState: TextFieldState = TextFieldState("")
 
     init {
         viewModelScope.launch {
             try {
-                combine(_planStream, _dayOfWeek) { plan, day ->
-                    plan?.titlesMap?.get(day) ?: ""
+                combine(_planStream, _dayIndex) { plan, dayIndex ->
+                    plan?.titlesMap?.get(dayIndex) ?: ""
                 }.collect { title ->
                     if (!_isSavingDayTitle.value && dayTitleState.text.toString() != title) {
                         dayTitleState.edit {
@@ -126,7 +123,7 @@ class PlanEditViewModel @Inject constructor(
                         _isSavingDayTitle.value = true
                         try {
                             val currentPlan = repo.plan(planIdStream.value) ?: return@collect
-                            val day = _dayOfWeek.value
+                            val day = _dayIndex.value
                             if (currentPlan.titlesMap[day] != title) {
                                 repo.updatePlan(currentPlan.withDayTitle(day, title))
                             }
@@ -159,8 +156,6 @@ class PlanEditViewModel @Inject constructor(
 
     private val _isSheetVisible: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
-    private val _fullDaySelection: MutableStateFlow<Boolean> = MutableStateFlow(false)
-
     val isNameAlreadyUsed = snapshotFlow { planNameState.text.trim().toString() }
         .debounce(200.milliseconds)
         .flatMapLatest { name ->
@@ -178,21 +173,21 @@ class PlanEditViewModel @Inject constructor(
     val state: StateFlow<PlanEditState> = combine(
         _planStream,
         _planItemsStream,
-        _dayOfWeek,
-        _fullDaySelection,
+        _dayIndex,
         _isSheetVisible,
-    ) { plan, items, day, daySelection, sheetVisible ->
+    ) { plan, items, dayIndex, sheetVisible ->
         PlanEditState(
-            currentDay = day,
-            selectionMode = daySelection,
+            currentDay = dayIndex,
+            dayCount = plan?.dayCount ?: 7,
             exerciseSheetVisible = sheetVisible,
-            planItems = items.filter { it.dayOfWeek == day },
+            planItems = items.filter { it.dayIndex == dayIndex },
             planTitles = plan?.titlesMap ?: emptyMap(),
+            allItems = items,
         )
     }.asStateFlow(
         PlanEditState(
-            currentDay = today().dayOfWeek,
-            selectionMode = false,
+            currentDay = 1,
+            dayCount = 7,
             exerciseSheetVisible = false,
             planItems = emptyList(),
         ),
@@ -217,23 +212,10 @@ class PlanEditViewModel @Inject constructor(
         }
     }
 
-    fun setCurrentDay(dayOfWeek: DayOfWeek) {
+    fun setCurrentDay(dayIndex: Int) {
         viewModelScope.launch {
             try {
-                _dayOfWeek.emit(dayOfWeek)
-                if (_fullDaySelection.value) {
-                    _fullDaySelection.emit(false)
-                }
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
-        }
-    }
-
-    fun openFullDaySelection() {
-        viewModelScope.launch {
-            try {
-                _fullDaySelection.emit(true)
+                _dayIndex.emit(dayIndex)
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
             }
@@ -265,7 +247,7 @@ class PlanEditViewModel @Inject constructor(
             try {
                 repo.addItem(
                     PlanItem(
-                        dayOfWeek = _dayOfWeek.value,
+                        dayIndex = _dayIndex.value,
                         exercise = exercise,
                         planId = planIdStream.value,
                     ),
@@ -289,7 +271,51 @@ class PlanEditViewModel @Inject constructor(
     fun updateOrder(exercises: List<Exercise>) {
         viewModelScope.launch {
             try {
-                repo.updateOrder(planIdStream.value, _dayOfWeek.value, exercises)
+                repo.updateOrder(planIdStream.value, _dayIndex.value, exercises)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
+        }
+    }
+
+    fun addDay() {
+        viewModelScope.launch {
+            try {
+                repo.addDay(planIdStream.value)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
+        }
+    }
+
+    fun deleteCurrentDay() {
+        viewModelScope.launch {
+            try {
+                repo.deleteDay(planIdStream.value, _dayIndex.value)
+                _dayIndex.emit(1)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
+        }
+    }
+
+    fun setDayAsRest() {
+        viewModelScope.launch {
+            try {
+                // 清空当天动作即成为休息日
+                repo.getPlanItems(planIdStream.value, _dayIndex.value)
+                    .forEach { repo.removeItem(requireNotNull(it.id)) }
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
+        }
+    }
+
+    fun moveDay(from: Int, to: Int) {
+        viewModelScope.launch {
+            try {
+                repo.moveDay(planIdStream.value, from, to)
+                _dayIndex.emit(to)
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
             }
@@ -329,9 +355,10 @@ enum class PlanEditStage {
 
 @Stable
 data class PlanEditState(
-    val currentDay: DayOfWeek,
-    val selectionMode: Boolean,
+    val currentDay: Int,
+    val dayCount: Int,
     val exerciseSheetVisible: Boolean,
     val planItems: List<PlanItem>,
-    val planTitles: Map<DayOfWeek, String> = emptyMap(),
+    val planTitles: Map<Int, String> = emptyMap(),
+    val allItems: List<PlanItem> = emptyList(),
 )
