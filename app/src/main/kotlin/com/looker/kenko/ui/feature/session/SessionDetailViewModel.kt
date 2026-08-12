@@ -28,7 +28,6 @@ import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.Set
 import com.looker.kenko.domain.model.today
-import com.looker.kenko.domain.model.week
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
@@ -54,7 +53,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 
@@ -86,13 +84,13 @@ class SessionDetailViewModel @Inject constructor(
             session to plans
         }.flatMapLatest { (session, plans) ->
             val planId = session?.planId ?: plans.find { it.isActive }?.id
-            val day = session?.planDayOverride ?: sessionDate.dayOfWeek
-            repo.previousSessionDate(sessionDate, planId, day)
+            val day = session?.dayIndexOverride ?: plans.find { it.isActive }?.currentDayIndex
+            if (day == null) flowOf(null) else repo.previousSessionDate(sessionDate, planId, day)
         }
 
-    private val availablePlanItems: Flow<Map<DayOfWeek, List<Exercise>>> = planRepo.planItems
+    private val availablePlanItems: Flow<Map<Int, List<Exercise>>> = planRepo.planItems
         .map { items ->
-            items.groupBy { it.dayOfWeek }
+            items.groupBy { it.dayIndex }
                 .mapValues { entry -> entry.value.map { it.exercise } }
         }
 
@@ -103,24 +101,34 @@ class SessionDetailViewModel @Inject constructor(
     private val exercisesToday: Flow<List<Exercise>> =
         combine(
             sessionStream,
-            availablePlanItems
-        ) { session, available ->
-            session to available
-        }.flatMapLatest { (session, available) ->
+            availablePlanItems,
+            planRepo.plans,
+        ) { session, available, plans ->
+            Triple(session, available, plans)
+        }.flatMapLatest { (session, available, plans) ->
+            val currentPlan = plans.find { it.isActive }
+            val dayOverride = session?.dayIndexOverride
             val plannedFlow = when {
-                session?.planDayOverride != null -> {
+                dayOverride != null -> {
                     val pid = session.planId
                     if (pid != null) {
-                        planRepo.planItems(pid, session.planDayOverride)
+                        planRepo.planItems(pid, dayOverride)
                             .map { it.map(PlanItem::exercise) }
                     } else {
-                        planRepo.activeExercises(session.planDayOverride)
+                        planRepo.activeExercises(dayOverride)
                     }
                 }
 
-                sessionDate.isToday -> planRepo.activeExercises(sessionDate.dayOfWeek)
-                session?.planId != null -> planRepo.planItems(session.planId, sessionDate.dayOfWeek)
-                    .map { it.map(PlanItem::exercise) }
+                sessionDate.isToday -> {
+                    val day = currentPlan?.currentDayIndex
+                    if (day == null) flowOf(emptyList()) else planRepo.activeExercises(day)
+                }
+
+                session?.planId != null -> {
+                    val day = currentPlan?.currentDayIndex
+                    if (day == null) flowOf(emptyList()) else planRepo.planItems(session.planId, day)
+                        .map { it.map(PlanItem::exercise) }
+                }
 
                 else -> flowOf(emptyList())
             }
@@ -167,7 +175,7 @@ class SessionDetailViewModel @Inject constructor(
             val session = flows[0] as Session?
             val exercises = flows[1] as List<Exercise>
             val previousSessionDate = flows[2] as LocalDate?
-            val available = flows[3] as Map<DayOfWeek, List<Exercise>>
+            val available = flows[3] as Map<Int, List<Exercise>>
             val isEditMode = flows[4] as Boolean
             val plans = flows[5] as List<com.looker.kenko.domain.model.Plan>
 
@@ -184,7 +192,7 @@ class SessionDetailViewModel @Inject constructor(
 
             val currentSession = session ?: Session(-1, emptyList())
             val dayTitle = plans.find { it.id == currentSession.planId }
-                ?.titlesMap?.get(currentSession.planDayOverride ?: currentSession.date.dayOfWeek)
+                ?.titlesMap?.get(currentSession.dayIndexOverride)
 
             val exerciseMap = when {
                 sessionDate.isToday || exercises.isNotEmpty() -> exercises.associateWith { exercise ->
@@ -214,10 +222,10 @@ class SessionDetailViewModel @Inject constructor(
         _isEditMode.value = !_isEditMode.value
     }
 
-    fun importPlanFromDay(day: DayOfWeek) {
+    fun importPlanFromDay(dayIndex: Int) {
         viewModelScope.launch {
             try {
-                repo.updatePlanDay(sessionDate, day)
+                repo.updateDayIndex(sessionDate, dayIndex)
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
             }
@@ -295,9 +303,10 @@ data class SessionUiData(
     val isToday: Boolean = false,
     val isEditMode: Boolean = false,
     val dayTitle: String? = null,
+    val dayIndexOverride: Int? = null,
     val previousSessionDate: LocalDate? = null,
-    val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),
-    val dayTitles: Map<DayOfWeek, String> = emptyMap(),
+    val availablePlanDays: Map<Int, List<Exercise>> = emptyMap(),
+    val dayTitles: Map<Int, String> = emptyMap(),
 )
 
 sealed interface SessionDetailState {
@@ -316,8 +325,8 @@ sealed interface SessionDetailState {
         )
 
         data class EmptyPlan(
-            val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),
-            val dayTitles: Map<DayOfWeek, String> = emptyMap()
+            val availablePlanDays: Map<Int, List<Exercise>> = emptyMap(),
+            val dayTitles: Map<Int, String> = emptyMap()
         ) : Error(
             title = R.string.label_nothing_today,
             errorMessage = R.string.label_no_exercise_today,

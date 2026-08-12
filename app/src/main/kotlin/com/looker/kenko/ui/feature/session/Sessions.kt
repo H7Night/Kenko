@@ -59,7 +59,6 @@ import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.extension.plus
-import com.looker.kenko.ui.feature.plan.components.dayName
 import com.looker.kenko.ui.component.timer.TimerService
 import com.looker.kenko.ui.feature.home.components.TrainingHeatmap
 import com.looker.kenko.ui.theme.KenkoIcons
@@ -93,7 +92,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.scale
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import androidx.compose.ui.platform.LocalContext
-import kotlinx.datetime.DayOfWeek
 
 @Composable
 fun Sessions(
@@ -142,13 +140,13 @@ private fun Sessions(
     var planExpanded by remember { mutableStateOf(false) }
     var dayExpanded by remember { mutableStateOf(false) }
     var selectedPlan by remember { mutableStateOf<Plan?>(null) }
-    var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
+    var selectedDay by remember { mutableStateOf<Int?>(null) }
     var selectedMonth by remember { mutableStateOf(today()) }
     val context = LocalContext.current
 
     val selectedPlanName = selectedPlan?.name ?: stringResource(R.string.label_select_plan_one)
-    val selectedDayName = selectedDay?.let { day -> selectedPlan?.titlesMap?.get(day) ?: dayName(day) } ?: stringResource(R.string.label_select_muscle)
-    val availableDays: Map<DayOfWeek, String> = remember(selectedPlan) {
+    val selectedDayName = selectedDay?.let { day -> selectedPlan?.titlesMap?.get(day) ?: stringResource(R.string.label_day_n, day) } ?: stringResource(R.string.label_select_muscle)
+    val availableDays: Map<Int, String> = remember(selectedPlan) {
         selectedPlan?.titlesMap ?: emptyMap()
     }
 
@@ -156,7 +154,7 @@ private fun Sessions(
         val planId = selectedPlan?.id
         state.sessions.filter { session ->
             val planMatch = planId == null || session.planId == planId
-            val dayMatch = selectedDay == null || session.planDayOverride == selectedDay
+            val dayMatch = selectedDay == null || session.dayIndexOverride == selectedDay
             val monthMatch =
                 session.date.year == selectedMonth.year && session.date.month == selectedMonth.month
             planMatch && dayMatch && monthMatch
@@ -329,20 +327,16 @@ private fun Sessions(
 
 @Composable
 private fun AddHistoryDialog(
-    availablePlanDays: Map<DayOfWeek, List<Exercise>>,
-    dayTitles: Map<DayOfWeek, String>,
+    availablePlanDays: Map<Int, List<Exercise>>,
+    dayTitles: Map<Int, String>,
     onDismiss: () -> Unit,
-    onConfirm: (LocalDate, DayOfWeek) -> Unit,
+    onConfirm: (LocalDate, Int) -> Unit,
 ) {
     var date by remember { mutableStateOf<LocalDate>(today()) }
-    var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
+    var selectedDay by remember { mutableStateOf<Int?>(null) }
 
-    LaunchedEffect(date) {
-        if (date.dayOfWeek in availablePlanDays) {
-            selectedDay = date.dayOfWeek
-        } else if (availablePlanDays.isNotEmpty()) {
-            selectedDay = availablePlanDays.keys.first()
-        }
+    LaunchedEffect(availablePlanDays) {
+        selectedDay = availablePlanDays.keys.firstOrNull()
     }
 
     AlertDialog(
@@ -378,7 +372,7 @@ private fun AddHistoryDialog(
                             item {
                                 val title = dayTitles[day]
                                 val isSelected = selectedDay == day
-                                val text = if (title.isNullOrBlank()) dayName(day) else title
+                                val text = if (title.isNullOrBlank()) stringResource(R.string.label_day_n, day) else title
                                 val colors = ButtonDefaults.buttonColors(
                                     containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                                     contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -456,7 +450,7 @@ fun SessionCard(
     session: Session,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
-    dayTitles: Map<Int?, Map<DayOfWeek, String>> = emptyMap(),
+    dayTitles: Map<Int?, Map<Int, String>> = emptyMap(),
     onDelete: (() -> Unit)? = null,
 ) {
     val containerColor = if (session.date.isToday) {
@@ -480,11 +474,10 @@ fun SessionCard(
             Column(modifier = Modifier.weight(1f)) {
             val titleStyle = MaterialTheme.typography.titleLarge
             val secondaryEmphasis = MaterialTheme.colorScheme.outline
-            val effectiveDay = session.planDayOverride ?: session.date.dayOfWeek
-            val dayName = dayName(effectiveDay)
+            val effectiveDay = session.dayIndexOverride
             val dayTitle = dayTitles[session.planId]?.get(effectiveDay)
-            val displayName = if (dayTitle.isNullOrBlank()) dayName else "$dayTitle ($dayName)"
-            val string = remember(session.date, dayName, dayTitle) {
+            val displayName = if (dayTitle.isNullOrBlank()) stringResource(R.string.label_day_n, effectiveDay ?: 1) else dayTitle
+            val string = remember(session.date, displayName, dayTitle) {
                 buildAnnotatedString {
                     withStyle(titleStyle.toSpanStyle().copy(fontWeight = FontWeight.Bold)) {
                         append(formatDate(session.date, dateTimeFormat = DateFormat.YearMonthDay))

@@ -100,7 +100,6 @@ import com.looker.kenko.ui.component.DeletableSetItem
 import com.looker.kenko.ui.component.SetItem
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.extension.plus
-import com.looker.kenko.ui.feature.plan.components.dayName
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.utils.DateFormat
@@ -113,7 +112,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 
 @Composable
@@ -161,7 +159,7 @@ private fun SessionDetail(
     onUpdateSet: (Int?, Int, Float) -> Unit = { _, _, _ -> },
     onSelectBottomSheet: (Exercise) -> Unit = {},
     onHistoryClick: () -> Unit = {},
-    onImportDay: (DayOfWeek) -> Unit = {},
+    onImportDay: (Int) -> Unit = {},
     onEditToggle: () -> Unit = {},
     onClearSets: () -> Unit = {},
     showBackButton: Boolean = true,
@@ -243,7 +241,7 @@ private fun SessionDetail(
                                         contentPadding = PaddingValues(vertical = 12.dp)
                                     ) {
                                         val title = state.dayTitles[day]
-                                        Text(text = if (title.isNullOrBlank()) dayName(day) else title)
+                                        Text(text = if (title.isNullOrBlank()) stringResource(R.string.label_day_n, day) else title)
                                     }
                                 }
                             }
@@ -281,6 +279,7 @@ private fun SessionDetail(
                 isEditMode = data.isEditMode,
                 previousSessionDate = data.previousSessionDate,
                 dayTitle = data.dayTitle,
+                dayIndexOverride = data.dayIndexOverride,
                 availablePlanDays = data.availablePlanDays,
                 dayTitles = data.dayTitles,
                 allExercises = allExercises,
@@ -309,8 +308,9 @@ private fun SetsList(
     isEditMode: Boolean,
     previousSessionDate: LocalDate?,
     dayTitle: String?,
-    availablePlanDays: Map<DayOfWeek, List<Exercise>>,
-    dayTitles: Map<DayOfWeek, String>,
+    dayIndexOverride: Int?,
+    availablePlanDays: Map<Int, List<Exercise>>,
+    dayTitles: Map<Int, String>,
     allExercises: List<Exercise> = emptyList(),
     onBackPress: () -> Unit,
     onRemoveSet: (Int?) -> Unit,
@@ -318,7 +318,7 @@ private fun SetsList(
     onSelectBottomSheet: (Exercise) -> Unit,
     onHistoryClick: () -> Unit,
     onEditToggle: () -> Unit,
-    onImportDay: (DayOfWeek) -> Unit,
+    onImportDay: (Int) -> Unit,
     onClearSets: () -> Unit,
     showBackButton: Boolean = true,
     onAddExerciseClick: (String) -> Unit = {},
@@ -382,7 +382,7 @@ private fun SetsList(
                             contentPadding = PaddingValues(vertical = 12.dp)
                         ) {
                             val title = dayTitles[day]
-                            Text(text = if (title.isNullOrBlank()) dayName(day) else title)
+                            Text(text = if (title.isNullOrBlank()) stringResource(R.string.label_day_n, day) else title)
                         }
                     }
                 }
@@ -417,6 +417,7 @@ private fun SetsList(
             Header(
                 performedOn = date,
                 dayTitle = dayTitle,
+                dayIndexOverride = dayIndexOverride,
                 onBackPress = onBackPress,
                 showBackButton = showBackButton,
                 actions = {
@@ -527,6 +528,7 @@ private fun SetsList(
 private fun Header(
     performedOn: LocalDate,
     dayTitle: String?,
+    dayIndexOverride: Int?,
     onBackPress: () -> Unit,
     modifier: Modifier = Modifier,
     showBackButton: Boolean = true,
@@ -535,10 +537,7 @@ private fun Header(
     val date = remember {
         formatDate(performedOn, DateFormat.YearMonthDay)
     }
-    val name = dayName(performedOn.dayOfWeek)
-    val dayText = remember(dayTitle, name) {
-        if (dayTitle.isNullOrBlank()) name else "$dayTitle ($name)"
-    }
+    val dayText = dayTitle ?: stringResource(R.string.label_day_n, dayIndexOverride ?: 1)
     TopAppBar(
         modifier = modifier,
         actions = actions,
@@ -767,7 +766,7 @@ private fun SessionEmptyPreview() {
     KenkoTheme {
         val data = remember {
             SessionDetailState.Error.EmptyPlan(
-                mapOf(DayOfWeek.MONDAY to emptyList())
+                mapOf(1 to emptyList())
             )
         }
         Surface(modifier = Modifier.fillMaxSize()) {
