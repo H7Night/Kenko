@@ -61,7 +61,7 @@ private val CatppuccinLatteColorScheme: ColorScheme = lightColorScheme(
     surface = Color(0xFFEFF1F5),
     onSurface = Color(0xFF4C4F69),
     surfaceVariant = Color(0xFFCCD0DA),
-    onSurfaceVariant = Color(0xFF6C6F85),
+    onSurfaceVariant = Color(0xFF5C5F77), // Subtext1 — secondary text ≥4.5:1
     outline = Color(0xFF7C7F93),
     outlineVariant = Color(0xFFACB0BE),
     scrim = Color(0xFF000000),
@@ -80,32 +80,33 @@ private val CatppuccinLatteColorScheme: ColorScheme = lightColorScheme(
 /**
  * Catppuccin Mocha — dark color scheme.
  * Palette: https://catppuccin.com/palette (Mocha)
- * Container roles use the brighter accent variants (Sapphire/Sky/Lavender/Maroon)
- * with Base as the on-color, all straight from the official palette.
+ * Container roles follow the community-standard mix(base, accent, 25%)
+ * approach (equivalent to M3 tone 30, desaturated for dark mode);
+ * on-container colors are lightened accents for readable on-dark text.
  */
 private val CatppuccinMochaColorScheme: ColorScheme = darkColorScheme(
     primary = Color(0xFF89B4FA),
     onPrimary = Color(0xFF1E1E2E),
-    primaryContainer = Color(0xFF74C7EC), // Sapphire
-    onPrimaryContainer = Color(0xFF1E1E2E), // Base
+    primaryContainer = Color(0xFF394461),
+    onPrimaryContainer = Color(0xFFB8D4FB),
     secondary = Color(0xFF94E2D5),
     onSecondary = Color(0xFF1E1E2E),
-    secondaryContainer = Color(0xFF89DCEB), // Sky
-    onSecondaryContainer = Color(0xFF1E1E2E), // Base
+    secondaryContainer = Color(0xFF3C4F58),
+    onSecondaryContainer = Color(0xFFC4EFE8),
     tertiary = Color(0xFFCBA6F7),
     onTertiary = Color(0xFF1E1E2E),
-    tertiaryContainer = Color(0xFFB4BEFE), // Lavender
-    onTertiaryContainer = Color(0xFF1E1E2E), // Base
+    tertiaryContainer = Color(0xFF494060),
+    onTertiaryContainer = Color(0xFFE2CEFB),
     error = Color(0xFFF38BA8),
     onError = Color(0xFF1E1E2E),
-    errorContainer = Color(0xFFEBA0AC), // Maroon
-    onErrorContainer = Color(0xFF1E1E2E), // Base
+    errorContainer = Color(0xFF53394C),
+    onErrorContainer = Color(0xFFF8BFCF),
     background = Color(0xFF1E1E2E),
     onBackground = Color(0xFFCDD6F4),
     surface = Color(0xFF1E1E2E),
     onSurface = Color(0xFFCDD6F4),
     surfaceVariant = Color(0xFF313244),
-    onSurfaceVariant = Color(0xFFA6ADC8),
+    onSurfaceVariant = Color(0xFFBAC2DE), // Subtext1 — secondary text ≥7:1
     outline = Color(0xFF9399B2),
     outlineVariant = Color(0xFF45475A),
     scrim = Color(0xFF000000),
