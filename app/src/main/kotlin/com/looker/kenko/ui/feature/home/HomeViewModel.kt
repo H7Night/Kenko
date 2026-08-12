@@ -200,6 +200,7 @@ class HomeViewModel @Inject constructor(
                 val session = sessionStream.first()
                 if (session?.sets?.isNotEmpty() == true) {
                     val day = session.dayIndexOverride ?: plan.currentDayIndex
+                    sessionRepo.updateDayIndex(today(), day)
                     planRepo.advanceDay(requireNotNull(plan.id), day)
                 }
             } catch (e: Exception) {

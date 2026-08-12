@@ -208,7 +208,17 @@ class LocalPlanRepo @Inject constructor(
     override suspend fun deleteDay(planId: Int, dayIndex: Int) {
         val plan = dao.getPlanById(planId) ?: return
         if (dayIndex !in 1..plan.dayCount) return
-        dao.deleteDay(planId, dayIndex)
+        // dayTitles 的 key 同步搬移:删除目标天,后续天前移,范围外保留
+        val shifted = plan.toExternal(isActive = false, stat = PlanStat(0, 0)).titlesMap.mapNotNull { (day, title) ->
+            val newDay = when {
+                day == dayIndex -> return@mapNotNull null
+                day > dayIndex -> day - 1
+                else -> day
+            }
+            newDay to title
+        }.toMap()
+        val newDayTitles = if (shifted.isEmpty()) null else Json.encodeToString(shifted)
+        dao.deleteDayWithTitles(planId, dayIndex, newDayTitles)
     }
 
     override suspend fun moveDay(planId: Int, from: Int, to: Int) {

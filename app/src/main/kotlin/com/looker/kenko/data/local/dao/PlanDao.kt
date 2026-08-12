@@ -302,6 +302,12 @@ interface PlanDao {
     }
 
     @Transaction
+    suspend fun deleteDayWithTitles(planId: Int, day: Int, dayTitles: String?) {
+        deleteDay(planId, day)
+        updatePlanDayTitles(planId, dayTitles)
+    }
+
+    @Transaction
     suspend fun moveDay(planId: Int, from: Int, to: Int) {
         if (from == to) return
         if (from < to) moveDayForward(planId, from, to) else moveDayBackward(planId, from, to)
