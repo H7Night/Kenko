@@ -299,26 +299,6 @@
         <item>Fast Feedback</item>
     </string-array>
 
-    <string-array name="kenko_day_of_week">
-        <item>.mon</item>
-        <item>.tue</item>
-        <item>.wed</item>
-        <item>.thu</item>
-        <item>.fri</item>
-        <item>.sat</item>
-        <item>.sun</item>
-    </string-array>
-
-    <string-array name="day_of_week">
-        <item>Monday</item>
-        <item>Tuesday</item>
-        <item>Wednesday</item>
-        <item>Thursday</item>
-        <item>Friday</item>
-        <item>Saturday</item>
-        <item>Sunday</item>
-    </string-array>
-
     <string-array name="day_of_week_short">
         <item>Mon</item>
         <item>Tue</item>
