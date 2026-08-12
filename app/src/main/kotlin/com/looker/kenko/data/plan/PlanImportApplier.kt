@@ -7,6 +7,7 @@ import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.PlanTransfer
 import com.looker.kenko.domain.model.toExercise
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
@@ -25,6 +26,8 @@ class PlanImportApplier @Inject constructor(
             try {
                 applyOne(plan)
                 imported++
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 failed++
             }
