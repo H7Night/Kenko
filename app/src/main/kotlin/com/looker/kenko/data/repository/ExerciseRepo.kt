@@ -32,5 +32,8 @@ interface ExerciseRepo {
 
     suspend fun isExerciseAvailable(name: String): Boolean
 
+    /** 按 name 查动作；不存在则创建（tags 按名匹配本地 Tag 关联）并返回带 id 的结果。 */
+    suspend fun getOrCreate(exercise: Exercise): Exercise
+
     suspend fun hasHistory(id: Int): Boolean
 }

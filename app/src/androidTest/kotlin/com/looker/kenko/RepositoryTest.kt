@@ -154,4 +154,16 @@ class RepositoryTest {
         assertEquals("Push", titlesAfterForward?.get(4)) // 1 → 4
         assertEquals(2, titlesAfterForward?.size)
     }
+
+    @Test
+    fun getOrCreateCreatesMissingExerciseAndReusesExisting() = runTest {
+        val created = exerciseRepo.getOrCreate(
+            com.looker.kenko.domain.model.Exercise(name = "Unique-Import-Test-动作"),
+        )
+        assertNotNull(created.id)
+        val reused = exerciseRepo.getOrCreate(
+            com.looker.kenko.domain.model.Exercise(name = "Unique-Import-Test-动作"),
+        )
+        assertEquals(created.id, reused.id)
+    }
 }
