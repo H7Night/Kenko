@@ -431,11 +431,30 @@ suspend fun decrementDayCount(planId: Int, day: Int)
 @Query("UPDATE plan_day SET dayIndex = :to WHERE planId = :planId AND dayIndex = :from")
 suspend fun setDayIndex(planId: Int, from: Int, to: Int)
 
-@Query("UPDATE plan_day SET dayIndex = dayIndex - 1 WHERE planId = :planId AND dayIndex > :from AND dayIndex <= :to")
-suspend fun decrementDayRange(planId: Int, from: Int, to: Int)
+@Query(
+    """
+    UPDATE plan_day SET dayIndex = CASE
+        WHEN dayIndex = :from THEN :to
+        WHEN dayIndex > :from AND dayIndex <= :to THEN dayIndex - 1
+        ELSE dayIndex END
+    WHERE planId = :planId AND dayIndex >= :from AND dayIndex <= :to
+    """,
+)
+suspend fun moveDayForward(planId: Int, from: Int, to: Int)
 
-@Query("UPDATE plan_day SET dayIndex = dayIndex + 1 WHERE planId = :planId AND dayIndex >= :from AND dayIndex < :to")
-suspend fun incrementDayRange(planId: Int, from: Int, to: Int)
+@Query(
+    """
+    UPDATE plan_day SET dayIndex = CASE
+        WHEN dayIndex = :from THEN :to
+        WHEN dayIndex >= :to AND dayIndex < :from THEN dayIndex + 1
+        ELSE dayIndex END
+    WHERE planId = :planId AND dayIndex >= :to AND dayIndex <= :from
+    """,
+)
+suspend fun moveDayBackward(planId: Int, from: Int, to: Int)
+
+@Query("UPDATE plans SET dayTitles = :dayTitles WHERE id = :planId")
+suspend fun updatePlanDayTitles(planId: Int, dayTitles: String?)
 
 @Transaction
 suspend fun deleteDay(planId: Int, day: Int) {
@@ -447,13 +466,13 @@ suspend fun deleteDay(planId: Int, day: Int) {
 @Transaction
 suspend fun moveDay(planId: Int, from: Int, to: Int) {
     if (from == to) return
-    if (from < to) {
-        decrementDayRange(planId, from + 1, to)
-        setDayIndex(planId, from, to)
-    } else {
-        incrementDayRange(planId, to, from - 1)
-        setDayIndex(planId, from, to)
-    }
+    if (from < to) moveDayForward(planId, from, to) else moveDayBackward(planId, from, to)
+}
+
+@Transaction
+suspend fun moveDayWithTitles(planId: Int, from: Int, to: Int, dayTitles: String?) {
+    moveDay(planId, from, to)
+    updatePlanDayTitles(planId, dayTitles)
 }
 ```
 
@@ -489,24 +508,25 @@ override suspend fun addDay(planId: Int) {
 }
 
 override suspend fun deleteDay(planId: Int, dayIndex: Int) {
+    val plan = dao.getPlanById(planId) ?: return
+    if (dayIndex !in 1..plan.dayCount) return
     dao.deleteDay(planId, dayIndex)
 }
 
 override suspend fun moveDay(planId: Int, from: Int, to: Int) {
     val plan = dao.getPlanById(planId) ?: return
-    dao.moveDay(planId, from, to)
-    // dayTitles 的 key 同步搬移
-    val shifted = plan.titlesMap.entries.mapNotNull { (day, title) ->
+    // dayTitles 的 key 同步搬移:范围外条目保留,只移动 from→to 与区间内条目
+    val shifted = plan.toExternal(isActive = false, stat = PlanStat(0, 0)).titlesMap.map { (day, title) ->
         val newDay = when {
             day == from -> to
             from < to && day in (from + 1)..to -> day - 1
             from > to && day in to until from -> day + 1
-            else -> null
+            else -> day
         }
-        newDay?.let { it to title }
+        newDay to title
     }.toMap()
     val newDayTitles = if (shifted.isEmpty()) null else Json.encodeToString(shifted)
-    dao.upsertPlan(plan.copy(dayTitles = newDayTitles))
+    dao.moveDayWithTitles(planId, from, to, newDayTitles)
 }
 ```
 
@@ -831,9 +851,9 @@ fun TrainingDayBar(
     onSelectDay: (Int) -> Unit,
     onAddDay: () -> Unit,
     onMoveDay: (Int, Int) -> Unit,
-    onRename: () -> Unit,
-    onSetAsRest: () -> Unit,
-    onDeleteDay: () -> Unit,
+    onRename: (Int) -> Unit,
+    onSetAsRest: (Int) -> Unit,
+    onDeleteDay: (Int) -> Unit,
     modifier: Modifier = Modifier,
 )
 ```
@@ -893,10 +913,13 @@ private fun DayTab(
     label: String,
     isRest: Boolean,
     selected: Boolean,
+    day: Int,
+    dayCount: Int,
     onClick: () -> Unit,
-    onRename: () -> Unit,
-    onSetAsRest: () -> Unit,
-    onDeleteDay: () -> Unit,
+    onRename: (Int) -> Unit,
+    onSetAsRest: (Int) -> Unit,
+    onDeleteDay: (Int) -> Unit,
+    onMoveDay: (Int, Int) -> Unit,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     FilterChip(
@@ -921,9 +944,30 @@ private fun DayTab(
         ),
     )
     DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-        DropdownMenuItem(text = { Text(stringResource(R.string.label_rename_day)) }, onClick = { menuExpanded = false; onRename() })
-        DropdownMenuItem(text = { Text(stringResource(R.string.label_set_as_rest_day)) }, onClick = { menuExpanded = false; onSetAsRest() })
-        DropdownMenuItem(text = { Text(stringResource(R.string.label_delete_day)) }, onClick = { menuExpanded = false; onDeleteDay() })
+        if (day > 1) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.label_move_day_backward)) },
+                onClick = { menuExpanded = false; onMoveDay(day, day - 1) },
+            )
+        }
+        if (day < dayCount) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.label_move_day_forward)) },
+                onClick = { menuExpanded = false; onMoveDay(day, day + 1) },
+            )
+        }
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.label_rename_day)) },
+            onClick = { menuExpanded = false; onRename(day) },
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.label_set_as_rest_day)) },
+            onClick = { menuExpanded = false; onSetAsRest(day) },
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.label_delete_day)) },
+            onClick = { menuExpanded = false; onDeleteDay(day) },
+        )
     }
 }
 ```
