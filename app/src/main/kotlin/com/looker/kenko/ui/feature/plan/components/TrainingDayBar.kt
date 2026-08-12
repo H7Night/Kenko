@@ -19,6 +19,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,12 +29,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -52,11 +56,12 @@ import com.looker.kenko.R
  * - 休息日(restDays 中)灰显并带"休"角标
  * - 末尾 "+" 按钮新增训练日(onAddDay)
  * - 点击标签切换当天(onSelectDay)
- * - 长按标签弹出菜单:移到前 / 移到后 / 重命名 / 设为休息日 / 删除该天(回调均带 day 参数,作用于被长按的标签而非当前选中日)
+ * - 选中天可移动时,标签条下方显示"移到前/后"操作条(onMoveDay,作用于当前选中天)
+ * - 长按标签弹出菜单:重命名 / 设为休息日 / 删除该天(作用于被长按的标签)
  *
- * 说明:重排采用退化方案(菜单"移到前/后",经 onMoveDay 调用 repo.moveDay),
- * 而非长按拖拽——FilterChip + combinedClickable 与 horizontalScroll 的横向拖拽
- * 手势相互冲突,拖拽在可滚动容器中不可靠。
+ * 说明:重排用显式按钮(移到前/后,经 onMoveDay 调用 repo.moveDay),而非长按拖拽
+ * ——FilterChip + combinedClickable 与 horizontalScroll 的横向拖拽手势相互冲突,
+ * 拖拽在可滚动容器中不可靠。
  */
 @Composable
 fun TrainingDayBar(
@@ -72,34 +77,61 @@ fun TrainingDayBar(
     onDeleteDay: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        (1..dayCount).forEach { day ->
-            val title = titles[day]
-            val isRest = day in restDays
-            DayTab(
-                day = day,
-                dayCount = dayCount,
-                label = title ?: stringResource(R.string.label_day_n, day),
-                isRest = isRest,
-                selected = day == selectedDay,
-                onClick = { onSelectDay(day) },
-                onMoveDay = onMoveDay,
-                onRename = onRename,
-                onSetAsRest = onSetAsRest,
-                onDeleteDay = onDeleteDay,
-            )
-        }
-        FilledTonalIconButton(
-            onClick = onAddDay,
-            modifier = Modifier.size(40.dp),
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.label_add_day))
+            (1..dayCount).forEach { day ->
+                val title = titles[day]
+                val isRest = day in restDays
+                DayTab(
+                    day = day,
+                    label = title ?: stringResource(R.string.label_day_n, day),
+                    isRest = isRest,
+                    selected = day == selectedDay,
+                    onClick = { onSelectDay(day) },
+                    onRename = onRename,
+                    onSetAsRest = onSetAsRest,
+                    onDeleteDay = onDeleteDay,
+                )
+            }
+            FilledTonalIconButton(
+                onClick = onAddDay,
+                modifier = Modifier.size(40.dp),
+            ) {
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.label_add_day))
+            }
+        }
+
+        // 选中天可移动时,显示"移到前/后"操作条(作用于当前选中天)
+        val canMoveBackward = selectedDay > 1
+        val canMoveForward = selectedDay < dayCount
+        if (canMoveBackward || canMoveForward) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                if (canMoveBackward) {
+                    OutlinedButton(onClick = { onMoveDay(selectedDay, selectedDay - 1) }) {
+                        Icon(Icons.Default.KeyboardArrowLeft, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.label_move_day_backward))
+                    }
+                }
+                if (canMoveForward) {
+                    OutlinedButton(onClick = { onMoveDay(selectedDay, selectedDay + 1) }) {
+                        Text(stringResource(R.string.label_move_day_forward))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(Icons.Default.KeyboardArrowRight, contentDescription = null)
+                    }
+                }
+            }
         }
     }
 }
@@ -108,12 +140,10 @@ fun TrainingDayBar(
 @Composable
 private fun DayTab(
     day: Int,
-    dayCount: Int,
     label: String,
     isRest: Boolean,
     selected: Boolean,
     onClick: () -> Unit,
-    onMoveDay: (Int, Int) -> Unit,
     onRename: (Int) -> Unit,
     onSetAsRest: (Int) -> Unit,
     onDeleteDay: (Int) -> Unit,
@@ -146,24 +176,6 @@ private fun DayTab(
         ),
     )
     DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-        if (day > 1) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.label_move_day_backward)) },
-                onClick = {
-                    menuExpanded = false
-                    onMoveDay(day, day - 1)
-                },
-            )
-        }
-        if (day < dayCount) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.label_move_day_forward)) },
-                onClick = {
-                    menuExpanded = false
-                    onMoveDay(day, day + 1)
-                },
-            )
-        }
         DropdownMenuItem(
             text = { Text(stringResource(R.string.label_rename_day)) },
             onClick = {
