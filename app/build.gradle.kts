@@ -185,6 +185,7 @@ dependencies {
     ksp(libs.room.compiler)
 
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:${libs.versions.kotlin.get()}")
+    testImplementation(libs.kotlinx.coroutines.test)
 
     androidTestImplementation("org.jetbrains.kotlin:kotlin-test-junit5:${libs.versions.kotlin.get()}")
     androidTestImplementation(platform(libs.compose.bom))
