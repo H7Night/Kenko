@@ -93,12 +93,13 @@ class RepositoryTest {
         val set = sessionRepo.getSets(sessionId).first()
         sessionRepo.removeSet(set.id!!)
         assertEquals(23, sessionRepo.getSets(sessionId).size)
-        val randomPerformedExercise = sets.random().exercise
-        val setsForRandomExercise = sets.filter { it.exercise.id == randomPerformedExercise.id }
+        val remainingSets = sessionRepo.getSets(sessionId) // 23 个(已删 1 个)
+        val randomPerformedExercise = remainingSets.random().exercise
+        val setsForRandomExercise = remainingSets.filter { it.exercise.id == randomPerformedExercise.id }
         exerciseRepo.remove(randomPerformedExercise.id!!)
-        assertEquals(23 - setsForRandomExercise.size, sessionRepo.getSets(sessionId).size)
+        assertEquals(remainingSets.size - setsForRandomExercise.size, sessionRepo.getSets(sessionId).size)
         planRepo.deletePlan(planId)
-        assertEquals(23 - setsForRandomExercise.size, sessionRepo.getSets(sessionId).size)
+        assertEquals(remainingSets.size - setsForRandomExercise.size, sessionRepo.getSets(sessionId).size)
         assertFails {
             planRepo.addItem(
                 PlanItem(
