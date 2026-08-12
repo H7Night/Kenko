@@ -476,7 +476,7 @@ fun SessionCard(
             val secondaryEmphasis = MaterialTheme.colorScheme.outline
             val effectiveDay = session.dayIndexOverride
             val dayTitle = dayTitles[session.planId]?.get(effectiveDay)
-            val displayName = if (dayTitle.isNullOrBlank()) stringResource(R.string.label_day_n, effectiveDay ?: 1) else dayTitle
+            val displayName = dayTitle ?: effectiveDay?.let { stringResource(R.string.label_day_n, it) } ?: ""
             val string = remember(session.date, displayName, dayTitle) {
                 buildAnnotatedString {
                     withStyle(titleStyle.toSpanStyle().copy(fontWeight = FontWeight.Bold)) {

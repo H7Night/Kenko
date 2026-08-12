@@ -537,7 +537,7 @@ private fun Header(
     val date = remember {
         formatDate(performedOn, DateFormat.YearMonthDay)
     }
-    val dayText = dayTitle ?: stringResource(R.string.label_day_n, dayIndexOverride ?: 1)
+    val dayText = dayTitle ?: dayIndexOverride?.let { stringResource(R.string.label_day_n, it) } ?: ""
     TopAppBar(
         modifier = modifier,
         actions = actions,

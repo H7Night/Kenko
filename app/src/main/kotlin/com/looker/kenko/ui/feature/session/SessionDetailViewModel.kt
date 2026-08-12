@@ -191,8 +191,11 @@ class SessionDetailViewModel @Inject constructor(
             }
 
             val currentSession = session ?: Session(-1, emptyList())
-            val dayTitle = plans.find { it.id == currentSession.planId }
-                ?.titlesMap?.get(currentSession.dayIndexOverride)
+            val dayIndex = currentSession.dayIndexOverride ?: currentPlan?.currentDayIndex
+            val dayTitle = dayIndex?.let { day ->
+                plans.find { it.id == currentSession.planId }?.titlesMap?.get(day)
+                    ?: currentPlanTitles[day]
+            }
 
             val exerciseMap = when {
                 sessionDate.isToday || exercises.isNotEmpty() -> exercises.associateWith { exercise ->
@@ -210,6 +213,7 @@ class SessionDetailViewModel @Inject constructor(
                     isToday = isTodaySession,
                     isEditMode = isEditMode,
                     dayTitle = dayTitle,
+                    dayIndexOverride = dayIndex,
                     previousSessionDate = previousSessionDate,
                     availablePlanDays = available,
                     dayTitles = currentPlanTitles,
