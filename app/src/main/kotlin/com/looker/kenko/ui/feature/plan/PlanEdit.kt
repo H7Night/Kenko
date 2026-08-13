@@ -16,8 +16,6 @@
 package com.looker.kenko.ui.feature.plan
 
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
@@ -30,7 +28,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -59,16 +56,12 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -126,47 +119,6 @@ fun PlanEdit(
         viewModel.onBackPress(pageStage, onBackPress)
     }
     val isNameAlreadyUsed by viewModel.isNameAlreadyUsed.collectAsStateWithLifecycle()
-    var showExportDialog by remember { mutableStateOf(false) }
-    var pendingExportIds by remember { mutableStateOf<List<Int>?>(null) }
-    val plansForExport by viewModel.plansForExport.collectAsStateWithLifecycle()
-    val importPreview by viewModel.importPreview.collectAsStateWithLifecycle()
-
-    val exportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/json"),
-    ) { uri ->
-        if (uri != null) {
-            pendingExportIds?.let { viewModel.exportPlans(it, uri) }
-        }
-        pendingExportIds = null
-    }
-
-    val importLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-    ) { uri ->
-        uri?.let { viewModel.previewImport(it) }
-    }
-
-    if (showExportDialog) {
-        ExportPlanDialog(
-            plans = plansForExport,
-            onConfirm = { ids ->
-                pendingExportIds = ids
-                showExportDialog = false
-                exportLauncher.launch("kenko-plans.json")
-            },
-            onDismiss = { showExportDialog = false },
-        )
-    }
-
-    importPreview?.let { preview ->
-        ImportPlanConfirmDialog(
-            planCount = preview.planCount,
-            onConfirm = {
-                viewModel.confirmImport()
-            },
-            onDismiss = { viewModel.dismissImportPreview() },
-        )
-    }
 
     FullEdit(
         snackbarHostState = viewModel.snackbarState,
@@ -200,31 +152,6 @@ fun PlanEdit(
             )
         },
         onBackPress = { viewModel.onBackPress(pageStage, onBackPress) },
-        actions = {
-            var menuExpanded by remember { mutableStateOf(false) }
-            IconButton(onClick = { menuExpanded = true }) {
-                Icon(Icons.Default.MoreVert, contentDescription = null)
-            }
-            DropdownMenu(
-                expanded = menuExpanded,
-                onDismissRequest = { menuExpanded = false },
-            ) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.label_export_plan)) },
-                    onClick = {
-                        menuExpanded = false
-                        showExportDialog = true
-                    },
-                )
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.label_import_plan_file)) },
-                    onClick = {
-                        menuExpanded = false
-                        importLauncher.launch(arrayOf("application/json"))
-                    },
-                )
-            }
-        },
     ) { stage ->
         when (stage) {
             PlanEditStage.NameEdit -> {
@@ -272,7 +199,6 @@ private fun FullEdit(
     fab: @Composable () -> Unit,
     onBackPress: () -> Unit,
     title: @Composable () -> Unit = {},
-    actions: @Composable RowScope.() -> Unit = {},
     ui: @Composable (stage: PlanEditStage) -> Unit,
 ) {
     Scaffold(
@@ -287,7 +213,6 @@ private fun FullEdit(
             CenterAlignedTopAppBar(
                 title = title,
                 navigationIcon = { BackButton(onBackPress) },
-                actions = actions,
             )
         },
     ) { innerPadding ->

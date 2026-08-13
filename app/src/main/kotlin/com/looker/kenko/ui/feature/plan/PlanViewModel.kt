@@ -17,15 +17,22 @@ package com.looker.kenko.ui.feature.plan
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.net.Uri
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.Stable
+import com.looker.kenko.R
+import com.looker.kenko.data.StringHandler
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SettingsRepo
+import com.looker.kenko.data.plan.PlanTransferManager
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -33,19 +40,76 @@ import kotlinx.coroutines.launch
 class PlanViewModel @Inject constructor(
     private val repo: PlanRepo,
     private val settingsRepo: SettingsRepo,
+    private val stringHandler: StringHandler,
+    private val transferManager: PlanTransferManager,
 ) : ViewModel() {
 
     val plans = repo.plans.asStateFlow(emptyList())
 
-    private val _snackbar = MutableSharedFlow<String>()
-    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
+    val snackbarState = SnackbarHostState()
+
+    private val _importPreview = MutableStateFlow<ImportPreview?>(null)
+    val importPreview: StateFlow<ImportPreview?> = _importPreview.asStateFlow()
+
+    fun previewImport(uri: Uri) {
+        viewModelScope.launch {
+            try {
+                val plans = transferManager.readPlans(uri)
+                _importPreview.value = ImportPreview(uri, plans.size)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                snackbarState.showSnackbar(stringHandler.getString(R.string.label_plan_file_invalid))
+            }
+        }
+    }
+
+    fun dismissImportPreview() {
+        _importPreview.value = null
+    }
+
+    fun confirmImport() {
+        val preview = _importPreview.value ?: return
+        viewModelScope.launch {
+            try {
+                val summary = transferManager.importPlans(preview.uri)
+                val message = if (summary.failed == 0) {
+                    stringHandler.getString(R.string.label_import_success, summary.imported)
+                } else {
+                    stringHandler.getString(R.string.label_import_partial, summary.imported, summary.failed)
+                }
+                snackbarState.showSnackbar(message)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                snackbarState.showSnackbar(e.message ?: "An error occurred")
+            } finally {
+                _importPreview.value = null
+            }
+        }
+    }
+
+    fun exportPlans(planIds: List<Int>, destinationUri: Uri) {
+        viewModelScope.launch {
+            try {
+                transferManager.exportPlans(planIds, destinationUri)
+                snackbarState.showSnackbar(
+                    stringHandler.getString(R.string.label_export_success, planIds.size),
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                snackbarState.showSnackbar(e.message ?: "An error occurred")
+            }
+        }
+    }
 
     fun removePlan(id: Int) {
         viewModelScope.launch {
             try {
                 repo.deletePlan(id)
             } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
+                snackbarState.showSnackbar(e.message ?: "An error occurred")
             }
         }
     }
@@ -62,8 +126,14 @@ class PlanViewModel @Inject constructor(
                     settingsRepo.setOnboardingDone()
                 }
             } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
+                snackbarState.showSnackbar(e.message ?: "An error occurred")
             }
         }
     }
 }
+
+@Stable
+data class ImportPreview(
+    val uri: Uri,
+    val planCount: Int,
+)
