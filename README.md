@@ -15,7 +15,8 @@ thought-out plans
 
 - **Workout Journal**: Track your training sessions (Resistance and Cardio) with ease.
 - **Inline Training Timer**: Start, pause, resume, and end workouts directly from the Home page with a foreground service timer and notification.
-- **Custom Plans**: Create and manage your own workout plans with custom names and per-day titles.
+- **Custom Plans**: Create and manage your own workout plans with custom names, per-day titles, rest days, and an adjustable training-day cycle (add/delete/reorder days).
+- **Plan Import & Export**: Export one or more selected plans to a single JSON file, and import plans from JSON — duplicate names are allowed and missing exercises are auto-created.
 - **Two-Level Exercise Tags**: Classify exercises by body part → specific muscle groups. Multi-tag support with tag management in Settings.
 - **Interactive Heatmap**: View your training consistency with a scrollable monthly heatmap and day-of-week labels on the Session History screen.
 - **Progressive Overload**: Monitor your progress over time with detailed session history and performance insights.
