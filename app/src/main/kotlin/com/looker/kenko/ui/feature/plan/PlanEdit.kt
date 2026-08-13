@@ -91,7 +91,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -127,7 +126,6 @@ fun PlanEdit(
         viewModel.onBackPress(pageStage, onBackPress)
     }
     val isNameAlreadyUsed by viewModel.isNameAlreadyUsed.collectAsStateWithLifecycle()
-    val context = LocalContext.current
     var showExportDialog by remember { mutableStateOf(false) }
     var pendingExportIds by remember { mutableStateOf<List<Int>?>(null) }
     val plansForExport by viewModel.plansForExport.collectAsStateWithLifecycle()

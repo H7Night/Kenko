@@ -14,6 +14,8 @@ import com.looker.kenko.domain.model.titlesMap
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.OutputStreamWriter
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class PlanTransferManager @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -22,22 +24,28 @@ class PlanTransferManager @Inject constructor(
 ) {
 
     suspend fun exportPlans(planIds: List<Int>, destinationUri: Uri) {
-        val transfers = planIds.mapNotNull { id ->
-            val plan = planRepo.plan(id) ?: return@mapNotNull null
-            plan.toTransfer(planRepo.getPlanItems(id))
-        }
-        val jsonString = PlanTransferCodec.encode(transfers)
-        context.contentResolver.openOutputStream(destinationUri)?.use { outputStream ->
-            OutputStreamWriter(outputStream).use { writer ->
-                writer.write(jsonString)
+        val jsonString = withContext(Dispatchers.IO) {
+            val transfers = planIds.mapNotNull { id ->
+                val plan = planRepo.plan(id) ?: return@mapNotNull null
+                plan.toTransfer(planRepo.getPlanItems(id))
             }
-        } ?: throw IllegalStateException("Cannot open output stream for $destinationUri")
+            PlanTransferCodec.encode(transfers)
+        }
+        withContext(Dispatchers.IO) {
+            context.contentResolver.openOutputStream(destinationUri)?.use { outputStream ->
+                OutputStreamWriter(outputStream).use { writer ->
+                    writer.write(jsonString)
+                }
+            } ?: throw IllegalStateException("Cannot open output stream for $destinationUri")
+        }
     }
 
     suspend fun readPlans(uri: Uri): List<PlanTransfer> {
-        val jsonString = context.contentResolver.openInputStream(uri)?.use { inputStream ->
-            inputStream.readBytes().toString(Charsets.UTF_8)
-        } ?: throw IllegalStateException("Cannot open input stream for $uri")
+        val jsonString = withContext(Dispatchers.IO) {
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                inputStream.readBytes().toString(Charsets.UTF_8)
+            } ?: throw IllegalStateException("Cannot open input stream for $uri")
+        }
         return PlanTransferCodec.decode(jsonString)
     }
 

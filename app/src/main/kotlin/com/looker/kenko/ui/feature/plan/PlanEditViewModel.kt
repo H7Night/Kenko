@@ -38,6 +38,7 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -209,6 +210,8 @@ class PlanEditViewModel @Inject constructor(
             try {
                 val plans = transferManager.readPlans(uri)
                 _importPreview.value = ImportPreview(uri, plans.size)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 snackbarState.showSnackbar(stringHandler.getString(R.string.label_plan_file_invalid))
             }
@@ -230,6 +233,8 @@ class PlanEditViewModel @Inject constructor(
                     stringHandler.getString(R.string.label_import_partial, summary.imported, summary.failed)
                 }
                 snackbarState.showSnackbar(message)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 snackbarState.showSnackbar(e.message ?: "An error occurred")
             } finally {
@@ -245,6 +250,8 @@ class PlanEditViewModel @Inject constructor(
                 snackbarState.showSnackbar(
                     stringHandler.getString(R.string.label_export_success, planIds.size),
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 snackbarState.showSnackbar(e.message ?: "An error occurred")
             }
