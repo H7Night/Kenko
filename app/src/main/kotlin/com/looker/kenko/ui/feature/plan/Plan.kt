@@ -59,6 +59,7 @@ import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.KenkoAddButton
 import com.looker.kenko.ui.feature.plan.components.PlanItem
 import androidx.compose.ui.platform.LocalContext
+import com.looker.kenko.utils.ExportFileName
 import com.looker.kenko.utils.toast
 import com.looker.kenko.ui.theme.KenkoTheme
 
@@ -97,7 +98,7 @@ fun Plan(
             onConfirm = { ids ->
                 pendingExportIds = ids
                 showExportDialog = false
-                exportLauncher.launch("kenko-plans.json")
+                exportLauncher.launch(ExportFileName.forProject("plans", "json"))
             },
             onDismiss = { showExportDialog = false },
         )
