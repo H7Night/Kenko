@@ -70,6 +70,8 @@ class PlanViewModel @Inject constructor(
 
     fun confirmImport() {
         val preview = _importPreview.value ?: return
+        // 立即关闭确认窗口，避免导入执行期间重复点击导致重复导入
+        _importPreview.value = null
         viewModelScope.launch {
             try {
                 val summary = transferManager.importPlans(preview.uri)
@@ -83,8 +85,6 @@ class PlanViewModel @Inject constructor(
                 throw e
             } catch (e: Exception) {
                 snackbarState.showSnackbar(e.message ?: "An error occurred")
-            } finally {
-                _importPreview.value = null
             }
         }
     }
