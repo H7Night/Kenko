@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Home page bottom text is hidden while a workout is active
 - Plan/session models migrated from weekday to day-index based training cycle (database migration 12 → 13)
 - Screen navigation now uses a short fade-in transition instead of swapping instantly
+- Start training button is hidden when there is no workout scheduled for today, and appears after selecting a training day
 
 ### Fixed
 - Day reordering (`moveDay`) now shifts day indexes and day titles atomically without gaps
@@ -26,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Incorrect rest-day count on the Profile page for plans with more/fewer than 7 days
 - Crash-save screen back handling migrated to `OnBackPressedDispatcher`
 - Core screens (Home, history, exercises, plans, profile) no longer flash an empty state while their data loads
+- Home timer now keeps showing the accumulated time after ending a workout, and starting again continues from that time
 
 ## [1.7.0] - 2026-08-07
 
