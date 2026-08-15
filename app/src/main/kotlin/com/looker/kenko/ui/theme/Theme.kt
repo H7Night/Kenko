@@ -144,10 +144,10 @@ fun KenkoTheme(
 
     val localView = LocalView.current
     SideEffect {
-        // Keep the window background transparent so the floating bottom bar
-        // doesn't sit on a white window background in the system nav-bar area.
+        // Keep the window background in sync with the theme so page transitions
+        // don't flash a mismatched (e.g. white) background under dark themes.
         (localView.context as Activity).window.setBackgroundDrawable(
-            ColorDrawable(android.graphics.Color.TRANSPARENT),
+            ColorDrawable(colorScheme.surface.toArgb()),
         )
     }
     SideEffect { setupSystemBar(localView, isDarkTheme) }
