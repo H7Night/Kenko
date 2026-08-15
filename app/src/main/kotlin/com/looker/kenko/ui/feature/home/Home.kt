@@ -211,6 +211,7 @@ fun Home(
                 elapsedSeconds = timerSeconds,
                 notificationGranted = notifState.granted,
                 hasAccumulatedTime = state.timerState == TimerState.IDLE && timerSeconds > 0,
+                showStart = !state.isTodayEmpty,
                 onStart = {
                     if (!notifState.granted) {
                         notifState.request()

@@ -64,6 +64,8 @@ class TrainingSessionManager @Inject constructor(
             val sessionId = (_sessionState.value as? TrainingSessionState.Active)?.sessionId
 
             timerManager.stop()
+            // Keep the accumulated time visible so the user can continue training
+            timerManager.setElapsedSeconds(elapsed)
 
             if (sessionId != null) {
                 // Save duration to session
@@ -82,6 +84,8 @@ class TrainingSessionManager @Inject constructor(
                         )
                     )
                     onEmptySessionDeleted()
+                    // Empty session deleted: nothing to continue, reset the display
+                    timerManager.setElapsedSeconds(0L)
                 }
             }
 

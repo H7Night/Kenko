@@ -45,6 +45,7 @@ fun TimerCard(
     elapsedSeconds: Long,
     notificationGranted: Boolean,
     hasAccumulatedTime: Boolean = false,
+    showStart: Boolean = true,
     onStart: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
@@ -85,16 +86,18 @@ fun TimerCard(
             ) {
                 when (timerState) {
                     TimerState.IDLE -> {
-                        Button(
-                            onClick = onStart,
-                            enabled = notificationGranted,
-                        ) {
-                            Text(
-                                if (hasAccumulatedTime)
-                                    stringResource(R.string.label_continue_session)
-                                else
-                                    stringResource(R.string.label_start_workout)
-                            )
+                        if (showStart) {
+                            Button(
+                                onClick = onStart,
+                                enabled = notificationGranted,
+                            ) {
+                                Text(
+                                    if (hasAccumulatedTime)
+                                        stringResource(R.string.label_continue_session)
+                                    else
+                                        stringResource(R.string.label_start_workout)
+                                )
+                            }
                         }
                     }
                     TimerState.RUNNING -> {
