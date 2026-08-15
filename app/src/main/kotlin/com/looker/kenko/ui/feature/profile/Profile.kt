@@ -57,7 +57,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -77,6 +76,12 @@ import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.ui.theme.end
 import com.looker.kenko.ui.theme.numbers
 import com.looker.kenko.ui.theme.start
+
+private sealed interface WeightDialogState {
+    data object Hidden : WeightDialogState
+    data class Add(val initial: Float) : WeightDialogState
+    data class Edit(val weight: Weight) : WeightDialogState
+}
 
 @Composable
 fun Profile(
@@ -127,39 +132,41 @@ private fun Profile(
     modifier: Modifier = Modifier,
     showBackButton: Boolean = false,
 ) {
-    var showWeightDialog by remember { mutableStateOf(false) }
-    var weightToEdit by remember { mutableStateOf<Weight?>(null) }
+    var weightDialog by remember { mutableStateOf<WeightDialogState>(WeightDialogState.Hidden) }
     var showWeightHistory by remember { mutableStateOf(false) }
 
-    if (showWeightDialog || weightToEdit != null) {
-        val initialWeight = weightToEdit?.value
-            ?: state.weights.lastOrNull()?.value
-            ?: 60f
-        WeightDialog(
-            initialWeight = initialWeight,
-            isEdit = weightToEdit != null,
-            onDismiss = {
-                showWeightDialog = false
-                weightToEdit = null
-            },
-            onConfirm = { value ->
-                if (weightToEdit != null) {
-                    weightToEdit?.copy(value = value)?.let(onUpdateWeight)
-                } else {
+    when (val dialog = weightDialog) {
+        is WeightDialogState.Add -> {
+            WeightDialog(
+                initialWeight = dialog.initial,
+                isEdit = false,
+                onDismiss = { weightDialog = WeightDialogState.Hidden },
+                onConfirm = { value ->
                     onAddWeight(value)
-                }
-                showWeightDialog = false
-                weightToEdit = null
-            }
-        )
+                    weightDialog = WeightDialogState.Hidden
+                },
+            )
+        }
+        is WeightDialogState.Edit -> {
+            WeightDialog(
+                initialWeight = dialog.weight.value,
+                isEdit = true,
+                onDismiss = { weightDialog = WeightDialogState.Hidden },
+                onConfirm = { value ->
+                    onUpdateWeight(dialog.weight.copy(value = value))
+                    weightDialog = WeightDialogState.Hidden
+                },
+            )
+        }
+        WeightDialogState.Hidden -> Unit
     }
 
     if (showWeightHistory) {
         WeightHistorySheet(
             weights = state.weights,
             onDismiss = { showWeightHistory = false },
-            onEdit = { 
-                weightToEdit = it
+            onEdit = {
+                weightDialog = WeightDialogState.Edit(it)
                 showWeightHistory = false
             },
             onDelete = onDeleteWeight
@@ -178,12 +185,12 @@ private fun Profile(
                 },
             )
         },
-        containerColor = Color.Transparent,
+        containerColor = MaterialTheme.colorScheme.surface,
     ) { innerPadding ->
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(innerPadding + PaddingValues(start = 16.dp, end = 16.dp, bottom = 96.dp))
+                .padding(innerPadding + PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp))
                 .verticalScroll(rememberScrollState()),
         ) {
             if (state.isPlanAvailable) {
@@ -225,7 +232,7 @@ private fun Profile(
                 onPrevMonth = onPrevMonth,
                 onNextMonth = onNextMonth,
                 onPlanSelect = onPlanSelect,
-                onAddClick = { showWeightDialog = true },
+                onAddClick = { weightDialog = WeightDialogState.Add(state.weights.lastOrNull()?.value ?: 60f) },
                 onHistoryClick = { showWeightHistory = true }
             )
         }
