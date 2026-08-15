@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Crash-save screen back handling migrated to `OnBackPressedDispatcher`
 - Core screens (Home, history, exercises, plans, profile) no longer flash an empty state while their data loads
 - Home timer now keeps showing the accumulated time after ending a workout, and starting again continues from that time
+- Bottom navigation bar no longer shows a white background occluding the page content
 
 ## [1.7.0] - 2026-08-07
 
