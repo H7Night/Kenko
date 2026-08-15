@@ -15,8 +15,9 @@
 
 package com.looker.kenko.ui.navigation
 
-import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
@@ -69,9 +70,9 @@ fun KenkoNavHost(
         // receives clicks, so a fast tap right after back can hit the
         // previous screen's elements (e.g. opening the exercise editor
         // instead of the plan). Instant swaps avoid that click-through.
-        enterTransition = { EnterTransition.None },
+        enterTransition = { fadeIn(animationSpec = tween(220)) },
         exitTransition = { ExitTransition.None },
-        popEnterTransition = { EnterTransition.None },
+        popEnterTransition = { fadeIn(animationSpec = tween(220)) },
         popExitTransition = { ExitTransition.None },
     ) {
         home(
