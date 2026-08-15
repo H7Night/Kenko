@@ -26,7 +26,8 @@ import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.Session
-import com.looker.kenko.domain.model.Set
+import com.looker.kenko.domain.model.TrainingExercise
+import com.looker.kenko.domain.model.orderTrainingExercises
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
@@ -229,19 +230,15 @@ class SessionDetailViewModel @Inject constructor(
                     ?: currentPlanTitles[day]
             }
 
-            val exerciseMap = when {
-                sessionDate.isToday || exercises.isNotEmpty() -> exercises.associateWith { exercise ->
-                    currentSession.sets.filter { it.exercise.id == exercise.id }
-                }
-
-                currentSession.sets.isNotEmpty() -> currentSession.sets.groupBy { it.exercise }
-                else -> emptyMap()
-            }
+            val sets = orderTrainingExercises(
+                planned = exercises,
+                sets = currentSession.sets,
+            )
 
             SessionDetailState.Success(
                 SessionUiData(
                     date = currentSession.date,
-                    sets = exerciseMap,
+                    sets = sets,
                     isToday = isTodaySession,
                     isEditMode = isEditMode,
                     dayTitle = dayTitle,
@@ -335,7 +332,7 @@ class SessionDetailViewModel @Inject constructor(
 @Stable
 data class SessionUiData(
     val date: LocalDate,
-    val sets: Map<Exercise, List<Set>>,
+    val sets: List<TrainingExercise>,
     val isToday: Boolean = false,
     val isEditMode: Boolean = false,
     val dayTitle: String? = null,

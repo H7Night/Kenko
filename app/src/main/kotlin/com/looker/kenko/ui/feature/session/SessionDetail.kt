@@ -87,7 +87,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.Set
+import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.ui.feature.session.AddSet
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.BodyPartMuscleFilter
@@ -301,7 +301,7 @@ private fun SessionDetail(
 @Composable
 private fun SetsList(
     date: LocalDate,
-    exerciseSets: Map<Exercise, List<Set>>,
+    exerciseSets: List<TrainingExercise>,
     isToday: Boolean,
     isEditMode: Boolean,
     previousSessionDate: LocalDate?,
@@ -454,13 +454,15 @@ private fun SetsList(
                 },
             )
         }
-        exerciseSets.forEach { (exercise, sets) ->
+        exerciseSets.forEach { row ->
+            val exercise = row.exercise
+            val sets = row.sets
             val isCollapsed = exercise.id in collapsedExercises
             item(
                 span = { GridItemSpan(maxLineSpan) },
             ) {
                 StickyHeader(
-                    name = exercise.name,
+                    name = row.sequence?.let { "$it ${exercise.name}" } ?: exercise.name,
                     setCount = sets.size,
                     isCollapsed = isCollapsed,
                     onCollapseToggle = {
@@ -716,7 +718,7 @@ private fun SessionDetailPreview() {
             SessionDetailState.Success(
                 SessionUiData(
                     date = LocalDate(2024, 4, 15),
-                    sets = emptyMap(),
+                    sets = emptyList(),
                     isToday = true,
                 ),
             )

@@ -25,6 +25,7 @@ fun SetEntity.toExternal(exercise: Exercise): Set = Set(
     weight = weight,
     exercise = exercise,
     rir = RepsInReserve(rir),
+    order = order,
     id = id,
 )
 

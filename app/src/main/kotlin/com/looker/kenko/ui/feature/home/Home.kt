@@ -70,7 +70,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.Set
+import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.ui.component.ConfirmDialog
 import com.looker.kenko.ui.component.DeletableSetItem
@@ -306,7 +306,7 @@ private fun TrainingActionBar(
 
 @Composable
 private fun InlineTrainingContent(
-    exerciseSets: Map<Exercise, List<Set>>,
+    exerciseSets: List<TrainingExercise>,
     onAddSet: (Exercise) -> Unit,
     onRemoveSet: (Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -331,10 +331,12 @@ private fun InlineTrainingContent(
     }
 
     Column(modifier = modifier.padding(horizontal = 12.dp)) {
-        exerciseSets.forEach { (exercise, sets) ->
+        exerciseSets.forEach { row ->
+            val exercise = row.exercise
+            val sets = row.sets
             val isCollapsed = exercise.id in collapsedExercises
             StickyHeader(
-                name = exercise.name,
+                name = row.sequence?.let { "$it ${exercise.name}" } ?: exercise.name,
                 setCount = sets.size,
                 isCollapsed = isCollapsed,
                 onCollapseToggle = {

@@ -21,6 +21,8 @@ import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
+import com.looker.kenko.domain.model.TrainingExercise
+import com.looker.kenko.domain.model.orderTrainingExercises
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.ui.component.timer.TimerManager
@@ -112,20 +114,13 @@ class HomeViewModel @Inject constructor(
     val planExercises: StateFlow<List<com.looker.kenko.domain.model.PlanItem>> = planItemStream
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val sessionSets: StateFlow<Map<com.looker.kenko.domain.model.Exercise, List<com.looker.kenko.domain.model.Set>>> =
+    val sessionSets: StateFlow<List<TrainingExercise>> =
         combine(sessionStream, planItemStream) { session, planItems ->
-            val fromPlan = planItems.map { it.exercise }.distinct()
-            val fromSession = session?.sets?.groupBy { it.exercise } ?: emptyMap()
-            // Ensure all planned exercises are present, even with empty sets
-            val result = fromPlan.associateWith { exercise ->
-                fromSession[exercise] ?: emptyList()
-            }.toMutableMap()
-            // Also include exercises that have sets but aren't in today's plan
-            fromSession.forEach { (ex, sets) ->
-                if (ex !in result) result[ex] = sets
-            }
-            result.toMap()
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+            orderTrainingExercises(
+                planned = planItems.map { it.exercise }.distinct(),
+                sets = session?.sets ?: emptyList(),
+            )
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val state: StateFlow<HomeUiData> = combine(
         planStream,
