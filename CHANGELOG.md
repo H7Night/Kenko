@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Move-day buttons ("earlier/later") under the training-day tabs in plan edit for reordering training days
 - Plan import/export: export one or more selected plans (with select-all and training/rest day counts) to a single JSON file, and import plans from JSON — duplicate names are allowed and missing exercises are auto-created; entry point is the menu on the plan list page
 - Training-day names are restored for legacy session records by matching exercised names against the plan
+- Workout exercise list now reorders as you train: adding the first set moves an exercise to the bottom with a sequence number, while not-yet-started exercises keep their plan order (Home inline training and session detail)
 
 ### Changed
 - Training/rest day statistics on the Profile page now count from the plan's actual `dayCount` instead of a fixed 7-day cycle
