@@ -74,7 +74,7 @@ class SessionsViewModel @Inject constructor(
                     array.map { it as Pair<Int, Map<Int, kotlin.collections.Set<String>>> }.toMap()
                 }
             }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
     val state: StateFlow<SessionsUiData> = combine(
         sessionsStream,
@@ -93,7 +93,7 @@ class SessionsViewModel @Inject constructor(
             plans = plans.filter { it.isActive || plans.indexOf(it) < 5 },
             planDayExerciseNames = dayExerciseNames,
         )
-    }.asStateFlow(SessionsUiData(emptyList(), false))
+    }.asStateFlow(SessionsUiData(emptyList(), false), started = SharingStarted.Eagerly)
 
     private val _snackbar = MutableSharedFlow<String>()
     val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()

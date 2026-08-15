@@ -88,19 +88,19 @@ class HomeViewModel @Inject constructor(
     }
 
     val planName: StateFlow<String?> = planStream.map { it?.name }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val allExercises: StateFlow<List<com.looker.kenko.domain.model.Exercise>> = exerciseRepo.stream
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val availablePlanDays: StateFlow<Map<Int, List<com.looker.kenko.domain.model.PlanItem>>> =
         planRepo.planItems.map { items ->
             items.groupBy { it.dayIndex }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
     val planDayTitles: StateFlow<Map<Int, String>> = planStream.map { plan ->
         plan?.titlesMap ?: emptyMap()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
     val previousSessionDate: StateFlow<LocalDate?> = combine(
         planStream,
@@ -109,10 +109,10 @@ class HomeViewModel @Inject constructor(
         val day = session?.dayIndexOverride ?: plan?.currentDayIndex
         if (day == null) null else sessionRepo.previousSessionDate(today(), plan?.id, day)
     }.flatMapLatest { it ?: flowOf(null) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val planExercises: StateFlow<List<com.looker.kenko.domain.model.PlanItem>> = planItemStream
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val sessionSets: StateFlow<List<TrainingExercise>> =
         combine(sessionStream, planItemStream) { session, planItems ->
@@ -120,7 +120,7 @@ class HomeViewModel @Inject constructor(
                 planned = planItems.map { it.exercise }.distinct(),
                 sets = session?.sets ?: emptyList(),
             )
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val state: StateFlow<HomeUiData> = combine(
         planStream,
@@ -173,6 +173,7 @@ class HomeViewModel @Inject constructor(
             planName = null,
             todayExercises = emptyList(),
         ),
+        started = SharingStarted.Eagerly,
     )
 
     fun startWorkout() {

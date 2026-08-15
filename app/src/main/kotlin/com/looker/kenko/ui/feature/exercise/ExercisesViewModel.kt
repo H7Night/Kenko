@@ -33,6 +33,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
@@ -57,10 +58,10 @@ class ExercisesViewModel @Inject constructor(
     val selectedChildFilter = MutableStateFlow<Int?>(null)
 
     val parentTags: StateFlow<List<Tag>> = tagRepo.streamParents
-        .asStateFlow(emptyList())
+        .asStateFlow(emptyList(), started = SharingStarted.Eagerly)
 
     val allTags: StateFlow<List<Tag>> = tagRepo.stream
-        .asStateFlow(emptyList())
+        .asStateFlow(emptyList(), started = SharingStarted.Eagerly)
 
     val exercises: StateFlow<List<Exercise>> = combine(
         repo.stream,
@@ -80,7 +81,7 @@ class ExercisesViewModel @Inject constructor(
         }
 
         filtered
-    }.asStateFlow(emptyList())
+    }.asStateFlow(emptyList(), started = SharingStarted.Eagerly)
 
     fun setParentFilter(parentId: Int?) {
         selectedParentFilter.value = parentId

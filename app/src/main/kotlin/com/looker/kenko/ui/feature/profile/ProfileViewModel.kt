@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,7 +53,7 @@ class ProfileViewModel @Inject constructor(
     private val currentPlan: Flow<Plan?> = planRepo.current
 
     val plans: StateFlow<List<Plan>> = planRepo.plans
-        .asStateFlow(emptyList())
+        .asStateFlow(emptyList(), started = SharingStarted.Eagerly)
 
     private val planDateRanges: Flow<Map<Int, Pair<LocalDate, LocalDate>>> =
         sessionRepo.planDateRanges
@@ -99,7 +100,7 @@ class ProfileViewModel @Inject constructor(
             canGoPrev = view.canGoPrev,
             canGoNext = view.canGoNext,
         )
-    }.asStateFlow(ProfileUiState())
+    }.asStateFlow(ProfileUiState(), started = SharingStarted.Eagerly)
 
     fun prevMonth() {
         val current = state.value.currentMonth ?: return

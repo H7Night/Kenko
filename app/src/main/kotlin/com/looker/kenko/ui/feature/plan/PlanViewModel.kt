@@ -31,6 +31,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -44,7 +45,7 @@ class PlanViewModel @Inject constructor(
     private val transferManager: PlanTransferManager,
 ) : ViewModel() {
 
-    val plans = repo.plans.asStateFlow(emptyList())
+    val plans = repo.plans.asStateFlow(emptyList(), started = SharingStarted.Eagerly)
 
     val snackbarState = SnackbarHostState()
 
