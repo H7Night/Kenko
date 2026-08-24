@@ -42,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.domain.model.Exercise
@@ -67,6 +68,7 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
             exercise.id?.let { id -> it.create(id, date) }
                 ?: error("Exercise id is null")
         }
+    val showRir by viewModel.showRir.collectAsStateWithLifecycle()
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -127,6 +129,33 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                 onClick = { viewModel.addRep(20) },
             ) {
                 Text(text = stringResource(R.string.label_plus_int, 20))
+            }
+        }
+        if (showRir) {
+            Spacer(modifier = Modifier.height(24.dp))
+            SwipeableTextField(
+                modifier = Modifier.align(CenterHorizontally),
+            ) {
+                TextButton(
+                    modifier = incrementButtonModifier,
+                    onClick = { viewModel.addRir(-1) },
+                ) {
+                    Text(text = stringResource(R.string.label_minus_int, 1))
+                }
+                val rir = rememberDraggableTextFieldState(viewModel.rirBoundReached)
+                DraggableTextField(
+                    dragState = rir,
+                    textFieldState = viewModel.rir,
+                    inputTransformation = IntTransformation,
+                    supportingText = stringResource(R.string.label_rir),
+                    modifier = zIndexModifier,
+                )
+                TextButton(
+                    modifier = incrementButtonModifier,
+                    onClick = { viewModel.addRir(1) },
+                ) {
+                    Text(text = stringResource(R.string.label_plus_int, 1))
+                }
             }
         }
         Spacer(modifier = Modifier.height(24.dp))
