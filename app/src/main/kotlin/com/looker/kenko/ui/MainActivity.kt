@@ -30,8 +30,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -191,17 +196,27 @@ fun Kenko(
     bottomBar: @Composable () -> Unit = {},
     content: @Composable (innerPadding: PaddingValues) -> Unit,
 ) {
+    // 底部导航栏以悬浮层覆盖在内容之上。测量其实际高度（bottomBar 未渲染时为 0），
+    // 并作为内容 bottom padding，使页面内容可滚动到导航栏上方而不被遮挡。
+    var bottomBarHeight by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
-        content(PaddingValues(bottom = 0.dp))
+        content(PaddingValues(bottom = bottomBarHeight))
 
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding(),
         ) {
-            bottomBar()
+            Box(
+                modifier = Modifier.onSizeChanged { size ->
+                    bottomBarHeight = with(density) { size.height.toDp() }
+                },
+            ) {
+                bottomBar()
+            }
         }
     }
 }
