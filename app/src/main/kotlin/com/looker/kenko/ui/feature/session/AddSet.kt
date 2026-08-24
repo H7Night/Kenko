@@ -19,6 +19,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -65,8 +66,8 @@ private val incrementButtonModifier = Modifier
 private val zIndexModifier = Modifier.zIndex(1F)
 
 /**
- * 紧凑的步进按钮：不应用 Material 的最小交互尺寸（48dp 宽），
- * 让重量行的多个 +/- 按钮并排时不折行。
+ * 紧凑的微调步进按钮：不应用 Material 的最小交互尺寸（48dp 宽），
+ * 用于重量行的 ±0.5 微调，使整行按钮并排时不折行。
  */
 @Composable
 private fun CompactStepButton(
@@ -248,10 +249,13 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                     )
                 } else {
                     if (!viewModel.isWeightZero) {
-                        CompactStepButton(
-                            text = stringResource(R.string.label_minus_int, 1),
+                        TextButton(
+                            modifier = incrementButtonModifier,
                             onClick = { viewModel.addWeight(-1F) },
-                        )
+                            contentPadding = PaddingValues(horizontal = 4.dp),
+                        ) {
+                            Text(text = stringResource(R.string.label_minus_int, 1))
+                        }
                     }
                     CompactStepButton(
                         text = stringResource(R.string.label_minus_int, 0.5F),
@@ -272,14 +276,20 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                         text = stringResource(R.string.label_plus_int, 0.5F),
                         onClick = { viewModel.addWeight(0.5F) },
                     )
-                    CompactStepButton(
-                        text = stringResource(R.string.label_plus_int, 1),
+                    TextButton(
+                        modifier = incrementButtonModifier,
                         onClick = { viewModel.addWeight(1F) },
-                    )
-                    CompactStepButton(
-                        text = stringResource(R.string.label_plus_int, 5F),
+                        contentPadding = PaddingValues(horizontal = 4.dp),
+                    ) {
+                        Text(text = stringResource(R.string.label_plus_int, 1))
+                    }
+                    TextButton(
+                        modifier = incrementButtonModifier,
                         onClick = { viewModel.addWeight(5F) },
-                    )
+                        contentPadding = PaddingValues(horizontal = 4.dp),
+                    ) {
+                        Text(text = stringResource(R.string.label_plus_int, 5))
+                    }
                 }
             }
         }
