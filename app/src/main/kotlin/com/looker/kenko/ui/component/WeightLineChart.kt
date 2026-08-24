@@ -82,7 +82,7 @@ fun WeightLineChart(
                 end = Offset(size.width - rightPad, y),
                 strokeWidth = 1f,
             )
-            val layout = textMeasurer.measure("%.1f".format(value), textStyle)
+            val layout = textMeasurer.measure("%.2f".format(value), textStyle)
             drawText(
                 textLayoutResult = layout,
                 topLeft = Offset(leftPad - layout.size.width - 4f, y - layout.size.height / 2f),
@@ -164,7 +164,7 @@ fun WeightLineChart(
             drawCircle(color = color, radius = radius, center = point)
 
             if (labelAll || isEdge) {
-                val layout = textMeasurer.measure("%.1f".format(weights[index].value), textStyle)
+                val layout = textMeasurer.measure("%.2f".format(weights[index].value), textStyle)
                 val aboveY = point.y - layout.size.height - 4f
                 val overlaps = aboveY < lastLabelBottom + 2f
                 val labelY = if (overlaps) point.y + 4f else aboveY

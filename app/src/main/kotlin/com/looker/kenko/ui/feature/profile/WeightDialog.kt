@@ -37,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
 import com.looker.kenko.ui.component.DigitPicker
+import kotlin.math.roundToInt
 
 @Composable
 fun WeightDialog(
@@ -96,9 +97,12 @@ private fun WeightPicker(
     onValueChange: (Float) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val tens = (value / 10).toInt()
-    val ones = (value % 10).toInt()
-    val decimal = ((value * 10) % 10).toInt()
+    // 以 0.01kg 为最小单位用整数运算，避免浮点误差
+    val total = (value * 100).roundToInt()
+    val tens = total / 1000
+    val ones = (total / 100) % 10
+    val tenths = (total / 10) % 10
+    val hundredths = total % 10
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -107,12 +111,12 @@ private fun WeightPicker(
     ) {
         DigitPicker(
             value = tens,
-            onValueChange = { onValueChange((it * 10 + ones + decimal * 0.1f)) },
-            range = 0..15 // Support up to 159.9 kg or similar if needed, or just 0..9 for tens
+            onValueChange = { onValueChange((it * 1000 + ones * 100 + tenths * 10 + hundredths) / 100f) },
+            range = 0..15 // Support up to 159.99 kg or similar if needed
         )
         DigitPicker(
             value = ones,
-            onValueChange = { onValueChange((tens * 10 + it + decimal * 0.1f)) }
+            onValueChange = { onValueChange((tens * 1000 + it * 100 + tenths * 10 + hundredths) / 100f) }
         )
         Text(
             text = ".",
@@ -120,8 +124,12 @@ private fun WeightPicker(
             modifier = Modifier.padding(horizontal = 4.dp)
         )
         DigitPicker(
-            value = decimal,
-            onValueChange = { onValueChange((tens * 10 + ones + it * 0.1f)) }
+            value = tenths,
+            onValueChange = { onValueChange((tens * 1000 + ones * 100 + it * 10 + hundredths) / 100f) }
+        )
+        DigitPicker(
+            value = hundredths,
+            onValueChange = { onValueChange((tens * 1000 + ones * 100 + tenths * 10 + it) / 100f) }
         )
     }
 }
