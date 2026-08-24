@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -38,6 +39,7 @@ import com.looker.kenko.ui.theme.numbers
 @Composable
 fun StickyHeader(
     name: String,
+    sequence: String? = null,
     setCount: Int = 0,
     isCollapsed: Boolean = false,
     onCollapseToggle: () -> Unit = {},
@@ -60,6 +62,14 @@ fun StickyHeader(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                if (sequence != null) {
+                    Text(
+                        text = sequence,
+                        style = MaterialTheme.typography.headlineMedium.numbers(),
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
                 Text(
                     text = name,
                     style = MaterialTheme.typography.titleMedium,

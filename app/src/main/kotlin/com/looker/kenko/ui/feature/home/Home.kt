@@ -337,7 +337,8 @@ private fun InlineTrainingContent(
             val sets = row.sets
             val isCollapsed = exercise.id in collapsedExercises
             StickyHeader(
-                name = row.sequence?.let { "$it ${exercise.name}" } ?: exercise.name,
+                name = exercise.name,
+                sequence = row.sequence?.toString(),
                 setCount = sets.size,
                 isCollapsed = isCollapsed,
                 onCollapseToggle = {
