@@ -72,6 +72,12 @@ class AddSetViewModel @AssistedInject constructor(
 
     private var isCardio by mutableStateOf(false)
 
+    /** 是否处于“自重”选中状态：为 true 时重量输入显示“自重”而非数字。 */
+    var isBodyweightMode by mutableStateOf(false)
+        private set
+
+    private var weightBeforeBodyweight = "20.0"
+
     /** 设置页“显示 RIR”开关：勾选后训练时在次数下方显示 RIR 选项。 */
     val showRir: StateFlow<Boolean> = settingsRepo.get { showRir }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
@@ -98,10 +104,21 @@ class AddSetViewModel @AssistedInject constructor(
     }
 
     fun setBodyweight() {
-        weights.setTextAndPlaceCursorAtEnd("0")
+        isBodyweightMode = !isBodyweightMode
+        if (isBodyweightMode) {
+            weightBeforeBodyweight = weights.text.toString()
+            weights.setTextAndPlaceCursorAtEnd("0")
+        } else {
+            weights.setTextAndPlaceCursorAtEnd(weightBeforeBodyweight)
+        }
     }
 
     fun addWeight(value: Float) {
+        if (isBodyweightMode) {
+            isBodyweightMode = false
+            weights.setTextAndPlaceCursorAtEnd(weightBeforeBodyweight)
+            return
+        }
         weights.setTextAndPlaceCursorAtEnd((weightFloat + value).coerceAtLeast(0F).toString())
     }
 

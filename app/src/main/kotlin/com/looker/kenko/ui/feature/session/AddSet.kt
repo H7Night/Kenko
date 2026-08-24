@@ -17,6 +17,7 @@ package com.looker.kenko.ui.feature.session
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -198,40 +200,73 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                     TextButton(
                         modifier = incrementButtonModifier,
                         onClick = { viewModel.setBodyweight() },
+                        colors = if (viewModel.isBodyweightMode) {
+                            ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary,
+                            )
+                        } else {
+                            ButtonDefaults.textButtonColors()
+                        },
                     ) {
                         Text(text = stringResource(R.string.label_bodyweight))
                     }
                 }
-                if (!viewModel.isWeightZero) {
+                if (viewModel.isBodyweightMode) {
+                    Text(
+                        text = stringResource(R.string.label_bodyweight_display),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                } else {
+                    if (!viewModel.isWeightZero) {
+                        TextButton(
+                            modifier = incrementButtonModifier,
+                            onClick = { viewModel.addWeight(-1F) },
+                            contentPadding = PaddingValues(horizontal = 4.dp),
+                        ) {
+                            Text(text = stringResource(R.string.label_minus_int, 1F))
+                        }
+                    }
                     TextButton(
                         modifier = incrementButtonModifier,
-                        onClick = { viewModel.addWeight(-1F) },
+                        onClick = { viewModel.addWeight(-0.5F) },
+                        contentPadding = PaddingValues(horizontal = 4.dp),
                     ) {
-                        Text(text = stringResource(R.string.label_minus_int, 1F))
+                        Text(text = stringResource(R.string.label_minus_int, 0.5F))
                     }
-                }
-                val weights = rememberDraggableTextFieldState(viewModel.weightsBoundReached)
-                DraggableTextField(
-                    dragState = weights,
-                    textFieldState = viewModel.weights,
-                    supportingText = stringResource(R.string.label_weight),
-                    inputTransformation = FloatTransformation,
-                    modifier = zIndexModifier,
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    ),
-                )
-                TextButton(
-                    modifier = incrementButtonModifier,
-                    onClick = { viewModel.addWeight(1F) },
-                ) {
-                    Text(text = stringResource(R.string.label_plus_int, 1F))
-                }
-                TextButton(
-                    modifier = incrementButtonModifier,
-                    onClick = { viewModel.addWeight(5F) },
-                ) {
-                    Text(text = stringResource(R.string.label_plus_int, 5F))
+                    val weights = rememberDraggableTextFieldState(viewModel.weightsBoundReached)
+                    DraggableTextField(
+                        dragState = weights,
+                        textFieldState = viewModel.weights,
+                        supportingText = stringResource(R.string.label_weight),
+                        inputTransformation = FloatTransformation,
+                        modifier = zIndexModifier,
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        ),
+                    )
+                    TextButton(
+                        modifier = incrementButtonModifier,
+                        onClick = { viewModel.addWeight(0.5F) },
+                        contentPadding = PaddingValues(horizontal = 4.dp),
+                    ) {
+                        Text(text = stringResource(R.string.label_plus_int, 0.5F))
+                    }
+                    TextButton(
+                        modifier = incrementButtonModifier,
+                        onClick = { viewModel.addWeight(1F) },
+                        contentPadding = PaddingValues(horizontal = 4.dp),
+                    ) {
+                        Text(text = stringResource(R.string.label_plus_int, 1F))
+                    }
+                    TextButton(
+                        modifier = incrementButtonModifier,
+                        onClick = { viewModel.addWeight(5F) },
+                        contentPadding = PaddingValues(horizontal = 4.dp),
+                    ) {
+                        Text(text = stringResource(R.string.label_plus_int, 5F))
+                    }
                 }
             }
         }
