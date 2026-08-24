@@ -225,7 +225,7 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                             onClick = { viewModel.addWeight(-1F) },
                             contentPadding = PaddingValues(horizontal = 4.dp),
                         ) {
-                            Text(text = stringResource(R.string.label_minus_int, 1F))
+                            Text(text = stringResource(R.string.label_minus_int, 1))
                         }
                     }
                     TextButton(
@@ -258,7 +258,7 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                         onClick = { viewModel.addWeight(1F) },
                         contentPadding = PaddingValues(horizontal = 4.dp),
                     ) {
-                        Text(text = stringResource(R.string.label_plus_int, 1F))
+                        Text(text = stringResource(R.string.label_plus_int, 1))
                     }
                     TextButton(
                         modifier = incrementButtonModifier,
