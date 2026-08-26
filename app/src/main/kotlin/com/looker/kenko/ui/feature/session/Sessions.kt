@@ -494,14 +494,17 @@ fun SessionCard(
                 ?: dayTitle
                 ?: day?.let { stringResource(R.string.label_day_n, it) }
                 ?: ""
-            val string = remember(session.date, displayName, dayTitle) {
+            val string = remember(session.date, displayName) {
                 buildAnnotatedString {
                     withStyle(titleStyle.toSpanStyle().copy(fontWeight = FontWeight.Bold)) {
                         append(formatDate(session.date, dateTimeFormat = DateFormat.YearMonthDay))
                     }
-                    append(" ${Typography.bullet} ")
-                    withStyle(titleStyle.toSpanStyle().copy(color = secondaryEmphasis)) {
-                        append(displayName)
+                    // 训练名称缺失(如老记录反查失败)时不残留孤立的 " • " 分隔符
+                    if (displayName.isNotBlank()) {
+                        append(" ${Typography.bullet} ")
+                        withStyle(titleStyle.toSpanStyle().copy(color = secondaryEmphasis)) {
+                            append(displayName)
+                        }
                     }
                 }
             }
