@@ -21,23 +21,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -196,27 +187,12 @@ fun Kenko(
     bottomBar: @Composable () -> Unit = {},
     content: @Composable (innerPadding: PaddingValues) -> Unit,
 ) {
-    // 底部导航栏以悬浮层覆盖在内容之上。测量其实际高度（bottomBar 未渲染时为 0），
-    // 并作为内容 bottom padding，使页面内容可滚动到导航栏上方而不被遮挡。
-    var bottomBarHeight by remember { mutableStateOf(0.dp) }
-    val density = LocalDensity.current
-    Box(
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        content(PaddingValues(bottom = bottomBarHeight))
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding(),
-        ) {
-            Box(
-                modifier = Modifier.onSizeChanged { size ->
-                    bottomBarHeight = with(density) { size.height.toDp() }
-                },
-            ) {
-                bottomBar()
-            }
-        }
+    // 底部导航栏固定在页面底部(非悬浮):bottomBar 作为 Scaffold 布局的一部分,
+    // 内容通过 innerPadding 自动避让,无需手动测量导航栏高度。
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.surface,
+        bottomBar = { bottomBar() },
+    ) { innerPadding ->
+        content(innerPadding)
     }
 }
