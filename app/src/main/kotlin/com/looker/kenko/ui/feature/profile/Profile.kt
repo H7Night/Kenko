@@ -195,7 +195,7 @@ private fun Profile(
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(innerPadding + PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp))
+                .padding(innerPadding + PaddingValues(start = 16.dp, end = 16.dp))
                 .verticalScroll(rememberScrollState()),
         ) {
             if (state.isPlanAvailable) {
