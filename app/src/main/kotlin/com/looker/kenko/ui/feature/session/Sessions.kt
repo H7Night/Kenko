@@ -18,6 +18,7 @@ package com.looker.kenko.ui.feature.session
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -208,6 +209,10 @@ private fun Sessions(
             )
         },
         containerColor = MaterialTheme.colorScheme.surface,
+        // 页面位于外层 Scaffold(底部导航栏)内,外层已通过 innerPadding 处理
+        // 系统导航条避让;禁用内层 Scaffold 的 systemBars insets,
+        // 避免底部重复避让产生额外空白。
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { padding ->
         if (!state.hasAnySessions) {
             EmptyState(
@@ -217,7 +222,8 @@ private fun Sessions(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = padding + PaddingValues(bottom = 96.dp, start = 14.dp, end = 14.dp),
+                // 导航栏已固定由外层 Scaffold 避让,移除旧悬浮导航栏时代的 96dp 底部预留
+                contentPadding = padding + PaddingValues(start = 14.dp, end = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
