@@ -92,6 +92,9 @@ class AddSetViewModel @AssistedInject constructor(
                 isCardio = exercise?.countType == CountType.MINUTES
                 if (isCardio) {
                     reps.setTextAndPlaceCursorAtEnd("20")
+                    // 有氧只记录时长,不记录重量;UI 虽隐藏重量行,底层值也必须为 0,
+                    // 否则会用默认 "20.0" 记录成错误的 20kg × N 次。
+                    weights.setTextAndPlaceCursorAtEnd("0")
                 }
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
@@ -170,7 +173,7 @@ class AddSetViewModel @AssistedInject constructor(
                     sessionRepo.addSet(
                         sessionId = sessionId,
                         exerciseId = id,
-                        weight = weightFloat,
+                        weight = if (isCardio) 0F else weightFloat,
                         reps = repInt,
                         rir = RepsInReserve(rirInt),
                     )
