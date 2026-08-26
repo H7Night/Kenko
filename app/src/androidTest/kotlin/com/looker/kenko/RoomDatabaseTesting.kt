@@ -108,6 +108,8 @@ class RoomDatabaseTesting {
             MIGRATION_10_11,
             MIGRATION_11_12,
             MIGRATION_12_13,
+            MIGRATION_13_14,
+            MIGRATION_14_15,
         ).build()
         val exercises = updatedDb.exerciseDao().stream().first()
         val planHistory = updatedDb.historyDao().getCurrent()
@@ -233,7 +235,7 @@ class RoomDatabaseTesting {
             InstrumentationRegistry.getInstrumentation().targetContext,
             KenkoDatabase::class.java,
             DB_NAME,
-        ).addMigrations(MIGRATION_12_13).build()
+        ).addMigrations(MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15).build()
         val plan = updatedDb.planDao().getPlanById(1)
         assertEquals(7, plan?.dayCount)
         assertEquals(1, plan?.currentDayIndex)
