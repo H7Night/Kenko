@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -186,6 +187,10 @@ private fun Profile(
             )
         },
         containerColor = MaterialTheme.colorScheme.surface,
+        // 页面位于外层 Scaffold(底部导航栏)内,外层已通过 innerPadding 处理
+        // 系统导航条避让;这里禁用内层 Scaffold 的 systemBars insets,
+        // 否则底部会多出一段与导航栏高度不符的空白(白条)。
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { innerPadding ->
         Column(
             modifier = modifier
