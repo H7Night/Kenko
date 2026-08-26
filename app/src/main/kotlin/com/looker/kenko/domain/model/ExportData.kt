@@ -40,7 +40,6 @@ data class ExportSet(
     val weight: Float,
     val exerciseName: String,
     val exerciseTarget: String,
-    val rir: Int? = null,
 )
 
 @Serializable

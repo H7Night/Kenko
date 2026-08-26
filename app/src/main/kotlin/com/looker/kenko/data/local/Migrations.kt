@@ -599,3 +599,32 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_sessions_planId` ON `sessions` (`planId`)")
     }
 }
+
+val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // RIR 业务整体移除:重建 sets 表去掉 `rir` 列(与 MIGRATION_11_12 同款模式,
+        // 兼容所有 SQLite 版本),其余数据原样保留。
+        db.execSQL("ALTER TABLE `sets` RENAME TO `sets_old`")
+        db.execSQL(
+            """
+            CREATE TABLE `sets` (
+            `reps` INTEGER NOT NULL,
+            `weight` REAL NOT NULL,
+            `order` INTEGER NOT NULL,
+            `sessionId` INTEGER NOT NULL,
+            `exerciseId` INTEGER NOT NULL,
+            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+            FOREIGN KEY(`sessionId`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            INSERT INTO `sets` (`reps`, `weight`, `order`, `sessionId`, `exerciseId`, `id`)
+            SELECT `reps`, `weight`, `order`, `sessionId`, `exerciseId`, `id` FROM `sets_old`
+            """.trimIndent(),
+        )
+        db.execSQL("DROP TABLE `sets_old`")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_sets_sessionId_exerciseId` ON `sets` (`sessionId`, `exerciseId`)")
+    }
+}

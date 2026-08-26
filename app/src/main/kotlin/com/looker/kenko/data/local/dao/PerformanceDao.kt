@@ -35,17 +35,9 @@ interface PerformanceDao {
             // Sum of all ratings
             append("SUM(")
 
-            // Ratings = reps * weight * rir_modifier
+            // Ratings = reps * weight
             append("sets.reps * ")
-            append("sets.weight * ")
-
-            // RIR modifier
-            append("CASE WHEN sets.rir <= 0 ")
-            append("THEN 1.20 WHEN sets.rir = 1 ")
-            append("THEN 1.12 WHEN sets.rir = 2 ")
-            append("THEN 1.04 WHEN sets.rir = 3 ")
-            append("THEN 0.96 WHEN sets.rir = 4 ")
-            append("THEN 0.88 ELSE 0.80 END")
+            append("sets.weight ")
 
             append(") AS rating FROM sets ")
             append("INNER JOIN sessions ON sets.sessionId = sessions.id ")

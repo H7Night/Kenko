@@ -25,5 +25,4 @@ data class Settings(
     val backupInterval: BackupInterval,
     val lastBackupTime: Instant?,
     val language: Language,
-    val showRir: Boolean = false,
 )

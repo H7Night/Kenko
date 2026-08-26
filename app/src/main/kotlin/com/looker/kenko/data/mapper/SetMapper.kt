@@ -17,14 +17,12 @@ package com.looker.kenko.data.mapper
 
 import com.looker.kenko.data.local.model.SetEntity
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Set
 
 fun SetEntity.toExternal(exercise: Exercise): Set = Set(
     repsOrDuration = repsOrDuration,
     weight = weight,
     exercise = exercise,
-    rir = RepsInReserve(rir),
     order = order,
     id = id,
 )
@@ -36,5 +34,4 @@ fun Set.toEntity(sessionId: Int, order: Int): SetEntity = SetEntity(
     order = order,
     sessionId = sessionId,
     exerciseId = requireNotNull(exercise.id),
-    rir = rir.value,
 )

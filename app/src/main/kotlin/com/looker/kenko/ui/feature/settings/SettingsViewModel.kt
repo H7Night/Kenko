@@ -76,7 +76,6 @@ class SettingsViewModel @Inject constructor(
             backupMessage = backupState.message,
             language = settings.language,
             earliestSessionDate = earliestDate,
-            showRir = settings.showRir,
         )
     }.asStateFlow(
         SettingsUiData(
@@ -90,7 +89,6 @@ class SettingsViewModel @Inject constructor(
             backupMessage = null,
             language = Language.System,
             earliestSessionDate = null,
-            showRir = false,
         ),
     )
 
@@ -108,16 +106,6 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 repo.setLanguage(language)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
-        }
-    }
-
-    fun updateShowRir(show: Boolean) {
-        viewModelScope.launch {
-            try {
-                repo.setShowRir(show)
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
             }
@@ -262,5 +250,4 @@ data class SettingsUiData(
     val backupMessage: BackupMessage?,
     val language: Language,
     val earliestSessionDate: LocalDate?,
-    val showRir: Boolean = false,
 )

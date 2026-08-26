@@ -24,7 +24,6 @@ data class Set(
     val repsOrDuration: Int,
     val weight: Float,
     val exercise: Exercise,
-    val rir: RepsInReserve,
     val order: Int = 0,
     val id: Int? = null,
 )

@@ -42,6 +42,4 @@ interface SettingsRepo {
 
     suspend fun setLanguage(language: Language)
 
-    suspend fun setShowRir(show: Boolean)
-
 }

@@ -23,7 +23,6 @@ import com.looker.kenko.data.local.model.SessionDataEntity
 import com.looker.kenko.data.local.model.SetEntity
 import com.looker.kenko.data.mapper.toEntity
 import com.looker.kenko.data.mapper.toExternal
-import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.Set
@@ -102,7 +101,6 @@ class LocalSessionRepo @Inject constructor(
         exerciseId: Int,
         weight: Float,
         reps: Int,
-        rir: RepsInReserve,
     ) = mutex.withLock {
         setsDao.insert(
             SetEntity(
@@ -111,7 +109,6 @@ class LocalSessionRepo @Inject constructor(
                 exerciseId = exerciseId,
                 sessionId = sessionId,
                 order = setsDao.getSetsCountBySessionId(sessionId) ?: 0,
-                rir = rir.value,
             ),
         )
     }

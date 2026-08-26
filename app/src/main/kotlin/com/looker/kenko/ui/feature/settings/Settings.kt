@@ -61,7 +61,6 @@ import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.KenkoBorderWidth
-import com.looker.kenko.ui.component.PreferenceSwitchRow
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 
@@ -78,7 +77,6 @@ fun Settings(
         state = state,
         onSelectLanguage = viewModel::updateLanguage,
         onSelectTheme = viewModel::updateTheme,
-        onShowRirChange = viewModel::updateShowRir,
         onBackPress = onBackPress,
         onTagManagementClick = onTagManagementClick,
         onBackupClick = onBackupClick,
@@ -92,7 +90,6 @@ private fun Settings(
     state: SettingsUiData,
     onSelectLanguage: (Language) -> Unit,
     onSelectTheme: (Theme) -> Unit,
-    onShowRirChange: (Boolean) -> Unit,
     onBackPress: () -> Unit,
     onTagManagementClick: () -> Unit,
     onBackupClick: () -> Unit,
@@ -158,12 +155,6 @@ private fun Settings(
                 title = stringResource(R.string.label_theme),
                 value = stringResource(state.selectedTheme.nameRes),
                 onClick = { showThemeDialog = true },
-            )
-
-            PreferenceSwitchRow(
-                title = stringResource(R.string.label_show_rir),
-                checked = state.showRir,
-                onCheckedChange = onShowRirChange,
             )
 
             HorizontalDivider(
@@ -401,7 +392,6 @@ private fun SettingsPreview() {
             ),
             onSelectLanguage = {},
             onSelectTheme = {},
-            onShowRirChange = {},
             onBackPress = {},
             onTagManagementClick = {},
             onBackupClick = {},

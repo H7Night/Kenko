@@ -17,7 +17,6 @@ package com.looker.kenko
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.looker.kenko.domain.model.PlanItem
-import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Set
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.today
@@ -85,7 +84,6 @@ class RepositoryTest {
                 repsOrDuration = 12,
                 weight = 12F,
                 exercise = exercises.random(),
-                rir = RepsInReserve(2)
             )
         }
         sets.forEach { sessionRepo.addSet(createdSessionId, it) }

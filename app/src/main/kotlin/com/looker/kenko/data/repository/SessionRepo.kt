@@ -15,7 +15,6 @@
 
 package com.looker.kenko.data.repository
 
-import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.Set
@@ -43,7 +42,6 @@ interface SessionRepo {
         exerciseId: Int,
         weight: Float,
         reps: Int,
-        rir: RepsInReserve,
     )
 
     suspend fun updateSet(setId: Int, reps: Int, weight: Float)

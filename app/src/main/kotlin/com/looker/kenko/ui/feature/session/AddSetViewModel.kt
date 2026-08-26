@@ -28,11 +28,9 @@ import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.looker.kenko.domain.model.CountType
-import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.SessionRepo
-import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.ui.feature.session.components.BoundReached
 import com.looker.kenko.ui.feature.session.components.Direction
 import dagger.assisted.Assisted
@@ -41,11 +39,8 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
@@ -60,7 +55,6 @@ import kotlinx.datetime.LocalDate
 class AddSetViewModel @AssistedInject constructor(
     private val sessionRepo: SessionRepo,
     private val exerciseRepo: ExerciseRepo,
-    settingsRepo: SettingsRepo,
     @Assisted("id") private val id: Int,
     @Assisted("date") private val date: LocalDate?,
 ) : ViewModel() {
@@ -68,7 +62,6 @@ class AddSetViewModel @AssistedInject constructor(
     val reps: TextFieldState = TextFieldState("10")
     val weights: TextFieldState = TextFieldState("20.0")
     val setsCount: TextFieldState = TextFieldState("2")
-    val rir: TextFieldState = TextFieldState("2")
 
     private var isCardio by mutableStateOf(false)
 
@@ -77,10 +70,6 @@ class AddSetViewModel @AssistedInject constructor(
         private set
 
     private var weightBeforeBodyweight = "20.0"
-
-    /** 设置页“显示 RIR”开关：勾选后训练时在次数下方显示 RIR 选项。 */
-    val showRir: StateFlow<Boolean> = settingsRepo.get { showRir }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     private val _snackbar = MutableSharedFlow<String>()
     val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
@@ -147,17 +136,6 @@ class AddSetViewModel @AssistedInject constructor(
         }
     }
 
-    val rirBoundReached = BoundReached { direction ->
-        when (direction) {
-            Direction.Left -> addRir(-1)
-            Direction.Right -> addRir(1)
-        }
-    }
-
-    fun addRir(value: Int) {
-        rir.setTextAndPlaceCursorAtEnd((rirInt + value).coerceAtLeast(0).toString())
-    }
-
     val setsBoundReached = BoundReached { direction ->
         when (direction) {
             Direction.Left -> addSetCount(-1)
@@ -175,7 +153,6 @@ class AddSetViewModel @AssistedInject constructor(
                         exerciseId = id,
                         weight = if (isCardio) 0F else weightFloat,
                         reps = repInt,
-                        rir = RepsInReserve(rirInt),
                     )
                 }
             } catch (e: Exception) {
@@ -192,9 +169,6 @@ class AddSetViewModel @AssistedInject constructor(
 
     private inline val setsInt: Int
         get() = setsCount.text.toString().toIntOrNull() ?: 2
-
-    private inline val rirInt: Int
-        get() = rir.text.toString().toIntOrNull() ?: 2
 
     @AssistedFactory
     interface AddSetViewModelFactory {

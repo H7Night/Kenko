@@ -12,7 +12,6 @@ class TrainingOrderTest {
         repsOrDuration = 10,
         weight = 20F,
         exercise = exercise,
-        rir = RepsInReserve(2),
         order = order,
     )
 

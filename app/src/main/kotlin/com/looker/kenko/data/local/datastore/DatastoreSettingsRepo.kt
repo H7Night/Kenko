@@ -95,10 +95,6 @@ class DatastoreSettingsRepo @Inject constructor(
         LANGUAGE.update(language.name)
     }
 
-    override suspend fun setShowRir(show: Boolean) {
-        SHOW_RIR.update(show)
-    }
-
     private suspend inline fun <T> Preferences.Key<T>.update(value: T) {
         dataStore.edit { preference ->
             preference[this] = value
@@ -113,7 +109,6 @@ class DatastoreSettingsRepo @Inject constructor(
         val backupInterval = preferences[BACKUP_INTERVAL] ?: BackupInterval.Off.name
         val lastBackupTime = preferences[LAST_BACKUP_TIME_SECONDS]
         val language = preferences[LANGUAGE] ?: Language.System.name
-        val showRir = preferences[SHOW_RIR] ?: false
         return Settings(
             isOnboardingDone = isOnboardingDone,
             theme = Theme.valueOf(theme),
@@ -122,7 +117,6 @@ class DatastoreSettingsRepo @Inject constructor(
             backupInterval = BackupInterval.valueOf(backupInterval),
             lastBackupTime = lastBackupTime?.let { Instant.fromEpochSeconds(it) },
             language = Language.valueOf(language),
-            showRir = showRir,
         )
     }
 
@@ -136,6 +130,5 @@ class DatastoreSettingsRepo @Inject constructor(
         val LAST_BACKUP_TIME_SECONDS: Preferences.Key<Long> =
             longPreferencesKey("last_backup_time_seconds")
         val LANGUAGE: Preferences.Key<String> = stringPreferencesKey("language")
-        val SHOW_RIR: Preferences.Key<Boolean> = booleanPreferencesKey("show_rir")
     }
 }
