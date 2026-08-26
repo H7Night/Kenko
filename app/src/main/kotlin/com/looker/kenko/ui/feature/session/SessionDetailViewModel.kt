@@ -225,7 +225,8 @@ class SessionDetailViewModel @Inject constructor(
                     )
                 }
             }
-            val dayTitle = dayIndex?.let { day ->
+            // 优先显示训练日名称快照(计划修改后历史记录保持不变)
+            val dayTitle = currentSession.dayTitleOverride ?: dayIndex?.let { day ->
                 plans.find { it.id == currentSession.planId }?.titlesMap?.get(day)
                     ?: currentPlanTitles[day]
             }

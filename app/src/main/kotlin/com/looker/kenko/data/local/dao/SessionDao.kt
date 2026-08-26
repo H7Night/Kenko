@@ -23,6 +23,7 @@ import androidx.room.Transaction
 import com.looker.kenko.data.local.model.SessionDataEntity
 import com.looker.kenko.data.local.model.SessionDateEntity
 import com.looker.kenko.data.local.model.SessionEntity
+import com.looker.kenko.data.local.model.SessionSnapshotEntity
 import com.looker.kenko.data.local.model.SessionSummaryEntity
 import com.looker.kenko.utils.EpochDays
 import kotlinx.coroutines.flow.Flow
@@ -71,12 +72,44 @@ interface SessionDao {
 
     @Query(
         """
+        SELECT planId
+        FROM sessions
+        WHERE id = :sessionId
+        """,
+    )
+    suspend fun getSessionPlanId(sessionId: Int): Int?
+
+    @Query(
+        """
         UPDATE sessions
         SET dayIndexOverride = :dayIndex
         WHERE date = :date
         """,
     )
     suspend fun updateDayIndexOverride(date: EpochDays, dayIndex: Int)
+
+    @Query(
+        """
+        UPDATE sessions
+        SET dayTitleOverride = :dayTitle
+        WHERE id = :sessionId
+        """,
+    )
+    suspend fun updateDayTitleOverride(sessionId: Int, dayTitle: String?)
+
+    /** 某计划的全部 session 概要（id + 训练日 + 动作名），供修改计划前回填训练日名称快照。 */
+    @Query(
+        """
+        SELECT s.id, s.dayIndexOverride, s.dayTitleOverride,
+               GROUP_CONCAT(DISTINCT e.name) AS exerciseNames
+        FROM sessions s
+        LEFT JOIN sets st ON st.sessionId = s.id
+        LEFT JOIN exercises e ON e.id = st.exerciseId
+        WHERE s.planId = :planId
+        GROUP BY s.id
+        """,
+    )
+    suspend fun getSessionsByPlan(planId: Int): List<SessionSnapshotEntity>
 
     @Query(
         """
@@ -113,7 +146,7 @@ interface SessionDao {
      */
     @Query(
         """
-        SELECT s.id, s.date, s.planId, s.dayIndexOverride, s.durationSeconds,
+        SELECT s.id, s.date, s.planId, s.dayIndexOverride, s.dayTitleOverride, s.durationSeconds,
                GROUP_CONCAT(DISTINCT e.name) AS exerciseNames,
                COUNT(st.id) AS setCount
         FROM sessions s

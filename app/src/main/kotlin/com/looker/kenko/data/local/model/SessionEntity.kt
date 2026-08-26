@@ -49,6 +49,7 @@ data class SessionDataEntity(
     @ColumnInfo(index = true)
     val planId: Int?,
     val dayIndexOverride: Int? = null,
+    val dayTitleOverride: String? = null,
     val durationSeconds: Long? = null,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
@@ -65,9 +66,18 @@ data class SessionSummaryEntity(
     val date: EpochDays,
     val planId: Int?,
     val dayIndexOverride: Int? = null,
+    val dayTitleOverride: String? = null,
     val durationSeconds: Long? = null,
     val exerciseNames: String? = null,
     val setCount: Int = 0,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+)
+
+/** 轻量投影：某计划的 session 概要（回填训练日名称快照用）。 */
+data class SessionSnapshotEntity(
+    val id: Int,
+    val dayIndexOverride: Int?,
+    val dayTitleOverride: String? = null,
+    val exerciseNames: String? = null,
 )

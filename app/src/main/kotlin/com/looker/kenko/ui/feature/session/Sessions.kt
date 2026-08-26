@@ -489,7 +489,11 @@ fun SessionCard(
             }
             val day = effectiveDay ?: inferredDay
             val dayTitle = dayTitles[session.planId]?.get(day)
-            val displayName = dayTitle ?: day?.let { stringResource(R.string.label_day_n, it) } ?: ""
+            // 优先显示训练日名称快照(计划修改后历史记录保持不变)
+            val displayName = session.dayTitleOverride
+                ?: dayTitle
+                ?: day?.let { stringResource(R.string.label_day_n, it) }
+                ?: ""
             val string = remember(session.date, displayName, dayTitle) {
                 buildAnnotatedString {
                     withStyle(titleStyle.toSpanStyle().copy(fontWeight = FontWeight.Bold)) {

@@ -34,6 +34,7 @@ import com.looker.kenko.data.local.MIGRATION_10_11
 import com.looker.kenko.data.local.MIGRATION_11_12
 import com.looker.kenko.data.local.MIGRATION_12_13
 import com.looker.kenko.data.local.MIGRATION_13_14
+import com.looker.kenko.data.local.MIGRATION_14_15
 import com.looker.kenko.data.local.dao.ExerciseDao
 import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.model.ExerciseEntity
@@ -210,6 +211,16 @@ class RoomDatabaseTesting {
         db.execSQL("INSERT INTO sessions (date, planId, dayIndexOverride) VALUES (20000, 1, 5)")
         db.execSQL("INSERT INTO sets (reps, weight, \"order\", sessionId, exerciseId, rir) VALUES (10, 50.0, 0, 1, 1, 2)")
         helper.runMigrationsAndValidate(DB_NAME, 14, true, MIGRATION_13_14)
+    }
+
+    @Test
+    fun schemaMigration14To15() = runTest {
+        val db = helper.createDatabase(DB_NAME, 14)
+        db.execSQL("INSERT INTO exercises (name, countType, reference, isBodyweight) VALUES ('Pushups', 'REPS', NULL, 0)")
+        db.execSQL("INSERT INTO plans (name, dayTitles) VALUES ('Test Plan', '{\"1\":\"Chest\"}')")
+        db.execSQL("INSERT INTO plan_day (planId, exerciseId, dayIndex, sortOrder) VALUES (1, 1, 3, 0)")
+        db.execSQL("INSERT INTO sessions (date, planId, dayIndexOverride) VALUES (20000, 1, 5)")
+        helper.runMigrationsAndValidate(DB_NAME, 15, true, MIGRATION_14_15)
     }
 
     @Test

@@ -56,6 +56,12 @@ interface SessionRepo {
 
     suspend fun getSessionIdOrCreate(date: LocalDate): Int
 
+    /**
+     * 把某计划当前(修改前)的训练日名称回填为该计划下所有 session 的快照,
+     * 供修改计划动作/训练日名称前调用,使历史记录不再随计划修改而变化。
+     */
+    suspend fun snapshotPlanDayTitles(planId: Int)
+
     fun streamByDate(date: LocalDate): Flow<Session?>
 
     fun previousSessionDate(date: LocalDate, planId: Int?, dayIndex: Int): Flow<LocalDate?>

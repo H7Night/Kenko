@@ -22,6 +22,7 @@ import com.looker.kenko.data.local.model.PlanEntity
 import com.looker.kenko.data.local.model.PlanHistoryEntity
 import com.looker.kenko.data.mapper.toEntity
 import com.looker.kenko.data.mapper.toExternal
+import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Labels
 import com.looker.kenko.domain.model.Plan
@@ -46,6 +47,7 @@ class LocalPlanRepo @Inject constructor(
     private val dao: PlanDao,
     private val exerciseDao: ExerciseDao,
     private val historyDao: PlanHistoryDao,
+    private val sessionRepo: SessionRepo,
 ) : PlanRepo {
 
     private val mutex = Mutex()
@@ -153,6 +155,8 @@ class LocalPlanRepo @Inject constructor(
     ).toInt()
 
     override suspend fun updatePlan(plan: Plan) {
+        // 修改计划前先把当前(修改前)训练日名称回填为历史 session 快照
+        plan.id?.let { sessionRepo.snapshotPlanDayTitles(it) }
         dao.upsertPlan(plan.toEntity())
     }
 
@@ -169,16 +173,19 @@ class LocalPlanRepo @Inject constructor(
     }
 
     override suspend fun addItem(planItem: PlanItem) {
+        sessionRepo.snapshotPlanDayTitles(planItem.planId)
         val items = dao.getPlanItemsByPlanIdAndDay(planItem.planId, planItem.dayIndex)
         val nextOrder = (items.maxOfOrNull { it.sortOrder } ?: -1) + 1
         dao.insertPlanItem(planItem.toEntity().copy(sortOrder = nextOrder))
     }
 
     override suspend fun removeItem(id: Long) {
+        dao.getPlanIdByItemId(id)?.let { sessionRepo.snapshotPlanDayTitles(it) }
         dao.deleteItem(id)
     }
 
     override suspend fun updateOrder(planId: Int, day: Int, exercises: List<Exercise>) {
+        sessionRepo.snapshotPlanDayTitles(planId)
         val items = getPlanItems(planId, day)
         if (items.size != exercises.size) return
 
@@ -208,6 +215,8 @@ class LocalPlanRepo @Inject constructor(
     override suspend fun deleteDay(planId: Int, dayIndex: Int) {
         val plan = dao.getPlanById(planId) ?: return
         if (dayIndex !in 1..plan.dayCount) return
+        // 搬移训练日序号前回填快照,避免历史记录训练日名称随序号搬移而变化
+        sessionRepo.snapshotPlanDayTitles(planId)
         // dayTitles 的 key 同步搬移:删除目标天,后续天前移,范围外保留
         val shifted = plan.toExternal(isActive = false, stat = PlanStat(0, 0)).titlesMap.mapNotNull { (day, title) ->
             val newDay = when {
@@ -223,6 +232,8 @@ class LocalPlanRepo @Inject constructor(
 
     override suspend fun moveDay(planId: Int, from: Int, to: Int) {
         val plan = dao.getPlanById(planId) ?: return
+        // 搬移训练日序号前回填快照,避免历史记录训练日名称随序号搬移而变化
+        sessionRepo.snapshotPlanDayTitles(planId)
         // dayTitles 的 key 同步搬移:范围外条目保留,只移动 from→to 与区间内条目
         val shifted = plan.toExternal(isActive = false, stat = PlanStat(0, 0)).titlesMap.map { (day, title) ->
             val newDay = when {

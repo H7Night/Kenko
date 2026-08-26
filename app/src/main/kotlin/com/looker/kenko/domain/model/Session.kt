@@ -24,6 +24,7 @@ data class Session(
     val sets: List<Set>,
     val planId: Int?,
     val dayIndexOverride: Int? = null,
+    val dayTitleOverride: String? = null,
     val durationSeconds: Long? = null,
     val id: Int? = null,
 ) {
@@ -42,6 +43,7 @@ data class SessionSummary(
     val date: LocalDate,
     val planId: Int?,
     val dayIndexOverride: Int? = null,
+    val dayTitleOverride: String? = null,
     val durationSeconds: Long? = null,
     val exerciseNames: List<String> = emptyList(),
     val setCount: Int = 0,

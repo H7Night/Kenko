@@ -76,3 +76,13 @@ data class PlanDayEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 )
+
+/** 解析计划的训练日名称 JSON（{"1":"胸A",...}）；解析失败或为空返回空 map。 */
+fun PlanEntity.dayTitlesMap(): Map<Int, String> {
+    if (dayTitles.isNullOrBlank()) return emptyMap()
+    return try {
+        kotlinx.serialization.json.Json.decodeFromString<Map<Int, String>>(dayTitles)
+    } catch (e: Exception) {
+        emptyMap()
+    }
+}

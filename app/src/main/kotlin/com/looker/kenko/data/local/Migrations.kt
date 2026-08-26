@@ -628,3 +628,11 @@ val MIGRATION_13_14 = object : Migration(13, 14) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_sets_sessionId_exerciseId` ON `sets` (`sessionId`, `exerciseId`)")
     }
 }
+
+val MIGRATION_14_15 = object : Migration(14, 15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // 训练日名称快照列:session 创建/训练日选择时写入当时的训练日名称,
+        // 之后修改计划的训练日名称不再影响历史记录显示。
+        db.execSQL("ALTER TABLE `sessions` ADD COLUMN `dayTitleOverride` TEXT")
+    }
+}
