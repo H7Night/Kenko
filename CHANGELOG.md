@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plan/session models migrated from weekday to day-index based training cycle (database migration 12 → 13)
 - Screen navigation now uses a short fade-in transition instead of swapping instantly
 - Start training button is hidden when there is no workout scheduled for today, and appears after selecting a training day
+- Bottom navigation bar is now fixed at the bottom edge of the screen instead of floating
+- Editing a plan later (renaming training days, changing/reordering exercises, adding/deleting days) no longer rewrites previously saved workout records — each session keeps a snapshot of its day name
+
+### Removed
+- RIR (reps in reserve) input during training and the "Show RIR" setting switch (database column removed)
 
 ### Fixed
 - Day reordering (`moveDay`) now shifts day indexes and day titles atomically without gaps
@@ -29,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Core screens (Home, history, exercises, plans, profile) no longer flash an empty state while their data loads
 - Home timer now keeps showing the accumulated time after ending a workout, and starting again continues from that time
 - Bottom navigation bar no longer shows a white background occluding the page content
+- Cardio exercises (e.g. brisk walking) no longer record a bogus weight (previously stored as e.g. 20 kg × 30)
+- Today's workout in the Records list now shows its training-day name, because the day index is stored when the session is created
+- Records cards no longer show a lone bullet separator when the training-day name is unavailable
 
 ## [1.7.0] - 2026-08-07
 
