@@ -16,6 +16,7 @@
 package com.looker.kenko.data.repository.local
 
 import com.looker.kenko.data.local.dao.ExerciseDao
+import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.dao.PlanHistoryDao
 import com.looker.kenko.data.local.dao.SessionDao
 import com.looker.kenko.data.local.dao.SetsDao
@@ -41,6 +42,7 @@ class LocalSessionRepo @Inject constructor(
     private val setsDao: SetsDao,
     private val historyDao: PlanHistoryDao,
     private val exerciseDao: ExerciseDao,
+    private val planDao: PlanDao,
 ) : SessionRepo {
 
     private val mutex = Mutex()
@@ -141,7 +143,16 @@ class LocalSessionRepo @Inject constructor(
         if (existingId != null) {
             return@withLock existingId
         }
-        return@withLock dao.insert(SessionDataEntity(date.toLocalEpochDays(), currentPlanId)).toInt()
+        // 新建当天训练 session 时即写入当前计划训练日序号(dayIndexOverride),
+        // 否则 Records 列表页只能靠动作名反查,反查失败时训练日名称不显示。
+        val dayIndex = planDao.getPlanById(currentPlanId)?.currentDayIndex
+        return@withLock dao.insert(
+            SessionDataEntity(
+                date = date.toLocalEpochDays(),
+                planId = currentPlanId,
+                dayIndexOverride = dayIndex,
+            ),
+        ).toInt()
     }
 
     override fun streamByDate(date: LocalDate): Flow<Session?> {
