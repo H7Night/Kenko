@@ -15,7 +15,9 @@
 
 package com.looker.kenko.ui.feature.session
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -25,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenuItem
@@ -222,9 +225,8 @@ private fun Sessions(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                // 导航栏已固定由外层 Scaffold 避让,移除旧悬浮导航栏时代的 96dp 底部预留
-                contentPadding = padding + PaddingValues(start = 14.dp, end = 14.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = padding + PaddingValues(start = 12.dp, end = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 item {
                     Column {
@@ -463,28 +465,40 @@ fun SessionCard(
     planDayExerciseNames: Map<Int, Map<Int, kotlin.collections.Set<String>>> = emptyMap(),
     onDelete: (() -> Unit)? = null,
 ) {
-    val containerColor = if (session.date.isToday) {
-        MaterialTheme.colorScheme.tertiaryContainer
-    } else {
-        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f)
-    }
+    val isToday = session.date.isToday
     Surface(
         modifier = modifier,
-        color = containerColor,
-        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.medium,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+            else MaterialTheme.colorScheme.outlineVariant
+        ),
         onClick = onClick,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .padding(start = 16.dp, end = 4.dp, top = 16.dp, bottom = 16.dp),
+                .padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.Top,
         ) {
+            // Linear status dot
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier
+                    .padding(top = 6.dp, end = 8.dp)
+                    .size(6.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(
+                        if (isToday) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outline
+                    )
+            )
             Column(modifier = Modifier.weight(1f)) {
-            val titleStyle = MaterialTheme.typography.titleLarge
-            val onContainer = MaterialTheme.colorScheme.onTertiaryContainer
-            val secondaryEmphasis = onContainer.copy(alpha = 0.75f)
+            val titleStyle = MaterialTheme.typography.titleSmall
+            val onContainer = MaterialTheme.colorScheme.onSurface
+            val secondaryEmphasis = MaterialTheme.colorScheme.onSurfaceVariant
             val effectiveDay = session.dayIndexOverride
             // 无 dayIndexOverride 的老记录:按动作名反查所属训练日,还原训练日名称
             val inferredDay = effectiveDay ?: session.planId?.let { planId ->
@@ -516,13 +530,13 @@ fun SessionCard(
             }
             Text(text = string)
 
-            // Duration
+            // Duration — mono, subtle
             if (session.durationSeconds != null && session.durationSeconds > 0) {
                 val durationText = TimerService.formatTime(session.durationSeconds)
                 Text(
                     text = durationText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = onContainer.copy(alpha = 0.75f),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 )
             }
 
@@ -531,9 +545,9 @@ fun SessionCard(
             }
             Text(
                 text = exerciseNames,
-                style = MaterialTheme.typography.labelMedium,
-                color = onContainer.copy(alpha = 0.9f),
-                maxLines = 3,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
             )
             }
             if (onDelete != null) {

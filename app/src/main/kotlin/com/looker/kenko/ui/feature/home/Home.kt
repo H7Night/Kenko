@@ -15,6 +15,7 @@
 
 package com.looker.kenko.ui.feature.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,7 +30,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -41,17 +41,16 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -79,11 +78,9 @@ import com.looker.kenko.ui.component.timer.TimerCard
 import com.looker.kenko.ui.component.timer.TimerState
 import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.ui.component.timer.rememberNotificationPermissionState
-import com.looker.kenko.ui.feature.session.ExerciseSearchDialog
 import com.looker.kenko.ui.feature.session.AddSetSheet
+import com.looker.kenko.ui.feature.session.ExerciseSearchDialog
 import com.looker.kenko.ui.theme.KenkoIcons
-import com.looker.kenko.ui.theme.bodyFont
-import com.looker.kenko.ui.theme.header
 import com.looker.kenko.ui.theme.numbers
 import com.looker.kenko.utils.toast
 import kotlinx.datetime.LocalDate
@@ -222,7 +219,7 @@ fun Home(
                 onPause = viewModel::pauseWorkout,
                 onResume = viewModel::resumeWorkout,
                 onEnd = { showEndConfirm = true },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             )
 
             when (state.trainingState) {
@@ -239,18 +236,14 @@ fun Home(
                         onSwitchTrainingDay = { showTrainingDayPicker = true },
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = stringResource(R.string.home_text),
-                        style = MaterialTheme.typography.displaySmall.copy(
-                            fontFamily = bodyFont,
-                            fontSize = 24.sp,
-                            lineHeight = 30.sp,
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 80.dp, bottom = 16.dp),
+                            .padding(top = 24.dp, bottom = 16.dp),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
                 }
@@ -281,25 +274,26 @@ private fun TrainingActionBar(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        FilledTonalButton(
+        OutlinedButton(
             onClick = onAddExercise,
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         ) {
-            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(2.dp))
+            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             Text(stringResource(R.string.label_add_exercise), style = MaterialTheme.typography.labelSmall)
         }
-        Spacer(modifier = Modifier.width(4.dp))
-        FilledTonalButton(
+        OutlinedButton(
             onClick = onChangePlan,
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         ) {
-            Icon(Icons.Rounded.SwapHoriz, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(2.dp))
+            Icon(Icons.Rounded.SwapHoriz, contentDescription = null, modifier = Modifier.size(14.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             Text(stringResource(R.string.label_change_plan), style = MaterialTheme.typography.labelSmall)
         }
     }
@@ -349,12 +343,13 @@ private fun InlineTrainingContent(
                     }
                 },
                 actions = {
-                    FilledTonalButton(
+                    OutlinedButton(
                         onClick = { onAddSet(exercise) },
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp))
-                        Spacer(modifier = Modifier.width(2.dp))
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(12.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(stringResource(R.string.label_add), style = MaterialTheme.typography.labelSmall)
                     }
                 },
@@ -398,70 +393,59 @@ private fun PlanInfoCard(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Row(modifier = Modifier.padding(16.dp)) {
+        Row(modifier = Modifier.padding(14.dp)) {
             Column(modifier = Modifier.weight(1f)) {
-                // Plan name
                 if (planName != null) {
                     Text(
                         text = planName,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                 }
-
-                // Date
                 Text(
                     text = today().toString(),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Day progress
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = stringResource(R.string.label_day_progress, dayIndex ?: 1, dayCount),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Today's training title
+                Spacer(modifier = Modifier.height(6.dp))
                 val trainingTitle = dayTitle ?: stringResource(R.string.label_day_n, dayIndex ?: 1)
                 Text(
                     text = when {
                         isRestDay -> stringResource(R.string.label_today_rest)
                         else -> "${stringResource(R.string.label_today_plan)}: $trainingTitle"
                     },
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                 )
-
                 if (isRestDay) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(onClick = onSwitchTrainingDay) {
-                        Text(stringResource(R.string.label_train_other_day))
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedButton(onClick = onSwitchTrainingDay) {
+                        Text(stringResource(R.string.label_train_other_day), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
-
             if (!isRestDay) {
                 var menuExpanded by remember { mutableStateOf(false) }
                 Box {
-                    IconButton(onClick = { menuExpanded = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = null)
+                    IconButton(onClick = { menuExpanded = true }, modifier = Modifier.size(28.dp)) {
+                        Icon(Icons.Default.MoreVert, contentDescription = null, modifier = Modifier.size(16.dp))
                     }
                     DropdownMenu(
                         expanded = menuExpanded,
                         onDismissRequest = { menuExpanded = false },
                     ) {
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.label_switch_training_day)) },
+                            text = { Text(stringResource(R.string.label_switch_training_day), style = MaterialTheme.typography.bodySmall) },
                             onClick = {
                                 menuExpanded = false
                                 onSwitchTrainingDay()
@@ -483,19 +467,20 @@ private fun TrainingDayPickerDialog(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Text(
             text = stringResource(R.string.label_switch_training_day),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(16.dp),
         )
         Column(modifier = Modifier.padding(bottom = 32.dp)) {
             availableDays.toSortedMap().forEach { (day, title) ->
-                Button(
+                OutlinedButton(
                     onClick = { onSelect(day) },
-                    shape = MaterialTheme.shapes.large,
-                    contentPadding = PaddingValues(vertical = 12.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    contentPadding = PaddingValues(vertical = 10.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp),
@@ -505,7 +490,7 @@ private fun TrainingDayPickerDialog(
                     } else {
                         title
                     }
-                    Text(text = displayName)
+                    Text(text = displayName, style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
@@ -519,33 +504,30 @@ private fun SelectPlanPrompt(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 32.dp),
+            .padding(vertical = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = stringResource(R.string.label_selecting_a_plan),
-            style = MaterialTheme.typography.header().copy(
+            style = MaterialTheme.typography.titleLarge.copy(
                 lineBreak = LineBreak.Heading,
             ),
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onSurface,
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = onSelectPlanClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.tertiary,
-                contentColor = MaterialTheme.colorScheme.onTertiary,
-            ),
             contentPadding = PaddingValues(
-                vertical = 24.dp,
-                horizontal = 40.dp,
+                vertical = 12.dp,
+                horizontal = 24.dp,
             ),
         ) {
-            Text(text = stringResource(R.string.label_select_plan_one))
-            Spacer(modifier = Modifier.width(12.dp))
+            Text(text = stringResource(R.string.label_select_plan_one), style = MaterialTheme.typography.labelLarge)
+            Spacer(modifier = Modifier.width(8.dp))
             Icon(
                 painter = KenkoIcons.ArrowOutward,
                 contentDescription = null,
+                modifier = Modifier.size(16.dp),
             )
         }
     }

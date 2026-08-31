@@ -15,9 +15,9 @@
 
 package com.looker.kenko.ui.feature.plan.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.Icon
@@ -61,71 +62,71 @@ fun PlanItem(
     onDelete: (() -> Unit)? = null,
 ) {
     val transition = updateTransition(targetState = plan.isActive, label = null)
-    val background by transition.animateColor(label = "background") {
-        if (it) {
-            MaterialTheme.colorScheme.secondaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceContainer
-        }
-    }
-    val contentColor by transition.animateColor(label = "foreground") {
-        if (it) {
-            MaterialTheme.colorScheme.onSecondaryContainer
-        } else {
-            MaterialTheme.colorScheme.onSurface
-        }
+    val borderColor by transition.animateColor(label = "border") {
+        if (it) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+        else MaterialTheme.colorScheme.outlineVariant
     }
 
     Surface(
         modifier = modifier,
         onClick = onClick,
-        color = background,
-        contentColor = contentColor,
-        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        shape = MaterialTheme.shapes.medium,
+        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(12.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
+                // Status dot
+                androidx.compose.foundation.layout.Box(
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .size(6.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(
+                            if (plan.isActive) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.outline
+                        )
+                )
                 Text(
                     modifier = Modifier.weight(1F),
                     text = plan.name,
-                    maxLines = 2,
-                    style = MaterialTheme.typography.headlineMedium,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.titleSmall,
                 )
                 OutlinedIconToggleButton(
                     checked = plan.isActive,
                     onCheckedChange = onActiveChange,
                 ) {
-                    Icon(painter = KenkoIcons.Done, contentDescription = null)
+                    Icon(painter = KenkoIcons.Done, contentDescription = null, modifier = Modifier.size(16.dp))
                 }
                 if (onDelete != null) {
                     IconButton(
                         onClick = onDelete,
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(28.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Delete,
                             contentDescription = stringResource(R.string.label_delete),
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
+                            modifier = Modifier.size(16.dp),
                         )
                     }
                 }
             }
-            AnimatedVisibility(visible = plan.isActive) {
+            if (plan.isActive) {
                 Text(
                     text = stringResource(R.string.label_selected),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 2.dp),
                 )
-            }
-            if (plan.isActive) {
-                Spacer(modifier = Modifier.height(4.dp))
             }
             val stats = remember(plan) { plan.stat }
             Text(
@@ -135,6 +136,9 @@ fun PlanItem(
                     normalizeInt(stats.workDays),
                     normalizeInt((plan.dayCount - stats.workDays).coerceAtLeast(0)),
                 ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
             )
         }
     }

@@ -15,6 +15,7 @@
 
 package com.looker.kenko.ui.component
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -45,15 +46,17 @@ fun KenkoBottomBar(
     // 固定底部导航栏(非悬浮):作为 Scaffold 的 bottomBar 全宽贴合屏幕底部,
     // 圆角/阴影/悬浮间距由 Scaffold 的 innerPadding 保证内容不被遮挡。
     NavigationBar(
-        modifier = modifier.fillMaxWidth(),
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = modifier
+            .fillMaxWidth()
+            .border(width = 1.dp, color = MaterialTheme.colorScheme.outlineVariant),
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         val itemColors = NavigationBarItemDefaults.colors(
-            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+            selectedIconColor = MaterialTheme.colorScheme.primary,
+            selectedTextColor = MaterialTheme.colorScheme.primary,
+            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
         )
 
         NavigationBarItem(
@@ -63,13 +66,14 @@ fun KenkoBottomBar(
                 Icon(
                     painter = KenkoIcons.Home,
                     contentDescription = null,
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(18.dp),
                 )
             },
             label = {
                 Text(
                     text = stringResource(R.string.label_home),
                     fontSize = 10.sp,
+                    letterSpacing = 0.04.sp,
                 )
             },
             colors = itemColors,
@@ -82,13 +86,14 @@ fun KenkoBottomBar(
                 Icon(
                     painter = KenkoIcons.History,
                     contentDescription = null,
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(18.dp),
                 )
             },
             label = {
                 Text(
                     text = stringResource(R.string.label_records),
                     fontSize = 10.sp,
+                    letterSpacing = 0.04.sp,
                 )
             },
             colors = itemColors,
@@ -101,13 +106,14 @@ fun KenkoBottomBar(
                 Icon(
                     painter = KenkoIcons.Person,
                     contentDescription = null,
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(18.dp),
                 )
             },
             label = {
                 Text(
                     text = stringResource(R.string.label_profile),
                     fontSize = 10.sp,
+                    letterSpacing = 0.04.sp,
                 )
             },
             colors = itemColors,

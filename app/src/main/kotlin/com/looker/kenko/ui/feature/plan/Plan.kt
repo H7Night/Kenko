@@ -195,8 +195,8 @@ private fun Plan(
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         LazyColumn(
-            contentPadding = it + PaddingValues(vertical = 8.dp, horizontal = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            contentPadding = it + PaddingValues(vertical = 6.dp, horizontal = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             items(
                 items = plans,
