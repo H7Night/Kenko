@@ -63,6 +63,19 @@ class LocalExerciseRepo @Inject constructor(
     override suspend fun isExerciseAvailable(name: String): Boolean =
         dao.exists(name)
 
+    override suspend fun getOrCreate(exercise: Exercise): Exercise {
+        dao.getByName(exercise.name)?.let { entity ->
+            val tags = tagDao.getTagsForExercise(entity.id).map { it.toExternal() }
+            return entity.toExternal(tags)
+        }
+        val newId = dao.upsert(exercise.toEntity()).toInt()
+        val tagIds = exercise.tags.mapNotNull { tag -> tagDao.getByName(tag.name)?.id }
+        if (tagIds.isNotEmpty()) {
+            tagDao.replaceExerciseTags(newId, tagIds)
+        }
+        return get(newId) ?: exercise.copy(id = newId)
+    }
+
     override suspend fun hasHistory(id: Int): Boolean =
         setsDao.hasSetsForExercise(id)
 }

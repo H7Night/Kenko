@@ -94,7 +94,6 @@ private fun Session.toExport(): ExportSession = ExportSession(
             weight = set.weight,
             exerciseName = set.exercise.name,
             exerciseTarget = set.exercise.tags.firstOrNull()?.parentName ?: "",
-            rir = set.rir.value,
         )
     },
     planId = planId,

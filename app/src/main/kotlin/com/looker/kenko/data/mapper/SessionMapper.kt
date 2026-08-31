@@ -21,14 +21,13 @@ import com.looker.kenko.data.local.model.SetEntity
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.Set
 import com.looker.kenko.utils.EpochDays
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.isoDayNumber
 
 fun Session.data(): SessionDataEntity = SessionDataEntity(
     date = EpochDays(date.toEpochDays().toInt()),
     planId = planId,
-    planDayOverride = planDayOverride?.isoDayNumber,
+    dayIndexOverride = dayIndexOverride,
+    dayTitleOverride = dayTitleOverride,
     durationSeconds = durationSeconds,
     id = id ?: 0,
 )
@@ -43,7 +42,8 @@ fun SessionEntity.toExternal(
     planId = data.planId,
     date = LocalDate.fromEpochDays(data.date.value),
     sets = setsMap,
-    planDayOverride = data.planDayOverride?.let { DayOfWeek(it) },
+    dayIndexOverride = data.dayIndexOverride,
+    dayTitleOverride = data.dayTitleOverride,
     durationSeconds = data.durationSeconds,
     id = data.id,
 )

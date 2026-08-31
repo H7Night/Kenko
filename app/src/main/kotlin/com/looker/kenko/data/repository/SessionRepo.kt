@@ -15,16 +15,21 @@
 
 package com.looker.kenko.data.repository
 
-import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.Set
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 
 interface SessionRepo {
 
     val stream: Flow<List<Session>>
+
+    /** 会话概要流（Records 列表页用）：轻量 JOIN 一次取回，不含组详情。 */
+    val streamSummaries: Flow<List<SessionSummary>>
+
+    /** 每个计划的训练日期区间（首 session 日期 ~ 末 session 日期），仅依赖轻量查询。 */
+    val planDateRanges: Flow<Map<Int, Pair<LocalDate, LocalDate>>>
 
     val setsCount: Flow<Int>
 
@@ -37,7 +42,6 @@ interface SessionRepo {
         exerciseId: Int,
         weight: Float,
         reps: Int,
-        rir: RepsInReserve,
     )
 
     suspend fun updateSet(setId: Int, reps: Int, weight: Float)
@@ -46,17 +50,25 @@ interface SessionRepo {
 
     suspend fun clearSets(date: LocalDate)
 
-    suspend fun updatePlanDay(date: LocalDate, day: DayOfWeek)
+    suspend fun updateDayIndex(date: LocalDate, dayIndex: Int)
 
     suspend fun updateSessionDuration(sessionId: Int, durationSeconds: Long)
 
     suspend fun getSessionIdOrCreate(date: LocalDate): Int
 
+    /**
+     * 把某计划当前(修改前)的训练日名称回填为该计划下所有 session 的快照,
+     * 供修改计划动作/训练日名称前调用,使历史记录不再随计划修改而变化。
+     */
+    suspend fun snapshotPlanDayTitles(planId: Int)
+
     fun streamByDate(date: LocalDate): Flow<Session?>
 
-    fun previousSessionDate(date: LocalDate, planId: Int?, day: DayOfWeek): Flow<LocalDate?>
+    fun previousSessionDate(date: LocalDate, planId: Int?, dayIndex: Int): Flow<LocalDate?>
 
     suspend fun getSets(sessionId: Int): List<Set>
 
     suspend fun deleteSession(session: Session)
+
+    suspend fun deleteSessionById(id: Int)
 }

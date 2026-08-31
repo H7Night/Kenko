@@ -15,14 +15,16 @@
 
 package com.looker.kenko.ui.component.timer
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -45,35 +47,59 @@ fun TimerCard(
     elapsedSeconds: Long,
     notificationGranted: Boolean,
     hasAccumulatedTime: Boolean = false,
+    showStart: Boolean = true,
     onStart: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
     onEnd: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isActive = timerState != TimerState.IDLE
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.primaryContainer,
-        tonalElevation = when (timerState) {
-            TimerState.RUNNING -> 8.dp
-            TimerState.PAUSED -> 4.dp
-            TimerState.IDLE -> 0.dp
-        },
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            1.dp,
+            if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+            else MaterialTheme.colorScheme.outlineVariant
+        ),
+        tonalElevation = 0.dp,
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Timer display
-            Text(
-                text = TimerService.formatTime(elapsedSeconds),
-                style = MaterialTheme.typography.displayMedium.copy(
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold,
-                ),
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
+            // Timer display — Linear mono, tight tracking
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                if (isActive) {
+                    Box(
+                        modifier = Modifier
+                            .width(2.dp)
+                            .height(28.dp)
+                            .padding(end = 0.dp),
+                    ) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = MaterialTheme.shapes.extraSmall,
+                            modifier = Modifier.matchParentSize()
+                        ) {}
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                }
+                Text(
+                    text = TimerService.formatTime(elapsedSeconds),
+                    style = MaterialTheme.typography.displayMedium.copy(
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.02).sp,
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -85,16 +111,18 @@ fun TimerCard(
             ) {
                 when (timerState) {
                     TimerState.IDLE -> {
-                        Button(
-                            onClick = onStart,
-                            enabled = notificationGranted,
-                        ) {
-                            Text(
-                                if (hasAccumulatedTime)
-                                    stringResource(R.string.label_continue_session)
-                                else
-                                    stringResource(R.string.label_start_workout)
-                            )
+                        if (showStart) {
+                            Button(
+                                onClick = onStart,
+                                enabled = notificationGranted,
+                            ) {
+                                Text(
+                                    if (hasAccumulatedTime)
+                                        stringResource(R.string.label_continue_session)
+                                    else
+                                        stringResource(R.string.label_start_workout)
+                                )
+                            }
                         }
                     }
                     TimerState.RUNNING -> {

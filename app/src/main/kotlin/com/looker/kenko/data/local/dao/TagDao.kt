@@ -40,6 +40,9 @@ interface TagDao {
     @Query("SELECT * FROM tags WHERE id = :id")
     suspend fun get(id: Int): TagEntity?
 
+    @Query("SELECT * FROM tags WHERE name = :name LIMIT 1")
+    suspend fun getByName(name: String): TagEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(tag: TagEntity)
 

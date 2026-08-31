@@ -23,7 +23,6 @@ import com.looker.kenko.domain.model.Labels.Time
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanItem
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.DayOfWeek
 
 interface PlanRepo {
 
@@ -33,13 +32,13 @@ interface PlanRepo {
 
     val planItems: Flow<List<PlanItem>>
 
-    fun planItems(day: DayOfWeek): Flow<List<PlanItem>>
+    fun planItems(day: Int): Flow<List<PlanItem>>
 
-    fun planItems(id: Int): Flow<List<PlanItem>>
+    fun planItemsByPlan(id: Int): Flow<List<PlanItem>>
 
-    fun planItems(id: Int, day: DayOfWeek): Flow<List<PlanItem>>
+    fun planItems(id: Int, day: Int): Flow<List<PlanItem>>
 
-    fun activeExercises(day: DayOfWeek): Flow<List<Exercise>>
+    fun activeExercises(day: Int): Flow<List<Exercise>>
 
     suspend fun plan(id: Int): Plan?
 
@@ -47,7 +46,7 @@ interface PlanRepo {
 
     suspend fun getPlanItems(id: Int): List<PlanItem>
 
-    suspend fun getPlanItems(id: Int, day: DayOfWeek): List<PlanItem>
+    suspend fun getPlanItems(id: Int, day: Int): List<PlanItem>
 
     suspend fun createPlan(
         name: String,
@@ -68,5 +67,15 @@ interface PlanRepo {
 
     suspend fun removeItem(id: Long)
 
-    suspend fun updateOrder(planId: Int, day: DayOfWeek, exercises: List<Exercise>)
+    suspend fun updateOrder(planId: Int, day: Int, exercises: List<Exercise>)
+
+    suspend fun updateDayIndex(planId: Int, dayIndex: Int)
+
+    suspend fun advanceDay(planId: Int, actualDayIndex: Int)
+
+    suspend fun addDay(planId: Int)
+
+    suspend fun deleteDay(planId: Int, dayIndex: Int)
+
+    suspend fun moveDay(planId: Int, from: Int, to: Int)
 }

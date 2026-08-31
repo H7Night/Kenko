@@ -28,7 +28,6 @@ import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.looker.kenko.domain.model.CountType
-import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.SessionRepo
@@ -66,6 +65,12 @@ class AddSetViewModel @AssistedInject constructor(
 
     private var isCardio by mutableStateOf(false)
 
+    /** 是否处于“自重”选中状态：为 true 时重量输入显示“自重”而非数字。 */
+    var isBodyweightMode by mutableStateOf(false)
+        private set
+
+    private var weightBeforeBodyweight = "20.0"
+
     private val _snackbar = MutableSharedFlow<String>()
     val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
 
@@ -76,6 +81,9 @@ class AddSetViewModel @AssistedInject constructor(
                 isCardio = exercise?.countType == CountType.MINUTES
                 if (isCardio) {
                     reps.setTextAndPlaceCursorAtEnd("20")
+                    // 有氧只记录时长,不记录重量;UI 虽隐藏重量行,底层值也必须为 0,
+                    // 否则会用默认 "20.0" 记录成错误的 20kg × N 次。
+                    weights.setTextAndPlaceCursorAtEnd("0")
                 }
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
@@ -88,10 +96,21 @@ class AddSetViewModel @AssistedInject constructor(
     }
 
     fun setBodyweight() {
-        weights.setTextAndPlaceCursorAtEnd("0")
+        isBodyweightMode = !isBodyweightMode
+        if (isBodyweightMode) {
+            weightBeforeBodyweight = weights.text.toString()
+            weights.setTextAndPlaceCursorAtEnd("0")
+        } else {
+            weights.setTextAndPlaceCursorAtEnd(weightBeforeBodyweight)
+        }
     }
 
     fun addWeight(value: Float) {
+        if (isBodyweightMode) {
+            isBodyweightMode = false
+            weights.setTextAndPlaceCursorAtEnd(weightBeforeBodyweight)
+            return
+        }
         weights.setTextAndPlaceCursorAtEnd((weightFloat + value).coerceAtLeast(0F).toString())
     }
 
@@ -132,9 +151,8 @@ class AddSetViewModel @AssistedInject constructor(
                     sessionRepo.addSet(
                         sessionId = sessionId,
                         exerciseId = id,
-                        weight = weightFloat,
+                        weight = if (isCardio) 0F else weightFloat,
                         reps = repInt,
-                        rir = RepsInReserve(2),
                     )
                 }
             } catch (e: Exception) {

@@ -62,12 +62,11 @@ import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.ui.theme.end
 import com.looker.kenko.ui.theme.start
+import com.looker.kenko.utils.ExportFileName
 import com.looker.kenko.utils.toFormat
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 @Composable
 internal fun BackupSection(
@@ -142,7 +141,7 @@ internal fun BackupSection(
             onDismiss = { showExportDialog = false },
             onConfirm = { options ->
                 pendingExportOptions = options
-                jsonFileLauncher.launch(buildExportFileName())
+                jsonFileLauncher.launch(ExportFileName.forProject("data", "json"))
                 showExportDialog = false
             },
         )
@@ -179,7 +178,7 @@ internal fun BackupSection(
             Text(
                 text = stringResource(R.string.label_last_backup, lastBackupTime.toFormat()),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
@@ -293,13 +292,13 @@ internal fun BackupSettingRow(
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Icon(
             painter = KenkoIcons.ArrowForward,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.outline,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -355,13 +354,6 @@ internal fun RestoreConfirmationDialog(
             }
         },
     )
-}
-
-private fun buildExportFileName(): String {
-    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-    val datePart = "${now.year}-${now.monthNumber.toString().padStart(2, '0')}-${now.dayOfMonth.toString().padStart(2, '0')}"
-    val timePart = "${now.hour.toString().padStart(2, '0')}${now.minute.toString().padStart(2, '0')}${now.second.toString().padStart(2, '0')}"
-    return "kenko-export-$datePart-$timePart"
 }
 
 internal fun extractFolderName(uri: String): String {

@@ -69,13 +69,13 @@ fun DeletableSetItem(
             }
             IconButton(
                 onClick = onDelete,
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(28.dp),
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Delete,
                     contentDescription = stringResource(R.string.label_delete),
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
+                    modifier = Modifier.size(16.dp),
                 )
             }
         }

@@ -15,7 +15,9 @@
 
 package com.looker.kenko.ui.feature.home.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +33,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -85,17 +88,22 @@ fun TrainingHeatmap(
         sessionDates.any { it.year > displayedDate.year }
     }
 
-    Column(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(10.dp)
-            .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .clickable(onClick = onClick)
-            .padding(top = 14.dp, bottom = 10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(7.dp)
+            .padding(horizontal = 4.dp, vertical = 6.dp),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(top = 12.dp, bottom = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
         HeatmapHeader(
             displayedDate = displayedDate,
             onPreviousMonth = {
@@ -122,18 +130,19 @@ fun TrainingHeatmap(
             showNextYear = showNextYear
         )
 
-        HorizontalPager(
-            state = pagerState,
-            key = { it }
-        ) { page ->
-            val pageOffset = page - (Int.MAX_VALUE / 2)
-            val dateForPage = remember(initialDate, pageOffset) {
-                initialDate.plus(pageOffset, DateTimeUnit.MONTH)
+            HorizontalPager(
+                state = pagerState,
+                key = { it }
+            ) { page ->
+                val pageOffset = page - (Int.MAX_VALUE / 2)
+                val dateForPage = remember(initialDate, pageOffset) {
+                    initialDate.plus(pageOffset, DateTimeUnit.MONTH)
+                }
+                HeatmapGrid(
+                    displayedDate = dateForPage,
+                    sessionDates = sessionDates
+                )
             }
-            HeatmapGrid(
-                displayedDate = dateForPage,
-                sessionDates = sessionDates
-            )
         }
     }
 }
@@ -167,7 +176,7 @@ private fun HeatmapHeader(
                     Icon(
                         painter = KenkoIcons.ArrowBack,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.outline
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -175,7 +184,7 @@ private fun HeatmapHeader(
                 Icon(
                     painter = KenkoIcons.KeyboardArrowLeft,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.outline
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -184,7 +193,7 @@ private fun HeatmapHeader(
             text = monthLabel,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.outline
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Row {
@@ -192,7 +201,7 @@ private fun HeatmapHeader(
                 Icon(
                     painter = KenkoIcons.KeyboardArrowRight,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.outline
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             if (showNextYear) {
@@ -200,7 +209,7 @@ private fun HeatmapHeader(
                     Icon(
                         painter = KenkoIcons.ArrowForward,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.outline
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -256,14 +265,18 @@ private fun HeatmapGrid(
                         val isToday = day == today
                         val color = when {
                             isTrained -> MaterialTheme.colorScheme.primary
-                            isToday -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-                            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+                            isToday -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                            else -> MaterialTheme.colorScheme.surface
                         }
+                        val border = if (!isTrained) {
+                            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        } else null
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .aspectRatio(1f)
                                 .clip(MaterialTheme.shapes.extraSmall)
+                                .then(if (border != null) Modifier.border(border, MaterialTheme.shapes.extraSmall) else Modifier)
                                 .background(color)
                         )
                     } else {
@@ -293,7 +306,7 @@ private fun DayOfWeekLabels(modifier: Modifier = Modifier) {
                 modifier = Modifier.weight(1f),
                 text = day,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.outline,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )

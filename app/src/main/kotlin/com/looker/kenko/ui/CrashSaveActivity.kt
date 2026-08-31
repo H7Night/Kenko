@@ -19,6 +19,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -35,11 +36,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.looker.kenko.R
+import com.looker.kenko.utils.ExportFileName
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -63,6 +62,10 @@ class CrashSaveActivity : ComponentActivity() {
 
         logFilePath = intent.getStringExtra(EXTRA_LOG_FILE_PATH)
 
+        // Ignore back press — user must make a choice
+        // (also covers predictive back gestures; avoids overriding onBackPressed)
+        onBackPressedDispatcher.addCallback(this) { }
+
         setContent {
             MaterialTheme {
                 CrashSaveDialog(
@@ -76,12 +79,8 @@ class CrashSaveActivity : ComponentActivity() {
         }
     }
 
-    override fun onBackPressed() {
-        // Ignore back press — user must make a choice
-    }
-
     private fun launchFilePicker() {
-        val fileName = "kenko-crash-${defaultFileName()}.log"
+        val fileName = ExportFileName.forProject("crash", "log")
         // Default to Downloads via initial URI
         val initialUri = "content://com.android.externalstorage.documents/document/primary:Download".toUri()
         createDocLauncher.launch(fileName)
@@ -113,9 +112,6 @@ class CrashSaveActivity : ComponentActivity() {
             android.os.Process.killProcess(android.os.Process.myPid())
         }.start()
     }
-
-    private fun defaultFileName(): String =
-        SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
 
     companion object {
         const val EXTRA_LOG_FILE_PATH = "log_file_path"

@@ -55,6 +55,16 @@ interface ExerciseDao {
 
     @Query(
         """
+        SELECT *
+        FROM exercises
+        WHERE name = :name
+        LIMIT 1
+        """,
+    )
+    suspend fun getByName(name: String): ExerciseEntity?
+
+    @Query(
+        """
         SELECT COUNT(*)
         FROM exercises
         """,

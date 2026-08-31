@@ -69,7 +69,7 @@ fun PlanName(
             targetValue = if (error) {
                 MaterialTheme.colorScheme.error
             } else {
-                MaterialTheme.colorScheme.outline
+                MaterialTheme.colorScheme.onSurfaceVariant
             },
         )
         CompositionLocalProvider(LocalContentColor provides contentColor) {

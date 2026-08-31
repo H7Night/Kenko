@@ -24,10 +24,9 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.looker.kenko.data.local.KenkoDatabase
-import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.di.IoDispatcher
-import com.looker.kenko.utils.DateFormat
+import com.looker.kenko.utils.ExportFileName
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -37,7 +36,6 @@ import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.LocalDate
 
 class BackupManagerImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
@@ -174,7 +172,7 @@ class BackupManagerImpl @Inject constructor(
         val treeDoc = DocumentFile.fromTreeUri(context, treeUri)
             ?: error("Cannot access directory: $treeUri")
 
-        val fileName = backupFileName(today())
+        val fileName = ExportFileName.forProject("app", "zip")
         val backupFile = treeDoc.findFile(fileName)
             ?: treeDoc.createFile("application/zip", fileName)
             ?: error("Cannot create backup file in: $treeUri")
@@ -275,11 +273,6 @@ class BackupManagerImpl @Inject constructor(
             datastoreDir.mkdirs()
             sourceFile.copyTo(destFile, overwrite = true)
         }
-    }
-
-    fun backupFileName(date: LocalDate): String = buildString {
-        append("kenko_backup_")
-        append(DateFormat.BackupName.format(date))
     }
 
     companion object {

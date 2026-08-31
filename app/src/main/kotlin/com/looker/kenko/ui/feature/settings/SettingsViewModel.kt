@@ -74,7 +74,6 @@ class SettingsViewModel @Inject constructor(
             isRestoring = backupState.isRestoring,
             isExporting = backupState.isExporting,
             backupMessage = backupState.message,
-            capitalizeExerciseName = settings.capitalizeExerciseName,
             language = settings.language,
             earliestSessionDate = earliestDate,
         )
@@ -88,7 +87,6 @@ class SettingsViewModel @Inject constructor(
             isRestoring = false,
             isExporting = false,
             backupMessage = null,
-            capitalizeExerciseName = true,
             language = Language.System,
             earliestSessionDate = null,
         ),
@@ -98,16 +96,6 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 repo.setTheme(theme)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
-        }
-    }
-
-    fun updateCapitalizeExerciseName(enabled: Boolean) {
-        viewModelScope.launch {
-            try {
-                repo.setCapitalizeExerciseName(enabled)
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
             }
@@ -260,7 +248,6 @@ data class SettingsUiData(
     val isRestoring: Boolean,
     val isExporting: Boolean,
     val backupMessage: BackupMessage?,
-    val capitalizeExerciseName: Boolean,
     val language: Language,
     val earliestSessionDate: LocalDate?,
 )

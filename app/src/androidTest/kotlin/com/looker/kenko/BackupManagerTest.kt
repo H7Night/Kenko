@@ -21,7 +21,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.looker.kenko.data.backup.BackupManager
 import com.looker.kenko.data.backup.BackupResult
 import com.looker.kenko.domain.model.PlanItem
-import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Set
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
@@ -37,7 +36,6 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.DayOfWeek
 import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
@@ -115,7 +113,7 @@ class BackupManagerTest {
         exercises.forEach {
             planRepo.addItem(
                 PlanItem(
-                    dayOfWeek = DayOfWeek(Random.nextInt(1, 5)),
+                    dayIndex = Random.nextInt(1, 5),
                     exercise = it,
                     planId = planId,
                 ),
@@ -129,7 +127,6 @@ class BackupManagerTest {
                 repsOrDuration = 12,
                 weight = 50F,
                 exercise = exercises.first(),
-                rir = RepsInReserve(2),
             )
         }
         sets.forEach { sessionRepo.addSet(sessionId, it) }

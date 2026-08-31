@@ -532,3 +532,107 @@ val MIGRATION_11_12 = object : Migration(11, 12) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_sets_sessionId_exerciseId` ON `sets` (`sessionId`, `exerciseId`)")
     }
 }
+
+val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // API 26–29 的系统 SQLite(<3.25)不支持 RENAME COLUMN,故 plan_day/sessions
+        // 的列改名采用重建表方式(与 MIGRATION_11_12 同款模式),兼容所有 SQLite 版本。
+        db.execSQL("ALTER TABLE plans ADD COLUMN dayCount INTEGER NOT NULL DEFAULT 7")
+        db.execSQL("ALTER TABLE plans ADD COLUMN currentDayIndex INTEGER NOT NULL DEFAULT 1")
+
+        // plan_day: dayOfWeek -> dayIndex(无其他表引用 plan_day,可独立重建)
+        db.execSQL("ALTER TABLE `plan_day` RENAME TO `plan_day_old`")
+        db.execSQL(
+            """
+            CREATE TABLE `plan_day` (
+            `planId` INTEGER NOT NULL,
+            `exerciseId` INTEGER NOT NULL,
+            `dayIndex` INTEGER NOT NULL,
+            `sortOrder` INTEGER NOT NULL,
+            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            FOREIGN KEY(`planId`) REFERENCES `plans`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+            FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)
+            """.trimIndent(),
+        )
+        db.execSQL("INSERT INTO `plan_day` (`planId`, `exerciseId`, `dayIndex`, `sortOrder`, `id`) SELECT `planId`, `exerciseId`, `dayOfWeek`, `sortOrder`, `id` FROM `plan_day_old`")
+        db.execSQL("DROP TABLE `plan_day_old`")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_plan_day_planId_exerciseId` ON `plan_day` (`planId`, `exerciseId`)")
+
+        // sessions: planDayOverride -> dayIndexOverride
+        // 注意:RENAME sessions 会把 sets 的 FK 改写为引用 sessions_old,且该 FK 为
+        // ON DELETE CASCADE——若先 DROP sessions_old 会级联清空 sets 数据。因此必须
+        // 在 DROP sessions_old 之前先重建 sets(使其 FK 指向新 sessions 表)。
+        db.execSQL("ALTER TABLE `sessions` RENAME TO `sessions_old`")
+        db.execSQL(
+            """
+            CREATE TABLE `sessions` (
+            `date` INTEGER NOT NULL,
+            `planId` INTEGER,
+            `dayIndexOverride` INTEGER,
+            `durationSeconds` INTEGER,
+            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            FOREIGN KEY(`planId`) REFERENCES `plans`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL)
+            """.trimIndent(),
+        )
+        db.execSQL("INSERT INTO `sessions` (`date`, `planId`, `dayIndexOverride`, `durationSeconds`, `id`) SELECT `date`, `planId`, `planDayOverride`, `durationSeconds`, `id` FROM `sessions_old`")
+
+        db.execSQL("ALTER TABLE `sets` RENAME TO `sets_old`")
+        db.execSQL(
+            """
+            CREATE TABLE `sets` (
+            `reps` INTEGER NOT NULL,
+            `weight` REAL NOT NULL,
+            `order` INTEGER NOT NULL,
+            `sessionId` INTEGER NOT NULL,
+            `exerciseId` INTEGER NOT NULL,
+            `rir` INTEGER NOT NULL,
+            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+            FOREIGN KEY(`sessionId`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)
+            """.trimIndent(),
+        )
+        db.execSQL("INSERT INTO `sets` (`reps`, `weight`, `order`, `sessionId`, `exerciseId`, `rir`, `id`) SELECT `reps`, `weight`, `order`, `sessionId`, `exerciseId`, `rir`, `id` FROM `sets_old`")
+        db.execSQL("DROP TABLE `sets_old`")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_sets_sessionId_exerciseId` ON `sets` (`sessionId`, `exerciseId`)")
+
+        db.execSQL("DROP TABLE `sessions_old`")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_sessions_planId` ON `sessions` (`planId`)")
+    }
+}
+
+val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // RIR 业务整体移除:重建 sets 表去掉 `rir` 列(与 MIGRATION_11_12 同款模式,
+        // 兼容所有 SQLite 版本),其余数据原样保留。
+        db.execSQL("ALTER TABLE `sets` RENAME TO `sets_old`")
+        db.execSQL(
+            """
+            CREATE TABLE `sets` (
+            `reps` INTEGER NOT NULL,
+            `weight` REAL NOT NULL,
+            `order` INTEGER NOT NULL,
+            `sessionId` INTEGER NOT NULL,
+            `exerciseId` INTEGER NOT NULL,
+            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+            FOREIGN KEY(`sessionId`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            INSERT INTO `sets` (`reps`, `weight`, `order`, `sessionId`, `exerciseId`, `id`)
+            SELECT `reps`, `weight`, `order`, `sessionId`, `exerciseId`, `id` FROM `sets_old`
+            """.trimIndent(),
+        )
+        db.execSQL("DROP TABLE `sets_old`")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_sets_sessionId_exerciseId` ON `sets` (`sessionId`, `exerciseId`)")
+    }
+}
+
+val MIGRATION_14_15 = object : Migration(14, 15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // 训练日名称快照列:session 创建/训练日选择时写入当时的训练日名称,
+        // 之后修改计划的训练日名称不再影响历史记录显示。
+        db.execSQL("ALTER TABLE `sessions` ADD COLUMN `dayTitleOverride` TEXT")
+    }
+}

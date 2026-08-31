@@ -23,19 +23,24 @@ import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Plan
+import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 
 @HiltViewModel
@@ -43,38 +48,60 @@ class SessionsViewModel @Inject constructor(
     private val repo: SessionRepo,
     private val planRepo: PlanRepo,
 ) : ViewModel() {
-    private val sessionsStream = repo.stream
+    private val sessionsStream = repo.streamSummaries
     private val isCurrentSessionActive = repo.streamByDate(today()).map { it != null }
 
     private val availablePlanItems = planRepo.planItems
         .map { items ->
-            items.groupBy { it.dayOfWeek }
+            items.groupBy { it.dayIndex }
                 .mapValues { entry -> entry.value.map { it.exercise } }
         }
+
+    /** 每个计划的训练日 → 动作名集合,用于无 dayIndexOverride 的历史记录反查训练日。 */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val planDayExerciseNames: StateFlow<Map<Int, Map<Int, kotlin.collections.Set<String>>>> =
+        planRepo.plans
+            .flatMapLatest { plans ->
+                val flows = plans.map { plan ->
+                    planRepo.planItems(requireNotNull(plan.id)).map { items ->
+                        plan.id to items.groupBy({ it.dayIndex }, { it.exercise.name })
+                            .mapValues { it.value.toSet() }
+                    }
+                }
+                if (flows.isEmpty()) flowOf(emptyMap())
+                else combine(flows) { array ->
+                    @Suppress("UNCHECKED_CAST")
+                    array.map { it as Pair<Int, Map<Int, kotlin.collections.Set<String>>> }.toMap()
+                }
+            }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
     val state: StateFlow<SessionsUiData> = combine(
         sessionsStream,
         isCurrentSessionActive,
         availablePlanItems,
         planRepo.plans,
-    ) { sessions, isCurrentSessionActive, available, plans ->
+        planDayExerciseNames,
+    ) { sessions, isCurrentSessionActive, available, plans, dayExerciseNames ->
         val planTitlesMap = plans.associate { it.id to it.titlesMap }
         SessionsUiData(
-            sessions = sessions.filter { it.sets.isNotEmpty() },
+            sessions = sessions.filter { it.setCount > 0 },
+            hasAnySessions = sessions.isNotEmpty(),
             isCurrentSessionActive = isCurrentSessionActive,
             availablePlanDays = available,
             dayTitles = planTitlesMap,
             plans = plans.filter { it.isActive || plans.indexOf(it) < 5 },
+            planDayExerciseNames = dayExerciseNames,
         )
-    }.asStateFlow(SessionsUiData(emptyList(), false))
+    }.asStateFlow(SessionsUiData(emptyList(), false), started = SharingStarted.Eagerly)
 
     private val _snackbar = MutableSharedFlow<String>()
     val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
 
-    fun addSession(date: LocalDate, day: DayOfWeek, onComplete: () -> Unit) {
+    fun addSession(date: LocalDate, dayIndex: Int, onComplete: () -> Unit) {
         viewModelScope.launch {
             try {
-                repo.updatePlanDay(date, day)
+                repo.updateDayIndex(date, dayIndex)
                 onComplete()
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
@@ -82,10 +109,11 @@ class SessionsViewModel @Inject constructor(
         }
     }
 
-    fun removeSession(session: Session) {
+    fun removeSession(session: SessionSummary) {
         viewModelScope.launch {
             try {
-                repo.deleteSession(session)
+                val id = session.id ?: return@launch
+                repo.deleteSessionById(id)
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
             }
@@ -95,11 +123,13 @@ class SessionsViewModel @Inject constructor(
 
 @Stable
 data class SessionsUiData(
-    val sessions: List<Session>,
+    val sessions: List<SessionSummary>,
     val isCurrentSessionActive: Boolean,
-    val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),
-    val dayTitles: Map<Int?, Map<DayOfWeek, String>> = emptyMap(),
+    val hasAnySessions: Boolean = false,
+    val availablePlanDays: Map<Int, List<Exercise>> = emptyMap(),
+    val dayTitles: Map<Int?, Map<Int, String>> = emptyMap(),
     val plans: List<Plan> = emptyList(),
+    val planDayExerciseNames: Map<Int, Map<Int, kotlin.collections.Set<String>>> = emptyMap(),
 ) {
     val sessionDates: Set<LocalDate> get() = sessions.map { it.date }.toSet()
 }

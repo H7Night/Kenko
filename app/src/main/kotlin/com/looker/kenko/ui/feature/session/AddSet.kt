@@ -15,8 +15,11 @@
 
 package com.looker.kenko.ui.feature.session
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -24,8 +27,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -58,6 +64,32 @@ private val incrementButtonModifier = Modifier
     .zIndex(0f)
 
 private val zIndexModifier = Modifier.zIndex(1F)
+
+/**
+ * 紧凑的微调步进按钮：不应用 Material 的最小交互尺寸（48dp 宽），
+ * 用于重量行的 ±0.5 微调，使整行按钮并排时不折行。
+ */
+@Composable
+private fun CompactStepButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .height(48.dp)
+            .clip(CircleShape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 6.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
+}
 
 @Composable
 fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
@@ -169,40 +201,67 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                     TextButton(
                         modifier = incrementButtonModifier,
                         onClick = { viewModel.setBodyweight() },
+                        colors = if (viewModel.isBodyweightMode) {
+                            ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary,
+                            )
+                        } else {
+                            ButtonDefaults.textButtonColors()
+                        },
                     ) {
                         Text(text = stringResource(R.string.label_bodyweight))
                     }
                 }
-                if (!viewModel.isWeightZero) {
+                if (viewModel.isBodyweightMode) {
+                    Text(
+                        text = stringResource(R.string.label_bodyweight_display),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                } else {
+                    if (!viewModel.isWeightZero) {
+                        TextButton(
+                            modifier = incrementButtonModifier,
+                            onClick = { viewModel.addWeight(-1F) },
+                            contentPadding = PaddingValues(horizontal = 4.dp),
+                        ) {
+                            Text(text = stringResource(R.string.label_minus_int, 1))
+                        }
+                    }
+                    CompactStepButton(
+                        text = stringResource(R.string.label_minus_int, 0.5F),
+                        onClick = { viewModel.addWeight(-0.5F) },
+                    )
+                    val weights = rememberDraggableTextFieldState(viewModel.weightsBoundReached)
+                    DraggableTextField(
+                        dragState = weights,
+                        textFieldState = viewModel.weights,
+                        supportingText = stringResource(R.string.label_weight),
+                        inputTransformation = FloatTransformation,
+                        modifier = zIndexModifier,
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        ),
+                    )
+                    CompactStepButton(
+                        text = stringResource(R.string.label_plus_int, 0.5F),
+                        onClick = { viewModel.addWeight(0.5F) },
+                    )
                     TextButton(
                         modifier = incrementButtonModifier,
-                        onClick = { viewModel.addWeight(-1F) },
+                        onClick = { viewModel.addWeight(1F) },
+                        contentPadding = PaddingValues(horizontal = 4.dp),
                     ) {
-                        Text(text = stringResource(R.string.label_minus_int, 1F))
+                        Text(text = stringResource(R.string.label_plus_int, 1))
                     }
-                }
-                val weights = rememberDraggableTextFieldState(viewModel.weightsBoundReached)
-                DraggableTextField(
-                    dragState = weights,
-                    textFieldState = viewModel.weights,
-                    supportingText = stringResource(R.string.label_weight),
-                    inputTransformation = FloatTransformation,
-                    modifier = zIndexModifier,
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    ),
-                )
-                TextButton(
-                    modifier = incrementButtonModifier,
-                    onClick = { viewModel.addWeight(1F) },
-                ) {
-                    Text(text = stringResource(R.string.label_plus_int, 1F))
-                }
-                TextButton(
-                    modifier = incrementButtonModifier,
-                    onClick = { viewModel.addWeight(5F) },
-                ) {
-                    Text(text = stringResource(R.string.label_plus_int, 5F))
+                    TextButton(
+                        modifier = incrementButtonModifier,
+                        onClick = { viewModel.addWeight(5F) },
+                        contentPadding = PaddingValues(horizontal = 4.dp),
+                    ) {
+                        Text(text = stringResource(R.string.label_plus_int, 5))
+                    }
                 }
             }
         }
@@ -224,19 +283,20 @@ private fun AddSetHeader(
         Column(modifier = Modifier.weight(1F)) {
             Text(
                 text = stringResource(R.string.label_add_set_for).uppercase(),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.outline,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
                 text = exerciseName,
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.tertiary,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
         FilledTonalIconButton(onClick = onClick) {
             Icon(
                 painter = KenkoIcons.Done,
                 contentDescription = "",
+                modifier = Modifier.size(16.dp),
             )
         }
     }
@@ -248,9 +308,10 @@ private fun SwipeableTextField(
     content: @Composable RowScope.() -> Unit,
 ) {
     Surface(
-        modifier = modifier.requiredHeight(48.dp),
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = modifier.requiredHeight(44.dp),
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

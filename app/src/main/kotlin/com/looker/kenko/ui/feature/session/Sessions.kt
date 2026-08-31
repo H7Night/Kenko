@@ -15,15 +15,19 @@
 
 package com.looker.kenko.ui.feature.session
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenuItem
@@ -52,14 +56,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Plan
-import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.titlesMap
+import com.looker.kenko.domain.model.TrainingDayMatch
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.extension.plus
-import com.looker.kenko.ui.feature.plan.components.dayName
 import com.looker.kenko.ui.component.timer.TimerService
 import com.looker.kenko.ui.feature.home.components.TrainingHeatmap
 import com.looker.kenko.ui.theme.KenkoIcons
@@ -93,7 +97,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.scale
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import androidx.compose.ui.platform.LocalContext
-import kotlinx.datetime.DayOfWeek
 
 @Composable
 fun Sessions(
@@ -133,22 +136,22 @@ fun Sessions(
 private fun Sessions(
     state: SessionsUiData,
     onSessionClick: (LocalDate?) -> Unit,
-    onRemoveSession: (Session) -> Unit,
+    onRemoveSession: (SessionSummary) -> Unit,
     onBackPress: () -> Unit,
     onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var sessionToDelete by remember { mutableStateOf<Session?>(null) }
+    var sessionToDelete by remember { mutableStateOf<SessionSummary?>(null) }
     var planExpanded by remember { mutableStateOf(false) }
     var dayExpanded by remember { mutableStateOf(false) }
     var selectedPlan by remember { mutableStateOf<Plan?>(null) }
-    var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
+    var selectedDay by remember { mutableStateOf<Int?>(null) }
     var selectedMonth by remember { mutableStateOf(today()) }
     val context = LocalContext.current
 
     val selectedPlanName = selectedPlan?.name ?: stringResource(R.string.label_select_plan_one)
-    val selectedDayName = selectedDay?.let { day -> selectedPlan?.titlesMap?.get(day) ?: dayName(day) } ?: stringResource(R.string.label_select_muscle)
-    val availableDays: Map<DayOfWeek, String> = remember(selectedPlan) {
+    val selectedDayName = selectedDay?.let { day -> selectedPlan?.titlesMap?.get(day) ?: stringResource(R.string.label_day_n, day) } ?: stringResource(R.string.label_select_day)
+    val availableDays: Map<Int, String> = remember(selectedPlan) {
         selectedPlan?.titlesMap ?: emptyMap()
     }
 
@@ -156,7 +159,7 @@ private fun Sessions(
         val planId = selectedPlan?.id
         state.sessions.filter { session ->
             val planMatch = planId == null || session.planId == planId
-            val dayMatch = selectedDay == null || session.planDayOverride == selectedDay
+            val dayMatch = selectedDay == null || session.dayIndexOverride == selectedDay
             val monthMatch =
                 session.date.year == selectedMonth.year && session.date.month == selectedMonth.month
             planMatch && dayMatch && monthMatch
@@ -209,8 +212,12 @@ private fun Sessions(
             )
         },
         containerColor = MaterialTheme.colorScheme.surface,
+        // 页面位于外层 Scaffold(底部导航栏)内,外层已通过 innerPadding 处理
+        // 系统导航条避让;禁用内层 Scaffold 的 systemBars insets,
+        // 避免底部重复避让产生额外空白。
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { padding ->
-        if (state.sessions.isEmpty()) {
+        if (!state.hasAnySessions) {
             EmptyState(
                 icon = Icons.Rounded.History,
                 text = stringResource(id = R.string.label_no_sessions),
@@ -218,8 +225,8 @@ private fun Sessions(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = padding + PaddingValues(bottom = 96.dp, start = 14.dp, end = 14.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = padding + PaddingValues(start = 12.dp, end = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 item {
                     Column {
@@ -231,7 +238,7 @@ private fun Sessions(
                                 .fillMaxWidth()
                                 .padding(bottom = 4.dp),
                         )
-                        // Filter row: plan + day dropdowns
+                        // Filter row: body part + plan dropdowns
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -276,6 +283,7 @@ private fun Sessions(
                                     }
                                 }
                             }
+                            // Day dropdown — shown when a plan is selected
                             if (selectedPlan != null) {
                                 ExposedDropdownMenuBox(
                                     expanded = dayExpanded,
@@ -319,6 +327,7 @@ private fun Sessions(
                         session = session,
                         onClick = { onSessionClick(session.date) },
                         dayTitles = state.dayTitles,
+                        planDayExerciseNames = state.planDayExerciseNames,
                         onDelete = { sessionToDelete = session },
                     )
                 }
@@ -329,20 +338,16 @@ private fun Sessions(
 
 @Composable
 private fun AddHistoryDialog(
-    availablePlanDays: Map<DayOfWeek, List<Exercise>>,
-    dayTitles: Map<DayOfWeek, String>,
+    availablePlanDays: Map<Int, List<Exercise>>,
+    dayTitles: Map<Int, String>,
     onDismiss: () -> Unit,
-    onConfirm: (LocalDate, DayOfWeek) -> Unit,
+    onConfirm: (LocalDate, Int) -> Unit,
 ) {
     var date by remember { mutableStateOf<LocalDate>(today()) }
-    var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
+    var selectedDay by remember { mutableStateOf<Int?>(null) }
 
-    LaunchedEffect(date) {
-        if (date.dayOfWeek in availablePlanDays) {
-            selectedDay = date.dayOfWeek
-        } else if (availablePlanDays.isNotEmpty()) {
-            selectedDay = availablePlanDays.keys.first()
-        }
+    LaunchedEffect(availablePlanDays) {
+        selectedDay = availablePlanDays.keys.firstOrNull()
     }
 
     AlertDialog(
@@ -378,7 +383,7 @@ private fun AddHistoryDialog(
                             item {
                                 val title = dayTitles[day]
                                 val isSelected = selectedDay == day
-                                val text = if (title.isNullOrBlank()) dayName(day) else title
+                                val text = if (title.isNullOrBlank()) stringResource(R.string.label_day_n, day) else title
                                 val colors = ButtonDefaults.buttonColors(
                                     containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                                     contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -453,68 +458,96 @@ private fun DateSelectionRow(
 
 @Composable
 fun SessionCard(
-    session: Session,
+    session: SessionSummary,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
-    dayTitles: Map<Int?, Map<DayOfWeek, String>> = emptyMap(),
+    dayTitles: Map<Int?, Map<Int, String>> = emptyMap(),
+    planDayExerciseNames: Map<Int, Map<Int, kotlin.collections.Set<String>>> = emptyMap(),
     onDelete: (() -> Unit)? = null,
 ) {
-    val containerColor = if (session.date.isToday) {
-        MaterialTheme.colorScheme.tertiaryContainer
-    } else {
-        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f)
-    }
+    val isToday = session.date.isToday
     Surface(
         modifier = modifier,
-        color = containerColor,
-        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.medium,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+            else MaterialTheme.colorScheme.outlineVariant
+        ),
         onClick = onClick,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .padding(start = 16.dp, end = 4.dp, top = 16.dp, bottom = 16.dp),
+                .padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.Top,
         ) {
+            // Linear status dot
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier
+                    .padding(top = 6.dp, end = 8.dp)
+                    .size(6.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(
+                        if (isToday) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outline
+                    )
+            )
             Column(modifier = Modifier.weight(1f)) {
-            val titleStyle = MaterialTheme.typography.titleLarge
-            val secondaryEmphasis = MaterialTheme.colorScheme.outline
-            val effectiveDay = session.planDayOverride ?: session.date.dayOfWeek
-            val dayName = dayName(effectiveDay)
-            val dayTitle = dayTitles[session.planId]?.get(effectiveDay)
-            val displayName = if (dayTitle.isNullOrBlank()) dayName else "$dayTitle ($dayName)"
-            val string = remember(session.date, dayName, dayTitle) {
+            val titleStyle = MaterialTheme.typography.titleSmall
+            val onContainer = MaterialTheme.colorScheme.onSurface
+            val secondaryEmphasis = MaterialTheme.colorScheme.onSurfaceVariant
+            val effectiveDay = session.dayIndexOverride
+            // 无 dayIndexOverride 的老记录:按动作名反查所属训练日,还原训练日名称
+            val inferredDay = effectiveDay ?: session.planId?.let { planId ->
+                TrainingDayMatch.matchDayIndex(
+                    session.exerciseNames.map { it.trim() }.toSet(),
+                    planDayExerciseNames[planId] ?: emptyMap(),
+                )
+            }
+            val day = effectiveDay ?: inferredDay
+            val dayTitle = dayTitles[session.planId]?.get(day)
+            // 优先显示训练日名称快照(计划修改后历史记录保持不变)
+            val displayName = session.dayTitleOverride
+                ?: dayTitle
+                ?: day?.let { stringResource(R.string.label_day_n, it) }
+                ?: ""
+            val string = remember(session.date, displayName) {
                 buildAnnotatedString {
                     withStyle(titleStyle.toSpanStyle().copy(fontWeight = FontWeight.Bold)) {
                         append(formatDate(session.date, dateTimeFormat = DateFormat.YearMonthDay))
                     }
-                    append(" ${Typography.bullet} ")
-                    withStyle(titleStyle.toSpanStyle().copy(color = secondaryEmphasis)) {
-                        append(displayName)
+                    // 训练名称缺失(如老记录反查失败)时不残留孤立的 " • " 分隔符
+                    if (displayName.isNotBlank()) {
+                        append(" ${Typography.bullet} ")
+                        withStyle(titleStyle.toSpanStyle().copy(color = secondaryEmphasis)) {
+                            append(displayName)
+                        }
                     }
                 }
             }
             Text(text = string)
 
-            // Duration
+            // Duration — mono, subtle
             if (session.durationSeconds != null && session.durationSeconds > 0) {
                 val durationText = TimerService.formatTime(session.durationSeconds)
                 Text(
                     text = durationText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 )
             }
 
-            val exerciseNames = remember(session.performExercises) {
-                session.performExercises.joinToString { it.name }
+            val exerciseNames = remember(session.exerciseNames) {
+                session.exerciseNames.joinToString { it }
             }
             Text(
                 text = exerciseNames,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.outline,
-                maxLines = 3,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
             )
             }
             if (onDelete != null) {
@@ -539,10 +572,10 @@ fun SessionCard(
 private fun SessionCardPreview() {
     KenkoTheme {
         SessionCard(
-            session = Session(
-                planId = 1,
+            session = SessionSummary(
                 date = LocalDate(2024, 4, 15),
-                sets = emptyList(),
+                planId = 1,
+                exerciseNames = listOf("Bench Press", "Curls"),
             ),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -554,7 +587,17 @@ private fun SessionCardPreview() {
 private fun SessionsPreview() {
     KenkoTheme {
         Sessions(
-            state = SessionsUiData(listOf(Session(1, emptyList())), false),
+            state = SessionsUiData(
+                sessions = listOf(
+                    SessionSummary(
+                        date = LocalDate(2024, 4, 15),
+                        planId = 1,
+                        exerciseNames = listOf("Bench Press"),
+                    )
+                ),
+                isCurrentSessionActive = false,
+                hasAnySessions = true,
+            ),
             onBackPress = {},
             onSessionClick = {},
             onRemoveSession = {},

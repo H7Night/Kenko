@@ -21,7 +21,10 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.looker.kenko.data.local.model.SessionDataEntity
+import com.looker.kenko.data.local.model.SessionDateEntity
 import com.looker.kenko.data.local.model.SessionEntity
+import com.looker.kenko.data.local.model.SessionSnapshotEntity
+import com.looker.kenko.data.local.model.SessionSummaryEntity
 import com.looker.kenko.utils.EpochDays
 import kotlinx.coroutines.flow.Flow
 
@@ -69,12 +72,44 @@ interface SessionDao {
 
     @Query(
         """
+        SELECT planId
+        FROM sessions
+        WHERE id = :sessionId
+        """,
+    )
+    suspend fun getSessionPlanId(sessionId: Int): Int?
+
+    @Query(
+        """
         UPDATE sessions
-        SET planDayOverride = :day
+        SET dayIndexOverride = :dayIndex
         WHERE date = :date
         """,
     )
-    suspend fun updatePlanDayOverride(date: EpochDays, day: Int)
+    suspend fun updateDayIndexOverride(date: EpochDays, dayIndex: Int)
+
+    @Query(
+        """
+        UPDATE sessions
+        SET dayTitleOverride = :dayTitle
+        WHERE id = :sessionId
+        """,
+    )
+    suspend fun updateDayTitleOverride(sessionId: Int, dayTitle: String?)
+
+    /** 某计划的全部 session 概要（id + 训练日 + 动作名），供修改计划前回填训练日名称快照。 */
+    @Query(
+        """
+        SELECT s.id, s.dayIndexOverride, s.dayTitleOverride,
+               GROUP_CONCAT(DISTINCT e.name) AS exerciseNames
+        FROM sessions s
+        LEFT JOIN sets st ON st.sessionId = s.id
+        LEFT JOIN exercises e ON e.id = st.exerciseId
+        WHERE s.planId = :planId
+        GROUP BY s.id
+        """,
+    )
+    suspend fun getSessionsByPlan(planId: Int): List<SessionSnapshotEntity>
 
     @Query(
         """
@@ -94,6 +129,34 @@ interface SessionDao {
         """,
     )
     fun stream(): Flow<List<SessionEntity>>
+
+    /** 轻量查询：仅 date + planId，用于计算计划训练日期区间（避免加载全部 sets）。 */
+    @Query(
+        """
+        SELECT date, planId
+        FROM sessions
+        ORDER BY date
+        """,
+    )
+    fun streamPlanDates(): Flow<List<SessionDateEntity>>
+
+    /**
+     * 轻量查询：会话概要 + 去重动作名（单条 JOIN + GROUP_CONCAT），
+     * 供 Records 列表页使用，避免逐 session 加载 sets 与逐 set 加载 exercise 的 N+1。
+     */
+    @Query(
+        """
+        SELECT s.id, s.date, s.planId, s.dayIndexOverride, s.dayTitleOverride, s.durationSeconds,
+               GROUP_CONCAT(DISTINCT e.name) AS exerciseNames,
+               COUNT(st.id) AS setCount
+        FROM sessions s
+        LEFT JOIN sets st ON st.sessionId = s.id
+        LEFT JOIN exercises e ON e.id = st.exerciseId
+        GROUP BY s.id
+        ORDER BY s.date DESC
+        """,
+    )
+    fun streamSummaries(): Flow<List<SessionSummaryEntity>>
 
     @Transaction
     @Query(
@@ -120,13 +183,13 @@ interface SessionDao {
         SELECT date
         FROM sessions
         WHERE (planId = :planId OR :planId IS NULL)
-        AND (COALESCE(planDayOverride, (date + 3) % 7 + 1) = :day)
+        AND dayIndexOverride = :dayIndex
         AND date < :date
         ORDER BY date DESC
         LIMIT 1
         """
     )
-    fun getPreviousSessionDate(date: Int, planId: Int?, day: Int): Flow<Int?>
+    fun getPreviousSessionDate(date: Int, planId: Int?, dayIndex: Int): Flow<Int?>
 
     @Query(
         """

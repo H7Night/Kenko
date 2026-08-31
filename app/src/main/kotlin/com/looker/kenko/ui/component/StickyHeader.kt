@@ -15,6 +15,7 @@
 
 package com.looker.kenko.ui.component
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -38,49 +40,61 @@ import com.looker.kenko.ui.theme.numbers
 @Composable
 fun StickyHeader(
     name: String,
+    sequence: String? = null,
     setCount: Int = 0,
     isCollapsed: Boolean = false,
     onCollapseToggle: () -> Unit = {},
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
     Surface(
-        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = MaterialTheme.shapes.extraLarge,
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.small,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(24.dp)
+                .heightIn(36.dp)
                 .clickable(onClick = onCollapseToggle)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                if (sequence != null) {
+                    Text(
+                        text = sequence,
+                        style = MaterialTheme.typography.labelSmall.numbers(),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                }
                 Text(
                     text = name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 if (setCount > 0) {
-                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = normalizeInt(setCount),
-                        style = MaterialTheme.typography.titleMedium.numbers(),
-                        color = MaterialTheme.colorScheme.outline,
-                    )
-                    Icon(
-                        modifier = Modifier.rotate(if (isCollapsed) 180F else 90F),
-                        painter = KenkoIcons.KeyboardArrowRight,
-                        tint = MaterialTheme.colorScheme.outline,
-                        contentDescription = null,
+                        text = "${normalizeInt(setCount)} sets",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    modifier = Modifier.rotate(if (isCollapsed) 180F else 90F),
+                    painter = KenkoIcons.KeyboardArrowRight,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    contentDescription = null,
+                )
             }
             if (actions != null) {
+                Spacer(modifier = Modifier.width(8.dp))
                 actions()
             }
         }

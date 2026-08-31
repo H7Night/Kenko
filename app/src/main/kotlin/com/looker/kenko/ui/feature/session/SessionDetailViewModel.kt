@@ -26,14 +26,15 @@ import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.Session
-import com.looker.kenko.domain.model.Set
+import com.looker.kenko.domain.model.TrainingExercise
+import com.looker.kenko.domain.model.orderTrainingExercises
 import com.looker.kenko.domain.model.today
-import com.looker.kenko.domain.model.week
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.domain.model.titlesMap
+import com.looker.kenko.domain.model.TrainingDayMatch
 import com.looker.kenko.ui.feature.session.navigation.SessionDetailRoute
 import com.looker.kenko.utils.asStateFlow
 import com.looker.kenko.utils.isToday
@@ -46,15 +47,16 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 
@@ -86,15 +88,34 @@ class SessionDetailViewModel @Inject constructor(
             session to plans
         }.flatMapLatest { (session, plans) ->
             val planId = session?.planId ?: plans.find { it.isActive }?.id
-            val day = session?.planDayOverride ?: sessionDate.dayOfWeek
-            repo.previousSessionDate(sessionDate, planId, day)
+            val day = session?.dayIndexOverride ?: plans.find { it.isActive }?.currentDayIndex
+            if (day == null) flowOf(null) else repo.previousSessionDate(sessionDate, planId, day)
         }
 
-    private val availablePlanItems: Flow<Map<DayOfWeek, List<Exercise>>> = planRepo.planItems
+    private val availablePlanItems: Flow<Map<Int, List<Exercise>>> = planRepo.planItems
         .map { items ->
-            items.groupBy { it.dayOfWeek }
+            items.groupBy { it.dayIndex }
                 .mapValues { entry -> entry.value.map { it.exercise } }
         }
+
+    /** 每个计划的训练日 → 动作名集合,用于无 dayIndexOverride 的历史记录反查训练日。 */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val planDayExerciseNames: StateFlow<Map<Int, Map<Int, kotlin.collections.Set<String>>>> =
+        planRepo.plans
+            .flatMapLatest { plans ->
+                val flows = plans.map { plan ->
+                    planRepo.planItems(requireNotNull(plan.id)).map { items ->
+                        plan.id to items.groupBy({ it.dayIndex }, { it.exercise.name })
+                            .mapValues { it.value.toSet() }
+                    }
+                }
+                if (flows.isEmpty()) flowOf(emptyMap())
+                else combine(flows) { array ->
+                    @Suppress("UNCHECKED_CAST")
+                    array.map { it as Pair<Int, Map<Int, kotlin.collections.Set<String>>> }.toMap()
+                }
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     val allExercises: StateFlow<List<Exercise>> = exerciseRepo.stream
         .asStateFlow(initial = emptyList())
@@ -103,24 +124,34 @@ class SessionDetailViewModel @Inject constructor(
     private val exercisesToday: Flow<List<Exercise>> =
         combine(
             sessionStream,
-            availablePlanItems
-        ) { session, available ->
-            session to available
-        }.flatMapLatest { (session, available) ->
+            availablePlanItems,
+            planRepo.plans,
+        ) { session, available, plans ->
+            Triple(session, available, plans)
+        }.flatMapLatest { (session, available, plans) ->
+            val currentPlan = plans.find { it.isActive }
+            val dayOverride = session?.dayIndexOverride
             val plannedFlow = when {
-                session?.planDayOverride != null -> {
+                dayOverride != null -> {
                     val pid = session.planId
                     if (pid != null) {
-                        planRepo.planItems(pid, session.planDayOverride)
+                        planRepo.planItems(pid, dayOverride)
                             .map { it.map(PlanItem::exercise) }
                     } else {
-                        planRepo.activeExercises(session.planDayOverride)
+                        planRepo.activeExercises(dayOverride)
                     }
                 }
 
-                sessionDate.isToday -> planRepo.activeExercises(sessionDate.dayOfWeek)
-                session?.planId != null -> planRepo.planItems(session.planId, sessionDate.dayOfWeek)
-                    .map { it.map(PlanItem::exercise) }
+                sessionDate.isToday -> {
+                    val day = currentPlan?.currentDayIndex
+                    if (day == null) flowOf(emptyList()) else planRepo.activeExercises(day)
+                }
+
+                session?.planId != null -> {
+                    val day = currentPlan?.currentDayIndex
+                    if (day == null) flowOf(emptyList()) else planRepo.planItems(session.planId, day)
+                        .map { it.map(PlanItem::exercise) }
+                }
 
                 else -> flowOf(emptyList())
             }
@@ -167,7 +198,7 @@ class SessionDetailViewModel @Inject constructor(
             val session = flows[0] as Session?
             val exercises = flows[1] as List<Exercise>
             val previousSessionDate = flows[2] as LocalDate?
-            val available = flows[3] as Map<DayOfWeek, List<Exercise>>
+            val available = flows[3] as Map<Int, List<Exercise>>
             val isEditMode = flows[4] as Boolean
             val plans = flows[5] as List<com.looker.kenko.domain.model.Plan>
 
@@ -183,25 +214,36 @@ class SessionDetailViewModel @Inject constructor(
             }
 
             val currentSession = session ?: Session(-1, emptyList())
-            val dayTitle = plans.find { it.id == currentSession.planId }
-                ?.titlesMap?.get(currentSession.planDayOverride ?: currentSession.date.dayOfWeek)
-
-            val exerciseMap = when {
-                sessionDate.isToday || exercises.isNotEmpty() -> exercises.associateWith { exercise ->
-                    currentSession.sets.filter { it.exercise.id == exercise.id }
+            // 无 dayIndexOverride:今天回退当前训练日;历史记录按动作名反查所属训练日
+            val dayIndex = currentSession.dayIndexOverride ?: if (sessionDate.isToday) {
+                currentPlan?.currentDayIndex
+            } else {
+                currentSession.planId?.let { planId ->
+                    TrainingDayMatch.matchDayIndex(
+                        currentSession.performExercises.map { it.name }.toSet(),
+                        planDayExerciseNames.value[planId] ?: emptyMap(),
+                    )
                 }
-
-                currentSession.sets.isNotEmpty() -> currentSession.sets.groupBy { it.exercise }
-                else -> emptyMap()
             }
+            // 优先显示训练日名称快照(计划修改后历史记录保持不变)
+            val dayTitle = currentSession.dayTitleOverride ?: dayIndex?.let { day ->
+                plans.find { it.id == currentSession.planId }?.titlesMap?.get(day)
+                    ?: currentPlanTitles[day]
+            }
+
+            val sets = orderTrainingExercises(
+                planned = exercises,
+                sets = currentSession.sets,
+            )
 
             SessionDetailState.Success(
                 SessionUiData(
                     date = currentSession.date,
-                    sets = exerciseMap,
+                    sets = sets,
                     isToday = isTodaySession,
                     isEditMode = isEditMode,
                     dayTitle = dayTitle,
+                    dayIndexOverride = dayIndex,
                     previousSessionDate = previousSessionDate,
                     availablePlanDays = available,
                     dayTitles = currentPlanTitles,
@@ -214,10 +256,10 @@ class SessionDetailViewModel @Inject constructor(
         _isEditMode.value = !_isEditMode.value
     }
 
-    fun importPlanFromDay(day: DayOfWeek) {
+    fun importPlanFromDay(dayIndex: Int) {
         viewModelScope.launch {
             try {
-                repo.updatePlanDay(sessionDate, day)
+                repo.updateDayIndex(sessionDate, dayIndex)
             } catch (e: Exception) {
                 _snackbar.emit(e.message ?: "An error occurred")
             }
@@ -291,13 +333,14 @@ class SessionDetailViewModel @Inject constructor(
 @Stable
 data class SessionUiData(
     val date: LocalDate,
-    val sets: Map<Exercise, List<Set>>,
+    val sets: List<TrainingExercise>,
     val isToday: Boolean = false,
     val isEditMode: Boolean = false,
     val dayTitle: String? = null,
+    val dayIndexOverride: Int? = null,
     val previousSessionDate: LocalDate? = null,
-    val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),
-    val dayTitles: Map<DayOfWeek, String> = emptyMap(),
+    val availablePlanDays: Map<Int, List<Exercise>> = emptyMap(),
+    val dayTitles: Map<Int, String> = emptyMap(),
 )
 
 sealed interface SessionDetailState {
@@ -316,8 +359,8 @@ sealed interface SessionDetailState {
         )
 
         data class EmptyPlan(
-            val availablePlanDays: Map<DayOfWeek, List<Exercise>> = emptyMap(),
-            val dayTitles: Map<DayOfWeek, String> = emptyMap()
+            val availablePlanDays: Map<Int, List<Exercise>> = emptyMap(),
+            val dayTitles: Map<Int, String> = emptyMap()
         ) : Error(
             title = R.string.label_nothing_today,
             errorMessage = R.string.label_no_exercise_today,

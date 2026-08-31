@@ -62,6 +62,17 @@
     <string name="label_modify_plan_message">Do you want to modify today\'s training plan? This will clear all existing sets for today.</string>
     <string name="label_import_plan">Import Plan</string>
 
+    <!--Plan Import/Export-->
+    <string name="label_export_plan">Export plans</string>
+    <string name="label_import_plan_file">Import plan</string>
+    <string name="label_select_all">Select all</string>
+    <string name="label_plan_days_summary">%1$s training days · %2$s rest days</string>
+    <string name="label_import_confirm">Import %1$s plan(s)?</string>
+    <string name="label_import_success">Imported %1$s plan(s)</string>
+    <string name="label_import_partial">Imported %1$s, failed %2$s</string>
+    <string name="label_export_success">Exported %1$s plan(s)</string>
+    <string name="label_plan_file_invalid">Invalid plan file</string>
+
     <!--Plans-->
     <string name="label_plans_title">Plans</string>
     <string name="label_edit_plan">Edit Plan</string>
@@ -86,6 +97,7 @@
     <string name="label_body_weight">Weight</string>
     <string name="label_body_weight_history">Weight History</string>
     <string name="label_add_body_weight">Add Weight</string>
+    <string name="label_no_weight_in_period">No weight records in this period</string>
     <string name="label_edit_body_weight">Edit Weight</string>
     <string name="placeholder_set_day_title">Set title (e.g. Chest)</string>
     <string name="label_weight_unit">kg</string>
@@ -182,12 +194,6 @@
     <string name="label_language_en">English</string>
     <string name="label_language_zh">中文</string>
 
-    <string name="label_capitalize_exercise_name">Capitalize Exercise Name</string>
-
-    <!--Color Schemes-->
-    <string name="label_color_palettes">Color Palettes</string>
-    <string name="label_color_scheme_dynamic">Dynamic</string>
-
     <!--Backup-->
     <string name="label_backup">Backup &amp; Restore</string>
     <string name="label_backup_location">Backup Location</string>
@@ -221,7 +227,7 @@
     <string name="label_export_plans">Training Plans</string>
     <string name="label_export_exercises">Exercises</string>
     <string name="label_export_weights">Body Weight</string>
-    <string name="label_export_success">Export completed</string>
+    <string name="label_backup_export_success">Export completed</string>
     <string name="error_export_failed">Export failed</string>
 
 
@@ -241,6 +247,7 @@
     <string name="label_parent_tag">Body Part</string>
     <string name="label_select_body_part">Select Body Part</string>
     <string name="label_select_muscle">Select Muscle</string>
+    <string name="label_select_day">Select Day</string>
     <string name="label_selected_tags">Selected Tags</string>
     <string name="label_at_least_one_tag">Select at least one tag</string>
     <string name="label_delete_tag_warning">%d exercise(s) are using this tag. Deleting will remove it from those exercises.</string>
@@ -265,6 +272,21 @@
     <string name="label_change_plan">Change Plan</string>
     <string name="label_training_session">Training Session</string>
 
+    <!--Training Cycle-->
+    <string name="label_day_n">Day %1$d</string>
+    <string name="label_day_progress">Day %1$d/%2$d</string>
+    <string name="label_rest_day">Rest Day</string>
+    <string name="label_rest_short">Rest</string>
+    <string name="label_today_rest">Rest Day — train another day from the menu</string>
+    <string name="label_switch_training_day">Switch training day</string>
+    <string name="label_add_day">Add training day</string>
+    <string name="label_rename_day">Rename</string>
+    <string name="label_move_day_backward">Move day earlier</string>
+    <string name="label_move_day_forward">Move day later</string>
+    <string name="label_set_as_rest_day">Set as rest day</string>
+    <string name="label_delete_day">Delete this day</string>
+    <string name="label_train_other_day">Train another day</string>
+
     <!--Day of Week-->
     <string name="label_today">.today</string>
     <string name="label_plan">Plan</string>
@@ -282,26 +304,6 @@
         <item>Statistics</item>
         <item>Plan Management</item>
         <item>Fast Feedback</item>
-    </string-array>
-
-    <string-array name="kenko_day_of_week">
-        <item>.mon</item>
-        <item>.tue</item>
-        <item>.wed</item>
-        <item>.thu</item>
-        <item>.fri</item>
-        <item>.sat</item>
-        <item>.sun</item>
-    </string-array>
-
-    <string-array name="day_of_week">
-        <item>Monday</item>
-        <item>Tuesday</item>
-        <item>Wednesday</item>
-        <item>Thursday</item>
-        <item>Friday</item>
-        <item>Saturday</item>
-        <item>Sunday</item>
     </string-array>
 
     <string-array name="day_of_week_short">

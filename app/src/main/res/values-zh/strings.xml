@@ -53,6 +53,17 @@
     <string name="label_missed_day">你错过今天了吗？</string>
     <string name="label_import_from_other_day">从其他计划日导入：</string>
 
+    <!--Plan Import/Export-->
+    <string name="label_export_plan">导出计划</string>
+    <string name="label_import_plan_file">导入计划</string>
+    <string name="label_select_all">全选</string>
+    <string name="label_plan_days_summary">%1$s 天训练 %2$s 天休息</string>
+    <string name="label_import_confirm">将导入 %1$s 个计划？</string>
+    <string name="label_import_success">已导入 %1$s 个计划</string>
+    <string name="label_import_partial">成功导入 %1$s 个，失败 %2$s 个</string>
+    <string name="label_export_success">已导出 %1$s 个计划</string>
+    <string name="label_plan_file_invalid">无效的计划文件</string>
+
     <!--Plans-->
     <string name="label_plans_title">计划</string>
     <string name="label_edit_plan">编辑计划</string>
@@ -79,6 +90,7 @@
     <string name="label_body_weight">体重记录</string>
     <string name="label_body_weight_history">体重历史</string>
     <string name="label_add_body_weight">添加体重</string>
+    <string name="label_no_weight_in_period">该时间段无体重记录</string>
     <string name="label_edit_body_weight">编辑体重</string>
     <string name="placeholder_set_day_title">设置标题（如：胸部训练）</string>
     <string name="label_weight_unit">kg</string>
@@ -176,12 +188,6 @@
     <string name="label_language_en">English</string>
     <string name="label_language_zh">中文</string>
 
-    <string name="label_capitalize_exercise_name">动作名称首字母大写</string>
-
-    <!--Color Schemes-->
-    <string name="label_color_palettes">配色方案</string>
-    <string name="label_color_scheme_dynamic">动态颜色</string>
-
     <!--Backup-->
     <string name="label_backup">备份与恢复</string>
     <string name="label_backup_location">备份位置</string>
@@ -215,7 +221,7 @@
     <string name="label_export_plans">训练计划</string>
     <string name="label_export_exercises">动作</string>
     <string name="label_export_weights">体重记录</string>
-    <string name="label_export_success">导出完成</string>
+    <string name="label_backup_export_success">导出完成</string>
     <string name="error_export_failed">导出失败</string>
 
 
@@ -235,6 +241,7 @@
     <string name="label_parent_tag">所属部位</string>
     <string name="label_select_body_part">选择部位</string>
     <string name="label_select_muscle">选择肌肉</string>
+    <string name="label_select_day">选择计划日</string>
     <string name="label_selected_tags">已选标签</string>
     <string name="label_at_least_one_tag">至少选择一个标签</string>
     <string name="label_delete_tag_warning">该标签关联了 %d 个动作。删除后将移除这些动作的该标签。</string>
@@ -259,6 +266,21 @@
     <string name="label_change_plan">更改计划</string>
     <string name="label_training_session">训练中</string>
 
+    <!--Training Cycle-->
+    <string name="label_day_n">第 %1$d 天</string>
+    <string name="label_day_progress">第 %1$d/%2$d 天</string>
+    <string name="label_rest_day">休息日</string>
+    <string name="label_rest_short">休</string>
+    <string name="label_today_rest">今日休息 — 可从菜单选择其他训练日训练</string>
+    <string name="label_switch_training_day">切换训练日</string>
+    <string name="label_add_day">新增训练日</string>
+    <string name="label_rename_day">重命名</string>
+    <string name="label_move_day_backward">前移</string>
+    <string name="label_move_day_forward">后移</string>
+    <string name="label_set_as_rest_day">设为休息日</string>
+    <string name="label_delete_day">删除该训练日</string>
+    <string name="label_train_other_day">选择训练日训练</string>
+
     <!--Day of Week-->
     <string name="label_today">.今天</string>
     <string name="label_plan">计划</string>
@@ -276,26 +298,6 @@
         <item>数据统计</item>
         <item>计划管理</item>
         <item>快速反馈</item>
-    </string-array>
-
-    <string-array name="kenko_day_of_week">
-        <item>.周一</item>
-        <item>.周二</item>
-        <item>.周三</item>
-        <item>.周四</item>
-        <item>.周五</item>
-        <item>.周六</item>
-        <item>.周日</item>
-    </string-array>
-
-    <string-array name="day_of_week">
-        <item>星期一</item>
-        <item>星期二</item>
-        <item>星期三</item>
-        <item>星期四</item>
-        <item>星期五</item>
-        <item>星期六</item>
-        <item>星期日</item>
     </string-array>
 
     <string-array name="day_of_week_short">

@@ -74,7 +74,7 @@ fun TagSelector(
         Text(
             text = stringResource(R.string.label_selected_tags),
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(8.dp))
 

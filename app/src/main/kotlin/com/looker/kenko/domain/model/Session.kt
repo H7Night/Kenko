@@ -16,7 +16,6 @@
 package com.looker.kenko.domain.model
 
 import androidx.compose.runtime.Immutable
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 
 @Immutable
@@ -24,7 +23,8 @@ data class Session(
     val date: LocalDate,
     val sets: List<Set>,
     val planId: Int?,
-    val planDayOverride: DayOfWeek? = null,
+    val dayIndexOverride: Int? = null,
+    val dayTitleOverride: String? = null,
     val durationSeconds: Long? = null,
     val id: Int? = null,
 ) {
@@ -33,3 +33,19 @@ data class Session(
 }
 
 fun Session(planId: Int, sets: List<Set>) = Session(planId = planId, date = today(), sets = sets)
+
+/**
+ * 会话概要（Records 列表页用）：不加载组详情，仅日期/计划日/时长与去重后的动作名。
+ * 由轻量 JOIN 查询一次取回，避免列表页触发 N+1 加载。
+ */
+@Immutable
+data class SessionSummary(
+    val date: LocalDate,
+    val planId: Int?,
+    val dayIndexOverride: Int? = null,
+    val dayTitleOverride: String? = null,
+    val durationSeconds: Long? = null,
+    val exerciseNames: List<String> = emptyList(),
+    val setCount: Int = 0,
+    val id: Int? = null,
+)

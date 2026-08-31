@@ -66,9 +66,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
@@ -86,13 +83,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.Set
-import com.looker.kenko.domain.model.Tag
+import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.ui.feature.session.AddSet
 import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.ui.component.BodyPartMuscleFilter
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.ConfirmDialog
@@ -100,7 +98,6 @@ import com.looker.kenko.ui.component.DeletableSetItem
 import com.looker.kenko.ui.component.SetItem
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.extension.plus
-import com.looker.kenko.ui.feature.plan.components.dayName
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.utils.DateFormat
@@ -113,7 +110,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 
 @Composable
@@ -161,7 +157,7 @@ private fun SessionDetail(
     onUpdateSet: (Int?, Int, Float) -> Unit = { _, _, _ -> },
     onSelectBottomSheet: (Exercise) -> Unit = {},
     onHistoryClick: () -> Unit = {},
-    onImportDay: (DayOfWeek) -> Unit = {},
+    onImportDay: (Int) -> Unit = {},
     onEditToggle: () -> Unit = {},
     onClearSets: () -> Unit = {},
     showBackButton: Boolean = true,
@@ -243,7 +239,7 @@ private fun SessionDetail(
                                         contentPadding = PaddingValues(vertical = 12.dp)
                                     ) {
                                         val title = state.dayTitles[day]
-                                        Text(text = if (title.isNullOrBlank()) dayName(day) else title)
+                                        Text(text = if (title.isNullOrBlank()) stringResource(R.string.label_day_n, day) else title)
                                     }
                                 }
                             }
@@ -281,6 +277,7 @@ private fun SessionDetail(
                 isEditMode = data.isEditMode,
                 previousSessionDate = data.previousSessionDate,
                 dayTitle = data.dayTitle,
+                dayIndexOverride = data.dayIndexOverride,
                 availablePlanDays = data.availablePlanDays,
                 dayTitles = data.dayTitles,
                 allExercises = allExercises,
@@ -304,13 +301,14 @@ private fun SessionDetail(
 @Composable
 private fun SetsList(
     date: LocalDate,
-    exerciseSets: Map<Exercise, List<Set>>,
+    exerciseSets: List<TrainingExercise>,
     isToday: Boolean,
     isEditMode: Boolean,
     previousSessionDate: LocalDate?,
     dayTitle: String?,
-    availablePlanDays: Map<DayOfWeek, List<Exercise>>,
-    dayTitles: Map<DayOfWeek, String>,
+    dayIndexOverride: Int?,
+    availablePlanDays: Map<Int, List<Exercise>>,
+    dayTitles: Map<Int, String>,
     allExercises: List<Exercise> = emptyList(),
     onBackPress: () -> Unit,
     onRemoveSet: (Int?) -> Unit,
@@ -318,7 +316,7 @@ private fun SetsList(
     onSelectBottomSheet: (Exercise) -> Unit,
     onHistoryClick: () -> Unit,
     onEditToggle: () -> Unit,
-    onImportDay: (DayOfWeek) -> Unit,
+    onImportDay: (Int) -> Unit,
     onClearSets: () -> Unit,
     showBackButton: Boolean = true,
     onAddExerciseClick: (String) -> Unit = {},
@@ -357,7 +355,7 @@ private fun SetsList(
     if (showImportSheet) {
         ModalBottomSheet(
             onDismissRequest = { showImportSheet = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            containerColor = MaterialTheme.colorScheme.surface,
         ) {
             Text(
                 text = stringResource(R.string.label_import_plan),
@@ -382,7 +380,7 @@ private fun SetsList(
                             contentPadding = PaddingValues(vertical = 12.dp)
                         ) {
                             val title = dayTitles[day]
-                            Text(text = if (title.isNullOrBlank()) dayName(day) else title)
+                            Text(text = if (title.isNullOrBlank()) stringResource(R.string.label_day_n, day) else title)
                         }
                     }
                 }
@@ -417,6 +415,7 @@ private fun SetsList(
             Header(
                 performedOn = date,
                 dayTitle = dayTitle,
+                dayIndexOverride = dayIndexOverride,
                 onBackPress = onBackPress,
                 showBackButton = showBackButton,
                 actions = {
@@ -455,13 +454,16 @@ private fun SetsList(
                 },
             )
         }
-        exerciseSets.forEach { (exercise, sets) ->
+        exerciseSets.forEach { row ->
+            val exercise = row.exercise
+            val sets = row.sets
             val isCollapsed = exercise.id in collapsedExercises
             item(
                 span = { GridItemSpan(maxLineSpan) },
             ) {
                 StickyHeader(
                     name = exercise.name,
+                    sequence = row.sequence?.toString(),
                     setCount = sets.size,
                     isCollapsed = isCollapsed,
                     onCollapseToggle = {
@@ -527,6 +529,7 @@ private fun SetsList(
 private fun Header(
     performedOn: LocalDate,
     dayTitle: String?,
+    dayIndexOverride: Int?,
     onBackPress: () -> Unit,
     modifier: Modifier = Modifier,
     showBackButton: Boolean = true,
@@ -535,10 +538,7 @@ private fun Header(
     val date = remember {
         formatDate(performedOn, DateFormat.YearMonthDay)
     }
-    val name = dayName(performedOn.dayOfWeek)
-    val dayText = remember(dayTitle, name) {
-        if (dayTitle.isNullOrBlank()) name else "$dayTitle ($name)"
-    }
+    val dayText = dayTitle ?: dayIndexOverride?.let { stringResource(R.string.label_day_n, it) } ?: ""
     TopAppBar(
         modifier = modifier,
         actions = actions,
@@ -549,11 +549,12 @@ private fun Header(
             ) {
                 Text(
                     text = dayText,
+                    style = MaterialTheme.typography.titleSmall,
                 )
                 Text(
                     text = date,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.outline,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         },
@@ -577,7 +578,7 @@ private fun SessionError(
             Text(
                 text = message,
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.outline,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -591,26 +592,33 @@ fun ExerciseSearchDialog(
     onCreateNew: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val viewModel: ExerciseSearchViewModel = hiltViewModel()
+    val parentTags by viewModel.parentTags.collectAsStateWithLifecycle()
+    val allTags by viewModel.allTags.collectAsStateWithLifecycle()
+
     var selectedExercise by remember { mutableStateOf<Exercise?>(null) }
-    var selectedTag by remember { mutableStateOf<Tag?>(null) }
-    var tagExpanded by remember { mutableStateOf(false) }
+    var selectedParentId by remember { mutableStateOf<Int?>(null) }
+    var selectedChildId by remember { mutableStateOf<Int?>(null) }
 
-    val allTags = remember(exercises) {
-        exercises.flatMap { it.tags }
-            .distinctBy { it.id }
-            .sortedBy { it.sortOrder }
-    }
-
-    val filteredExercises = remember(selectedTag, exercises) {
+    val filteredExercises = remember(exercises, selectedParentId, selectedChildId) {
         var filtered = exercises
-        val currentTag = selectedTag
-        if (currentTag != null) {
-            val tagId = currentTag.id
+        val parentId = selectedParentId
+        val childId = selectedChildId
+        if (childId != null) {
             filtered = filtered.filter { exercise ->
-                exercise.tags.any { it.id == tagId }
+                exercise.tags.any { it.id == childId }
+            }
+        } else if (parentId != null) {
+            filtered = filtered.filter { exercise ->
+                exercise.tags.any { it.parentId == parentId }
             }
         }
         filtered
+    }
+
+    // Clear the pending selection when the visible result set changes
+    LaunchedEffect(selectedParentId, selectedChildId) {
+        selectedExercise = null
     }
 
     AlertDialog(
@@ -618,44 +626,19 @@ fun ExerciseSearchDialog(
         title = { Text(stringResource(R.string.label_select_exercise)) },
         text = {
             Column {
-                ExposedDropdownMenuBox(
-                    expanded = tagExpanded,
-                    onExpandedChange = { tagExpanded = it },
-                ) {
-                    OutlinedTextField(
-                        value = selectedTag?.name
-                            ?: stringResource(R.string.label_search_tag),
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = tagExpanded) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth(),
-                        singleLine = true,
-                    )
-                    ExposedDropdownMenu(
-                        expanded = tagExpanded,
-                        onDismissRequest = { tagExpanded = false },
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.label_all_muscle_groups)) },
-                            onClick = {
-                                selectedTag = null
-                                tagExpanded = false
-                            },
-                        )
-                        allTags.forEach { tag ->
-                            val label = tag.parentName?.let { "${it} → ${tag.name}" } ?: tag.name
-                            DropdownMenuItem(
-                                text = { Text(label) },
-                                onClick = {
-                                    selectedTag = tag
-                                    tagExpanded = false
-                                },
-                            )
-                        }
-                    }
-                }
+                BodyPartMuscleFilter(
+                    parentTags = parentTags,
+                    allTags = allTags,
+                    selectedParentId = selectedParentId,
+                    selectedChildId = selectedChildId,
+                    onParentSelect = { parentId ->
+                        selectedParentId = parentId
+                        selectedChildId = null
+                    },
+                    onChildSelect = { childId ->
+                        selectedChildId = childId
+                    },
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyColumn(
                     modifier = Modifier.height(300.dp),
@@ -715,7 +698,7 @@ fun AddSetSheet(
     ModalBottomSheet(
         sheetState = state,
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         AddSet(
             exercise = exercise,
@@ -737,7 +720,7 @@ private fun SessionDetailPreview() {
             SessionDetailState.Success(
                 SessionUiData(
                     date = LocalDate(2024, 4, 15),
-                    sets = emptyMap(),
+                    sets = emptyList(),
                     isToday = true,
                 ),
             )
@@ -767,7 +750,7 @@ private fun SessionEmptyPreview() {
     KenkoTheme {
         val data = remember {
             SessionDetailState.Error.EmptyPlan(
-                mapOf(DayOfWeek.MONDAY to emptyList())
+                mapOf(1 to emptyList())
             )
         }
         Surface(modifier = Modifier.fillMaxSize()) {

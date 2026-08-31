@@ -48,8 +48,36 @@ data class SessionDataEntity(
     val date: EpochDays,
     @ColumnInfo(index = true)
     val planId: Int?,
-    val planDayOverride: Int? = null,
+    val dayIndexOverride: Int? = null,
+    val dayTitleOverride: String? = null,
     val durationSeconds: Long? = null,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+)
+
+/** 轻量投影：仅 date + planId（供计划训练日期区间计算，不加载 sets）。 */
+data class SessionDateEntity(
+    val date: EpochDays,
+    val planId: Int?,
+)
+
+/** 轻量投影：会话概要 + 去重动作名（GROUP_CONCAT），供 Records 列表页一次查询取回。 */
+data class SessionSummaryEntity(
+    val date: EpochDays,
+    val planId: Int?,
+    val dayIndexOverride: Int? = null,
+    val dayTitleOverride: String? = null,
+    val durationSeconds: Long? = null,
+    val exerciseNames: String? = null,
+    val setCount: Int = 0,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+)
+
+/** 轻量投影：某计划的 session 概要（回填训练日名称快照用）。 */
+data class SessionSnapshotEntity(
+    val id: Int,
+    val dayIndexOverride: Int?,
+    val dayTitleOverride: String? = null,
+    val exerciseNames: String? = null,
 )

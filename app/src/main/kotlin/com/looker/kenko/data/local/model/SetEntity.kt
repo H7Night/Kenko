@@ -48,7 +48,6 @@ data class SetEntity(
     val order: Int,
     val sessionId: Int,
     val exerciseId: Int,
-    val rir: Int = 2,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 )

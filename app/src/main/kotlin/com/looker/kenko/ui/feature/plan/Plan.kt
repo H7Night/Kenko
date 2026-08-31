@@ -15,15 +15,25 @@
 
 package com.looker.kenko.ui.feature.plan
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -41,6 +51,7 @@ import com.looker.kenko.R
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanPreviewParameters
 import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.ui.component.ErrorSnackbar
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.ConfirmDialog
 import com.looker.kenko.ui.component.endItem
@@ -48,6 +59,7 @@ import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.KenkoAddButton
 import com.looker.kenko.ui.feature.plan.components.PlanItem
 import androidx.compose.ui.platform.LocalContext
+import com.looker.kenko.utils.ExportFileName
 import com.looker.kenko.utils.toast
 import com.looker.kenko.ui.theme.KenkoTheme
 
@@ -60,6 +72,45 @@ fun Plan(
     val plans: List<Plan> by viewModel.plans.collectAsStateWithLifecycle()
     var planToDelete by remember { mutableStateOf<Plan?>(null) }
     val context = LocalContext.current
+    val importPreview by viewModel.importPreview.collectAsStateWithLifecycle()
+
+    var showExportDialog by remember { mutableStateOf(false) }
+    var pendingExportIds by remember { mutableStateOf<List<Int>?>(null) }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) {
+            pendingExportIds?.let { viewModel.exportPlans(it, uri) }
+        }
+        pendingExportIds = null
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        uri?.let { viewModel.previewImport(it) }
+    }
+
+    if (showExportDialog) {
+        ExportPlanDialog(
+            plans = plans,
+            onConfirm = { ids ->
+                pendingExportIds = ids
+                showExportDialog = false
+                exportLauncher.launch(ExportFileName.forProject("plans", "json"))
+            },
+            onDismiss = { showExportDialog = false },
+        )
+    }
+
+    importPreview?.let { preview ->
+        ImportPlanConfirmDialog(
+            planCount = preview.planCount,
+            onConfirm = { viewModel.confirmImport() },
+            onDismiss = { viewModel.dismissImportPreview() },
+        )
+    }
 
     Plan(
         plans = plans,
@@ -68,6 +119,9 @@ fun Plan(
         onRemove = viewModel::removePlan,
         onPlanClick = onPlanClick,
         onRequestRemove = { planToDelete = it },
+        onExportPlans = { showExportDialog = true },
+        onImportPlan = { importLauncher.launch(arrayOf("application/json")) },
+        snackbarHostState = viewModel.snackbarState,
     )
 
     planToDelete?.let { plan ->
@@ -95,12 +149,45 @@ private fun Plan(
     onRemove: (Int) -> Unit,
     onPlanClick: (Int) -> Unit,
     onRequestRemove: (Plan) -> Unit = {},
+    onExportPlans: () -> Unit = {},
+    onImportPlan: () -> Unit = {},
+    snackbarHostState: SnackbarHostState = SnackbarHostState(),
 ) {
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) {
+                ErrorSnackbar(data = it)
+            }
+        },
         topBar = {
             TopAppBar(
                 navigationIcon = { BackButton(onClick = onBackPress) },
-                title = { Text(text = stringResource(R.string.label_plans_title)) }
+                title = { Text(text = stringResource(R.string.label_plans_title)) },
+                actions = {
+                    var menuExpanded by remember { mutableStateOf(false) }
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = null)
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.label_export_plan)) },
+                            onClick = {
+                                menuExpanded = false
+                                onExportPlans()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.label_import_plan_file)) },
+                            onClick = {
+                                menuExpanded = false
+                                onImportPlan()
+                            },
+                        )
+                    }
+                },
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -108,8 +195,8 @@ private fun Plan(
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         LazyColumn(
-            contentPadding = it + PaddingValues(vertical = 8.dp, horizontal = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            contentPadding = it + PaddingValues(vertical = 6.dp, horizontal = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             items(
                 items = plans,

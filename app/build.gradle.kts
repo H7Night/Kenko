@@ -46,7 +46,7 @@ android {
         applicationId = "com.looker.kenko"
         minSdk = 26
         targetSdk = 36
-        versionName = "1.7.0"
+        versionName = "1.8.0"
         versionCode = versionCodeFor(versionName)
 
         testInstrumentationRunner = "com.looker.kenko.KenkoTestRunner"
@@ -185,6 +185,7 @@ dependencies {
     ksp(libs.room.compiler)
 
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:${libs.versions.kotlin.get()}")
+    testImplementation(libs.kotlinx.coroutines.test)
 
     androidTestImplementation("org.jetbrains.kotlin:kotlin-test-junit5:${libs.versions.kotlin.get()}")
     androidTestImplementation(platform(libs.compose.bom))

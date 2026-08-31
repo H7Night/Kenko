@@ -22,11 +22,14 @@ import com.looker.kenko.data.local.model.PlanEntity
 import com.looker.kenko.data.local.model.PlanHistoryEntity
 import com.looker.kenko.data.mapper.toEntity
 import com.looker.kenko.data.mapper.toExternal
+import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Labels
 import com.looker.kenko.domain.model.Plan
+import com.looker.kenko.domain.model.PlanCycle
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.PlanStat
+import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.utils.toLocalEpochDays
@@ -37,13 +40,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.DayOfWeek
-import kotlinx.datetime.isoDayNumber
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class LocalPlanRepo @Inject constructor(
     private val dao: PlanDao,
     private val exerciseDao: ExerciseDao,
     private val historyDao: PlanHistoryDao,
+    private val sessionRepo: SessionRepo,
 ) : PlanRepo {
 
     private val mutex = Mutex()
@@ -73,8 +77,8 @@ class LocalPlanRepo @Inject constructor(
             }
         }
 
-    override fun planItems(day: DayOfWeek): Flow<List<PlanItem>> =
-        dao.currentPlanItemsByDayFlow(day.isoDayNumber).map { planDays ->
+    override fun planItems(day: Int): Flow<List<PlanItem>> =
+        dao.currentPlanItemsByDayFlow(day).map { planDays ->
             planDays.map { planDay ->
                 planDay.toExternal { exerciseId ->
                     exerciseDao.get(exerciseId)?.toExternal()
@@ -90,7 +94,7 @@ class LocalPlanRepo @Inject constructor(
     override suspend fun planNameExists(name: String): Boolean =
         dao.exists(name)
 
-    override fun planItems(id: Int): Flow<List<PlanItem>> =
+    override fun planItemsByPlan(id: Int): Flow<List<PlanItem>> =
         dao.planItemsByPlanIdFlow(id).map {
             it.map { planDay ->
                 planDay.toExternal { exerciseId ->
@@ -99,8 +103,8 @@ class LocalPlanRepo @Inject constructor(
             }
         }
 
-    override fun planItems(id: Int, day: DayOfWeek): Flow<List<PlanItem>> =
-        dao.planItemsByPlanIdAndDayFlow(id, day.isoDayNumber).map {
+    override fun planItems(id: Int, day: Int): Flow<List<PlanItem>> =
+        dao.planItemsByPlanIdAndDayFlow(id, day).map {
             it.map { planDay ->
                 planDay.toExternal { exerciseId ->
                     exerciseDao.get(exerciseId)?.toExternal()
@@ -108,8 +112,8 @@ class LocalPlanRepo @Inject constructor(
             }
         }
 
-    override fun activeExercises(day: DayOfWeek): Flow<List<Exercise>> =
-        dao.currentPlanItemsByDayFlow(day.isoDayNumber).map {
+    override fun activeExercises(day: Int): Flow<List<Exercise>> =
+        dao.currentPlanItemsByDayFlow(day).map {
             it.mapNotNull { planDay ->
                 exerciseDao.get(planDay.exerciseId)?.toExternal()
             }
@@ -122,8 +126,8 @@ class LocalPlanRepo @Inject constructor(
             }
         }
 
-    override suspend fun getPlanItems(id: Int, day: DayOfWeek): List<PlanItem> =
-        dao.getPlanItemsByPlanIdAndDay(id, day.isoDayNumber).map {
+    override suspend fun getPlanItems(id: Int, day: Int): List<PlanItem> =
+        dao.getPlanItemsByPlanIdAndDay(id, day).map {
             it.toExternal { exerciseId ->
                 exerciseDao.get(exerciseId)?.toExternal()
             }
@@ -151,6 +155,8 @@ class LocalPlanRepo @Inject constructor(
     ).toInt()
 
     override suspend fun updatePlan(plan: Plan) {
+        // 修改计划前先把当前(修改前)训练日名称回填为历史 session 快照
+        plan.id?.let { sessionRepo.snapshotPlanDayTitles(it) }
         dao.upsertPlan(plan.toEntity())
     }
 
@@ -167,16 +173,19 @@ class LocalPlanRepo @Inject constructor(
     }
 
     override suspend fun addItem(planItem: PlanItem) {
-        val items = dao.getPlanItemsByPlanIdAndDay(planItem.planId, planItem.dayOfWeek.isoDayNumber)
+        sessionRepo.snapshotPlanDayTitles(planItem.planId)
+        val items = dao.getPlanItemsByPlanIdAndDay(planItem.planId, planItem.dayIndex)
         val nextOrder = (items.maxOfOrNull { it.sortOrder } ?: -1) + 1
         dao.insertPlanItem(planItem.toEntity().copy(sortOrder = nextOrder))
     }
 
     override suspend fun removeItem(id: Long) {
+        dao.getPlanIdByItemId(id)?.let { sessionRepo.snapshotPlanDayTitles(it) }
         dao.deleteItem(id)
     }
 
-    override suspend fun updateOrder(planId: Int, day: DayOfWeek, exercises: List<Exercise>) {
+    override suspend fun updateOrder(planId: Int, day: Int, exercises: List<Exercise>) {
+        sessionRepo.snapshotPlanDayTitles(planId)
         val items = getPlanItems(planId, day)
         if (items.size != exercises.size) return
 
@@ -187,5 +196,55 @@ class LocalPlanRepo @Inject constructor(
             val newOrder = exerciseOrder[item.exercise.id] ?: return
             dao.updateItemSortOrder(requireNotNull(item.id), newOrder)
         }
+    }
+
+    override suspend fun updateDayIndex(planId: Int, dayIndex: Int) {
+        val plan = dao.getPlanById(planId) ?: return
+        dao.updateCurrentDayIndex(planId, dayIndex.coerceIn(1, plan.dayCount))
+    }
+
+    override suspend fun advanceDay(planId: Int, actualDayIndex: Int) {
+        val plan = dao.getPlanById(planId) ?: return
+        dao.updateCurrentDayIndex(planId, PlanCycle.nextDayIndex(actualDayIndex, plan.dayCount))
+    }
+
+    override suspend fun addDay(planId: Int) {
+        dao.incrementDayCount(planId)
+    }
+
+    override suspend fun deleteDay(planId: Int, dayIndex: Int) {
+        val plan = dao.getPlanById(planId) ?: return
+        if (dayIndex !in 1..plan.dayCount) return
+        // 搬移训练日序号前回填快照,避免历史记录训练日名称随序号搬移而变化
+        sessionRepo.snapshotPlanDayTitles(planId)
+        // dayTitles 的 key 同步搬移:删除目标天,后续天前移,范围外保留
+        val shifted = plan.toExternal(isActive = false, stat = PlanStat(0, 0)).titlesMap.mapNotNull { (day, title) ->
+            val newDay = when {
+                day == dayIndex -> return@mapNotNull null
+                day > dayIndex -> day - 1
+                else -> day
+            }
+            newDay to title
+        }.toMap()
+        val newDayTitles = if (shifted.isEmpty()) null else Json.encodeToString(shifted)
+        dao.deleteDayWithTitles(planId, dayIndex, newDayTitles)
+    }
+
+    override suspend fun moveDay(planId: Int, from: Int, to: Int) {
+        val plan = dao.getPlanById(planId) ?: return
+        // 搬移训练日序号前回填快照,避免历史记录训练日名称随序号搬移而变化
+        sessionRepo.snapshotPlanDayTitles(planId)
+        // dayTitles 的 key 同步搬移:范围外条目保留,只移动 from→to 与区间内条目
+        val shifted = plan.toExternal(isActive = false, stat = PlanStat(0, 0)).titlesMap.map { (day, title) ->
+            val newDay = when {
+                day == from -> to
+                from < to && day in (from + 1)..to -> day - 1
+                from > to && day in to until from -> day + 1
+                else -> day
+            }
+            newDay to title
+        }.toMap()
+        val newDayTitles = if (shifted.isEmpty()) null else Json.encodeToString(shifted)
+        dao.moveDayWithTitles(planId, from, to, newDayTitles)
     }
 }

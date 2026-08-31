@@ -27,4 +27,9 @@ class StringHandler(context: Context) {
         return resources.getString(id)
     }
 
+    fun getString(id: Int, vararg formatArgs: Any): String {
+        resources.configuration
+        return resources.getString(id, *formatArgs)
+    }
+
 }

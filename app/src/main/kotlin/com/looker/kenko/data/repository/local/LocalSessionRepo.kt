@@ -16,16 +16,19 @@
 package com.looker.kenko.data.repository.local
 
 import com.looker.kenko.data.local.dao.ExerciseDao
+import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.dao.PlanHistoryDao
 import com.looker.kenko.data.local.dao.SessionDao
 import com.looker.kenko.data.local.dao.SetsDao
 import com.looker.kenko.data.local.model.SessionDataEntity
 import com.looker.kenko.data.local.model.SetEntity
+import com.looker.kenko.data.local.model.dayTitlesMap
 import com.looker.kenko.data.mapper.toEntity
 import com.looker.kenko.data.mapper.toExternal
-import com.looker.kenko.domain.model.RepsInReserve
 import com.looker.kenko.domain.model.Session
+import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.Set
+import com.looker.kenko.domain.model.TrainingDayMatch
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.utils.toLocalEpochDays
 import javax.inject.Inject
@@ -34,15 +37,14 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.isoDayNumber
 
 class LocalSessionRepo @Inject constructor(
     private val dao: SessionDao,
     private val setsDao: SetsDao,
     private val historyDao: PlanHistoryDao,
     private val exerciseDao: ExerciseDao,
+    private val planDao: PlanDao,
 ) : SessionRepo {
 
     private val mutex = Mutex()
@@ -51,6 +53,36 @@ class LocalSessionRepo @Inject constructor(
         dao.stream().map {
             it.map { session ->
                 session.toExternal(session.sets.toExternal())
+            }
+        }
+
+    override val planDateRanges: Flow<Map<Int, Pair<LocalDate, LocalDate>>> =
+        dao.streamPlanDates().map { list ->
+            list.mapNotNull { entry ->
+                entry.planId?.let { it to LocalDate.fromEpochDays(entry.date.value.toLong()) }
+            }
+                .groupBy({ it.first }, { it.second })
+                .mapValues { (_, dates) ->
+                    (dates.minOrNull()!!) to (dates.maxOrNull()!!)
+                }
+        }
+
+    override val streamSummaries: Flow<List<SessionSummary>> =
+        dao.streamSummaries().map { list ->
+            list.map { entity ->
+                SessionSummary(
+                    date = LocalDate.fromEpochDays(entity.date.value.toLong()),
+                    planId = entity.planId,
+                    dayIndexOverride = entity.dayIndexOverride,
+                    dayTitleOverride = entity.dayTitleOverride,
+                    durationSeconds = entity.durationSeconds,
+                    exerciseNames = entity.exerciseNames
+                        ?.split(",")
+                        ?.filter { it.isNotBlank() }
+                        ?: emptyList(),
+                    setCount = entity.setCount,
+                    id = entity.id,
+                )
             }
         }
     override val setsCount: Flow<Int> =
@@ -74,7 +106,6 @@ class LocalSessionRepo @Inject constructor(
         exerciseId: Int,
         weight: Float,
         reps: Int,
-        rir: RepsInReserve,
     ) = mutex.withLock {
         setsDao.insert(
             SetEntity(
@@ -83,7 +114,6 @@ class LocalSessionRepo @Inject constructor(
                 exerciseId = exerciseId,
                 sessionId = sessionId,
                 order = setsDao.getSetsCountBySessionId(sessionId) ?: 0,
-                rir = rir.value,
             ),
         )
     }
@@ -101,9 +131,39 @@ class LocalSessionRepo @Inject constructor(
         setsDao.deleteBySessionId(sessionId)
     }
 
-    override suspend fun updatePlanDay(date: LocalDate, day: DayOfWeek) {
+    override suspend fun updateDayIndex(date: LocalDate, dayIndex: Int) {
         getSessionIdOrCreate(date)
-        dao.updatePlanDayOverride(date.toLocalEpochDays(), day.isoDayNumber)
+        dao.updateDayIndexOverride(date.toLocalEpochDays(), dayIndex)
+        // 同步写入训练日名称快照,保证历史记录不随计划名称修改而变化。
+        updateDayTitleSnapshot(date, dayIndex)
+    }
+
+    private suspend fun updateDayTitleSnapshot(date: LocalDate, dayIndex: Int) {
+        val sessionId = dao.getSessionId(date.toLocalEpochDays()) ?: return
+        val planId = dao.getSessionPlanId(sessionId) ?: return
+        val title = planDao.getPlanById(planId)?.dayTitlesMap()?.get(dayIndex)
+        dao.updateDayTitleOverride(sessionId, title)
+    }
+
+    override suspend fun snapshotPlanDayTitles(planId: Int) {
+        val plan = planDao.getPlanById(planId) ?: return
+        val titles = plan.dayTitlesMap()
+        if (titles.isEmpty()) return
+
+        // 修改计划前的训练日 → 动作名集合,用于无 dayIndexOverride 的老记录反查
+        val planDayExerciseNames = planDao.getPlanItemsByPlanId(planId)
+            .groupBy { it.dayIndex }
+            .mapValues { (_, items) -> items.mapNotNull { exerciseDao.get(it.exerciseId)?.name }.toSet() }
+
+        dao.getSessionsByPlan(planId).forEach { session ->
+            if (session.dayTitleOverride != null) return@forEach // 已有快照不再覆盖
+            val day = session.dayIndexOverride ?: TrainingDayMatch.matchDayIndex(
+                session.exerciseNames?.split(",")?.filter { it.isNotBlank() }?.toSet() ?: emptySet(),
+                planDayExerciseNames,
+            ) ?: return@forEach
+            val title = titles[day] ?: return@forEach
+            dao.updateDayTitleOverride(session.id, title)
+        }
     }
 
     override suspend fun updateSessionDuration(sessionId: Int, durationSeconds: Long) {
@@ -116,7 +176,20 @@ class LocalSessionRepo @Inject constructor(
         if (existingId != null) {
             return@withLock existingId
         }
-        return@withLock dao.insert(SessionDataEntity(date.toLocalEpochDays(), currentPlanId)).toInt()
+        // 新建当天训练 session 时即写入当前计划训练日序号(dayIndexOverride)与
+        // 训练日名称快照(dayTitleOverride):
+        // - 否则 Records 列表页只能靠动作名反查,反查失败时训练日名称不显示;
+        // - 快照使之后修改计划的训练日名称不影响历史记录。
+        val plan = planDao.getPlanById(currentPlanId)
+        val dayIndex = plan?.currentDayIndex
+        return@withLock dao.insert(
+            SessionDataEntity(
+                date = date.toLocalEpochDays(),
+                planId = currentPlanId,
+                dayIndexOverride = dayIndex,
+                dayTitleOverride = dayIndex?.let { plan.dayTitlesMap()[it] },
+            ),
+        ).toInt()
     }
 
     override fun streamByDate(date: LocalDate): Flow<Session?> {
@@ -128,8 +201,8 @@ class LocalSessionRepo @Inject constructor(
             }
     }
 
-    override fun previousSessionDate(date: LocalDate, planId: Int?, day: DayOfWeek): Flow<LocalDate?> {
-        return dao.getPreviousSessionDate(date.toLocalEpochDays().value, planId, day.isoDayNumber)
+    override fun previousSessionDate(date: LocalDate, planId: Int?, dayIndex: Int): Flow<LocalDate?> {
+        return dao.getPreviousSessionDate(date.toLocalEpochDays().value, planId, dayIndex)
             .map { it?.let(LocalDate::fromEpochDays) }
     }
 
@@ -140,6 +213,11 @@ class LocalSessionRepo @Inject constructor(
         val sessionId = session.id ?: return
         setsDao.deleteBySessionId(sessionId)
         dao.delete(sessionId)
+    }
+
+    override suspend fun deleteSessionById(id: Int) {
+        setsDao.deleteBySessionId(id)
+        dao.delete(id)
     }
 
     private suspend fun List<SetEntity>.toExternal(): List<Set> = mapNotNull {
