@@ -41,13 +41,13 @@ fun WeightLineChart(
     modifier: Modifier = Modifier,
 ) {
     val color = MaterialTheme.colorScheme.primary
-    val gridColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
-    val labelColor = MaterialTheme.colorScheme.outline
+    val gridColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
     val surfaceColor = MaterialTheme.colorScheme.surface
     val textMeasurer = rememberTextMeasurer()
     val textStyle = MaterialTheme.typography.labelSmall.copy(
         color = labelColor,
-        fontSize = 8.sp,
+        fontSize = 9.sp,
     )
 
     Canvas(modifier = modifier.fillMaxWidth()) {
@@ -96,7 +96,7 @@ fun WeightLineChart(
         }
         val bottomY = topPad + chartHeight
 
-        // 渐变面积
+        // 细线面积 — Linear: 极淡填充 0.06, hairline 1.25dp
         val areaPath = Path().apply {
             moveTo(points.first().x, bottomY)
             points.forEach { lineTo(it.x, it.y) }
@@ -106,13 +106,13 @@ fun WeightLineChart(
         drawPath(
             path = areaPath,
             brush = Brush.verticalGradient(
-                colors = listOf(color.copy(alpha = 0.25f), color.copy(alpha = 0f)),
+                colors = listOf(color.copy(alpha = 0.08f), color.copy(alpha = 0f)),
                 startY = topPad,
                 endY = bottomY,
             ),
         )
 
-        // 折线
+        // 折线 — hairline
         val linePath = Path().apply {
             moveTo(points.first().x, points.first().y)
             for (i in 1 until points.size) {
@@ -122,7 +122,7 @@ fun WeightLineChart(
         drawPath(
             path = linePath,
             color = color,
-            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
+            style = Stroke(width = 1.25.dp.toPx(), cap = StrokeCap.Round),
         )
 
         // X 轴日期刻度（含首尾，3-5 个避免拥挤）
@@ -147,18 +147,18 @@ fun WeightLineChart(
             )
         }
 
-        // 数据点 + 数值标签（≤10 条全标并防重叠，否则仅首尾）
+        // 数据点 — Linear 缩小 2.5/2dp 细点
         val labelAll = weights.size <= 10
         var lastLabelBottom = Float.NEGATIVE_INFINITY
         points.forEachIndexed { index, point ->
             val isEdge = index == 0 || index == points.lastIndex
-            val radius = if (isEdge) 4.dp.toPx() else 3.dp.toPx()
+            val radius = if (isEdge) 2.5.dp.toPx() else 2.dp.toPx()
             if (isEdge) {
                 drawCircle(
                     color = surfaceColor,
-                    radius = radius + 1.5.dp.toPx(),
+                    radius = radius + 1.dp.toPx(),
                     center = point,
-                    style = Stroke(width = 1.5.dp.toPx()),
+                    style = Stroke(width = 1.dp.toPx()),
                 )
             }
             drawCircle(color = color, radius = radius, center = point)
