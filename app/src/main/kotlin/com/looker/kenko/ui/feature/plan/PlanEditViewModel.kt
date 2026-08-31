@@ -73,7 +73,7 @@ class PlanEditViewModel @Inject constructor(
     val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
 
     private val _isBackAlreadyPressedOnce = MutableStateFlow(false)
-    private val _isSavingDayTitle = MutableStateFlow(false)
+    private val _isSavingDayTitle = MutableStateFlow<Int?>(null)
 
     private val _planItemsStream = planIdStream.flatMapLatest { repo.planItemsByPlan(it) }
 
@@ -89,9 +89,10 @@ class PlanEditViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 combine(_planStream, _dayIndex) { plan, dayIndex ->
-                    plan?.titlesMap?.get(dayIndex) ?: ""
-                }.collect { title ->
-                    if (!_isSavingDayTitle.value && dayTitleState.text.toString() != title) {
+                    (plan?.titlesMap?.get(dayIndex) ?: "") to dayIndex
+                }.collect { (title, dayIndex) ->
+                    // 仅当不是正在保存该天的标题时才回写，避免覆盖用户正在输入的内容
+                    if (_isSavingDayTitle.value != dayIndex && dayTitleState.text.toString() != title) {
                         dayTitleState.edit {
                             replace(0, length, title)
                         }
@@ -118,18 +119,19 @@ class PlanEditViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                // 捕获编辑时的 dayIndex，避免切换天后 debounce 将文本保存到错误的天
                 snapshotFlow { dayTitleState.text.toString() }
+                    .map { it to _dayIndex.value }
                     .debounce(200.milliseconds)
-                    .collect { title ->
-                        _isSavingDayTitle.value = true
+                    .collect { (title, day) ->
+                        _isSavingDayTitle.value = day
                         try {
                             val currentPlan = repo.plan(planIdStream.value) ?: return@collect
-                            val day = _dayIndex.value
-                            if (currentPlan.titlesMap[day] != title) {
+                            if ((currentPlan.titlesMap[day] ?: "") != title) {
                                 repo.updatePlan(currentPlan.withDayTitle(day, title))
                             }
                         } finally {
-                            _isSavingDayTitle.value = false
+                            _isSavingDayTitle.value = null
                         }
                     }
             } catch (e: Exception) {
