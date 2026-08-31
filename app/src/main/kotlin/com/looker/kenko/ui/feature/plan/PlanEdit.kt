@@ -62,6 +62,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -140,17 +141,15 @@ fun PlanEdit(
             }
         },
         fab = {
-            PlanEditFAB(
-                pageStage = pageStage,
-                onClick = {
-                    if (pageStage == PlanEditStage.NameEdit) {
-                        viewModel.saveName()
-                    } else {
-                        viewModel.openSheet()
-                    }
-                },
-            )
+            // 新增动作按钮已移至右上角，仅 NameEdit 保留居中 FAB
+            if (pageStage == PlanEditStage.NameEdit) {
+                PlanEditFAB(
+                    pageStage = pageStage,
+                    onClick = { viewModel.saveName() },
+                )
+            }
         },
+        onAddExercise = { viewModel.openSheet() },
         onBackPress = { viewModel.onBackPress(pageStage, onBackPress) },
     ) { stage ->
         when (stage) {
@@ -199,6 +198,7 @@ private fun FullEdit(
     fab: @Composable () -> Unit,
     onBackPress: () -> Unit,
     title: @Composable () -> Unit = {},
+    onAddExercise: () -> Unit = {},
     ui: @Composable (stage: PlanEditStage) -> Unit,
 ) {
     Scaffold(
@@ -213,6 +213,13 @@ private fun FullEdit(
             CenterAlignedTopAppBar(
                 title = title,
                 navigationIcon = { BackButton(onBackPress) },
+                actions = {
+                    if (stage == PlanEditStage.PlanEdit) {
+                        androidx.compose.material3.IconButton(onClick = onAddExercise) {
+                            Icon(painter = KenkoIcons.Add, contentDescription = stringResource(R.string.label_add))
+                        }
+                    }
+                },
             )
         },
     ) { innerPadding ->
