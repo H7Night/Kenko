@@ -32,3 +32,5 @@ docs/
 # ============ 本地个人环境配置============
 /AGENTS.md
 /reasonix.toml
+.reasonix/
+.reasonix
