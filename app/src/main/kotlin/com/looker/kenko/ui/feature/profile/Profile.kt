@@ -256,43 +256,47 @@ private fun ExerciseCard(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val cardShape = MaterialTheme.shapes.extraLarge
+        val cardShape = MaterialTheme.shapes.medium
         val surfaceShape = remember(cardShape) {
-            cardShape.end(16.dp, 16.dp)
+            cardShape.end(8.dp, 8.dp)
         }
         Surface(
             modifier = Modifier.weight(1.5F),
             shape = surfaceShape,
-            color = MaterialTheme.colorScheme.surfaceContainer,
+            color = MaterialTheme.colorScheme.surface,
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
             onClick = onExercisesClick,
         ) {
-            Column(Modifier.padding(24.dp)) {
+            Column(Modifier.padding(16.dp)) {
                 Text(
                     text = stringResource(R.string.label_exercise),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     text = numberOfExercises.toString(),
-                    style = MaterialTheme.typography.headlineLarge,
+                    style = MaterialTheme.typography.headlineMedium,
                 )
             }
         }
         val buttonShape = remember(cardShape) {
-            cardShape.start(16.dp, 16.dp)
+            cardShape.start(8.dp, 8.dp)
         }
         Box(
             modifier = Modifier
                 .weight(1F)
                 .fillMaxHeight()
                 .clip(buttonShape)
+                .border(androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), buttonShape)
                 .clickable(onClick = onAddClick)
-                .background(MaterialTheme.colorScheme.secondaryContainer),
+                .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painter = KenkoIcons.Add,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 contentDescription = stringResource(R.string.label_add),
+                modifier = Modifier.size(20.dp),
             )
         }
     }
@@ -323,11 +327,12 @@ private fun WeightCard(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(

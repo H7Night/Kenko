@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
@@ -282,19 +283,20 @@ private fun AddSetHeader(
         Column(modifier = Modifier.weight(1F)) {
             Text(
                 text = stringResource(R.string.label_add_set_for).uppercase(),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
                 text = exerciseName,
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.tertiary,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
         FilledTonalIconButton(onClick = onClick) {
             Icon(
                 painter = KenkoIcons.Done,
                 contentDescription = "",
+                modifier = Modifier.size(16.dp),
             )
         }
     }
@@ -306,9 +308,10 @@ private fun SwipeableTextField(
     content: @Composable RowScope.() -> Unit,
 ) {
     Surface(
-        modifier = modifier.requiredHeight(48.dp),
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = modifier.requiredHeight(44.dp),
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

@@ -31,11 +31,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -82,8 +84,9 @@ fun TrainingDayBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             (1..dayCount).forEach { day ->
                 val title = titles[day]
@@ -99,36 +102,49 @@ fun TrainingDayBar(
                     onDeleteDay = onDeleteDay,
                 )
             }
-            FilledTonalIconButton(
+            IconButton(
                 onClick = onAddDay,
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(28.dp),
             ) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.label_add_day))
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(R.string.label_add_day),
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
 
-        // 选中天可移动时,显示"移到前/后"操作条(作用于当前选中天)
+        // 选中天可移动时,显示"移到前/后"操作条 — Linear ghost
         val canMoveBackward = selectedDay > 1
         val canMoveForward = selectedDay < dayCount
         if (canMoveBackward || canMoveForward) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
                 horizontalArrangement = Arrangement.Center,
             ) {
                 if (canMoveBackward) {
-                    OutlinedButton(onClick = { onMoveDay(selectedDay, selectedDay - 1) }) {
-                        Icon(Icons.Default.KeyboardArrowLeft, contentDescription = null)
+                    OutlinedButton(
+                        onClick = { onMoveDay(selectedDay, selectedDay - 1) },
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    ) {
+                        Icon(Icons.Default.KeyboardArrowLeft, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.label_move_day_backward))
+                        Text(stringResource(R.string.label_move_day_backward), style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 if (canMoveForward) {
-                    OutlinedButton(onClick = { onMoveDay(selectedDay, selectedDay + 1) }) {
-                        Text(stringResource(R.string.label_move_day_forward))
+                    OutlinedButton(
+                        onClick = { onMoveDay(selectedDay, selectedDay + 1) },
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    ) {
+                        Text(stringResource(R.string.label_move_day_forward), style = MaterialTheme.typography.labelSmall)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Icon(Icons.Default.KeyboardArrowRight, contentDescription = null)
+                        Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(14.dp))
                     }
                 }
             }
@@ -156,20 +172,32 @@ private fun DayTab(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = if (isRest) MaterialTheme.colorScheme.outline
-                    else MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = when {
+                        isRest -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        selected -> MaterialTheme.colorScheme.primary
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                 )
                 if (isRest) {
                     Spacer(Modifier.width(4.dp))
                     Text(
                         stringResource(R.string.label_rest_short),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                     )
                 }
             }
         },
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+            selectedLabelColor = MaterialTheme.colorScheme.primary,
+            selectedLeadingIconColor = MaterialTheme.colorScheme.primary,
+        ),
+        border = BorderStroke(1.dp, if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f) else MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.combinedClickable(
             onClick = onClick,
             onLongClick = { menuExpanded = true },

@@ -62,6 +62,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -140,17 +141,15 @@ fun PlanEdit(
             }
         },
         fab = {
-            PlanEditFAB(
-                pageStage = pageStage,
-                onClick = {
-                    if (pageStage == PlanEditStage.NameEdit) {
-                        viewModel.saveName()
-                    } else {
-                        viewModel.openSheet()
-                    }
-                },
-            )
+            // 新增动作按钮已移至右上角，仅 NameEdit 保留居中 FAB
+            if (pageStage == PlanEditStage.NameEdit) {
+                PlanEditFAB(
+                    pageStage = pageStage,
+                    onClick = { viewModel.saveName() },
+                )
+            }
         },
+        onAddExercise = { viewModel.openSheet() },
         onBackPress = { viewModel.onBackPress(pageStage, onBackPress) },
     ) { stage ->
         when (stage) {
@@ -199,6 +198,7 @@ private fun FullEdit(
     fab: @Composable () -> Unit,
     onBackPress: () -> Unit,
     title: @Composable () -> Unit = {},
+    onAddExercise: () -> Unit = {},
     ui: @Composable (stage: PlanEditStage) -> Unit,
 ) {
     Scaffold(
@@ -213,6 +213,13 @@ private fun FullEdit(
             CenterAlignedTopAppBar(
                 title = title,
                 navigationIcon = { BackButton(onBackPress) },
+                actions = {
+                    if (stage == PlanEditStage.PlanEdit) {
+                        androidx.compose.material3.IconButton(onClick = onAddExercise) {
+                            Icon(painter = KenkoIcons.Add, contentDescription = stringResource(R.string.label_add))
+                        }
+                    }
+                },
             )
         },
     ) { innerPadding ->
@@ -308,17 +315,17 @@ private fun PlanEdit(
                         modifier = Modifier
                             .fillMaxWidth()
                             .focusRequester(dayTitleFocusRequester),
-                        textStyle = MaterialTheme.typography.displayMedium.copy(
-                            color = MaterialTheme.colorScheme.secondary,
+                        textStyle = MaterialTheme.typography.titleMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Start
                         ),
-                        cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.secondary),
+                        cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
                         decorator = { innerTextField ->
                             if (dayTitleState.text.isEmpty()) {
                                 Text(
                                     text = name,
-                                    style = MaterialTheme.typography.displayMedium,
-                                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                                 )
                             }
                             innerTextField()
@@ -368,7 +375,7 @@ private fun PlanEdit(
                         label = "elevation"
                     )
                     val animatedContainerColor by animateColorAsState(
-                        if (isDragged) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface,
+                        if (isDragged) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surface,
                         label = "color"
                     )
 

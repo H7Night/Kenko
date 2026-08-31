@@ -65,14 +65,10 @@ fun KenkoNavHost(
         modifier = modifier,
         navController = navController as NavHostController,
         startDestination = startDestination,
-        // Disable the default crossfade transitions (fadeIn/fadeOut ~700ms).
-        // During a pop the outgoing page stays composed on top and still
-        // receives clicks, so a fast tap right after back can hit the
-        // previous screen's elements (e.g. opening the exercise editor
-        // instead of the plan). Instant swaps avoid that click-through.
-        enterTransition = { fadeIn(animationSpec = tween(220)) },
+        // Linear-style: fast 150ms fade, no slide, avoid click-through on pop.
+        enterTransition = { fadeIn(animationSpec = tween(150)) },
         exitTransition = { ExitTransition.None },
-        popEnterTransition = { fadeIn(animationSpec = tween(220)) },
+        popEnterTransition = { fadeIn(animationSpec = tween(150)) },
         popExitTransition = { ExitTransition.None },
     ) {
         home(

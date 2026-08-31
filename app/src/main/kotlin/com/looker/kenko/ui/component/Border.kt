@@ -21,7 +21,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-val KenkoBorderWidth: Dp = 1.4.dp
+val KenkoBorderWidth: Dp = 1.dp
+val KenkoHairlineWidth: Dp = 0.8.dp
+
+// Linear-style hairline borders — hierarchy via border, not fill
+val LinearBorder: BorderStroke
+    @Composable
+    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outline)
+
+val LinearBorderStrong: BorderStroke
+    @Composable
+    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outlineVariant)
 
 val PrimaryBorder: BorderStroke
     @Composable
@@ -29,16 +39,16 @@ val PrimaryBorder: BorderStroke
 
 val SecondaryBorder: BorderStroke
     @Composable
-    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.secondary)
+    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outline)
 
 val OutlineBorder: BorderStroke
     @Composable
-    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.secondary)
+    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outline)
 
 val OnSurfaceBorder: BorderStroke
     @Composable
-    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.onSurface)
+    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outline)
 
 val OnSurfaceVariantBorder: BorderStroke
     @Composable
-    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.onSurfaceVariant)
+    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outline)

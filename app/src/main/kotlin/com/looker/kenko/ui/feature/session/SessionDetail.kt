@@ -355,7 +355,7 @@ private fun SetsList(
     if (showImportSheet) {
         ModalBottomSheet(
             onDismissRequest = { showImportSheet = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            containerColor = MaterialTheme.colorScheme.surface,
         ) {
             Text(
                 text = stringResource(R.string.label_import_plan),
@@ -549,10 +549,11 @@ private fun Header(
             ) {
                 Text(
                     text = dayText,
+                    style = MaterialTheme.typography.titleSmall,
                 )
                 Text(
                     text = date,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -697,7 +698,7 @@ fun AddSetSheet(
     ModalBottomSheet(
         sheetState = state,
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         AddSet(
             exercise = exercise,

@@ -77,26 +77,27 @@ fun SetItem(
     title: @Composable () -> Unit,
 ) {
     val isCardio = set.exercise.countType == CountType.MINUTES
-    val containerColor = androidx.compose.ui.graphics.Color.Transparent
-    val containerShape = MaterialTheme.shapes.large
+    val containerColor = MaterialTheme.colorScheme.surface
+    val containerShape = MaterialTheme.shapes.small
     Surface(
         modifier = Modifier
-            .widthIn(240.dp, 420.dp)
+            .widthIn(200.dp, 420.dp)
             .then(modifier),
         shape = containerShape,
         color = containerColor,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(
             modifier = Modifier
-                .heightIn(64.dp)
-                .padding(horizontal = 16.dp),
+                .heightIn(44.dp)
+                .padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CompositionLocalProvider(
                 LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
-                LocalTextStyle provides MaterialTheme.typography.displayMedium.numbers(),
+                LocalTextStyle provides MaterialTheme.typography.labelLarge.numbers(),
             ) {
-                Box(modifier = Modifier.padding(end = 16.dp)) {
+                Box(modifier = Modifier.padding(end = 12.dp)) {
                     title()
                 }
             }
@@ -162,7 +163,7 @@ private fun PerformedItem(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = title,
+            text = title.uppercase(),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -173,7 +174,7 @@ private fun PerformedItem(
                     .focusRequester(focusRequester),
                 value = textValue,
                 onValueChange = { textValue = it },
-                textStyle = MaterialTheme.typography.titleMedium.copy(
+                textStyle = MaterialTheme.typography.labelLarge.copy(
                     color = MaterialTheme.colorScheme.onSurface,
                 ),
                 keyboardOptions = KeyboardOptions(
@@ -194,9 +195,9 @@ private fun PerformedItem(
         } else {
             Text(
                 text = performance,
-                style = MaterialTheme.typography.titleMedium.copy(
+                style = MaterialTheme.typography.labelLarge.copy(
                     fontFamily = bodyFont,
-                    fontWeight = FontWeight.Normal,
+                    fontWeight = FontWeight.Medium,
                 ),
             )
         }
