@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-08-31
+
 ### Added
 - Training-cycle plan system: plans now support a variable number of training days (add/delete days), per-day titles, rest days, and day-by-day cycle advancement; the Home page tracks the current training day with manual override
 - Move-day buttons ("earlier/later") under the training-day tabs in plan edit for reordering training days
@@ -22,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Start training button is hidden when there is no workout scheduled for today, and appears after selecting a training day
 - Bottom navigation bar is now fixed at the bottom edge of the screen instead of floating
 - Editing a plan later (renaming training days, changing/reordering exercises, adding/deleting days) no longer rewrites previously saved workout records — each session keeps a snapshot of its day name
+- Linear-inspired UI redesign: Zinc neutral palette with single accent #5E6AD2, hairline borders, compact 6-14dp radii, tight typography, and dense lists across Home, History, Plan, Exercises and Profile
+- PlanEdit add-exercise button moved from centered FAB to top-right corner
+- WeightLineChart refined to hairline 1.25dp stroke with 0.08 alpha fill and smaller dots
 
 ### Removed
 - RIR (reps in reserve) input during training and the "Show RIR" setting switch (database column removed)
@@ -37,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cardio exercises (e.g. brisk walking) no longer record a bogus weight (previously stored as e.g. 20 kg × 30)
 - Today's workout in the Records list now shows its training-day name, because the day index is stored when the session is created
 - Records cards no longer show a lone bullet separator when the training-day name is unavailable
+- Training day titles no longer lost when switching days rapidly before debounce saves (per-day saving)
+- Weight chart value labels no longer overlap axis ticks (axis-aware placement with background)
 
 ## [1.7.0] - 2026-08-07
 
