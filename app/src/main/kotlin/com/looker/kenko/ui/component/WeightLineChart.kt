@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -55,8 +56,9 @@ fun WeightLineChart(
 
         val leftPad = 34f
         val rightPad = 8f
-        val topPad = 18f
-        val bottomPad = 22f
+        val topPad = 24f
+        val bottomPad = 28f
+        val axisLabelRects = mutableListOf<Rect>()
         val chartWidth = size.width - leftPad - rightPad
         val chartHeight = size.height - topPad - bottomPad
 
@@ -83,9 +85,14 @@ fun WeightLineChart(
                 strokeWidth = 1f,
             )
             val layout = textMeasurer.measure("%.2f".format(value), textStyle)
+            val yLabelLeft = leftPad - layout.size.width - 4f
+            val yLabelTop = y - layout.size.height / 2f
+            axisLabelRects.add(
+                Rect(yLabelLeft, yLabelTop, yLabelLeft + layout.size.width, yLabelTop + layout.size.height)
+            )
             drawText(
                 textLayoutResult = layout,
-                topLeft = Offset(leftPad - layout.size.width - 4f, y - layout.size.height / 2f),
+                topLeft = Offset(yLabelLeft, yLabelTop),
             )
         }
 
@@ -138,18 +145,21 @@ fun WeightLineChart(
                 text = "%02d-%02d".format(weights[index].date.monthNumber, weights[index].date.day),
                 style = textStyle,
             )
+            val xLeft = points[index].x - layout.size.width / 2f
+            val xTop = bottomY + 4f
+            axisLabelRects.add(
+                Rect(xLeft, xTop, xLeft + layout.size.width, xTop + layout.size.height)
+            )
             drawText(
                 textLayoutResult = layout,
-                topLeft = Offset(
-                    x = points[index].x - layout.size.width / 2f,
-                    y = bottomY + 4f,
-                ),
+                topLeft = Offset(x = xLeft, y = xTop),
             )
         }
 
-        // 数据点 — Linear 缩小 2.5/2dp 细点
+        // 数据点 — Linear 缩小 2.5/2dp 细点 + 轴标签避让
         val labelAll = weights.size <= 10
         var lastLabelBottom = Float.NEGATIVE_INFINITY
+        val labelPadding = 2.dp.toPx()
         points.forEachIndexed { index, point ->
             val isEdge = index == 0 || index == points.lastIndex
             val radius = if (isEdge) 2.5.dp.toPx() else 2.dp.toPx()
@@ -165,14 +175,50 @@ fun WeightLineChart(
 
             if (labelAll || isEdge) {
                 val layout = textMeasurer.measure("%.2f".format(weights[index].value), textStyle)
-                val aboveY = point.y - layout.size.height - 4f
-                val overlaps = aboveY < lastLabelBottom + 2f
-                val labelY = if (overlaps) point.y + 4f else aboveY
+                // 水平居中但限制在图表区内
+                val rawLabelX = point.x - layout.size.width / 2f
+                val labelX = rawLabelX.coerceIn(leftPad + 2f, size.width - rightPad - layout.size.width - 2f)
+                val aboveY = point.y - layout.size.height - 6f
+                val belowY = point.y + 6f
+                // 顶部/底部边界检查
+                val clampedAbove = aboveY.coerceAtLeast(topPad - layout.size.height - 2f)
+                val clampedBelow = belowY.coerceAtMost(bottomY - layout.size.height - 4f)
+                val overlapsPrev = clampedAbove < lastLabelBottom + 2f
+                var labelY = if (overlapsPrev) clampedBelow else clampedAbove
+                // 与坐标轴标签碰撞检查：若上方位置与轴标签相交，尝试下方；若均相交则跳过该标签
+                fun intersectsAxis(rect: Rect): Boolean {
+                    return axisLabelRects.any { axis ->
+                        val expanded = Rect(axis.left - 2f, axis.top - 2f, axis.right + 2f, axis.bottom + 2f)
+                        rect.overlaps(expanded)
+                    }
+                }
+                val aboveRect = Rect(labelX - labelPadding, labelY, labelX + layout.size.width + labelPadding, labelY + layout.size.height)
+                val belowRect = Rect(labelX - labelPadding, clampedBelow, labelX + layout.size.width + labelPadding, clampedBelow + layout.size.height)
+                if (intersectsAxis(aboveRect)) {
+                    if (!intersectsAxis(belowRect) && clampedBelow > lastLabelBottom + 2f) {
+                        labelY = clampedBelow
+                    } else {
+                        // 两侧均与轴标签重叠，跳过该数据标签以保证坐标可读
+                        return@forEachIndexed
+                    }
+                }
+                // 若下方仍与前一标签重叠，也跳过
+                if (labelY < lastLabelBottom + 2f && labelY == clampedBelow) {
+                    // 尝试跳过而非重叠
+                    return@forEachIndexed
+                }
+                // 绘制标签背景，避免折线/网格穿透
+                val bgRect = Rect(labelX - labelPadding, labelY - 1f, labelX + layout.size.width + labelPadding, labelY + layout.size.height + 1f)
+                drawRect(
+                    color = surfaceColor,
+                    topLeft = Offset(bgRect.left, bgRect.top),
+                    size = androidx.compose.ui.geometry.Size(bgRect.width, bgRect.height),
+                )
                 drawText(
                     textLayoutResult = layout,
-                    topLeft = Offset(point.x - layout.size.width / 2f, labelY),
+                    topLeft = Offset(labelX, labelY),
                 )
-                lastLabelBottom = if (overlaps) labelY + layout.size.height else aboveY
+                lastLabelBottom = labelY + layout.size.height
             }
         }
     }
