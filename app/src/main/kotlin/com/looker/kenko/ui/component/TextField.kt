@@ -30,17 +30,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 fun kenkoTextDecorator(supportingText: String) = TextFieldDecorator {
-    val outlineColor = MaterialTheme.colorScheme.outline
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = supportingText,
             style = MaterialTheme.typography.labelSmall,
-            color = outlineColor,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         it()
         HorizontalDivider(
             modifier = Modifier.width(48.dp),
-            color = outlineColor,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
         )
     }
 }
