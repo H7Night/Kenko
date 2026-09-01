@@ -16,6 +16,9 @@
 package com.looker.kenko.ui.feature.session
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +31,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
@@ -38,15 +42,20 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import kotlinx.coroutines.delay
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.CountType
@@ -60,10 +69,49 @@ import com.looker.kenko.ui.theme.KenkoIcons
 import kotlinx.datetime.LocalDate
 
 private val incrementButtonModifier = Modifier
+    .width(48.dp)
     .height(48.dp)
     .zIndex(0f)
 
 private val zIndexModifier = Modifier.zIndex(1F)
+
+/**
+ * 长按连发容器：按住 400ms 后每 80ms 重复触发 [onRepeat]，松开取消。
+ * 单次点击仍由内部按钮的 onClick 处理，拖拽手势不受影响。
+ */
+@Composable
+private fun HoldRepeatWrapper(
+    onRepeat: () -> Unit,
+    modifier: Modifier = Modifier,
+    initialDelay: Long = 400L,
+    repeatDelay: Long = 80L,
+    content: @Composable () -> Unit,
+) {
+    var pressed by remember { mutableStateOf(false) }
+    LaunchedEffect(pressed) {
+        if (!pressed) return@LaunchedEffect
+        delay(initialDelay)
+        while (pressed) {
+            onRepeat()
+            delay(repeatDelay)
+        }
+    }
+    Box(
+        modifier = modifier.pointerInput(Unit) {
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                pressed = true
+                try {
+                    waitForUpOrCancellation()
+                } finally {
+                    pressed = false
+                }
+            }
+        },
+    ) {
+        content()
+    }
+}
 
 /**
  * 紧凑的微调步进按钮：不应用 Material 的最小交互尺寸（48dp 宽），
@@ -118,18 +166,22 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
         SwipeableTextField(
             modifier = Modifier.align(CenterHorizontally),
         ) {
-            TextButton(
-                modifier = incrementButtonModifier,
-                onClick = { viewModel.addRep(-10) },
-            ) {
-                Text(text = stringResource(R.string.label_minus_int, 10))
-            }
-            if (!isCardio) {
+            HoldRepeatWrapper(onRepeat = { viewModel.addRep(-10) }) {
                 TextButton(
                     modifier = incrementButtonModifier,
-                    onClick = { viewModel.addRep(-1) },
+                    onClick = { viewModel.addRep(-10) },
                 ) {
-                    Text(text = stringResource(R.string.label_minus_int, 1))
+                    Text(text = stringResource(R.string.label_minus_int, 10))
+                }
+            }
+            if (!isCardio) {
+                HoldRepeatWrapper(onRepeat = { viewModel.addRep(-1) }) {
+                    TextButton(
+                        modifier = incrementButtonModifier,
+                        onClick = { viewModel.addRep(-1) },
+                    ) {
+                        Text(text = stringResource(R.string.label_minus_int, 1))
+                    }
                 }
             }
             val reps = rememberDraggableTextFieldState(viewModel.repsBoundReached)
@@ -141,35 +193,43 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                 modifier = zIndexModifier,
             )
             if (!isCardio) {
-                TextButton(
-                    modifier = incrementButtonModifier,
-                    onClick = { viewModel.addRep(1) },
-                ) {
-                    Text(text = stringResource(R.string.label_plus_int, 1))
+                HoldRepeatWrapper(onRepeat = { viewModel.addRep(1) }) {
+                    TextButton(
+                        modifier = incrementButtonModifier,
+                        onClick = { viewModel.addRep(1) },
+                    ) {
+                        Text(text = stringResource(R.string.label_plus_int, 1))
+                    }
                 }
             }
-            TextButton(
-                modifier = incrementButtonModifier,
-                onClick = { viewModel.addRep(10) },
-            ) {
-                Text(text = stringResource(R.string.label_plus_int, 10))
+            HoldRepeatWrapper(onRepeat = { viewModel.addRep(10) }) {
+                TextButton(
+                    modifier = incrementButtonModifier,
+                    onClick = { viewModel.addRep(10) },
+                ) {
+                    Text(text = stringResource(R.string.label_plus_int, 10))
+                }
             }
-            TextButton(
-                modifier = incrementButtonModifier,
-                onClick = { viewModel.addRep(20) },
-            ) {
-                Text(text = stringResource(R.string.label_plus_int, 20))
+            HoldRepeatWrapper(onRepeat = { viewModel.addRep(20) }) {
+                TextButton(
+                    modifier = incrementButtonModifier,
+                    onClick = { viewModel.addRep(20) },
+                ) {
+                    Text(text = stringResource(R.string.label_plus_int, 20))
+                }
             }
         }
         Spacer(modifier = Modifier.height(24.dp))
         SwipeableTextField(
             modifier = Modifier.align(CenterHorizontally),
         ) {
-            TextButton(
-                modifier = incrementButtonModifier,
-                onClick = { viewModel.addSetCount(-1) },
-            ) {
-                Text(text = stringResource(R.string.label_minus_int, 1))
+            HoldRepeatWrapper(onRepeat = { viewModel.addSetCount(-1) }) {
+                TextButton(
+                    modifier = incrementButtonModifier,
+                    onClick = { viewModel.addSetCount(-1) },
+                ) {
+                    Text(text = stringResource(R.string.label_minus_int, 1))
+                }
             }
             val sets = rememberDraggableTextFieldState(viewModel.setsBoundReached)
             DraggableTextField(
@@ -179,17 +239,21 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                 inputTransformation = IntTransformation,
                 modifier = zIndexModifier,
             )
-            TextButton(
-                modifier = incrementButtonModifier,
-                onClick = { viewModel.addSetCount(1) },
-            ) {
-                Text(text = stringResource(R.string.label_plus_int, 1))
+            HoldRepeatWrapper(onRepeat = { viewModel.addSetCount(1) }) {
+                TextButton(
+                    modifier = incrementButtonModifier,
+                    onClick = { viewModel.addSetCount(1) },
+                ) {
+                    Text(text = stringResource(R.string.label_plus_int, 1))
+                }
             }
-            TextButton(
-                modifier = incrementButtonModifier,
-                onClick = { viewModel.addSetCount(2) },
-            ) {
-                Text(text = stringResource(R.string.label_plus_int, 2))
+            HoldRepeatWrapper(onRepeat = { viewModel.addSetCount(2) }) {
+                TextButton(
+                    modifier = incrementButtonModifier,
+                    onClick = { viewModel.addSetCount(2) },
+                ) {
+                    Text(text = stringResource(R.string.label_plus_int, 2))
+                }
             }
         }
         if (!isCardio) {
@@ -217,22 +281,27 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                         text = stringResource(R.string.label_bodyweight_display),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.width(48.dp).padding(horizontal = 4.dp),
                     )
                 } else {
                     if (!viewModel.isWeightZero) {
-                        TextButton(
-                            modifier = incrementButtonModifier,
-                            onClick = { viewModel.addWeight(-1F) },
-                            contentPadding = PaddingValues(horizontal = 4.dp),
-                        ) {
-                            Text(text = stringResource(R.string.label_minus_int, 1))
+                        HoldRepeatWrapper(onRepeat = { viewModel.addWeight(-1F) }) {
+                            TextButton(
+                                modifier = incrementButtonModifier,
+                                onClick = { viewModel.addWeight(-1F) },
+                                contentPadding = PaddingValues(horizontal = 4.dp),
+                            ) {
+                                Text(text = stringResource(R.string.label_minus_int, 1))
+                            }
                         }
                     }
-                    CompactStepButton(
-                        text = stringResource(R.string.label_minus_int, 0.5F),
-                        onClick = { viewModel.addWeight(-0.5F) },
-                    )
+                    HoldRepeatWrapper(onRepeat = { viewModel.addWeight(-0.5F) }) {
+                        CompactStepButton(
+                            text = stringResource(R.string.label_minus_int, 0.5F),
+                            onClick = { viewModel.addWeight(-0.5F) },
+                            modifier = Modifier.width(48.dp),
+                        )
+                    }
                     val weights = rememberDraggableTextFieldState(viewModel.weightsBoundReached)
                     DraggableTextField(
                         dragState = weights,
@@ -244,23 +313,30 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                         ),
                     )
-                    CompactStepButton(
-                        text = stringResource(R.string.label_plus_int, 0.5F),
-                        onClick = { viewModel.addWeight(0.5F) },
-                    )
-                    TextButton(
-                        modifier = incrementButtonModifier,
-                        onClick = { viewModel.addWeight(1F) },
-                        contentPadding = PaddingValues(horizontal = 4.dp),
-                    ) {
-                        Text(text = stringResource(R.string.label_plus_int, 1))
+                    HoldRepeatWrapper(onRepeat = { viewModel.addWeight(0.5F) }) {
+                        CompactStepButton(
+                            text = stringResource(R.string.label_plus_int, 0.5F),
+                            onClick = { viewModel.addWeight(0.5F) },
+                            modifier = Modifier.width(48.dp),
+                        )
                     }
-                    TextButton(
-                        modifier = incrementButtonModifier,
-                        onClick = { viewModel.addWeight(5F) },
-                        contentPadding = PaddingValues(horizontal = 4.dp),
-                    ) {
-                        Text(text = stringResource(R.string.label_plus_int, 5))
+                    HoldRepeatWrapper(onRepeat = { viewModel.addWeight(1F) }) {
+                        TextButton(
+                            modifier = incrementButtonModifier,
+                            onClick = { viewModel.addWeight(1F) },
+                            contentPadding = PaddingValues(horizontal = 4.dp),
+                        ) {
+                            Text(text = stringResource(R.string.label_plus_int, 1))
+                        }
+                    }
+                    HoldRepeatWrapper(onRepeat = { viewModel.addWeight(5F) }) {
+                        TextButton(
+                            modifier = incrementButtonModifier,
+                            onClick = { viewModel.addWeight(5F) },
+                            contentPadding = PaddingValues(horizontal = 4.dp),
+                        ) {
+                            Text(text = stringResource(R.string.label_plus_int, 5))
+                        }
                     }
                 }
             }
@@ -308,12 +384,14 @@ private fun SwipeableTextField(
     content: @Composable RowScope.() -> Unit,
 ) {
     Surface(
-        modifier = modifier.requiredHeight(44.dp),
+        modifier = modifier.fillMaxWidth().requiredHeight(44.dp),
         shape = MaterialTheme.shapes.small,
         color = MaterialTheme.colorScheme.surface,
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
             content = content,
         )
