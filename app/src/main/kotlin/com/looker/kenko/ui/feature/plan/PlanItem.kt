@@ -66,11 +66,15 @@ fun PlanItem(
         if (it) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
         else MaterialTheme.colorScheme.outlineVariant
     }
+    val containerColor by transition.animateColor(label = "container") {
+        if (it) MaterialTheme.colorScheme.primaryContainer
+        else MaterialTheme.colorScheme.surface
+    }
 
     Surface(
         modifier = modifier,
         onClick = onClick,
-        color = MaterialTheme.colorScheme.surface,
+        color = containerColor,
         contentColor = MaterialTheme.colorScheme.onSurface,
         shape = MaterialTheme.shapes.medium,
         border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
@@ -119,14 +123,6 @@ fun PlanItem(
                         )
                     }
                 }
-            }
-            if (plan.isActive) {
-                Text(
-                    text = stringResource(R.string.label_selected),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = 2.dp),
-                )
             }
             val stats = remember(plan) { plan.stat }
             Text(
