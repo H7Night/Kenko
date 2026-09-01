@@ -313,7 +313,7 @@ private fun ExercisesList(
                 onClick = { onExerciseClick(exerciseId) },
                 shape = MaterialTheme.shapes.medium,
                 color = MaterialTheme.colorScheme.surface,
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                border = KenkoBorder,
             ) {
                 Row(
                     modifier = Modifier
@@ -337,7 +337,7 @@ private fun ExercisesList(
                                     Surface(
                                         shape = MaterialTheme.shapes.extraSmall,
                                         color = MaterialTheme.colorScheme.surface,
-                                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                        border = KenkoBorder,
                                     ) {
                                         Text(
                                             text = label,

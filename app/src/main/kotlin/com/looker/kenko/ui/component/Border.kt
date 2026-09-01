@@ -25,6 +25,7 @@ val KenkoBorderWidth: Dp = 1.dp
 val KenkoHairlineWidth: Dp = 0.8.dp
 
 // Linear-style hairline borders — hierarchy via border, not fill
+// LinearBorderStrong intentionally uses outlineVariant (subtle grey) for card/tag borders.
 val LinearBorder: BorderStroke
     @Composable
     get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outline)
@@ -33,7 +34,9 @@ val LinearBorderStrong: BorderStroke
     @Composable
     get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outlineVariant)
 
-// Aliases required by Task 2 spec — keep in sync with Linear* definitions
+// KenkoBorder aliases — intentionally different from Linear*:
+// - KenkoBorder (= outline) for unselected FilterChip/card default
+// - KenkoBorderStrong (= primary) for selected FilterChip/active state (not card grey)
 val KenkoBorder: BorderStroke
     @Composable
     get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outline)
