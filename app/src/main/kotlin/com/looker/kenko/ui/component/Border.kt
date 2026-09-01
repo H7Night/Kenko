@@ -24,14 +24,25 @@ import androidx.compose.ui.unit.dp
 val KenkoBorderWidth: Dp = 1.dp
 val KenkoHairlineWidth: Dp = 0.8.dp
 
-// Linear-style hairline borders — hierarchy via border, not fill
-val LinearBorder: BorderStroke
+// 统一边框体系：KenkoBorder(常规) / KenkoBorderStrong(强调)
+// 常规 = outlineVariant(可见但克制, 浅色 1.47 / 深色 1.46) , 强调 = outline(更深, 1.89/1.69)
+// 全部卡片/分割线统一使用此体系，避免内联 outline/outlineVariant 混用导致的视觉不统一
+val KenkoBorder: BorderStroke
+    @Composable
+    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outlineVariant)
+
+val KenkoBorderStrong: BorderStroke
     @Composable
     get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outline)
 
+// 兼容旧命名：统一收敛到 KenkoBorder 体系
+val LinearBorder: BorderStroke
+    @Composable
+    get() = KenkoBorder
+
 val LinearBorderStrong: BorderStroke
     @Composable
-    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outlineVariant)
+    get() = KenkoBorderStrong
 
 val PrimaryBorder: BorderStroke
     @Composable
@@ -39,16 +50,16 @@ val PrimaryBorder: BorderStroke
 
 val SecondaryBorder: BorderStroke
     @Composable
-    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outline)
+    get() = KenkoBorder
 
 val OutlineBorder: BorderStroke
     @Composable
-    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outline)
+    get() = KenkoBorder
 
 val OnSurfaceBorder: BorderStroke
     @Composable
-    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outline)
+    get() = KenkoBorder
 
 val OnSurfaceVariantBorder: BorderStroke
     @Composable
-    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outline)
+    get() = KenkoBorder
