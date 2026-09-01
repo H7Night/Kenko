@@ -16,6 +16,8 @@
 package com.looker.kenko.ui.feature.plan
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,26 +33,28 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
-import androidx.compose.foundation.clickable
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,6 +70,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.ui.component.KenkoBorder
+import com.looker.kenko.ui.component.KenkoBorderStrong
 import com.looker.kenko.ui.component.disableScrollConnection
 import com.looker.kenko.ui.feature.plan.components.ExerciseItem
 import com.looker.kenko.ui.theme.KenkoIcons
@@ -119,7 +125,75 @@ fun SelectExercise(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Filter selectors — tap to open modal picker
+        // Task 2: Two-level FilterChip rows — reuse Tag grouping, KenkoBorder/KenkoBorderStrong
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 12.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            FilterChip(
+                selected = selectedParentId == null,
+                onClick = { viewModel.setParentFilter(null) },
+                label = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    selectedLabelColor = MaterialTheme.colorScheme.primary,
+                ),
+                border = if (selectedParentId == null) KenkoBorderStrong else KenkoBorder,
+            )
+            parentTags.forEach { parent ->
+                val isSelected = parent.id == selectedParentId
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { viewModel.setParentFilter(parent.id) },
+                    label = { Text(parent.name) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                        selectedLabelColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    border = if (isSelected) KenkoBorderStrong else KenkoBorder,
+                )
+            }
+        }
+        if (selectedParentId != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                FilterChip(
+                    selected = selectedChildId == null,
+                    onClick = { viewModel.setChildFilter(null) },
+                    label = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                        selectedLabelColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    border = if (selectedChildId == null) KenkoBorderStrong else KenkoBorder,
+                )
+                children.forEach { child ->
+                    val isSelected = child.id == selectedChildId
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = {
+                            viewModel.setChildFilter(if (isSelected) null else child.id)
+                        },
+                        label = { Text(child.name) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            selectedLabelColor = MaterialTheme.colorScheme.primary,
+                        ),
+                        border = if (isSelected) KenkoBorderStrong else KenkoBorder,
+                    )
+                }
+            }
+        }
+
+        // Filter selectors — tap to open modal picker (kept for accessibility fallback)
         var showParentSheet by remember { mutableStateOf(false) }
         var showChildSheet by remember { mutableStateOf(false) }
 
@@ -349,12 +423,16 @@ fun SelectExercise(
         ) {
             when (searchResult) {
                 SearchResult.Loading -> ContainedLoadingIndicator()
-                SearchResult.NotFound -> SearchNotFound(
-                    onAddNewExercise = {
-                        focusManager.clearFocus()
-                        onRequestNewExercise(viewModel.searchQuery.value)
-                    }
-                )
+                SearchResult.NotFound -> {
+                    val query by viewModel.searchQuery.collectAsStateWithLifecycle()
+                    SearchNotFound(
+                        searchQuery = query,
+                        onAddNewExercise = {
+                            focusManager.clearFocus()
+                            onRequestNewExercise(query)
+                        },
+                    )
+                }
 
                 is SearchResult.Success -> SearchResult(
                     searchResult = searchResult as SearchResult.Success,
@@ -385,7 +463,11 @@ private fun SearchResult(
 }
 
 @Composable
-private fun SearchNotFound(onAddNewExercise: () -> Unit, modifier: Modifier = Modifier) {
+private fun SearchNotFound(
+    onAddNewExercise: () -> Unit,
+    modifier: Modifier = Modifier,
+    searchQuery: String? = null,
+) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
@@ -412,7 +494,12 @@ private fun SearchNotFound(onAddNewExercise: () -> Unit, modifier: Modifier = Mo
             ) {
                 Icon(painter = KenkoIcons.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(text = stringResource(R.string.label_create_exercise))
+                val query = searchQuery?.trim().orEmpty()
+                if (query.isNotBlank()) {
+                    Text(text = stringResource(R.string.label_create_exercise_name, query))
+                } else {
+                    Text(text = stringResource(R.string.label_create_exercise))
+                }
             }
         }
     }

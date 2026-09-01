@@ -33,6 +33,15 @@ val LinearBorderStrong: BorderStroke
     @Composable
     get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outlineVariant)
 
+// Aliases required by Task 2 spec — keep in sync with Linear* definitions
+val KenkoBorder: BorderStroke
+    @Composable
+    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.outline)
+
+val KenkoBorderStrong: BorderStroke
+    @Composable
+    get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.primary)
+
 val PrimaryBorder: BorderStroke
     @Composable
     get() = BorderStroke(KenkoBorderWidth, MaterialTheme.colorScheme.primary)

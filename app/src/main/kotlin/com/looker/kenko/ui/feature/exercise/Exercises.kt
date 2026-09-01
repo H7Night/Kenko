@@ -15,6 +15,7 @@
 
 package com.looker.kenko.ui.feature.exercise
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -27,13 +28,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.FitnessCenter
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -63,9 +70,10 @@ import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.ExercisesPreviewParameter
 import com.looker.kenko.ui.component.BackButton
-import com.looker.kenko.ui.component.BodyPartMuscleFilter
 import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.component.ErrorSnackbar
+import com.looker.kenko.ui.component.KenkoBorder
+import com.looker.kenko.ui.component.KenkoBorderStrong
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.SecondaryKenkoButton
 import com.looker.kenko.ui.component.ConfirmDialog
@@ -159,25 +167,105 @@ private fun Exercises(
                 )
                 HorizontalDivider(thickness = KenkoBorderWidth)
 
-                // Two-level body part + muscle filter (shared component)
-                BodyPartMuscleFilter(
-                    parentTags = parentTags,
-                    allTags = allTags,
-                    selectedParentId = selectedParent,
-                    selectedChildId = selectedChild,
-                    onParentSelect = onSelectParent,
-                    onChildSelect = onSelectChild,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                )
+                // Task 2: Two-level FilterChip rows — reuse Tag grouping, KenkoBorder/KenkoBorderStrong
+                val childTags = remember(allTags, selectedParent) {
+                    if (selectedParent == null) emptyList()
+                    else allTags.filter { it.parentId == selectedParent }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    FilterChip(
+                        selected = selectedParent == null,
+                        onClick = { onSelectParent(null) },
+                        label = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            selectedLabelColor = MaterialTheme.colorScheme.primary,
+                        ),
+                        border = if (selectedParent == null) KenkoBorderStrong else KenkoBorder,
+                    )
+                    parentTags.forEach { parent ->
+                        val isSelected = parent.id == selectedParent
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { onSelectParent(parent.id) },
+                            label = { Text(parent.name) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                selectedLabelColor = MaterialTheme.colorScheme.primary,
+                            ),
+                            border = if (isSelected) KenkoBorderStrong else KenkoBorder,
+                        )
+                    }
+                }
+                if (selectedParent != null) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = 12.dp, vertical = 2.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        FilterChip(
+                            selected = selectedChild == null,
+                            onClick = { onSelectChild(null) },
+                            label = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                selectedLabelColor = MaterialTheme.colorScheme.primary,
+                            ),
+                            border = if (selectedChild == null) KenkoBorderStrong else KenkoBorder,
+                        )
+                        childTags.forEach { muscle ->
+                            val isSelected = muscle.id == selectedChild
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { onSelectChild(muscle.id) },
+                                label = { Text(muscle.name) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                    selectedLabelColor = MaterialTheme.colorScheme.primary,
+                                ),
+                                border = if (isSelected) KenkoBorderStrong else KenkoBorder,
+                            )
+                        }
+                    }
+                }
             }
         },
     ) { innerPadding ->
         if (state.isEmpty()) {
-            EmptyState(
-                icon = Icons.Rounded.FitnessCenter,
-                text = stringResource(R.string.label_no_exercise_today),
-                modifier = Modifier.padding(innerPadding + PaddingValues(bottom = 80.dp)),
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding + PaddingValues(bottom = 80.dp))
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                EmptyState(
+                    icon = Icons.Rounded.FitnessCenter,
+                    text = stringResource(R.string.label_no_exercise_today),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onCreateClick,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                ) {
+                    Icon(painter = KenkoIcons.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.label_create_exercise))
+                }
+            }
         } else {
             ExercisesList(
                 exercises = state,
