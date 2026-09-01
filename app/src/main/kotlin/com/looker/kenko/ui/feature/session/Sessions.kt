@@ -318,18 +318,27 @@ private fun Sessions(
                         }
                     }
                 }
-                items(
-                    items = filteredSessions,
-                    key = { it.id ?: it.hashCode() },
-                ) { session ->
-                    SessionCard(
-                        modifier = Modifier.animateItem(),
-                        session = session,
-                        onClick = { onSessionClick(session.date) },
-                        dayTitles = state.dayTitles,
-                        planDayExerciseNames = state.planDayExerciseNames,
-                        onDelete = { sessionToDelete = session },
-                    )
+                if (filteredSessions.isEmpty()) {
+                    item {
+                        EmptyState(
+                            icon = Icons.Rounded.History,
+                            text = stringResource(R.string.label_no_sessions),
+                        )
+                    }
+                } else {
+                    items(
+                        items = filteredSessions,
+                        key = { it.id ?: it.hashCode() },
+                    ) { session ->
+                        SessionCard(
+                            modifier = Modifier.animateItem(),
+                            session = session,
+                            onClick = { onSessionClick(session.date) },
+                            dayTitles = state.dayTitles,
+                            planDayExerciseNames = state.planDayExerciseNames,
+                            onDelete = { sessionToDelete = session },
+                        )
+                    }
                 }
             }
         }
@@ -530,13 +539,13 @@ fun SessionCard(
             }
             Text(text = string)
 
-            // Duration — mono, subtle
+            // Duration — mono, subtle (labelSmall + onSurfaceVariant per三档规范)
             if (session.durationSeconds != null && session.durationSeconds > 0) {
                 val durationText = TimerService.formatTime(session.durationSeconds)
                 Text(
                     text = durationText,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -545,7 +554,7 @@ fun SessionCard(
             }
             Text(
                 text = exerciseNames,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
             )

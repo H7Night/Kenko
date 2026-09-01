@@ -86,7 +86,7 @@ fun CurrentPlanCard(
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = stringResource(R.string.label_current_plan),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                 )
                 Spacer(modifier = Modifier.weight(1F))
                 FilledIconButton(onClick = onPlanClick) {
@@ -108,11 +108,11 @@ fun CurrentPlanCard(
                 ) {
                     Text(
                         text = name,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     CompositionLocalProvider(
-                        LocalTextStyle provides MaterialTheme.typography.bodyLarge,
+                        LocalTextStyle provides MaterialTheme.typography.labelSmall,
                         LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
                     ) {
                         content()
@@ -148,7 +148,7 @@ fun SelectPlanCard(
         ) {
             Text(
                 text = stringResource(R.string.label_select_plan),
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.paddingFromBaseline(bottom = 16.dp)
             )
 

@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -78,43 +79,53 @@ fun WeightHistorySheet(
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(16.dp)
             )
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(weights.reversed()) { weight ->
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceContainer,
-                        shape = MaterialTheme.shapes.medium,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 4.dp)
-                            .clickable { onEdit(weight) }
-                    ) {
-                        Row(
+            if (weights.isEmpty()) {
+                com.looker.kenko.ui.component.EmptyState(
+                    icon = androidx.compose.material.icons.Icons.Rounded.History,
+                    text = stringResource(R.string.label_no_weight_in_period),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(weights.reversed()) { weight ->
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceContainer,
+                            shape = MaterialTheme.shapes.medium,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 16.dp, end = 4.dp, top = 16.dp, bottom = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                                .clickable { onEdit(weight) }
                         ) {
-                            Text(
-                                text = formatDate(weight.date, DateFormat.YearMonthDay),
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Spacer(modifier = Modifier.weight(1f))
-                            Text(
-                                text = "${weight.value} ${stringResource(R.string.label_weight_unit)}",
-                                style = MaterialTheme.typography.titleMedium.numbers()
-                            )
-                            IconButton(
-                                onClick = { weightToDelete = weight.id },
-                                modifier = Modifier.size(32.dp),
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 16.dp, end = 4.dp, top = 16.dp, bottom = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Delete,
-                                    contentDescription = stringResource(R.string.label_delete),
-                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                                    modifier = Modifier.size(18.dp),
+                                Text(
+                                    text = formatDate(weight.date, DateFormat.YearMonthDay),
+                                    style = MaterialTheme.typography.bodyLarge
                                 )
+                                Spacer(modifier = Modifier.weight(1f))
+                                Text(
+                                    text = "${weight.value} ${stringResource(R.string.label_weight_unit)}",
+                                    style = MaterialTheme.typography.titleMedium.numbers()
+                                )
+                                IconButton(
+                                    onClick = { weightToDelete = weight.id },
+                                    modifier = Modifier.size(32.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Delete,
+                                        contentDescription = stringResource(R.string.label_delete),
+                                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                }
                             }
                         }
                     }

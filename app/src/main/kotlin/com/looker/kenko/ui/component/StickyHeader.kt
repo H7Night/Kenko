@@ -89,7 +89,7 @@ fun StickyHeader(
                 Icon(
                     modifier = Modifier.rotate(if (isCollapsed) 180F else 90F),
                     painter = KenkoIcons.KeyboardArrowRight,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     contentDescription = null,
                 )
             }

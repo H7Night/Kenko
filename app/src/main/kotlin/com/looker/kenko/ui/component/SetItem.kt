@@ -49,7 +49,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -63,7 +62,6 @@ import com.looker.kenko.domain.model.ExercisesPreviewParameter
 import com.looker.kenko.domain.model.Set
 import com.looker.kenko.domain.model.repDurationStringRes
 import com.looker.kenko.ui.theme.KenkoTheme
-import com.looker.kenko.ui.theme.bodyFont
 import com.looker.kenko.ui.theme.numbers
 
 @Composable
@@ -195,10 +193,7 @@ private fun PerformedItem(
         } else {
             Text(
                 text = performance,
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontFamily = bodyFont,
-                    fontWeight = FontWeight.Medium,
-                ),
+                style = MaterialTheme.typography.titleMedium.numbers(),
             )
         }
     }
