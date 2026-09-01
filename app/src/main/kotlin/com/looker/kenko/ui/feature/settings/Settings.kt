@@ -233,7 +233,7 @@ private fun SettingsSelectionRow(
         Icon(
             imageVector = Icons.Default.UnfoldMore,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
             modifier = Modifier.size(16.dp),
         )
     }
@@ -282,7 +282,7 @@ private fun SettingsNavRow(
         Text(
             text = ">",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
         )
     }
 }

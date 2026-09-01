@@ -174,7 +174,7 @@ private fun DayTab(
                     text = label,
                     style = MaterialTheme.typography.labelSmall,
                     color = when {
-                        isRest -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        isRest -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
                         selected -> MaterialTheme.colorScheme.primary
                         else -> MaterialTheme.colorScheme.onSurfaceVariant
                     },
@@ -184,7 +184,7 @@ private fun DayTab(
                     Text(
                         stringResource(R.string.label_rest_short),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
                     )
                 }
             }
