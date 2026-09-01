@@ -15,14 +15,14 @@
 
 package com.looker.kenko.ui.feature.session
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalIconButton
@@ -46,6 +47,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -53,6 +55,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.delay
@@ -78,7 +84,7 @@ private val zIndexModifier = Modifier.zIndex(1F)
 /**
  * 长按连发容器：按住 400ms 后每 80ms 重复触发 [onRepeat]，松开取消。
  * 短按通过 wrapper 的 [onClick] 单次触发；长按（>400ms）抑制抬起时的额外 click。
- * 使用 [down.consume] 修复 M1 unused 警告与 I1 额外 +1 问题。
+ * 使用 [rememberUpdatedState] 稳定跨协程 [heldLong] 读取，避免 stale；提供 semantics/indication 恢复 TalkBack 与波纹。
  */
 @Composable
 private fun HoldRepeatWrapper(
@@ -91,6 +97,10 @@ private fun HoldRepeatWrapper(
 ) {
     var pressed by remember { mutableStateOf(false) }
     var heldLong by remember { mutableStateOf(false) }
+    val currentHeldLong by rememberUpdatedState(heldLong)
+    val currentOnClick by rememberUpdatedState(onClick)
+    val currentOnRepeat by rememberUpdatedState(onRepeat)
+    val interactionSource = remember { MutableInteractionSource() }
     LaunchedEffect(pressed) {
         if (!pressed) return@LaunchedEffect
         heldLong = false
@@ -98,32 +108,41 @@ private fun HoldRepeatWrapper(
         if (!pressed) return@LaunchedEffect
         heldLong = true
         while (pressed) {
-            onRepeat()
+            currentOnRepeat()
             delay(repeatDelay)
         }
     }
     Box(
-        modifier = modifier.pointerInput(Unit) {
-            awaitEachGesture {
-                val down = awaitFirstDown(requireUnconsumed = false)
-                down.consume()
-                pressed = true
-                val up = waitForUpOrCancellation()
-                val wasHeldLong = heldLong
-                pressed = false
-                if (up != null && !wasHeldLong) {
-                    onClick()
+        modifier = modifier
+            .semantics(mergeDescendants = true) {
+                role = Role.Button
+                onClick {
+                    currentOnClick()
+                    true
                 }
             }
-        },
+            .indication(interactionSource, LocalIndication.current)
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    down.consume()
+                    pressed = true
+                    val up = waitForUpOrCancellation()
+                    val wasHeldLong = currentHeldLong
+                    pressed = false
+                    if (up != null && !wasHeldLong) {
+                        currentOnClick()
+                    }
+                }
+            },
     ) {
         content()
     }
 }
 
 /**
- * 紧凑的微调步进按钮的纯展示：不含 clickable，click 由外层 HoldRepeatWrapper 统一通过
- * pointerInput + consume 承担，以避免 I1 长按额外 +1。
+ * 紧凑的微调步进按钮的纯展示：不含 clickable/semantics，click 与无障碍由外层
+ * HoldRepeatWrapper 统一通过 pointerInput + semantics + indication 承担，以避免 I1 长按额外 +1 并恢复 TalkBack。
  */
 @Composable
 private fun CompactStepButton(

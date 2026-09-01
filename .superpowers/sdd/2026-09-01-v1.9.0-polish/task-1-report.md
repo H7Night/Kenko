@@ -48,3 +48,34 @@
 
 **Self-Review:**
 - 无 TODO；M1 已通过 `down.consume()` 消除告警；I1 通过 `heldLong` 抑制与 `consume` 双重保障修复。
+
+---
+
+## Fix Round 2 — 2026-09-02 (Accessibility + heldLong + unused imports)
+
+**Review Findings Fixed:**
+- Important — Accessibility/indication loss at `AddSet.kt:124-186`：`StepButtonContent`/`CompactStepButton` 为 `Box+Text` 纯展示，`HoldRepeatWrapper` 仅 `pointerInput` 无 `semantics`/`indication`，丢失 `Role.Button`、ripple 与 TalkBack。已修复。
+- Important — Fragile cross-coroutine state at `AddSet.kt:90-136`：`heldLong` 为 `mutableStateOf` 在 `LaunchedEffect` 写入、`pointerInput` 读取，存在 stale 快照风险。已修复为 `rememberUpdatedState` 稳定读取。
+- Minor — Unused imports：`clickable`/`PaddingValues` 在重构后未使用已移除；新增 `indication`/`semantics`/`rememberUpdatedState` 所需导入。
+
+**Approach (per review suggestion):**
+- `HoldRepeatWrapper` 新增 `Modifier.semantics(mergeDescendants=true){ role=Role.Button; onClick{ currentOnClick(); true } }` 使 TalkBack 将按钮播报为 Button，双击触发 `onClick`；新增 `Modifier.indication(interactionSource, LocalIndication.current)` 恢复波纹（`interactionSource = remember{ MutableInteractionSource() }`）。
+- `StepButtonContent`/`CompactStepButton` 保持纯展示，注释更新为“click 与无障碍由外层统一承担”。
+- 跨协程 stale 修复：`var heldLong` 保留为状态但读取端改为 `val currentHeldLong by rememberUpdatedState(heldLong)`；`pointerInput` 内 `val wasHeldLong = currentHeldLong`，同时 `onClick`/`onRepeat` 均经 `rememberUpdatedState` 稳定（`currentOnClick`/`currentOnRepeat`），`LaunchedEffect` 内改用 `currentOnRepeat()`，避免重启 `pointerInput` 仍读旧闭包。
+- 清理未使用 `import clickable`、`import PaddingValues`；`LocalIndication` 改为 `androidx.compose.foundation.LocalIndication`（BOM 2025.11.00），新增 `onClick` semantics 导入。
+
+**Changes:**
+- `app/src/main/kotlin/com/looker/kenko/ui/feature/session/AddSet.kt:18-64` 导入清理与新增：移除 `clickable`/`PaddingValues`，新增 `indication`/`MutableInteractionSource`/`LocalIndication`/`onClick`/`role`/`semantics`/`rememberUpdatedState`/`LaunchedEffect`。
+- `app/src/main/kotlin/com/looker/kenko/ui/feature/session/AddSet.kt:84-140` `HoldRepeatWrapper` 重构：`semantics+indication` 置于 `pointerInput` 之前，`LaunchedEffect` 改用 `currentOnRepeat`，`pointerInput` 读取 `currentHeldLong/currentOnClick`。
+- `app/src/main/kotlin/com/looker/kenko/ui/feature/session/AddSet.kt:142-144` 更新 `CompactStepButton`/`StepButtonContent` 注释说明无障碍由外层统一承担。
+
+**Covering Tests / Manual Verification:**
+- `./gradlew assembleDebug` — BUILD SUCCESSFUL (15s, 43 tasks, 6 executed) — 编译通过，无 unused 导入告警，拖拽主手势保留。
+- 手动验证逻辑不变：短按 `<400ms` 播报 Button 并单次 `onClick`；长按 `>400ms` 每 80ms `onRepeat`，松开 `wasHeldLong=true` 抑制额外 `onClick`；`currentHeldLong` 经 `rememberUpdatedState` 保证 `pointerInput` 长驻协程读取最新值，无 stale。
+- 未新增 DB migration；`AddSetViewModel` 接口未改；Material 3 Expressive 参数不变。
+
+**Commits:**
+- fix(session): restore a11y semantics for AddSet hold buttons and stabilize heldLong state
+
+**Self-Review:**
+- 无 TODO；TalkBack 通过 `semantics{ role=Button; onClick }` 恢复；`indication` 已挂载；`heldLong` 跨协程读经 `rememberUpdatedState` 稳定，无直接跨协程 `mutableStateOf` 裸读。
