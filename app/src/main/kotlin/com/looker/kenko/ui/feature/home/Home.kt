@@ -240,7 +240,7 @@ fun Home(
                     Text(
                         text = stringResource(R.string.home_text),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 24.dp, bottom = 16.dp),
@@ -416,7 +416,7 @@ private fun PlanInfoCard(
                 Text(
                     text = stringResource(R.string.label_day_progress, dayIndex ?: 1, dayCount),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 val trainingTitle = dayTitle ?: stringResource(R.string.label_day_n, dayIndex ?: 1)

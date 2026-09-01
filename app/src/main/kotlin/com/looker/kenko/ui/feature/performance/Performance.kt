@@ -92,8 +92,8 @@ private fun PerformancePlot(
     plot: Plot,
     modifier: Modifier = Modifier,
 ) {
-    val axesColor = MaterialTheme.colorScheme.outline
-    val gridColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.3F)
+    val axesColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+    val gridColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.18f)
     Canvas(modifier) {
         val points = plot.mapXY(size)
         drawGrid(gridColor)
