@@ -74,3 +74,26 @@
 
 - `PlanCards` H标题收敛至 `titleSmall/titleMedium/titleLarge`，若设计需保留 `headlineLarge` 视觉冲击，可回调 `headlineLarge` 但需同步更新 `Type.kt` 字阶比例。
 - `WeightHistorySheet` EmptyState 使用 `History` 图标与 Sessions 统一，语义稍弱于 `MonitorWeight`，可按 UX 反馈替换图标不影响结构。
+
+---
+
+## ShouldFix 修正 (2026-09-01)
+
+**来源:** `.superpowers/sdd/2026-09-01-v1.9.0-polish/review-95f0efd..96272f5.diff` Should-Fix #1-#3，#4 DeletableSetItem 保持 deferred
+
+- [x] **#1 `Sessions.kt:322` LazyColumn EmptyState 无限高度** — `item { EmptyState(...) }` 默认 `fillMaxSize` 在 LazyColumn 中导致无限高度。已改为 `Modifier.fillMaxWidth().padding(vertical = 24.dp)`，并同步修正 `EmptyState.kt:39` 为条件 `if (modifier == Modifier) Modifier.fillMaxSize() else modifier`，使自定义 modifier 不再被强制 `fillMaxSize` 覆盖，避免 LazyColumn 测量异常。
+- [x] **#2 `SetItem.kt:96,175` 字阶不一致** — `CompositionLocalProvider LocalTextStyle` 与 `BasicTextField textStyle` 均为 `labelLarge`，与展示态 `titleMedium.numbers()` 不一致。已统一为 `titleMedium.numbers()`：`96: labelLarge.numbers() → titleMedium.numbers()`；`175: labelLarge.copy(...) → titleMedium.numbers().copy(color=onSurface)`，与 `PerformedItem` 展示态保持三档数值档一致。
+- [x] **#3 `WeightHistorySheet.kt:111` 辅助字阶** — 日期 `Text` 使用 `bodyLarge` 不符合三档辅助规范。已改为 `style = labelSmall, color = onSurfaceVariant`，与 `Sessions.kt` `exerciseNames`/`duration` 辅助档一致。
+- [ ] **#4 `DeletableSetItem` 保持 deferred** — 按指示保留现状，不在本轮修改。
+
+**验证:**
+
+- `./gradlew assembleDebug` — BUILD SUCCESSFUL in 21s (43 tasks, 6 executed, 37 up-to-date) — 仅既有 deprecated 警告 (`menuAnchor`, `monthNumber/dayOfMonth`)，无新增编译错误；三档字阶 (`titleSmall` / `titleMedium.numbers()` / `labelSmall onSurfaceVariant`) 保持一致，LazyColumn 空状态不再无限高度。
+- `./gradlew assembleDebug` 完整输出已在本地验证通过，符合 Global Constraints（无 DB migration、不改 Theme.kt 边框）。
+
+**本次变更文件:**
+
+- `app/src/main/kotlin/com/looker/kenko/ui/feature/session/Sessions.kt:322-326` 新增 `modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp)`
+- `app/src/main/kotlin/com/looker/kenko/ui/component/SetItem.kt:96` `labelLarge.numbers() → titleMedium.numbers()`；`175` `labelLarge.copy → titleMedium.numbers().copy`
+- `app/src/main/kotlin/com/looker/kenko/ui/feature/profile/WeightHistorySheet.kt:109-112` `bodyLarge → labelSmall onSurfaceVariant`
+- `app/src/main/kotlin/com/looker/kenko/ui/component/EmptyState.kt:39` `modifier.fillMaxSize() → if (modifier == Modifier) Modifier.fillMaxSize() else modifier`（支撑 #1 修正生效）

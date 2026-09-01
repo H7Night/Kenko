@@ -36,7 +36,7 @@ fun EmptyState(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = if (modifier == Modifier) Modifier.fillMaxSize() else modifier,
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

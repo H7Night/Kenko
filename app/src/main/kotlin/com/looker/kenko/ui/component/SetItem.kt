@@ -93,7 +93,7 @@ fun SetItem(
         ) {
             CompositionLocalProvider(
                 LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
-                LocalTextStyle provides MaterialTheme.typography.labelLarge.numbers(),
+                LocalTextStyle provides MaterialTheme.typography.titleMedium.numbers(),
             ) {
                 Box(modifier = Modifier.padding(end = 12.dp)) {
                     title()
@@ -172,7 +172,7 @@ private fun PerformedItem(
                     .focusRequester(focusRequester),
                 value = textValue,
                 onValueChange = { textValue = it },
-                textStyle = MaterialTheme.typography.labelLarge.copy(
+                textStyle = MaterialTheme.typography.titleMedium.numbers().copy(
                     color = MaterialTheme.colorScheme.onSurface,
                 ),
                 keyboardOptions = KeyboardOptions(

@@ -323,6 +323,7 @@ private fun Sessions(
                         EmptyState(
                             icon = Icons.Rounded.History,
                             text = stringResource(R.string.label_no_sessions),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
                         )
                     }
                 } else {

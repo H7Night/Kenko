@@ -108,7 +108,8 @@ fun WeightHistorySheet(
                             ) {
                                 Text(
                                     text = formatDate(weight.date, DateFormat.YearMonthDay),
-                                    style = MaterialTheme.typography.bodyLarge
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.weight(1f))
                                 Text(
