@@ -16,9 +16,13 @@
 package com.looker.kenko
 
 import android.app.Application
+import androidx.core.net.toUri
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.looker.kenko.data.backup.BackupManager
 import com.looker.kenko.data.local.KenkoDatabase
+import com.looker.kenko.data.repository.SettingsRepo
+import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.ui.CrashHandler
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -34,11 +38,14 @@ class KenkoApp : Application(), Configuration.Provider {
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var crashHandler: CrashHandler
     @Inject lateinit var database: KenkoDatabase
+    @Inject lateinit var settingsRepo: SettingsRepo
+    @Inject lateinit var backupManager: BackupManager
 
     override fun onCreate() {
         super.onCreate()
         crashHandler.install()
         warmUpDatabase()
+        reschedulePeriodicBackup()
     }
 
     /**
@@ -55,6 +62,20 @@ class KenkoApp : Application(), Configuration.Provider {
                 database.exerciseDao().stream().first()
             } catch (_: Exception) {
                 // 预热失败不影响正常使用
+            }
+        }
+    }
+
+    private fun reschedulePeriodicBackup() {
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            try {
+                val settings = settingsRepo.stream.first()
+                val uri = settings.backupUri?.toUri()
+                if (settings.backupInterval != BackupInterval.Off && uri != null) {
+                    backupManager.schedulePeriodicBackup(settings.backupInterval, uri)
+                }
+            } catch (_: Exception) {
+                // 恢复定时备份失败不影响正常使用
             }
         }
     }
