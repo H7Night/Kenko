@@ -16,6 +16,7 @@
 **Supplemental constraints from user:**
 - Bottom navigation label must be Chinese `统计`.
 - Heatmap defaults to **last 90 days** (GitHub style), matching `NzHelper` pattern (`calculateHeatmapData` with `weeksToShow=13` →91 days ≈90天).
+- Cardio handling: `Tag.parentName=="有氧"` 的训练卡片不展示组数，仅展示时长（分钟）；统计中该部位以“分钟”而非“次”计量。
 
 **What we will do:**
 - Build a frequency-centric balanced dashboard that simultaneously motivates (streak/trend), reveals imbalance (balance ring), and shows progress (week-over-week).
@@ -34,8 +35,9 @@
 ## 2. Architecture & Components
 
 **Data layer — reuse only:**
-- `SessionRepo.streamSummaries: Flow<List<SessionSummary>>` (date, planId, exerciseNames, setCount)
-- `ExerciseRepo.stream: Flow<List<Exercise>>` for `exerciseName → Tag.parentName` dictionary
+- `SessionRepo.streamSummaries: Flow<List<SessionSummary>>` (date, planId, exerciseNames, setCount) — for频次
+- `SessionRepo.stream: Flow<List<Session>>` — for有氧时长（需 `Set.repsOrDuration` + `Exercise.countType==MINUTES`）
+- `ExerciseRepo.stream: Flow<List<Exercise>>` for `exerciseName → (parentName, countType)` dictionary
 - `PlanRepo.current: Flow<Plan?>` for `dayCount` (adherence denominator)
 - No DAO changes; no `PlanHistory` changes.
 
@@ -65,9 +67,10 @@ PlanRepo.current ────────────┘
 ```
 
 **Mapping:**
-- Build `tagDict: Map<exerciseName, parentName>` from `ExerciseRepo` once per emission.
-- For each `SessionSummary`, resolve `exerciseNames → parentNames` via dict; `null/empty → "有氧"`. Deduplicate within a session per parent (bench+fly counts as 胸=1, not 2) to avoid intra-session double counting; single session with chest+back counts for both.
-- `countByBodyPart = Map<String, Int>` increments per session per distinct parent.
+- Build `tagDict: Map<exerciseName, (parentName, countType)>` from `ExerciseRepo` once per emission.
+- For strength (胸/背/腿/手臂/肩/腹): for each `SessionSummary`, resolve `exerciseNames → parentNames` via dict; `null/empty → "有氧"` 已排除；Deduplicate per session per parent (bench+fly → 胸=1).
+- For cardio `"有氧"`: from `Session.stream` 聚合 `sum(repsOrDuration)` where `parentName=="有氧"` 或 `countType==MINUTES`；按 `predicate(date)` 过滤后求和，得到 `minutesByPeriod: Int`。
+- Result: `countByBodyPart: Map<String,Int>` (6 项) + `cardioMinutes: Int` 单独；UI 对有氧显示“X 分钟”，其余显示“X 次”。柱长按各自最大值归一（有氧按分钟最大值，力量按次数最大值分尺度，避免 30 分钟压制 3 次）。
 
 **Time predicates:**
 - Week: `date in [mondayOfThisWeek, today]` via `isoDayNumber`
@@ -84,8 +87,8 @@ PlanRepo.current ────────────┘
 
 **Page structure — `Scaffold(LargeFlexibleTopAppBar("统计"))` + `LazyColumn` (16dp padding, 16dp spacing, NzHelper spacing):**
 1. `HeatmapCard(90d)` — horizontally scrollable, month labels on top, weekday `一/三/五/日` on left, `active X/90` + `max Y` footer (already in `YearHeatmap`)
-2. `BalanceRingCard` — monthly 7-part donut, <8% slice red dot + tooltip “薄弱”
-3. `BodyPartBarCard` ×3 — **本周 / 本月 / 本计划** (each 7 rows, bar length = count / maxInCard,降序, weakest pinned bottom with `error` tint)
+2. `BalanceRingCard` — monthly 7-part donut, <8% slice red dot + tooltip “薄弱”（有氧按分钟占比折算为次数等效，或单独灰段）
+3. `BodyPartBarCard` ×3 — **本周 / 本月 / 本计划** (each 7 rows; 6 项力量 `X 次`，有氧 `Y 分钟`；柱长分尺度：力量按 `maxCount`、有氧按 `maxMinutes` 各自归一，降序中力量与有氧分别排序，weakest 力量项标 `error` tint)
 4. `TrendCard` — 12-week column/sparkline, tap bar → `navigateToSessions(dateOfWeek)` (optional, no-op if no navigation)
 5. `AdherenceCard` — `Text("本月达成 12/20 天")` + `LinearProgressIndicator`
 
@@ -103,6 +106,7 @@ PlanRepo.current ────────────┘
 - **No plan:** `PlanRepo.current` null → `adherence = 0f`, `planCounts` empty with CTA.
 - **90d no data:** heatmap renders grey grid, `active=0`.
 - **Tag missing:** `parentName` null → bucket `"有氧"`; never throw.
+- **有氧无时长:** `Session.stream` 中有氧 `repsOrDuration==0` → 计 0 分钟，卡片显示“0 分钟”。
 - **Cross-year heatmap:** Monday alignment may start in prior month/year; month labels handle it.
 - **Large data:** Aggregation on `DefaultDispatcher`; UI observes `StateFlow`.
 
@@ -112,6 +116,7 @@ PlanRepo.current ────────────┘
 
 **Unit:**
 - `aggregateByBodyPart` cases: empty, single session multi-tag, duplicate parent in same session, null tag → 有氧, week/month/plan predicates boundaries (Monday, month-end).
+- `aggregateCardioMinutes` cases: 0 分钟、单次多组有氧累加、混合力量+有氧同会话、有氧 `countType==MINUTES` 判定。
 
 **UI preview:**
 - `StatisticsPreview` with 3 fixtures: empty, balanced (each part 4×), imbalanced (胸 10, 腿 0).
