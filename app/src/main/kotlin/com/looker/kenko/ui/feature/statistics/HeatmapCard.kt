@@ -33,17 +33,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,29 +48,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.looker.kenko.R
-import com.looker.kenko.ui.theme.KenkoIcons
+import com.looker.kenko.domain.statistics.buildHeatmapData90d
 import kotlin.time.Clock
-import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.isoDayNumber
-import kotlinx.datetime.minus
-import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
-@Composable
-fun YearHeatmap(
-    sessionDates: Set<LocalDate>,
-    countByDate: Map<LocalDate, Int> = emptyMap(),
-    modifier: Modifier = Modifier,
-    initialYear: Int = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.year,
-    onYearChange: (Int) -> Unit = {},
-) {
-    var displayYear by remember(initialYear) { mutableStateOf(initialYear) }
+const val WeeksToShow = 13
 
-    val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
-    val yearData = remember(sessionDates, displayYear) {
-        buildYearData(displayYear, sessionDates, countByDate)
+@Composable
+fun HeatmapCard(
+    sessionDates: Set<LocalDate>,
+    today: LocalDate,
+    modifier: Modifier = Modifier,
+    countByDate: Map<LocalDate, Int> = emptyMap(),
+) {
+    val data = remember(sessionDates, countByDate, today) {
+        buildHeatmapDisplayData(sessionDates, countByDate, today)
     }
 
     Surface(
@@ -93,10 +82,12 @@ fun YearHeatmap(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            YearHeatmapHeader(
-                year = displayYear,
-                onPreviousYear = { displayYear -= 1; onYearChange(displayYear) },
-                onNextYear = { displayYear += 1; onYearChange(displayYear) },
+            // Simple header for 90d window — no year navigation
+            Text(
+                text = "Last 90 days",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             // Horizontal scrollable grid
@@ -107,10 +98,8 @@ fun YearHeatmap(
                     .horizontalScroll(scrollState)
                     .padding(horizontal = 8.dp),
             ) {
-                YearHeatmapGrid(
-                    data = yearData,
-                    today = today,
-                    displayYear = displayYear,
+                HeatmapGrid(
+                    data = data,
                 )
             }
 
@@ -160,8 +149,8 @@ fun YearHeatmap(
             }
 
             // Summary row
-            val activeDays = yearData.activeDays
-            val totalDays = yearData.totalDays
+            val activeDays = data.activeDays
+            val totalDays = data.totalDays
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -173,9 +162,9 @@ fun YearHeatmap(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                if (yearData.maxCount > 0) {
+                if (data.maxCount > 0) {
                     Text(
-                        text = stringResource(R.string.label_max_per_day, yearData.maxCount),
+                        text = stringResource(R.string.label_max_per_day, data.maxCount),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -186,53 +175,49 @@ fun YearHeatmap(
 }
 
 @Composable
-private fun YearHeatmapHeader(
-    year: Int,
-    onPreviousYear: () -> Unit,
-    onNextYear: () -> Unit,
+fun HeatmapCard(
+    sessionDates: Set<LocalDate>,
     modifier: Modifier = Modifier,
+    countByDate: Map<LocalDate, Int> = emptyMap(),
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(onClick = onPreviousYear) {
-            Icon(
-                painter = KenkoIcons.KeyboardArrowLeft,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Text(
-            text = year.toString(),
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        IconButton(onClick = onNextYear) {
-            Icon(
-                painter = KenkoIcons.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
+    val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
+    HeatmapCard(
+        sessionDates = sessionDates,
+        today = today,
+        modifier = modifier,
+        countByDate = countByDate
+    )
+}
+
+/**
+ * Deprecated alias kept for backward compatibility — delegates to [HeatmapCard] with 90d window.
+ */
+@Deprecated("Use HeatmapCard instead", ReplaceWith("HeatmapCard(sessionDates, today, modifier, countByDate)"))
+@Composable
+fun YearHeatmap(
+    sessionDates: Set<LocalDate>,
+    countByDate: Map<LocalDate, Int> = emptyMap(),
+    modifier: Modifier = Modifier,
+    initialYear: Int = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.year,
+    onYearChange: (Int) -> Unit = {},
+) {
+    val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
+    HeatmapCard(
+        sessionDates = sessionDates,
+        today = today,
+        modifier = modifier,
+        countByDate = countByDate
+    )
 }
 
 @Composable
-private fun YearHeatmapGrid(
-    data: YearHeatmapData,
-    today: LocalDate,
-    displayYear: Int,
+private fun HeatmapGrid(
+    data: HeatmapDisplayData,
     modifier: Modifier = Modifier,
 ) {
     val primary = MaterialTheme.colorScheme.primary
     val surfaceColor = MaterialTheme.colorScheme.surfaceContainerHighest
     val futureColor = MaterialTheme.colorScheme.surfaceContainerHigh
-    // levels for intensity (binary for now, but support graded if countByDate provides >1)
     val levels = listOf(
         surfaceColor,
         primary.copy(alpha = 0.25f),
@@ -296,7 +281,6 @@ private fun YearHeatmapGrid(
                     ) {
                         week.days.forEach { day ->
                             val level = when {
-                                day == null -> 5 // empty padding
                                 day.isFuture -> 5
                                 day.count == 0 -> 0
                                 data.maxCount == 0 -> 0
@@ -310,27 +294,23 @@ private fun YearHeatmapGrid(
                                     }
                                 }
                             }
-                            if (day == null) {
-                                Box(modifier = Modifier.size(cellSize))
-                            } else {
-                                val cellColor = when (level) {
-                                    5 -> if (day.isFuture) futureColor else surfaceColor
-                                    0 -> levels[0]
-                                    else -> levels[level]
-                                }
-                                val alpha = when (level) {
-                                    0, 5 -> 1f
-                                    else -> animatedProgress.value
-                                }
-                                val border = if (level == 0) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null
-                                Box(
-                                    modifier = Modifier
-                                        .size(cellSize)
-                                        .clip(MaterialTheme.shapes.extraSmall)
-                                        .then(if (border != null) Modifier.border(border, MaterialTheme.shapes.extraSmall) else Modifier)
-                                        .background(cellColor.copy(alpha = alpha))
-                                )
+                            val cellColor = when (level) {
+                                5 -> futureColor
+                                0 -> levels[0]
+                                else -> levels[level]
                             }
+                            val alpha = when (level) {
+                                0, 5 -> 1f
+                                else -> animatedProgress.value
+                            }
+                            val border = if (level == 0) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null
+                            Box(
+                                modifier = Modifier
+                                    .size(cellSize)
+                                    .clip(MaterialTheme.shapes.extraSmall)
+                                    .then(if (border != null) Modifier.border(border, MaterialTheme.shapes.extraSmall) else Modifier)
+                                    .background(cellColor.copy(alpha = alpha))
+                            )
                         }
                     }
                 }
@@ -339,105 +319,73 @@ private fun YearHeatmapGrid(
     }
 }
 
-private data class YearDay(
+private data class HeatmapDay(
     val date: LocalDate,
     val count: Int,
     val isFuture: Boolean,
 )
 
-private data class YearWeek(
-    val days: List<YearDay?>,
+private data class HeatmapWeekDisplay(
+    val days: List<HeatmapDay>,
 )
 
-private data class YearHeatmapData(
-    val weeks: List<YearWeek>,
+private data class HeatmapDisplayData(
+    val weeks: List<HeatmapWeekDisplay>,
     val monthLabels: List<Pair<Int, String>>,
     val maxCount: Int,
     val activeDays: Int,
     val totalDays: Int,
 )
 
-private fun buildYearData(
-    year: Int,
+private fun buildHeatmapDisplayData(
     sessionDates: Set<LocalDate>,
     countByDate: Map<LocalDate, Int>,
-): YearHeatmapData {
-    val jan1 = LocalDate(year, 1, 1)
-    val dec31 = LocalDate(year, 12, 31)
-    val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-
-    // Monday of week containing Jan 1
-    val jan1Dow = jan1.dayOfWeek.isoDayNumber // 1 Mon .. 7 Sun
-    val startMonday = jan1.minus(jan1Dow - 1, DateTimeUnit.DAY)
-    // Sunday of week containing Dec 31
-    val dec31Dow = dec31.dayOfWeek.isoDayNumber
-    val endSunday = dec31.plus(7 - dec31Dow, DateTimeUnit.DAY)
-
-    val totalDaysBetween = daysBetween(startMonday, endSunday) + 1
-    val weekCount = totalDaysBetween / 7
-
-    val weeks = mutableListOf<YearWeek>()
+    today: LocalDate,
+): HeatmapDisplayData {
+    val raw = buildHeatmapData90d(sessionDates, today)
+    val monthNames = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
     val monthLabels = mutableListOf<Pair<Int, String>>()
-    var lastMonth = -1
+    var maxCount = 0
     var activeDays = 0
     var totalDays = 0
-    var maxCount = 0
 
-    val monthNames = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
-
-    for (w in 0 until weekCount) {
-        val weekStart = startMonday.plus(w * 7, DateTimeUnit.DAY)
+    val weeks = raw.weeks.mapIndexed { wIndex, week ->
         // month label if this week contains the 1st of a month
-        for (d in 0 until 7) {
-            val date = weekStart.plus(d, DateTimeUnit.DAY)
-            if (date.day == 1 && date.year == year) {
-                monthLabels.add(w to monthNames[date.month.ordinal])
+        for (d in week.days) {
+            val date = d!!
+            if (date.day == 1) {
+                monthLabels.add(wIndex to monthNames[date.month.ordinal])
                 break
             }
         }
-        // fallback: if first week, always add Jan
-        if (w == 0 && monthLabels.isEmpty()) {
-            monthLabels.add(0 to monthNames[0])
-        }
 
-        val days = (0 until 7).map { d ->
-            val date = weekStart.plus(d, DateTimeUnit.DAY)
-            if (date.year != year) {
-                null
-            } else {
-                val count = countByDate[date] ?: if (date in sessionDates) 1 else 0
-                if (count > maxCount) maxCount = count
-                val isFuture = date > today
-                if (!isFuture) {
-                    totalDays++
-                    if (count > 0) activeDays++
-                }
-                YearDay(date, count, isFuture)
+        val days = week.days.map { date ->
+            val d = date!!
+            val count = countByDate[d] ?: if (d in sessionDates) 1 else 0
+            if (count > maxCount) maxCount = count
+            val isFuture = d > today
+            if (!isFuture) {
+                totalDays++
+                if (count > 0) activeDays++
             }
+            HeatmapDay(d, count, isFuture)
         }
-        weeks.add(YearWeek(days))
+        HeatmapWeekDisplay(days)
     }
 
-    // Ensure Jan label exists if not added
-    if (weeks.isNotEmpty() && monthLabels.none { it.second == "Jan" }) {
-        // find first week with Jan 1
+    // Ensure at least one label (e.g. window entirely within one month but no 1st present)
+    if (monthLabels.isEmpty() && weeks.isNotEmpty()) {
+        val firstDate = weeks.first().days.first().date
+        monthLabels.add(0 to monthNames[firstDate.month.ordinal])
     }
 
-    return YearHeatmapData(
+    check(weeks.size == WeeksToShow) { "Heatmap must have $WeeksToShow weeks, was ${weeks.size}" }
+
+    return HeatmapDisplayData(
         weeks = weeks,
         monthLabels = monthLabels,
         maxCount = maxCount,
         activeDays = activeDays,
         totalDays = totalDays,
     )
-}
-
-private fun daysBetween(start: LocalDate, end: LocalDate): Int {
-    var count = 0
-    var cur = start
-    while (cur < end) {
-        cur = cur.plus(1, DateTimeUnit.DAY)
-        count++
-    }
-    return count
 }

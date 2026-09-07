@@ -63,8 +63,9 @@ fun Statistics(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            YearHeatmap(
+            HeatmapCard(
                 sessionDates = state.sessionDates,
+                today = state.today,
                 countByDate = state.countByDate,
                 modifier = Modifier
                     .fillMaxWidth()
