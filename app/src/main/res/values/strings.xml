@@ -169,7 +169,12 @@
     <!--Navigation-->
     <string name="label_home">Home</string>
     <string name="label_performance">Performance</string>
+    <string name="label_statistics">Statistics</string>
     <string name="label_profile">You</string>
+    <string name="label_less">Less</string>
+    <string name="label_more">More</string>
+    <string name="label_active_days">Active %1$d / %2$d days</string>
+    <string name="label_max_per_day">Max %1$d / day</string>
 
     <!--Error-->
     <string name="error_invalid_reference">Invalid Reference</string>
