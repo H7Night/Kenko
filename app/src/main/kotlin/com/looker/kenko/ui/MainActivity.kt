@@ -52,6 +52,8 @@ import com.looker.kenko.ui.feature.session.navigation.SessionDetailRoute
 import com.looker.kenko.ui.feature.session.navigation.navigateToSessionDetail
 import com.looker.kenko.ui.feature.session.navigation.SessionRoute
 import com.looker.kenko.ui.feature.session.navigation.navigateToSessions
+import com.looker.kenko.ui.feature.statistics.navigation.StatisticsRoute
+import com.looker.kenko.ui.feature.statistics.navigation.navigateToStatistics
 import com.looker.kenko.ui.navigation.KenkoNavHost
 import com.looker.kenko.ui.theme.KenkoTheme
 import dagger.hilt.EntryPoint
@@ -127,12 +129,14 @@ class MainActivity : AppCompatActivity() {
                 val profileRouteName = ProfileRoute::class.qualifiedName
                 val sessionDetailRouteName = SessionDetailRoute::class.qualifiedName
                 val sessionRouteName = SessionRoute::class.qualifiedName
+                val statisticsRouteName = StatisticsRoute::class.qualifiedName
 
                 val isTopLevelRoute = currentRouteName == homeRouteName ||
                         currentRouteName == profileRouteName ||
                         currentRouteName == sessionRouteName ||
+                        currentRouteName == statisticsRouteName ||
                         (currentRouteName == sessionDetailRouteName && 
-                         backStackEntry?.arguments?.getBoolean("showBackButton") == false)
+                          backStackEntry?.arguments?.getBoolean("showBackButton") == false)
 
                 Kenko(
                     bottomBar = {
@@ -150,6 +154,15 @@ class MainActivity : AppCompatActivity() {
                                 },
                                 onHistoryClick = {
                                     navController.navigateToSessions(
+                                        navOptions = navOptions {
+                                            popUpTo(HomeRoute) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    )
+                                },
+                                onStatisticsClick = {
+                                    navController.navigateToStatistics(
                                         navOptions = navOptions {
                                             popUpTo(HomeRoute) { saveState = true }
                                             launchSingleTop = true

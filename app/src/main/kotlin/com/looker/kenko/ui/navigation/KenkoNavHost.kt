@@ -36,6 +36,7 @@ import com.looker.kenko.ui.feature.exercise.navigation.navigateToExercises
 import com.looker.kenko.ui.feature.home.navigation.HomeRoute
 import com.looker.kenko.ui.feature.home.navigation.home
 import com.looker.kenko.ui.feature.performance.navigation.performance
+import com.looker.kenko.ui.feature.statistics.navigation.statistics
 import com.looker.kenko.ui.feature.plan.navigation.navigateToPlanEdit
 import com.looker.kenko.ui.feature.plan.navigation.planEdit
 import com.looker.kenko.ui.feature.plan.navigation.navigateToPlans
@@ -141,6 +142,8 @@ fun KenkoNavHost(
                 navController.navigateToSettings(navOptions = singleTopNavOptions)
             },
         )
+
+        statistics()
 
         exercises(
             onExerciseClick = { id ->

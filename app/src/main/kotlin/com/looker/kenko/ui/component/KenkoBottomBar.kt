@@ -33,6 +33,7 @@ import com.looker.kenko.R
 import com.looker.kenko.ui.feature.home.navigation.HomeRoute
 import com.looker.kenko.ui.feature.profile.navigation.ProfileRoute
 import com.looker.kenko.ui.feature.session.navigation.SessionRoute
+import com.looker.kenko.ui.feature.statistics.navigation.StatisticsRoute
 import com.looker.kenko.ui.theme.KenkoIcons
 
 @Composable
@@ -40,6 +41,7 @@ fun KenkoBottomBar(
     currentRouteName: String?,
     onHomeClick: () -> Unit,
     onHistoryClick: () -> Unit,
+    onStatisticsClick: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -92,6 +94,26 @@ fun KenkoBottomBar(
             label = {
                 Text(
                     text = stringResource(R.string.label_records),
+                    fontSize = 10.sp,
+                    letterSpacing = 0.04.sp,
+                )
+            },
+            colors = itemColors,
+            alwaysShowLabel = true,
+        )
+        NavigationBarItem(
+            selected = currentRouteName == StatisticsRoute::class.qualifiedName,
+            onClick = onStatisticsClick,
+            icon = {
+                Icon(
+                    painter = KenkoIcons.Performance,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+            },
+            label = {
+                Text(
+                    text = stringResource(R.string.label_statistics),
                     fontSize = 10.sp,
                     letterSpacing = 0.04.sp,
                 )
