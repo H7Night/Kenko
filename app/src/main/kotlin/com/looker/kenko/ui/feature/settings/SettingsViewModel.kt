@@ -76,6 +76,7 @@ class SettingsViewModel @Inject constructor(
             backupMessage = backupState.message,
             language = settings.language,
             earliestSessionDate = earliestDate,
+            fontSize = settings.fontSize,
         )
     }.asStateFlow(
         SettingsUiData(
@@ -89,6 +90,7 @@ class SettingsViewModel @Inject constructor(
             backupMessage = null,
             language = Language.System,
             earliestSessionDate = null,
+            fontSize = 14,
         ),
     )
 
@@ -250,4 +252,5 @@ data class SettingsUiData(
     val backupMessage: BackupMessage?,
     val language: Language,
     val earliestSessionDate: LocalDate?,
+    val fontSize: Int,
 )

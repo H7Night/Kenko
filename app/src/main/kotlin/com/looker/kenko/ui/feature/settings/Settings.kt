@@ -39,6 +39,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -98,6 +99,7 @@ private fun Settings(
 ) {
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var fontSize by remember { mutableStateOf(state.fontSize) }
 
     if (showLanguageDialog) {
         LanguageSelectionDialog(
@@ -157,6 +159,13 @@ private fun Settings(
                 onClick = { showThemeDialog = true },
             )
 
+            SettingsFontSizeRow(
+                fontSize = fontSize,
+                onFontSizeChanged = { newFontSize ->
+                    fontSize = newFontSize
+                },
+            )
+
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 thickness = KenkoBorderWidth,
@@ -188,6 +197,63 @@ private fun Settings(
             )
 
             Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+/**
+ * A settings row for font size with selection buttons.
+ * Layout: [title] [小] [中] [大]
+ */
+@Composable
+private fun SettingsFontSizeRow(
+    fontSize: Int,
+    onFontSizeChanged: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val fontSizeOptions = listOf(
+        10 to stringResource(R.string.label_font_size_small),
+        14 to stringResource(R.string.label_font_size_medium),
+        18 to stringResource(R.string.label_font_size_large),
+    )
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.label_font_size),
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        fontSizeOptions.forEach { (size, label) ->
+            val isSelected = fontSize == size
+            val containerColor = if (isSelected) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            }
+            val contentColor = if (isSelected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            Surface(
+                onClick = { onFontSizeChanged(size) },
+                modifier = Modifier.padding(horizontal = 2.dp),
+                shape = MaterialTheme.shapes.small,
+                color = containerColor,
+            ) {
+                Text(
+                    text = label,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = contentColor,
+                )
+            }
         }
     }
 }
@@ -389,6 +455,7 @@ private fun SettingsPreview() {
                 backupMessage = null,
                 language = Language.System,
                 earliestSessionDate = null,
+                fontSize = 14,
             ),
             onSelectLanguage = {},
             onSelectTheme = {},

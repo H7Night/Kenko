@@ -42,4 +42,5 @@ interface SettingsRepo {
 
     suspend fun setLanguage(language: Language)
 
+    suspend fun setFontSize(fontSize: Int)
 }
