@@ -22,6 +22,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import com.looker.kenko.BuildConfig
 import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.domain.model.settings.Language
@@ -95,6 +96,10 @@ class DatastoreSettingsRepo @Inject constructor(
         LANGUAGE.update(language.name)
     }
 
+    override suspend fun setFontSize(fontSize: Int) {
+        FONT_SIZE.update(fontSize)
+    }
+
     private suspend inline fun <T> Preferences.Key<T>.update(value: T) {
         dataStore.edit { preference ->
             preference[this] = value
@@ -109,6 +114,7 @@ class DatastoreSettingsRepo @Inject constructor(
         val backupInterval = preferences[BACKUP_INTERVAL] ?: BackupInterval.Off.name
         val lastBackupTime = preferences[LAST_BACKUP_TIME_SECONDS]
         val language = preferences[LANGUAGE] ?: Language.System.name
+        val fontSize = preferences[FONT_SIZE] ?: 14
         return Settings(
             isOnboardingDone = isOnboardingDone,
             theme = Theme.valueOf(theme),
@@ -117,6 +123,7 @@ class DatastoreSettingsRepo @Inject constructor(
             backupInterval = BackupInterval.valueOf(backupInterval),
             lastBackupTime = lastBackupTime?.let { Instant.fromEpochSeconds(it) },
             language = Language.valueOf(language),
+            fontSize = fontSize,
         )
     }
 
@@ -130,5 +137,6 @@ class DatastoreSettingsRepo @Inject constructor(
         val LAST_BACKUP_TIME_SECONDS: Preferences.Key<Long> =
             longPreferencesKey("last_backup_time_seconds")
         val LANGUAGE: Preferences.Key<String> = stringPreferencesKey("language")
+        val FONT_SIZE: Preferences.Key<Int> = intPreferencesKey("font_size")
     }
 }

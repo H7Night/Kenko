@@ -194,7 +194,12 @@
     <string name="label_language_en">English</string>
     <string name="label_language_zh">中文</string>
 
-    <!--Backup-->
+    <!--Font Size-->
+    <string name="label_font_size">字体大小</string>
+    <string name="label_font_size_small">小</string>
+    <string name="label_font_size_medium">中</string>
+    <string name="label_font_size_large">大</string>
+    <string name="label_font_size_larger">Larger</string>
     <string name="label_backup">Backup &amp; Restore</string>
     <string name="label_backup_location">Backup Location</string>
     <string name="label_backup_location_not_set">Not set</string>
