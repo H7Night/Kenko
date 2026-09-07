@@ -65,7 +65,6 @@ import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.component.timer.TimerService
-import com.looker.kenko.ui.feature.home.components.TrainingHeatmap
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.utils.DateFormat
@@ -146,7 +145,6 @@ private fun Sessions(
     var dayExpanded by remember { mutableStateOf(false) }
     var selectedPlan by remember { mutableStateOf<Plan?>(null) }
     var selectedDay by remember { mutableStateOf<Int?>(null) }
-    var selectedMonth by remember { mutableStateOf(today()) }
     val context = LocalContext.current
 
     val selectedPlanName = selectedPlan?.name ?: stringResource(R.string.label_select_plan_one)
@@ -155,14 +153,12 @@ private fun Sessions(
         selectedPlan?.titlesMap ?: emptyMap()
     }
 
-    val filteredSessions = remember(state.sessions, selectedPlan, selectedDay, selectedMonth) {
+    val filteredSessions = remember(state.sessions, selectedPlan, selectedDay) {
         val planId = selectedPlan?.id
         state.sessions.filter { session ->
             val planMatch = planId == null || session.planId == planId
             val dayMatch = selectedDay == null || session.dayIndexOverride == selectedDay
-            val monthMatch =
-                session.date.year == selectedMonth.year && session.date.month == selectedMonth.month
-            planMatch && dayMatch && monthMatch
+            planMatch && dayMatch
         }
     }
 
@@ -229,16 +225,7 @@ private fun Sessions(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 item {
-                    Column {
-                        TrainingHeatmap(
-                            sessionDates = state.sessionDates,
-                            onClick = { },
-                            onMonthChange = { selectedMonth = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 4.dp),
-                        )
-                        // Filter row: body part + plan dropdowns
+                        // Filter row: plan + day dropdowns
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -316,7 +303,6 @@ private fun Sessions(
                                 }
                             }
                         }
-                    }
                 }
                 if (filteredSessions.isEmpty()) {
                     item {
