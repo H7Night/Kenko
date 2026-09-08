@@ -21,6 +21,7 @@ import com.looker.kenko.data.backup.BackupResult
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
+import com.looker.kenko.data.repository.TagRepo
 import com.looker.kenko.data.repository.WeightRepo
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.ExportData
@@ -32,6 +33,7 @@ import com.looker.kenko.domain.model.ExportWeight
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.Weight
+import com.looker.kenko.domain.statistics.bodyPartByName
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
@@ -45,6 +47,7 @@ class ExportManagerImpl @Inject constructor(
     private val planRepo: PlanRepo,
     private val exerciseRepo: ExerciseRepo,
     private val weightRepo: WeightRepo,
+    private val tagRepo: TagRepo,
 ) : ExportManager {
 
     private val json = Json {
@@ -54,9 +57,13 @@ class ExportManagerImpl @Inject constructor(
 
     override suspend fun export(options: ExportOptions, destinationUri: Uri): BackupResult {
         return try {
+            val bodyPartByName = bodyPartByName(
+                exerciseRepo.stream.first(),
+                tagRepo.stream.first(),
+            )
             val data = ExportData(
                 sessions = if (options.exportSessions) {
-                    val sessions = sessionRepo.stream.first().map { it.toExport() }
+                    val sessions = sessionRepo.stream.first().map { it.toExport(bodyPartByName) }
                     if (options.startDate != null && options.endDate != null) {
                         sessions.filter { it.date >= options.startDate && it.date <= options.endDate }
                     } else {
@@ -67,7 +74,7 @@ class ExportManagerImpl @Inject constructor(
                     planRepo.plans.first().map { it.toExport() }
                 } else null,
                 exercises = if (options.exportExercises) {
-                    exerciseRepo.stream.first().map { it.toExport() }
+                    exerciseRepo.stream.first().map { it.toExport(bodyPartByName) }
                 } else null,
                 weights = if (options.exportWeights) {
                     weightRepo.weights.first().map { it.toExport() }
@@ -86,14 +93,14 @@ class ExportManagerImpl @Inject constructor(
     }
 }
 
-private fun Session.toExport(): ExportSession = ExportSession(
+private fun Session.toExport(bodyPartByName: Map<String, String>): ExportSession = ExportSession(
     date = date,
     sets = sets.map { set ->
         ExportSet(
             repsOrDuration = set.repsOrDuration,
             weight = set.weight,
             exerciseName = set.exercise.name,
-            exerciseTarget = set.exercise.tags.firstOrNull()?.parentName ?: "",
+            exerciseTarget = bodyPartByName[set.exercise.name] ?: "",
         )
     },
     planId = planId,
@@ -107,9 +114,9 @@ private fun Plan.toExport(): ExportPlan = ExportPlan(
     dayTitles = dayTitles,
 )
 
-private fun Exercise.toExport(): ExportExercise = ExportExercise(
+private fun Exercise.toExport(bodyPartByName: Map<String, String>): ExportExercise = ExportExercise(
     name = name,
-    target = tags.firstOrNull()?.parentName ?: "",
+    target = bodyPartByName[name] ?: "",
     tags = tags.map { it.name },
     countType = countType.name,
     isBodyweight = isBodyweight,

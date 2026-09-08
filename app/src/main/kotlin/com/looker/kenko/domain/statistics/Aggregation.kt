@@ -53,6 +53,14 @@ fun buildTagDict(
     }
 }
 
+/**
+ * 动作名 → 一级部位名（导出 target 用）。解析逻辑与 [buildTagDict] 一致。
+ */
+fun bodyPartByName(
+    exercises: List<Exercise>,
+    allTags: List<Tag>,
+): Map<String, String> = buildTagDict(exercises, allTags).mapValues { it.value.first }
+
 fun aggregateByBodyPart(
     summaries: List<SessionSummary>,
     predicate: (LocalDate) -> Boolean,
