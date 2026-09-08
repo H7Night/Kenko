@@ -77,6 +77,11 @@ class StatisticsViewModel @Inject constructor(
 
         val heatmapData = buildHeatmapData90d(dates, today)
         val weeklyTrend = buildWeeklyTrend(summaries, today)
+        val actualDays = summaries.count { it.date.year == today.year && it.date.month == today.month }
+            .let { // distinct days in month
+                summaries.filter { it.date.year == today.year && it.date.month == today.month }.map { it.date }.toSet().size
+            }
+        val plannedDays = plan?.dayCount ?: 0
 
         StatisticsUiState(
             sessionDates = dates,
@@ -93,6 +98,8 @@ class StatisticsViewModel @Inject constructor(
             cardioMinutesMonthly = cardioMonthly,
             cardioMinutesPlan = cardioPlan,
             weeklyTrend = weeklyTrend,
+            actualDays = actualDays,
+            plannedDays = plannedDays,
         )
     }.asStateFlow(StatisticsUiState())
 }
@@ -124,4 +131,6 @@ data class StatisticsUiState(
     val cardioMinutesMonthly: Int = 0,
     val cardioMinutesPlan: Int = 0,
     val weeklyTrend: List<Int> = emptyList(),
+    val actualDays: Int = 0,
+    val plannedDays: Int = 0,
 )
