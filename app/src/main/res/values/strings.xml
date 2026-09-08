@@ -176,6 +176,41 @@
     <string name="label_active_days">Active %1$d / %2$d days</string>
     <string name="label_max_per_day">Max %1$d / day</string>
 
+    <!--Statistics-->
+    <string name="label_last_90_days">Last 90 days</string>
+    <string name="label_stat_week">This Week</string>
+    <string name="label_stat_month">This Month</string>
+    <string name="label_stat_plan">This Plan</string>
+    <string name="label_count_times">%1$d×</string>
+    <string name="label_count_minutes">%1$d min</string>
+    <string name="label_monthly_balance">Monthly Balance</string>
+    <string name="label_weak_threshold">Share &lt;8% is weak</string>
+    <string name="label_no_records">No records</string>
+    <string name="label_weak">Weak</string>
+    <string name="label_percent">%1$d%%</string>
+    <string name="label_trend_12w">12-Week Trend</string>
+    <string name="label_weekly_count">Sessions per week</string>
+    <string name="label_total_times">Total %1$d sessions</string>
+    <string name="label_max_week">Peak %1$d/week</string>
+    <string name="label_plan_adherence">Plan Adherence</string>
+    <string name="label_monthly_adherence">%1$d / %2$d days this month</string>
+    <string name="label_no_plan">No plan</string>
+
+    <string-array name="month_short">
+        <item>Jan</item>
+        <item>Feb</item>
+        <item>Mar</item>
+        <item>Apr</item>
+        <item>May</item>
+        <item>Jun</item>
+        <item>Jul</item>
+        <item>Aug</item>
+        <item>Sep</item>
+        <item>Oct</item>
+        <item>Nov</item>
+        <item>Dec</item>
+    </string-array>
+
     <!--Error-->
     <string name="error_invalid_reference">Invalid Reference</string>
     <string name="error_invalid_reference_format">Invalid reference format</string>

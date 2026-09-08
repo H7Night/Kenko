@@ -170,6 +170,41 @@
     <string name="label_active_days">活跃 %1$d / %2$d 天</string>
     <string name="label_max_per_day">单日最高 %1$d 次</string>
 
+    <!--Statistics-->
+    <string name="label_last_90_days">最近90天</string>
+    <string name="label_stat_week">本周</string>
+    <string name="label_stat_month">本月</string>
+    <string name="label_stat_plan">本计划</string>
+    <string name="label_count_times">%1$d 次</string>
+    <string name="label_count_minutes">%1$d 分钟</string>
+    <string name="label_monthly_balance">本月平衡</string>
+    <string name="label_weak_threshold">占比 &lt;8% 为薄弱</string>
+    <string name="label_no_records">暂无记录</string>
+    <string name="label_weak">薄弱</string>
+    <string name="label_percent">%1$d%%</string>
+    <string name="label_trend_12w">近12周趋势</string>
+    <string name="label_weekly_count">每周训练次数</string>
+    <string name="label_total_times">总计 %1$d 次</string>
+    <string name="label_max_week">最高 %1$d 次/周</string>
+    <string name="label_plan_adherence">计划达成率</string>
+    <string name="label_monthly_adherence">本月达成 %1$d / %2$d 天</string>
+    <string name="label_no_plan">暂无计划</string>
+
+    <string-array name="month_short">
+        <item>1月</item>
+        <item>2月</item>
+        <item>3月</item>
+        <item>4月</item>
+        <item>5月</item>
+        <item>6月</item>
+        <item>7月</item>
+        <item>8月</item>
+        <item>9月</item>
+        <item>10月</item>
+        <item>11月</item>
+        <item>12月</item>
+    </string-array>
+
     <!--Error-->
     <string name="error_invalid_reference">无效参考</string>
     <string name="error_invalid_reference_format">无效参考格式</string>

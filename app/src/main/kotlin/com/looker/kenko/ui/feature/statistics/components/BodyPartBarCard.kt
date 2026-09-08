@@ -31,11 +31,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.looker.kenko.R
+import com.looker.kenko.domain.statistics.BODY_PARTS
+import com.looker.kenko.domain.statistics.CARDIO_PART
 import com.looker.kenko.ui.theme.KenkoTheme
-
-private val BodyPartOrder = listOf("胸", "背", "腿", "手臂", "肩", "核心", "有氧")
 
 @Composable
 fun BodyPartBarCard(
@@ -65,12 +67,16 @@ fun BodyPartBarCard(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
             )
-            BodyPartOrder.forEach { part ->
-                val isCardio = part == "有氧"
+            BODY_PARTS.forEach { part ->
+                val isCardio = part == CARDIO_PART
                 val value = if (isCardio) cardioMinutes else counts[part] ?: 0
                 val max = if (isCardio) safeMaxMinutes else safeMaxCount
                 val progress = (value.toFloat() / max).coerceIn(0f, 1f)
-                val label = if (isCardio) "$value 分钟" else "$value 次"
+                val label = if (isCardio) {
+                    stringResource(R.string.label_count_minutes, value)
+                } else {
+                    stringResource(R.string.label_count_times, value)
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,

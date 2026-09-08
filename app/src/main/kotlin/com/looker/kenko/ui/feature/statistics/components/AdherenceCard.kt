@@ -29,8 +29,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.looker.kenko.R
 import com.looker.kenko.ui.theme.KenkoTheme
 
 @Composable
@@ -58,11 +60,11 @@ fun AdherenceCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "计划达成率",
+                    text = stringResource(R.string.label_plan_adherence),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
-                    text = "$percent%",
+                    text = stringResource(R.string.label_percent, percent),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -72,7 +74,11 @@ fun AdherenceCard(
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
-                text = if (plannedDays > 0) "本月达成 $actualDays / $plannedDays 天" else "暂无计划",
+                text = if (plannedDays > 0) {
+                    stringResource(R.string.label_monthly_adherence, actualDays, plannedDays)
+                } else {
+                    stringResource(R.string.label_no_plan)
+                },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

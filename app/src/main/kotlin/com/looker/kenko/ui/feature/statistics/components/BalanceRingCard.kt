@@ -38,13 +38,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.looker.kenko.R
+import com.looker.kenko.domain.statistics.BODY_PARTS
+import com.looker.kenko.domain.statistics.CARDIO_PART
 import com.looker.kenko.ui.theme.KenkoTheme
 import kotlin.math.cos
 import kotlin.math.sin
-
-private val BalanceOrder = listOf("胸", "背", "腿", "手臂", "肩", "核心", "有氧")
 
 private val BalanceColors = mapOf(
     "胸" to Color(0xFF5E6AD2),
@@ -53,7 +55,7 @@ private val BalanceColors = mapOf(
     "手臂" to Color(0xFFEF4444),
     "肩" to Color(0xFF8B5CF6),
     "核心" to Color(0xFF06B6D4),
-    "有氧" to Color(0xFF9CA3AF),
+    CARDIO_PART to Color(0xFF9CA3AF),
 )
 
 private const val WeakThreshold = 0.08f
@@ -64,8 +66,8 @@ fun BalanceRingCard(
     cardioMonthly: Int,
     modifier: Modifier = Modifier,
 ) {
-    val values = BalanceOrder.associateWith { part ->
-        if (part == "有氧") cardioMonthly else monthlyCounts[part] ?: 0
+    val values = BODY_PARTS.associateWith { part ->
+        if (part == CARDIO_PART) cardioMonthly else monthlyCounts[part] ?: 0
     }
     val total = values.values.sum()
     val weakParts = if (total == 0) emptySet()
@@ -82,11 +84,11 @@ fun BalanceRingCard(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = "本月平衡",
+                text = stringResource(R.string.label_monthly_balance),
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(
-                text = "占比 <8% 为薄弱",
+                text = stringResource(R.string.label_weak_threshold),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -111,7 +113,7 @@ fun BalanceRingCard(
                             )
                         }
                         Text(
-                            text = "暂无记录",
+                            text = stringResource(R.string.label_no_records),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -132,7 +134,7 @@ fun BalanceRingCard(
                         val arcSize = Size(diameter, diameter)
                         var startAngle = -90f
                         // Draw slices
-                        for (part in BalanceOrder) {
+                        for (part in BODY_PARTS) {
                             val v = values[part] ?: 0
                             if (v == 0) continue
                             val sweep = 360f * v.toFloat() / total
@@ -150,7 +152,7 @@ fun BalanceRingCard(
                         }
                         // Draw red dots for weak parts
                         var dotStart = -90f
-                        for (part in BalanceOrder) {
+                        for (part in BODY_PARTS) {
                             val v = values[part] ?: 0
                             if (v == 0) {
                                 if (total != 0) {
@@ -189,13 +191,17 @@ fun BalanceRingCard(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
-                        BalanceOrder.forEach { part ->
+                        BODY_PARTS.forEach { part ->
                             val v = values[part] ?: 0
                             val pct = if (total == 0) 0f else v.toFloat() / total
                             val isWeak = part in weakParts
                             val color = BalanceColors[part] ?: Color.Gray
-                            val label = if (part == "有氧") "$v 分钟" else "$v 次"
-                            val pctText = "${(pct * 100).toInt()}%"
+                            val label = if (part == CARDIO_PART) {
+                                stringResource(R.string.label_count_minutes, v)
+                            } else {
+                                stringResource(R.string.label_count_times, v)
+                            }
+                            val pctText = stringResource(R.string.label_percent, (pct * 100).toInt())
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -239,7 +245,7 @@ fun BalanceRingCard(
                                                 .background(MaterialTheme.colorScheme.error, RoundedCornerShape(50)),
                                         )
                                         Text(
-                                            text = "薄弱",
+                                            text = stringResource(R.string.label_weak),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onErrorContainer,
                                         )

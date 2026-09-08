@@ -42,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -63,8 +64,9 @@ fun HeatmapCard(
     modifier: Modifier = Modifier,
     countByDate: Map<LocalDate, Int> = emptyMap(),
 ) {
-    val data = remember(sessionDates, countByDate, today) {
-        buildHeatmapDisplayData(sessionDates, countByDate, today)
+    val monthNames = stringArrayResource(R.array.month_short).toList()
+    val data = remember(sessionDates, countByDate, today, monthNames) {
+        buildHeatmapDisplayData(sessionDates, countByDate, today, monthNames)
     }
 
     Surface(
@@ -84,7 +86,7 @@ fun HeatmapCard(
         ) {
             // Simple header for 90d window — no year navigation
             Text(
-                text = "Last 90 days",
+                text = stringResource(R.string.label_last_90_days),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -192,6 +194,7 @@ private fun HeatmapGrid(
     val cellSize = 13.dp
     val cellGap = 3.dp
     val labelWidth = 22.dp
+    val weekdays = stringArrayResource(R.array.day_of_week_short)
 
     Column(modifier = modifier) {
         // Month labels on top
@@ -207,22 +210,20 @@ private fun HeatmapGrid(
         }
         Spacer(Modifier.height(4.dp))
         Row {
-            // Weekday labels on left
+            // Weekday labels on left (Mon/Wed/Fri = indices 0/2/4)
             Column(
                 modifier = Modifier.width(labelWidth),
                 verticalArrangement = Arrangement.spacedBy(cellGap)
             ) {
-                listOf("Mon", "", "Wed", "", "Fri", "", "").forEach { label ->
+                listOf(0, 2, 4).forEach { idx ->
                     Box(modifier = Modifier.size(cellSize)) {
-                        if (label.isNotEmpty()) {
-                            Text(
-                                label,
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center
-                            )
-                        }
+                        Text(
+                            text = weekdays[idx],
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }
@@ -296,9 +297,9 @@ private fun buildHeatmapDisplayData(
     sessionDates: Set<LocalDate>,
     countByDate: Map<LocalDate, Int>,
     today: LocalDate,
+    monthNames: List<String>,
 ): HeatmapDisplayData {
     val raw = buildHeatmapData90d(sessionDates, today)
-    val monthNames = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
     val monthLabels = mutableListOf<Pair<Int, String>>()
     var maxCount = 0
     var activeDays = 0

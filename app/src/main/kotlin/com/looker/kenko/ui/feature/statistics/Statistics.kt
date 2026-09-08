@@ -81,21 +81,21 @@ fun Statistics(
             }
             item {
                 BodyPartBarCard(
-                    title = "本周",
+                    title = stringResource(R.string.label_stat_week),
                     counts = state.weeklyCounts,
                     cardioMinutes = state.cardioWeekly,
                 )
             }
             item {
                 BodyPartBarCard(
-                    title = "本月",
+                    title = stringResource(R.string.label_stat_month),
                     counts = state.monthlyCounts,
                     cardioMinutes = state.cardioMonthly,
                 )
             }
             item {
                 BodyPartBarCard(
-                    title = "本计划",
+                    title = stringResource(R.string.label_stat_plan),
                     counts = state.planCounts,
                     cardioMinutes = state.cardioPlan,
                 )

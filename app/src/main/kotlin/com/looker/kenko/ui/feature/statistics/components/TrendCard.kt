@@ -35,8 +35,10 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.looker.kenko.R
 import com.looker.kenko.ui.theme.KenkoTheme
 
 @Composable
@@ -59,11 +61,11 @@ fun TrendCard(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = "近12周趋势",
+                text = stringResource(R.string.label_trend_12w),
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(
-                text = "每周训练次数",
+                text = stringResource(R.string.label_weekly_count),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -78,7 +80,7 @@ fun TrendCard(
                         .height(80.dp),
                 )
                 Text(
-                    text = "暂无记录",
+                    text = stringResource(R.string.label_no_records),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -104,7 +106,7 @@ fun TrendCard(
                     }
                 }
                 Text(
-                    text = "暂无记录",
+                    text = stringResource(R.string.label_no_records),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -122,12 +124,12 @@ fun TrendCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        text = "总计 $total 次",
+                        text = stringResource(R.string.label_total_times, total),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = "最高 $max 次/周",
+                        text = stringResource(R.string.label_max_week, max),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
