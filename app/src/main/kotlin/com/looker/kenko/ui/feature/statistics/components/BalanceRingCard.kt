@@ -44,7 +44,7 @@ import com.looker.kenko.ui.theme.KenkoTheme
 import kotlin.math.cos
 import kotlin.math.sin
 
-private val BalanceOrder = listOf("胸", "背", "腿", "手臂", "肩", "腹", "有氧")
+private val BalanceOrder = listOf("胸", "背", "腿", "手臂", "肩", "核心", "有氧")
 
 private val BalanceColors = mapOf(
     "胸" to Color(0xFF5E6AD2),
@@ -52,7 +52,7 @@ private val BalanceColors = mapOf(
     "腿" to Color(0xFFF59E0B),
     "手臂" to Color(0xFFEF4444),
     "肩" to Color(0xFF8B5CF6),
-    "腹" to Color(0xFF06B6D4),
+    "核心" to Color(0xFF06B6D4),
     "有氧" to Color(0xFF9CA3AF),
 )
 
@@ -259,7 +259,7 @@ fun BalanceRingCard(
 private fun BalanceRingCardPreviewBalanced() {
     KenkoTheme {
         BalanceRingCard(
-            monthlyCounts = mapOf("胸" to 4, "背" to 4, "腿" to 3, "手臂" to 2, "肩" to 2, "腹" to 3),
+            monthlyCounts = mapOf("胸" to 4, "背" to 4, "腿" to 3, "手臂" to 2, "肩" to 2, "核心" to 3),
             cardioMonthly = 30,
         )
     }
@@ -270,7 +270,7 @@ private fun BalanceRingCardPreviewBalanced() {
 private fun BalanceRingCardPreviewImbalanced() {
     KenkoTheme {
         BalanceRingCard(
-            monthlyCounts = mapOf("胸" to 10, "背" to 1, "腿" to 0, "手臂" to 1, "肩" to 0, "腹" to 0),
+            monthlyCounts = mapOf("胸" to 10, "背" to 1, "腿" to 0, "手臂" to 1, "肩" to 0, "核心" to 0),
             cardioMonthly = 0,
         )
     }

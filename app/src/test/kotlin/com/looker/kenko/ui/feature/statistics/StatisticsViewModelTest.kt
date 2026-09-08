@@ -88,6 +88,20 @@ class StatisticsViewModelTest {
         override suspend fun moveDay(planId: Int, from: Int, to: Int) = Unit
     }
 
+    private class FakeTagRepo(private val tags: List<Tag> = emptyList()) : com.looker.kenko.data.repository.TagRepo {
+        private val _stream = MutableStateFlow(tags)
+        override val stream: Flow<List<Tag>> = _stream
+        override val streamParents: Flow<List<Tag>> = MutableStateFlow(tags.filter { it.parentId == null })
+        override fun streamChildren(parentId: Int): Flow<List<Tag>> = MutableStateFlow(tags.filter { it.parentId == parentId })
+        override suspend fun get(id: Int): Tag? = tags.find { it.id == id }
+        override suspend fun upsert(tag: Tag) = Unit
+        override suspend fun delete(tag: Tag) = Unit
+        override suspend fun deleteById(id: Int) = Unit
+        override suspend fun exerciseCount(tagId: Int): Int = 0
+        override suspend fun getTagsForExercise(exerciseId: Int): List<Tag> = emptyList()
+        override fun streamTagsForExercise(exerciseId: Int): Flow<List<Tag>> = MutableStateFlow(emptyList())
+    }
+
     @Test
     fun `viewmodel weeklyCounts aggregates correctly`() = runTest {
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
@@ -95,18 +109,27 @@ class StatisticsViewModelTest {
             SessionSummary(date = today, planId = 1, exerciseNames = listOf("Bench Press"), setCount = 1),
             SessionSummary(date = today, planId = 1, exerciseNames = listOf("Squat"), setCount = 1),
         )
-        val chestTag = Tag(name = "中胸", parentName = "胸")
-        val legTag = Tag(name = "股四头肌", parentName = "腿")
+        // 生产形态：TagMapper.toExternal 不填充 parentName（恒 null），仅有 parentId
+        val chestTag = Tag(id = 9, name = "中胸", parentId = 1)
+        val legTag = Tag(id = 15, name = "股四头肌", parentId = 3)
         val exercises = listOf(
             Exercise(name = "Bench Press", tags = listOf(chestTag), countType = CountType.REPS),
             Exercise(name = "Squat", tags = listOf(legTag), countType = CountType.REPS),
         )
+        val allTags = listOf(
+            Tag(id = 1, name = "胸"),
+            Tag(id = 3, name = "腿"),
+            chestTag,
+            legTag,
+        )
         val fakeSessionRepo = FakeSessionRepo(summaries = summaries, sessions = emptyList())
         val fakeExerciseRepo = FakeExerciseRepo(exercises = exercises)
         val fakePlanRepo = FakePlanRepo(plan = null)
-        val vm = StatisticsViewModel(fakeSessionRepo, fakeExerciseRepo, fakePlanRepo)
+        val fakeTagRepo = FakeTagRepo(tags = allTags)
+        val vm = StatisticsViewModel(fakeSessionRepo, fakeExerciseRepo, fakePlanRepo, fakeTagRepo)
         val state = vm.state.first { it.weeklyCounts.isNotEmpty() || it.sessionDates.isNotEmpty() }
-        // weekly should contain chest count 1 this week
+        // 回归：旧实现（tag.parentName ?: "有氧"）在此 fixture 下 weeklyCounts 恒为 {}
         assertEquals(1, state.weeklyCounts["胸"])
+        assertEquals(1, state.weeklyCounts["腿"])
     }
 }

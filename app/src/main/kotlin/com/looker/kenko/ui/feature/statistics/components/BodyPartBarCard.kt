@@ -35,7 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.ui.theme.KenkoTheme
 
-private val BodyPartOrder = listOf("胸", "背", "腿", "手臂", "肩", "腹", "有氧")
+private val BodyPartOrder = listOf("胸", "背", "腿", "手臂", "肩", "核心", "有氧")
 
 @Composable
 fun BodyPartBarCard(
@@ -129,7 +129,7 @@ private fun BodyPartBarCardFullPreview() {
     KenkoTheme {
         BodyPartBarCard(
             title = "本计划",
-            counts = mapOf("胸" to 5, "背" to 3, "腿" to 4, "手臂" to 2, "肩" to 3, "腹" to 1),
+            counts = mapOf("胸" to 5, "背" to 3, "腿" to 4, "手臂" to 2, "肩" to 3, "核心" to 1),
             cardioMinutes = 45,
             maxCount = 5,
             maxMinutes = 60,

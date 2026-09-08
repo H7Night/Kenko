@@ -16,13 +16,37 @@
 package com.looker.kenko.domain.statistics
 
 import com.looker.kenko.domain.model.CountType
+import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.SessionSummary
+import com.looker.kenko.domain.model.Tag
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+
+const val CARDIO_PART = "有氧"
+
+/**
+ * 动作名 → (一级部位, 计量方式)。
+ * 部位解析必须走 parentId → 父标签名：TagEntity 没有 parentName 列，
+ * TagMapper.toExternal 从不填充 parentName（恒为 null），
+ * 直接读 tag.parentName 会把所有动作误归为「有氧」并被力量统计过滤为空。
+ * 一级标签（parentId==null）取自身名；无标签动作归「有氧」。
+ */
+fun buildTagDict(
+    exercises: List<Exercise>,
+    allTags: List<Tag>,
+): Map<String, Pair<String, CountType>> {
+    val tagNameById = allTags.associate { it.id to it.name }
+    return exercises.associate { ex ->
+        val part = ex.tags.firstOrNull()?.let { tag ->
+            tag.parentId?.let { tagNameById[it] } ?: tag.name
+        } ?: CARDIO_PART
+        ex.name to (part to ex.countType)
+    }
+}
 
 fun aggregateByBodyPart(
     summaries: List<SessionSummary>,
@@ -33,7 +57,7 @@ fun aggregateByBodyPart(
     for (s in summaries) {
         if (!predicate(s.date)) continue
         val parents = s.exerciseNames.mapNotNull { tagDict[it]?.first }.toSet()
-        for (p in parents) if (p != "有氧") counts[p] = (counts[p] ?: 0) + 1
+        for (p in parents) if (p != CARDIO_PART) counts[p] = (counts[p] ?: 0) + 1
     }
     return counts
 }

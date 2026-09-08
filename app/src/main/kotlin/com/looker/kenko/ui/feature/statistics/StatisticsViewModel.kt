@@ -19,11 +19,13 @@ import androidx.lifecycle.ViewModel
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
+import com.looker.kenko.data.repository.TagRepo
 import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.statistics.HeatmapData
 import com.looker.kenko.domain.statistics.aggregateByBodyPart
 import com.looker.kenko.domain.statistics.aggregateCardioMinutes
 import com.looker.kenko.domain.statistics.buildHeatmapData90d
+import com.looker.kenko.domain.statistics.buildTagDict
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -42,6 +44,7 @@ class StatisticsViewModel @Inject constructor(
     sessionRepo: SessionRepo,
     exerciseRepo: ExerciseRepo,
     planRepo: PlanRepo,
+    tagRepo: TagRepo,
 ) : ViewModel() {
 
     val state = combine(
@@ -49,10 +52,9 @@ class StatisticsViewModel @Inject constructor(
         sessionRepo.stream,
         exerciseRepo.stream,
         planRepo.current,
-    ) { summaries, sessions, exercises, plan ->
-        val tagDict = exercises.associate { ex ->
-            ex.name to ((ex.tags.firstOrNull()?.parentName ?: "有氧") to ex.countType)
-        }
+        tagRepo.stream,
+    ) { summaries, sessions, exercises, plan, allTags ->
+        val tagDict = buildTagDict(exercises, allTags)
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         val monday = today.minus(today.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
         val dates = summaries.map { it.date }.toSet()
@@ -77,10 +79,7 @@ class StatisticsViewModel @Inject constructor(
 
         val heatmapData = buildHeatmapData90d(dates, today)
         val weeklyTrend = buildWeeklyTrend(summaries, today)
-        val actualDays = summaries.count { it.date.year == today.year && it.date.month == today.month }
-            .let { // distinct days in month
-                summaries.filter { it.date.year == today.year && it.date.month == today.month }.map { it.date }.toSet().size
-            }
+        val actualDays = summaries.filter { it.date.year == today.year && it.date.month == today.month }.map { it.date }.toSet().size
         val plannedDays = plan?.dayCount ?: 0
 
         StatisticsUiState(

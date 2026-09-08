@@ -113,4 +113,68 @@ class AggregationTest {
         val allDates = data.weeks.flatMap { it.days }.filterNotNull()
         assertEquals(true, allDates.contains(today))
     }
+
+    // ── 回归：TagMapper.toExternal 从不填充 parentName（TagEntity 无此列），
+    // 任何依赖 tag.parentName 的解析都会把全部动作误归「有氧」→ 力量统计恒为空。
+    // 以下 fixture 镜像生产形态：parentName=null，仅 parentId 可用。
+
+    @Test
+    fun `buildTagDict resolves parent via parentId when parentName is null`() {
+        val exercises = listOf(
+            Exercise(name = "腿屈伸", tags = listOf(Tag(id = 15, name = "股四头肌", parentId = 3)), countType = CountType.REPS),
+            Exercise(name = "坐姿划船", tags = listOf(Tag(id = 13, name = "竖脊肌", parentId = 2)), countType = CountType.REPS),
+        )
+        val allTags = listOf(
+            Tag(id = 2, name = "背"),
+            Tag(id = 3, name = "腿"),
+            Tag(id = 13, name = "竖脊肌", parentId = 2),
+            Tag(id = 15, name = "股四头肌", parentId = 3),
+        )
+        val dict = buildTagDict(exercises, allTags)
+        assertEquals("腿", dict["腿屈伸"]?.first)
+        assertEquals("背", dict["坐姿划船"]?.first)
+    }
+
+    @Test
+    fun `buildTagDict top-level tag uses own name`() {
+        val exercises = listOf(
+            Exercise(name = "俯卧撑", tags = listOf(Tag(id = 1, name = "胸", parentId = null)), countType = CountType.REPS),
+        )
+        val dict = buildTagDict(exercises, listOf(Tag(id = 1, name = "胸")))
+        assertEquals("胸", dict["俯卧撑"]?.first)
+    }
+
+    @Test
+    fun `buildTagDict without tags falls back to cardio`() {
+        val exercises = listOf(Exercise(name = "未知动作", tags = emptyList(), countType = CountType.REPS))
+        val dict = buildTagDict(exercises, emptyList())
+        assertEquals(CARDIO_PART, dict["未知动作"]?.first)
+    }
+
+    @Test
+    fun `regression - production-shaped tags yield non-empty strength counts`() {
+        // 旧实现（parentName ?: "有氧"）在此 fixture 下返回 {}，即用户报告的「统计页无记录」
+        val exercises = listOf(
+            Exercise(name = "腿屈伸", tags = listOf(Tag(id = 15, name = "股四头肌", parentId = 3)), countType = CountType.REPS),
+            Exercise(name = "坐姿划船", tags = listOf(Tag(id = 13, name = "竖脊肌", parentId = 2)), countType = CountType.REPS),
+            Exercise(name = "有氧快走", tags = listOf(Tag(id = 28, name = "跑步", parentId = 7)), countType = CountType.MINUTES),
+        )
+        val allTags = listOf(
+            Tag(id = 2, name = "背"),
+            Tag(id = 3, name = "腿"),
+            Tag(id = 7, name = "有氧"),
+            Tag(id = 13, name = "竖脊肌", parentId = 2),
+            Tag(id = 15, name = "股四头肌", parentId = 3),
+            Tag(id = 28, name = "跑步", parentId = 7),
+        )
+        val dict = buildTagDict(exercises, allTags)
+        val summaries = listOf(
+            SessionSummary(date = LocalDate(2026, 9, 4), planId = 3, exerciseNames = listOf("腿屈伸", "坐姿划船", "有氧快走"), setCount = 10),
+            SessionSummary(date = LocalDate(2026, 9, 5), planId = 3, exerciseNames = listOf("坐姿划船"), setCount = 6),
+        )
+        val result = aggregateByBodyPart(summaries, { true }, dict)
+        assertEquals(1, result["腿"])
+        assertEquals(2, result["背"])
+        assertEquals(null, result["有氧"])
+    }
 }
