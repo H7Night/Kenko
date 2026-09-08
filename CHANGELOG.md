@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- New Statistics page (bottom-nav "Statistics" tab): a 90-day GitHub-style activity heatmap, body-part frequency bars (this week / this month / current plan) across 7 primary parts, a monthly balance ring that flags weak parts (<8%), a 12-week session trend line, and a plan-adherence bar
+- Cardio (e.g. brisk walking) now shows duration in minutes in the statistics bars instead of a set count
+- Font size setting (Small / Medium / Large) now applies immediately and is remembered across restarts
+
+### Changed
+- Records page no longer shows its own heatmap — the activity heatmap lives on the new Statistics page
+- Selecting a plan on the Profile page now shows all weight records across that plan's activation window (e.g. from activation date to today) instead of month-bucketing
+- Export and plan-transfer files now include each exercise's body-part target (previously always empty)
+
+### Fixed
+- Body-part statistics are now populated correctly: body parts are resolved from a tag's parent id instead of a field that was never populated
+- Scheduled (periodic) backups are re-registered on app startup after an app update
+
 ## [1.8.0] - 2026-08-31
 
 ### Added
