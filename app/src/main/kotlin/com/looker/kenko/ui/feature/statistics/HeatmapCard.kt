@@ -103,51 +103,6 @@ fun HeatmapCard(
                 )
             }
 
-            // Legend row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.label_less),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                val primary = MaterialTheme.colorScheme.primary
-                val surfaceColor = MaterialTheme.colorScheme.surfaceContainerHighest
-                listOf(
-                    surfaceColor,
-                    primary.copy(alpha = 0.25f),
-                    primary.copy(alpha = 0.5f),
-                    primary.copy(alpha = 0.75f),
-                    primary
-                ).forEach { color ->
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 1.dp)
-                            .size(11.dp)
-                            .clip(MaterialTheme.shapes.extraSmall)
-                            .background(color)
-                            .then(
-                                if (color == surfaceColor) Modifier.border(
-                                    BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                                    MaterialTheme.shapes.extraSmall
-                                ) else Modifier
-                            )
-                    )
-                }
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.label_more),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
             // Summary row
             val activeDays = data.activeDays
             val totalDays = data.totalDays
