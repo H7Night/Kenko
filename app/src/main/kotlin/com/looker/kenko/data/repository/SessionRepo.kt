@@ -28,7 +28,7 @@ interface SessionRepo {
     /** 会话概要流（Records 列表页用）：轻量 JOIN 一次取回，不含组详情。 */
     val streamSummaries: Flow<List<SessionSummary>>
 
-    /** 每个计划的训练日期区间（首 session 日期 ~ 末 session 日期），仅依赖轻量查询。 */
+    /** 每个计划的激活区间（plan_history 首次激活日 ~ 最近停用日；激活中则以今天为终点）。 */
     val planDateRanges: Flow<Map<Int, Pair<LocalDate, LocalDate>>>
 
     val setsCount: Flow<Int>

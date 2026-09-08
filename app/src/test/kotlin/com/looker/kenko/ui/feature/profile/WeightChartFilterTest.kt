@@ -64,35 +64,49 @@ class WeightChartFilterTest {
     }
 
     @Test
-    fun `plan - range clamped to first and last session dates`() {
+    fun `plan - shows all weights within activation window, no month paging`() {
         val weights = listOf(
-            w(LocalDate(2026, 1, 1), 70f),
-            w(LocalDate(2026, 1, 20), 69.5f),
-            w(LocalDate(2026, 2, 15), 69f),
-            w(LocalDate(2026, 3, 10), 68f),
+            w(LocalDate(2026, 7, 20), 71f),   // 激活前 → 排除
+            w(LocalDate(2026, 8, 1), 70f),
+            w(LocalDate(2026, 8, 20), 69.5f),
+            w(LocalDate(2026, 9, 10), 69f),   // 今天 09-17 之内
+            w(LocalDate(2026, 9, 20), 68f),   // 今天之后 → 排除
         )
-        val ranges = mapOf(1 to (LocalDate(2026, 1, 9) to LocalDate(2026, 3, 6)))
+        val ranges = mapOf(1 to (LocalDate(2026, 8, 1) to LocalDate(2026, 9, 17)))
         val view = computeWeightChartView(weights, ranges, 1, null)
-        assertEquals("2026-03", view.monthLabel)
-        // 3 月 ∩ 计划区间 = 3-01~3-06 → 无记录
-        assertEquals(emptyList(), view.visibleWeights.map { it.value })
-        assertTrue(view.canGoPrev)
+        assertEquals("2026-08 ~ 2026-09", view.monthLabel)
+        assertEquals(listOf(70f, 69.5f, 69f), view.visibleWeights.map { it.value })
+        assertFalse(view.canGoPrev)
         assertFalse(view.canGoNext)
     }
 
     @Test
-    fun `plan - january month only shows records after plan start`() {
+    fun `plan - activation window within single month labels that month`() {
         val weights = listOf(
-            w(LocalDate(2026, 1, 5), 70f),
-            w(LocalDate(2026, 1, 15), 69.5f),
+            w(LocalDate(2026, 8, 2), 70f),
+            w(LocalDate(2026, 8, 15), 69f),
+            w(LocalDate(2026, 9, 1), 68f), // 停用后 → 排除
         )
-        val ranges = mapOf(1 to (LocalDate(2026, 1, 9) to LocalDate(2026, 3, 6)))
-        val view = computeWeightChartView(weights, ranges, 1, (2026 to 1))
-        assertEquals(listOf(69.5f), view.visibleWeights.map { it.value })
+        val ranges = mapOf(1 to (LocalDate(2026, 8, 1) to LocalDate(2026, 8, 31)))
+        val view = computeWeightChartView(weights, ranges, 1, null)
+        assertEquals("2026-08", view.monthLabel)
+        assertEquals(listOf(70f, 69f), view.visibleWeights.map { it.value })
     }
 
     @Test
-    fun `plan without sessions yields empty view`() {
+    fun `plan - selectedMonth is ignored when a plan is selected`() {
+        val weights = listOf(
+            w(LocalDate(2026, 8, 2), 70f),
+            w(LocalDate(2026, 9, 5), 69f),
+        )
+        val ranges = mapOf(1 to (LocalDate(2026, 8, 1) to LocalDate(2026, 9, 17)))
+        val view = computeWeightChartView(weights, ranges, 1, (2026 to 8))
+        // 不再按月过滤，仍展示整个激活期
+        assertEquals(listOf(70f, 69f), view.visibleWeights.map { it.value })
+    }
+
+    @Test
+    fun `plan without activation range yields empty view`() {
         val weights = listOf(w(LocalDate(2026, 1, 5), 70f))
         val view = computeWeightChartView(weights, emptyMap(), 1, null)
         assertTrue(view.visibleWeights.isEmpty())
@@ -106,20 +120,5 @@ class WeightChartFilterTest {
         val weights = listOf(w(LocalDate(2026, 2, 10), 70f))
         val view = computeWeightChartView(weights, emptyMap(), null, (2026 to 5))
         assertEquals("2026-02", view.monthLabel)
-    }
-
-    @Test
-    fun `plan - month arrows bounded by plan session months`() {
-        val weights = listOf(w(LocalDate(2026, 2, 10), 70f))
-        val ranges = mapOf(1 to (LocalDate(2026, 1, 9) to LocalDate(2026, 3, 6)))
-        val first = computeWeightChartView(weights, ranges, 1, (2026 to 1))
-        assertFalse(first.canGoPrev)
-        assertTrue(first.canGoNext)
-        val middle = computeWeightChartView(weights, ranges, 1, (2026 to 2))
-        assertTrue(middle.canGoPrev)
-        assertTrue(middle.canGoNext)
-        val last = computeWeightChartView(weights, ranges, 1, (2026 to 3))
-        assertTrue(last.canGoPrev)
-        assertFalse(last.canGoNext)
     }
 }

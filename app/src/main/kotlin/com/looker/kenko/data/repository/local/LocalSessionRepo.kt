@@ -32,12 +32,15 @@ import com.looker.kenko.domain.model.TrainingDayMatch
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.utils.toLocalEpochDays
 import javax.inject.Inject
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class LocalSessionRepo @Inject constructor(
     private val dao: SessionDao,
@@ -57,13 +60,21 @@ class LocalSessionRepo @Inject constructor(
         }
 
     override val planDateRanges: Flow<Map<Int, Pair<LocalDate, LocalDate>>> =
-        dao.streamPlanDates().map { list ->
-            list.mapNotNull { entry ->
-                entry.planId?.let { it to LocalDate.fromEpochDays(entry.date.value.toLong()) }
-            }
-                .groupBy({ it.first }, { it.second })
-                .mapValues { (_, dates) ->
-                    (dates.minOrNull()!!) to (dates.maxOrNull()!!)
+        historyDao.stream().map { history ->
+            history.filter { it.planId != null }
+                .groupBy { it.planId!! }
+                .mapValues { (_, rows) ->
+                    val start = LocalDate.fromEpochDays(
+                        rows.minOf { it.start.value }.toLong(),
+                    )
+                    // 激活中（end==null）视为到今天为止
+                    val todayEpoch = Clock.System.now()
+                        .toLocalDateTime(TimeZone.currentSystemDefault())
+                        .date
+                        .toLocalEpochDays()
+                        .value
+                    val endEpoch = rows.mapNotNull { it.end?.value }.maxOrNull() ?: todayEpoch
+                    start to LocalDate.fromEpochDays(endEpoch.toLong())
                 }
         }
 

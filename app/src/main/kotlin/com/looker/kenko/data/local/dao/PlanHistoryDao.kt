@@ -72,6 +72,15 @@ interface PlanHistoryDao {
     )
     suspend fun getAll(): List<PlanHistoryEntity>
 
+    @Query(
+        """
+        SELECT *
+        FROM plan_history
+        ORDER BY start
+        """
+    )
+    fun stream(): Flow<List<PlanHistoryEntity>>
+
     @Upsert
     suspend fun upsert(history: PlanHistoryEntity)
 }
