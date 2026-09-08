@@ -16,14 +16,12 @@
 package com.looker.kenko.ui.feature.statistics
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -37,6 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.ui.extension.plus
+import com.looker.kenko.ui.feature.statistics.components.AdherenceCard
+import com.looker.kenko.ui.feature.statistics.components.BalanceRingCard
+import com.looker.kenko.ui.feature.statistics.components.BodyPartBarCard
+import com.looker.kenko.ui.feature.statistics.components.TrendCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,23 +58,59 @@ fun Statistics(
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding + PaddingValues(horizontal = 12.dp))
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(innerPadding),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            HeatmapCard(
-                sessionDates = state.sessionDates,
-                today = state.today,
-                countByDate = state.countByDate,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-            )
-            // Future: add more statistics cards below heatmap (e.g., Performance plot)
-            // Keeping minimal per current requirement: heatmap at top.
+            item {
+                HeatmapCard(
+                    sessionDates = state.sessionDates,
+                    today = state.today,
+                    countByDate = state.countByDate,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            item {
+                BalanceRingCard(
+                    monthlyCounts = state.monthlyCounts,
+                    cardioMonthly = state.cardioMonthly,
+                )
+            }
+            item {
+                BodyPartBarCard(
+                    title = "本周",
+                    counts = state.weeklyCounts,
+                    cardioMinutes = state.cardioWeekly,
+                )
+            }
+            item {
+                BodyPartBarCard(
+                    title = "本月",
+                    counts = state.monthlyCounts,
+                    cardioMinutes = state.cardioMonthly,
+                )
+            }
+            item {
+                BodyPartBarCard(
+                    title = "本计划",
+                    counts = state.planCounts,
+                    cardioMinutes = state.cardioPlan,
+                )
+            }
+            item {
+                TrendCard(
+                    weeklyTrend = state.weeklyTrend,
+                )
+            }
+            item {
+                AdherenceCard(
+                    actualDays = state.actualDays,
+                    plannedDays = state.plannedDays,
+                )
+            }
         }
     }
 }
