@@ -78,6 +78,7 @@ fun Settings(
         state = state,
         onSelectLanguage = viewModel::updateLanguage,
         onSelectTheme = viewModel::updateTheme,
+        onFontSizeChanged = viewModel::setFontSize,
         onBackPress = onBackPress,
         onTagManagementClick = onTagManagementClick,
         onBackupClick = onBackupClick,
@@ -91,6 +92,7 @@ private fun Settings(
     state: SettingsUiData,
     onSelectLanguage: (Language) -> Unit,
     onSelectTheme: (Theme) -> Unit,
+    onFontSizeChanged: (Int) -> Unit,
     onBackPress: () -> Unit,
     onTagManagementClick: () -> Unit,
     onBackupClick: () -> Unit,
@@ -99,7 +101,6 @@ private fun Settings(
 ) {
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
-    var fontSize by remember { mutableStateOf(state.fontSize) }
 
     if (showLanguageDialog) {
         LanguageSelectionDialog(
@@ -160,10 +161,8 @@ private fun Settings(
             )
 
             SettingsFontSizeRow(
-                fontSize = fontSize,
-                onFontSizeChanged = { newFontSize ->
-                    fontSize = newFontSize
-                },
+                fontSize = state.fontSize,
+                onFontSizeChanged = onFontSizeChanged,
             )
 
             HorizontalDivider(
@@ -459,6 +458,7 @@ private fun SettingsPreview() {
             ),
             onSelectLanguage = {},
             onSelectTheme = {},
+            onFontSizeChanged = {},
             onBackPress = {},
             onTagManagementClick = {},
             onBackupClick = {},

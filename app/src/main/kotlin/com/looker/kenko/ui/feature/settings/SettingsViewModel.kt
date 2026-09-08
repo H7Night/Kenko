@@ -114,6 +114,16 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setFontSize(fontSize: Int) {
+        viewModelScope.launch {
+            try {
+                repo.setFontSize(fontSize)
+            } catch (e: Exception) {
+                _snackbar.emit(e.message ?: "An error occurred")
+            }
+        }
+    }
+
     fun setBackupLocation(uri: Uri) {
         viewModelScope.launch {
             try {

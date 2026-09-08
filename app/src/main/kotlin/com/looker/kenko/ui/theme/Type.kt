@@ -20,6 +20,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.looker.kenko.R
 
@@ -147,3 +148,37 @@ val Typography = Typography().copy(
         letterSpacing = 0.06.sp,
     ),
 )
+
+/** 基准字体大小（sp），对应设置里的「中」。 */
+const val BaseFontSize = 14
+
+/**
+ * 按用户字体大小缩放整个 Typography 体系。
+ * 以 [BaseFontSize] 为基准等比放大/缩小各字号与行高，
+ * 供 KenkoTheme 在设置变更后全局应用。
+ */
+fun Typography.scaled(fontSize: Int): Typography {
+    val scale = fontSize.toFloat() / BaseFontSize
+    fun TextUnit.scaledSp() = (value * scale).sp
+    fun scaled(style: TextStyle) = style.copy(
+        fontSize = style.fontSize.scaledSp(),
+        lineHeight = style.lineHeight.scaledSp(),
+    )
+    return copy(
+        displayLarge = scaled(displayLarge),
+        displayMedium = scaled(displayMedium),
+        displaySmall = scaled(displaySmall),
+        headlineLarge = scaled(headlineLarge),
+        headlineMedium = scaled(headlineMedium),
+        headlineSmall = scaled(headlineSmall),
+        titleLarge = scaled(titleLarge),
+        titleMedium = scaled(titleMedium),
+        titleSmall = scaled(titleSmall),
+        bodyLarge = scaled(bodyLarge),
+        bodyMedium = scaled(bodyMedium),
+        bodySmall = scaled(bodySmall),
+        labelLarge = scaled(labelLarge),
+        labelMedium = scaled(labelMedium),
+        labelSmall = scaled(labelSmall),
+    )
+}
