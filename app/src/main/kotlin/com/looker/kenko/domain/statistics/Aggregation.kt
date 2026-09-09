@@ -29,11 +29,6 @@ import kotlinx.datetime.plus
 const val CARDIO_PART = "有氧"
 
 /**
- * 一级部位展示顺序（数据键，须与 DB 一级标签名一致）。Cardio 恒为末位。
- */
-val BODY_PARTS: List<String> = listOf("胸", "背", "腿", "手臂", "肩", "核心", CARDIO_PART)
-
-/**
  * 动作名 → (一级部位, 计量方式)。
  * 部位解析必须走 parentId → 父标签名：TagEntity 没有 parentName 列，
  * TagMapper.toExternal 从不填充 parentName（恒为 null），

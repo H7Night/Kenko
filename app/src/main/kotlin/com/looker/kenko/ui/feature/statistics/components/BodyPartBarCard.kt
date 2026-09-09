@@ -35,15 +35,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
-import com.looker.kenko.domain.statistics.BODY_PARTS
 import com.looker.kenko.domain.statistics.CARDIO_PART
 import com.looker.kenko.ui.theme.KenkoTheme
+
+private val PreviewBodyParts = listOf("胸", "背", "腿", "手臂", "肩", "核心", CARDIO_PART)
 
 @Composable
 fun BodyPartBarCard(
     title: String,
     counts: Map<String, Int>,
     cardioMinutes: Int,
+    bodyParts: List<String>,
     modifier: Modifier = Modifier,
     maxCount: Int = maxOf(1, counts.values.maxOrNull() ?: 1),
     maxMinutes: Int = maxOf(1, cardioMinutes),
@@ -67,7 +69,7 @@ fun BodyPartBarCard(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
             )
-            BODY_PARTS.forEach { part ->
+            bodyParts.forEach { part ->
                 val isCardio = part == CARDIO_PART
                 val value = if (isCardio) cardioMinutes else counts[part] ?: 0
                 val max = if (isCardio) safeMaxMinutes else safeMaxCount
@@ -113,6 +115,7 @@ private fun BodyPartBarCardPreview() {
             title = "本周",
             counts = mapOf("胸" to 3, "腿" to 0),
             cardioMinutes = 30,
+            bodyParts = PreviewBodyParts,
         )
     }
 }
@@ -125,6 +128,7 @@ private fun BodyPartBarCardEmptyPreview() {
             title = "本月",
             counts = emptyMap(),
             cardioMinutes = 0,
+            bodyParts = PreviewBodyParts,
         )
     }
 }
@@ -137,6 +141,7 @@ private fun BodyPartBarCardFullPreview() {
             title = "本计划",
             counts = mapOf("胸" to 5, "背" to 3, "腿" to 4, "手臂" to 2, "肩" to 3, "核心" to 1),
             cardioMinutes = 45,
+            bodyParts = PreviewBodyParts,
             maxCount = 5,
             maxMinutes = 60,
         )

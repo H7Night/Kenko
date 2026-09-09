@@ -26,6 +26,7 @@ import com.looker.kenko.domain.statistics.aggregateByBodyPart
 import com.looker.kenko.domain.statistics.aggregateCardioMinutes
 import com.looker.kenko.domain.statistics.buildHeatmapData90d
 import com.looker.kenko.domain.statistics.buildTagDict
+import com.looker.kenko.domain.statistics.CARDIO_PART
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -55,6 +56,7 @@ class StatisticsViewModel @Inject constructor(
         tagRepo.stream,
     ) { summaries, sessions, exercises, plan, allTags ->
         val tagDict = buildTagDict(exercises, allTags)
+        val bodyParts = buildBodyParts(allTags)
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         val monday = today.minus(today.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
         val dates = summaries.map { it.date }.toSet()
@@ -87,6 +89,7 @@ class StatisticsViewModel @Inject constructor(
             countByDate = countByDate,
             today = today,
             heatmapData = heatmapData,
+            bodyParts = bodyParts,
             weeklyCounts = weeklyCounts,
             monthlyCounts = monthlyCounts,
             planCounts = planCounts,
@@ -112,6 +115,21 @@ private fun buildWeeklyTrend(summaries: List<SessionSummary>, today: LocalDate):
     }
 }
 
+/** 一级部位（parentId==null）按 sortOrder 排序；有氧恒置末位。 */
+private fun buildBodyParts(allTags: List<com.looker.kenko.domain.model.Tag>): List<String> =
+    allTags
+        .filter { it.parentId == null }
+        .sortedBy { it.sortOrder }
+        .map { it.name }
+        .let { parts ->
+            val cardio = parts.firstOrNull { it == CARDIO_PART }
+            if (cardio == null) {
+                parts
+            } else {
+                (parts - cardio) + cardio
+            }
+        }
+
 data class StatisticsUiState(
     val sessionDates: Set<LocalDate> = emptySet(),
     val countByDate: Map<LocalDate, Int> = emptyMap(),
@@ -120,6 +138,7 @@ data class StatisticsUiState(
         emptySet(),
         Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
     ),
+    val bodyParts: List<String> = emptyList(),
     val weeklyCounts: Map<String, Int> = emptyMap(),
     val monthlyCounts: Map<String, Int> = emptyMap(),
     val planCounts: Map<String, Int> = emptyMap(),

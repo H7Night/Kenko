@@ -42,11 +42,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
-import com.looker.kenko.domain.statistics.BODY_PARTS
 import com.looker.kenko.domain.statistics.CARDIO_PART
 import com.looker.kenko.ui.theme.KenkoTheme
-import kotlin.math.cos
-import kotlin.math.sin
 
 private val BalanceColors = mapOf(
     "胸" to Color(0xFF5E6AD2),
@@ -58,20 +55,17 @@ private val BalanceColors = mapOf(
     CARDIO_PART to Color(0xFF9CA3AF),
 )
 
-private const val WeakThreshold = 0.08f
-
 @Composable
 fun BalanceRingCard(
     monthlyCounts: Map<String, Int>,
     cardioMonthly: Int,
+    bodyParts: List<String>,
     modifier: Modifier = Modifier,
 ) {
-    val values = BODY_PARTS.associateWith { part ->
+    val values = bodyParts.associateWith { part ->
         if (part == CARDIO_PART) cardioMonthly else monthlyCounts[part] ?: 0
     }
     val total = values.values.sum()
-    val weakParts = if (total == 0) emptySet()
-    else values.filter { (_, v) -> v.toFloat() / total < WeakThreshold }.keys
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -86,11 +80,6 @@ fun BalanceRingCard(
             Text(
                 text = stringResource(R.string.label_monthly_balance),
                 style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = stringResource(R.string.label_weak_threshold),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             if (total == 0) {
@@ -126,7 +115,6 @@ fun BalanceRingCard(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     // Donut canvas
-                    val errorColor = MaterialTheme.colorScheme.error
                     Canvas(modifier = Modifier.size(128.dp)) {
                         val stroke = 18.dp.toPx()
                         val diameter = size.minDimension - stroke
@@ -134,7 +122,7 @@ fun BalanceRingCard(
                         val arcSize = Size(diameter, diameter)
                         var startAngle = -90f
                         // Draw slices
-                        for (part in BODY_PARTS) {
+                        for (part in bodyParts) {
                             val v = values[part] ?: 0
                             if (v == 0) continue
                             val sweep = 360f * v.toFloat() / total
@@ -150,40 +138,6 @@ fun BalanceRingCard(
                             )
                             startAngle += sweep
                         }
-                        // Draw red dots for weak parts
-                        var dotStart = -90f
-                        for (part in BODY_PARTS) {
-                            val v = values[part] ?: 0
-                            if (v == 0) {
-                                if (total != 0) {
-                                    val sweepSkip = 360f * v.toFloat() / total
-                                    dotStart += sweepSkip
-                                }
-                                continue
-                            }
-                            val sweep = 360f * v.toFloat() / total
-                            val isWeak = v.toFloat() / total < WeakThreshold
-                            if (isWeak) {
-                                val midAngle = dotStart + sweep / 2
-                                val rad = Math.toRadians(midAngle.toDouble())
-                                val dotR = 5.dp.toPx()
-                                val borderR = 7.dp.toPx()
-                                val dCx = center.x + cos(rad).toFloat() * (diameter / 2)
-                                val dCy = center.y + sin(rad).toFloat() * (diameter / 2)
-                                // white border for contrast
-                                drawCircle(
-                                    color = Color.White,
-                                    radius = borderR,
-                                    center = Offset(dCx, dCy),
-                                )
-                                drawCircle(
-                                    color = errorColor,
-                                    radius = dotR,
-                                    center = Offset(dCx, dCy),
-                                )
-                            }
-                            dotStart += sweep
-                        }
                     }
 
                     // Legend
@@ -191,10 +145,9 @@ fun BalanceRingCard(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
-                        BODY_PARTS.forEach { part ->
+                        bodyParts.forEach { part ->
                             val v = values[part] ?: 0
                             val pct = if (total == 0) 0f else v.toFloat() / total
-                            val isWeak = part in weakParts
                             val color = BalanceColors[part] ?: Color.Gray
                             val label = if (part == CARDIO_PART) {
                                 stringResource(R.string.label_count_minutes, v)
@@ -228,29 +181,6 @@ fun BalanceRingCard(
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
-                                if (isWeak) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        modifier = Modifier
-                                            .background(
-                                                MaterialTheme.colorScheme.errorContainer,
-                                                RoundedCornerShape(4.dp),
-                                            )
-                                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(6.dp)
-                                                .background(MaterialTheme.colorScheme.error, RoundedCornerShape(50)),
-                                        )
-                                        Text(
-                                            text = stringResource(R.string.label_weak),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onErrorContainer,
-                                        )
-                                    }
-                                }
                             }
                         }
                     }
@@ -267,6 +197,7 @@ private fun BalanceRingCardPreviewBalanced() {
         BalanceRingCard(
             monthlyCounts = mapOf("胸" to 4, "背" to 4, "腿" to 3, "手臂" to 2, "肩" to 2, "核心" to 3),
             cardioMonthly = 30,
+            bodyParts = PreviewBodyParts,
         )
     }
 }
@@ -278,6 +209,7 @@ private fun BalanceRingCardPreviewImbalanced() {
         BalanceRingCard(
             monthlyCounts = mapOf("胸" to 10, "背" to 1, "腿" to 0, "手臂" to 1, "肩" to 0, "核心" to 0),
             cardioMonthly = 0,
+            bodyParts = PreviewBodyParts,
         )
     }
 }
@@ -289,6 +221,9 @@ private fun BalanceRingCardPreviewEmpty() {
         BalanceRingCard(
             monthlyCounts = emptyMap(),
             cardioMonthly = 0,
+            bodyParts = PreviewBodyParts,
         )
     }
 }
+
+private val PreviewBodyParts = listOf("胸", "背", "腿", "手臂", "肩", "核心", CARDIO_PART)

@@ -77,6 +77,7 @@ fun Statistics(
                 BalanceRingCard(
                     monthlyCounts = state.monthlyCounts,
                     cardioMonthly = state.cardioMonthly,
+                    bodyParts = state.bodyParts,
                 )
             }
             item {
@@ -84,6 +85,7 @@ fun Statistics(
                     title = stringResource(R.string.label_stat_week),
                     counts = state.weeklyCounts,
                     cardioMinutes = state.cardioWeekly,
+                    bodyParts = state.bodyParts,
                 )
             }
             item {
@@ -91,6 +93,7 @@ fun Statistics(
                     title = stringResource(R.string.label_stat_month),
                     counts = state.monthlyCounts,
                     cardioMinutes = state.cardioMonthly,
+                    bodyParts = state.bodyParts,
                 )
             }
             item {
@@ -98,6 +101,7 @@ fun Statistics(
                     title = stringResource(R.string.label_stat_plan),
                     counts = state.planCounts,
                     cardioMinutes = state.cardioPlan,
+                    bodyParts = state.bodyParts,
                 )
             }
             item {

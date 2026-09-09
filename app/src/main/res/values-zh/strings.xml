@@ -174,9 +174,7 @@
     <string name="label_count_times">%1$d 次</string>
     <string name="label_count_minutes">%1$d 分钟</string>
     <string name="label_monthly_balance">本月平衡</string>
-    <string name="label_weak_threshold">占比 &lt;8% 为薄弱</string>
     <string name="label_no_records">暂无记录</string>
-    <string name="label_weak">薄弱</string>
     <string name="label_percent">%1$d%%</string>
     <string name="label_trend_12w">近12周趋势</string>
     <string name="label_weekly_count">每周训练次数</string>

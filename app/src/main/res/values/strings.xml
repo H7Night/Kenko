@@ -180,9 +180,7 @@
     <string name="label_count_times">%1$d×</string>
     <string name="label_count_minutes">%1$d min</string>
     <string name="label_monthly_balance">Monthly Balance</string>
-    <string name="label_weak_threshold">Share &lt;8% is weak</string>
     <string name="label_no_records">No records</string>
-    <string name="label_weak">Weak</string>
     <string name="label_percent">%1$d%%</string>
     <string name="label_trend_12w">12-Week Trend</string>
     <string name="label_weekly_count">Sessions per week</string>
