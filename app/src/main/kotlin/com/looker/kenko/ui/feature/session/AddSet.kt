@@ -284,7 +284,10 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                         text = stringResource(R.string.label_bodyweight_display),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.width(48.dp).padding(horizontal = 4.dp),
+                        modifier = Modifier.width(72.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        maxLines = 1,
+                        softWrap = false,
                     )
                 } else {
                     if (!viewModel.isWeightZero) {
