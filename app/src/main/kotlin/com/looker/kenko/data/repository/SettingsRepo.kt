@@ -41,6 +41,4 @@ interface SettingsRepo {
     suspend fun setLastBackupTime(instant: Instant?)
 
     suspend fun setLanguage(language: Language)
-
-    suspend fun setFontSize(fontSize: Int)
 }

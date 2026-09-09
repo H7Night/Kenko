@@ -105,7 +105,6 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val theme by viewModel.theme.collectAsStateWithLifecycle()
             val language by viewModel.language.collectAsStateWithLifecycle()
-            val fontSize by viewModel.fontSize.collectAsStateWithLifecycle()
 
             LaunchedEffect(language) {
                 val appLocale: LocaleListCompat = if (language.code != null) {
@@ -120,7 +119,6 @@ class MainActivity : AppCompatActivity() {
 
             KenkoTheme(
                 theme = theme,
-                fontSize = fontSize,
             ) {
                 val navController = rememberNavController()
                 val backStackEntry by navController.currentBackStackEntryAsState()

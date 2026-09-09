@@ -122,7 +122,6 @@ private val CatppuccinMochaColorScheme: ColorScheme = darkColorScheme(
 @Composable
 fun KenkoTheme(
     theme: Theme = Theme.System,
-    fontSize: Int = BaseFontSize,
     content: @Composable () -> Unit,
 ) {
     val systemTheme = isSystemInDarkTheme()
@@ -138,8 +137,6 @@ fun KenkoTheme(
     } else {
         CatppuccinLatteColorScheme
     }
-    val scaledTypography = remember(fontSize) { Typography.scaled(fontSize) }
-
     val localView = LocalView.current
     SideEffect {
         // Keep the window background in sync with the theme so page transitions
@@ -152,7 +149,7 @@ fun KenkoTheme(
 
     MaterialExpressiveTheme(
         colorScheme = colorScheme,
-        typography = scaledTypography,
+        typography = Typography,
         shapes = Shapes,
         content = content,
     )

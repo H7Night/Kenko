@@ -50,9 +50,6 @@ class MainViewModel @Inject constructor(
     val language: StateFlow<Language> = repo.get { language }
         .asStateFlow(Language.System)
 
-    val fontSize: StateFlow<Int> = repo.get { fontSize }
-        .asStateFlow(com.looker.kenko.ui.theme.BaseFontSize)
-
     val isExerciseVisible: StateFlow<Boolean> = sessionRepo.streamByDate(today())
         .map { it != null && it.sets.isNotEmpty() }
         .asStateFlow(false)
