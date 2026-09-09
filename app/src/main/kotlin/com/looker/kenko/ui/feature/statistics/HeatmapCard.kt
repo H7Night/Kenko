@@ -104,29 +104,6 @@ fun HeatmapCard(
                     data = data,
                 )
             }
-
-            // Summary row
-            val activeDays = data.activeDays
-            val totalDays = data.totalDays
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = stringResource(R.string.label_active_days, activeDays, totalDays),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (data.maxCount > 0) {
-                    Text(
-                        text = stringResource(R.string.label_max_per_day, data.maxCount),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
         }
     }
 }
@@ -289,8 +266,6 @@ private data class HeatmapDisplayData(
     val weeks: List<HeatmapWeekDisplay>,
     val monthLabels: List<Pair<Int, String>>,
     val maxCount: Int,
-    val activeDays: Int,
-    val totalDays: Int,
 )
 
 private fun buildHeatmapDisplayData(
@@ -302,8 +277,6 @@ private fun buildHeatmapDisplayData(
     val raw = buildHeatmapData90d(sessionDates, today)
     val monthLabels = mutableListOf<Pair<Int, String>>()
     var maxCount = 0
-    var activeDays = 0
-    var totalDays = 0
 
     val weeks = raw.weeks.mapIndexed { wIndex, week ->
         // month label if this week contains the 1st of a month
@@ -320,10 +293,6 @@ private fun buildHeatmapDisplayData(
             val count = countByDate[d] ?: if (d in sessionDates) 1 else 0
             if (count > maxCount) maxCount = count
             val isFuture = d > today
-            if (!isFuture) {
-                totalDays++
-                if (count > 0) activeDays++
-            }
             HeatmapDay(d, count, isFuture)
         }
         HeatmapWeekDisplay(days)
@@ -341,7 +310,5 @@ private fun buildHeatmapDisplayData(
         weeks = weeks,
         monthLabels = monthLabels,
         maxCount = maxCount,
-        activeDays = activeDays,
-        totalDays = totalDays,
     )
 }

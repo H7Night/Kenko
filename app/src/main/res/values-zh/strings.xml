@@ -165,10 +165,6 @@
     <string name="label_performance">表现</string>
     <string name="label_statistics">统计</string>
     <string name="label_profile">我的</string>
-    <string name="label_less">少</string>
-    <string name="label_more">多</string>
-    <string name="label_active_days">活跃 %1$d / %2$d 天</string>
-    <string name="label_max_per_day">单日最高 %1$d 次</string>
 
     <!--Statistics-->
     <string name="label_last_90_days">最近90天</string>
