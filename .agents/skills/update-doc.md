@@ -20,7 +20,7 @@ allowed-tools: Read, Glob, Grep, Bash, Edit
 | `README_cn.md` | 用户（中文） | 功能特性、技术栈、构建/发布说明（简体中文） |
 | `.agents/AGENTS.md` | agent | 工作流、构建命令、架构说明、文档维护规范 |
 
-> ⚠️ **`.agents/` 目录从未被 git 跟踪**：对其修改（含本技能文件本身）只落在工作区，不纳入提交；如需纳入版本控制须先与用户确认。`CHANGELOG.md`、`README.md`、`README_cn.md` 是被跟踪文件，正常提交。
+> ⚠️ **`.agents/` 目录已被 git 跟踪**（含 `AGENTS.md`、`skills/` 技能文件）：对其修改需正常提交。`.gitignore` 已用 `docs/*` 忽略 docs 内容、`.superpowers` 忽略 SDD 工作区；`CHANGELOG.md`、`README.md`、`README_cn.md` 是被跟踪文件，正常提交。
 
 ## 二、CHANGELOG.md 规则
 

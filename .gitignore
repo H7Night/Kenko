@@ -27,10 +27,11 @@ local.properties
 *.zip
 
 # ============ 文档 ============
-docs/
+docs/*
 
 # ============ 本地个人环境配置============
 /AGENTS.md
 /reasonix.toml
 .reasonix/
 .reasonix
+.superpowers
