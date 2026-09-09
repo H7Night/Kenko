@@ -38,18 +38,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,9 +64,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
-import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanStat
 import com.looker.kenko.domain.model.Weight
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toLocalDateTime
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.OutlineBorder
 import com.looker.kenko.ui.component.SecondaryBorder
@@ -95,10 +97,8 @@ fun Profile(
     showBackButton: Boolean = false,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val selectedPlanId by viewModel.selectedPlanId.collectAsStateWithLifecycle()
     Profile(
         state = state,
-        selectedPlanId = selectedPlanId,
         onBackPress = onBackPress,
         onSettingsClick = onSettingsClick,
         onPlanClick = onPlanClick,
@@ -109,7 +109,8 @@ fun Profile(
         onDeleteWeight = viewModel::deleteWeight,
         onPrevMonth = viewModel::prevMonth,
         onNextMonth = viewModel::nextMonth,
-        onPlanSelect = viewModel::selectPlan,
+        onSetCustomRange = viewModel::setCustomRange,
+        onClearCustomRange = viewModel::clearCustomRange,
         showBackButton = showBackButton,
     )
 }
@@ -118,7 +119,6 @@ fun Profile(
 @Composable
 private fun Profile(
     state: ProfileUiState,
-    selectedPlanId: Int?,
     onBackPress: () -> Unit,
     onSettingsClick: () -> Unit,
     onPlanClick: () -> Unit,
@@ -129,7 +129,8 @@ private fun Profile(
     onDeleteWeight: (Int) -> Unit,
     onPrevMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    onPlanSelect: (Int?) -> Unit,
+    onSetCustomRange: (LocalDate, LocalDate) -> Unit,
+    onClearCustomRange: () -> Unit,
     modifier: Modifier = Modifier,
     showBackButton: Boolean = false,
 ) {
@@ -229,14 +230,14 @@ private fun Profile(
             WeightCard(
                 weights = state.weights,
                 filteredWeights = state.filteredWeights,
-                plans = state.plans,
-                selectedPlanId = selectedPlanId,
                 selectedMonthLabel = state.selectedMonthLabel,
                 canGoPrev = state.canGoPrev,
                 canGoNext = state.canGoNext,
+                customRangeActive = state.customRangeActive,
                 onPrevMonth = onPrevMonth,
                 onNextMonth = onNextMonth,
-                onPlanSelect = onPlanSelect,
+                onSetCustomRange = onSetCustomRange,
+                onClearCustomRange = onClearCustomRange,
                 onAddClick = { weightDialog = WeightDialogState.Add(state.weights.lastOrNull()?.value ?: 60f) },
                 onHistoryClick = { showWeightHistory = true }
             )
@@ -307,23 +308,29 @@ private fun ExerciseCard(
 private fun WeightCard(
     weights: List<Weight>,
     filteredWeights: List<Weight>,
-    plans: List<Plan>,
-    selectedPlanId: Int?,
     selectedMonthLabel: String?,
     canGoPrev: Boolean,
     canGoNext: Boolean,
+    customRangeActive: Boolean,
     onPrevMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    onPlanSelect: (Int?) -> Unit,
+    onSetCustomRange: (LocalDate, LocalDate) -> Unit,
+    onClearCustomRange: () -> Unit,
     onAddClick: () -> Unit,
     onHistoryClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var planExpanded by remember { mutableStateOf(false) }
-    val selectedPlanName = selectedPlanId?.let { id ->
-        plans.find { it.id == id }?.name
-            ?: stringResource(R.string.label_select_plan_one)
-    } ?: stringResource(R.string.label_all_muscle_groups)
+    var showRangeDialog by remember { mutableStateOf(false) }
+
+    if (showRangeDialog) {
+        WeightRangeDialog(
+            onDismiss = { showRangeDialog = false },
+            onConfirm = { start, end ->
+                onSetCustomRange(start, end)
+                showRangeDialog = false
+            },
+        )
+    }
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -356,7 +363,7 @@ private fun WeightCard(
                 }
             }
 
-            // Filter row: month switcher + plan dropdown (only when there is any record)
+            // Filter row: month switcher + custom range (only when there is any record)
             if (weights.isNotEmpty()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -390,41 +397,12 @@ private fun WeightCard(
                         )
                     }
                     Spacer(modifier = Modifier.weight(1f))
-                    ExposedDropdownMenuBox(
-                        expanded = planExpanded,
-                        onExpandedChange = { planExpanded = it },
-                    ) {
-                        OutlinedTextField(
-                            value = selectedPlanName,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text(stringResource(R.string.label_select_plan_one)) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = planExpanded) },
-                            modifier = Modifier
-                                .menuAnchor()
-                                .width(132.dp),
-                            singleLine = true,
-                        )
-                        ExposedDropdownMenu(
-                            expanded = planExpanded,
-                            onDismissRequest = { planExpanded = false },
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.label_all_muscle_groups)) },
-                                onClick = {
-                                    onPlanSelect(null)
-                                    planExpanded = false
-                                },
-                            )
-                            plans.forEach { plan ->
-                                DropdownMenuItem(
-                                    text = { Text(plan.name) },
-                                    onClick = {
-                                        onPlanSelect(plan.id)
-                                        planExpanded = false
-                                    },
-                                )
-                            }
+                    TextButton(onClick = { showRangeDialog = true }) {
+                        Text(stringResource(R.string.label_custom_range))
+                    }
+                    if (customRangeActive) {
+                        TextButton(onClick = onClearCustomRange) {
+                            Text(stringResource(R.string.label_clear))
                         }
                     }
                 }
@@ -494,6 +472,120 @@ private fun WeightCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WeightRangeDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (LocalDate, LocalDate) -> Unit,
+) {
+    val today = com.looker.kenko.domain.model.today()
+    var startDate by remember { mutableStateOf<LocalDate?>(null) }
+    var endDate by remember { mutableStateOf<LocalDate?>(null) }
+    var showStartPicker by remember { mutableStateOf(false) }
+    var showEndPicker by remember { mutableStateOf(false) }
+
+    if (showStartPicker) {
+        val pickerState = rememberDatePickerState(
+            initialSelectedDateMillis = (startDate ?: today).toEpochDayMillis(),
+        )
+        DatePickerDialog(
+            onDismissRequest = { showStartPicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pickerState.selectedDateMillis?.let { startDate = it.toLocalDate() }
+                        showStartPicker = false
+                    },
+                ) { Text(stringResource(R.string.label_ok)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showStartPicker = false }) { Text(stringResource(R.string.label_cancel)) }
+            },
+        ) { DatePicker(state = pickerState) }
+    }
+
+    if (showEndPicker) {
+        val pickerState = rememberDatePickerState(
+            initialSelectedDateMillis = (endDate ?: today).toEpochDayMillis(),
+        )
+        DatePickerDialog(
+            onDismissRequest = { showEndPicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pickerState.selectedDateMillis?.let { endDate = it.toLocalDate() }
+                        showEndPicker = false
+                    },
+                ) { Text(stringResource(R.string.label_ok)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEndPicker = false }) { Text(stringResource(R.string.label_cancel)) }
+            },
+        ) { DatePicker(state = pickerState) }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.label_custom_range_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                RangeDateRow(
+                    label = stringResource(R.string.label_start_date),
+                    date = startDate,
+                    onClick = { showStartPicker = true },
+                )
+                RangeDateRow(
+                    label = stringResource(R.string.label_end_date),
+                    date = endDate,
+                    onClick = { showEndPicker = true },
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val s = startDate ?: return@TextButton
+                    val e = endDate ?: return@TextButton
+                    onConfirm(minOf(s, e), maxOf(s, e))
+                },
+                enabled = startDate != null && endDate != null,
+            ) { Text(stringResource(R.string.label_confirm)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.label_cancel)) }
+        },
+    )
+}
+
+@Composable
+private fun RangeDateRow(
+    label: String,
+    date: LocalDate?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(text = label, style = MaterialTheme.typography.bodyMedium)
+        TextButton(onClick = onClick) {
+            Text(
+                text = date?.toString() ?: stringResource(R.string.label_select_date),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
+}
+
+private fun LocalDate.toEpochDayMillis(): Long =
+    toEpochDays().toInt().toLong() * 86_400_000L
+
+private fun Long.toLocalDate(): LocalDate =
+    kotlin.time.Instant.fromEpochMilliseconds(this)
+        .toLocalDateTime(kotlinx.datetime.TimeZone.UTC).date
+
 @Preview(showBackground = true)
 @Composable
 private fun ExerciseCardPreview() {
@@ -508,7 +600,6 @@ private fun ProfileNoPlanPreview() {
     KenkoTheme {
         Profile(
             state = ProfileUiState(12, false, "Push-Pull-Leg", emptyList(), PlanStat(12, 5)),
-            selectedPlanId = null,
             onBackPress = { },
             onSettingsClick = { },
             onPlanClick = { },
@@ -519,7 +610,8 @@ private fun ProfileNoPlanPreview() {
             onDeleteWeight = {},
             onPrevMonth = {},
             onNextMonth = {},
-            onPlanSelect = {},
+            onSetCustomRange = { _, _ -> },
+            onClearCustomRange = {},
         )
     }
 }
@@ -530,7 +622,6 @@ private fun ProfilePreview() {
     KenkoTheme {
         Profile(
             state = ProfileUiState(12, true, "Push-Pull-Leg", emptyList(), PlanStat(12, 5)),
-            selectedPlanId = null,
             onBackPress = { },
             onSettingsClick = { },
             onPlanClick = { },
@@ -541,7 +632,8 @@ private fun ProfilePreview() {
             onDeleteWeight = {},
             onPrevMonth = {},
             onNextMonth = {},
-            onPlanSelect = {},
+            onSetCustomRange = { _, _ -> },
+            onClearCustomRange = {},
         )
     }
 }

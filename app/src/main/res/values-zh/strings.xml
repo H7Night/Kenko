@@ -89,6 +89,9 @@
     <string name="label_lifts">动作记录</string>
     <string name="label_body_weight">体重记录</string>
     <string name="label_body_weight_history">体重历史</string>
+    <string name="label_custom_range">范围</string>
+    <string name="label_custom_range_title">选择日期范围</string>
+    <string name="label_clear">清除</string>
     <string name="label_add_body_weight">添加体重</string>
     <string name="label_no_weight_in_period">该时间段无体重记录</string>
     <string name="label_edit_body_weight">编辑体重</string>

@@ -21,9 +21,9 @@ import kotlinx.datetime.LocalDate
 /** 计算后的体重图视图状态（纯函数，便于单元测试）。 */
 data class WeightChartView(
     val visibleWeights: List<Weight>,
-    /** 显示区间标签；null 表示当前无任何可展示的数据（无体重记录 / 所选计划无激活区间）。 */
+    /** 显示区间标签；null 表示当前无任何可展示的数据（无体重记录）。 */
     val monthLabel: String?,
-    /** 当前展示月份 (year, month)；null 表示无数据。 */
+    /** 当前展示月份 (year, month)；null 表示无数据或处于自定义区间模式。 */
     val currentMonth: Pair<Int, Int>?,
     val canGoPrev: Boolean,
     val canGoNext: Boolean,
@@ -33,46 +33,37 @@ data class WeightChartView(
  * 根据筛选条件计算体重图显示区间与月份导航状态。
  *
  * @param weights 全部体重记录（升序或乱序均可，结果会排序）
- * @param planDateRanges 计划 id -> (激活起始日, 激活结束日)；激活中的计划结束日已解析为今天
- * @param selectedPlanId 选中计划（null = 全部）
- * @param selectedMonth 当前选中月份 (year, month)；仅未选计划时生效（null = 取范围内最近月份）
+ * @param selectedMonth 当前选中月份 (year, month)；自定义区间模式下忽略（null = 取范围内最近月份）
+ * @param customRange 自定义时间范围 (起始日, 结束日)；非 null 时展示该区间全部记录，不按月翻页
  *
  * 规则：
- * - 未选计划：月份范围 = 全部体重记录的首末月份，按月翻页筛选
- * - 选了计划：展示该计划整个激活区间内的全部体重记录（如激活 08-01、现 09-17 → 08-01~09-17），
- *   不按月翻页（canGoPrev/canGoNext 恒 false）
- * - 所选计划无激活区间时返回空视图（空态）
+ * - 无自定义区间：月份范围 = 全部体重记录的首末月份，按月翻页筛选
+ * - 有自定义区间：展示 [start, end] 内全部记录（不按月翻页，canGoPrev/canGoNext 恒 false）
  */
 fun computeWeightChartView(
     weights: List<Weight>,
-    planDateRanges: Map<Int, Pair<LocalDate, LocalDate>>,
-    selectedPlanId: Int?,
     selectedMonth: Pair<Int, Int>?,
+    customRange: Pair<LocalDate, LocalDate>?,
 ): WeightChartView {
     if (weights.isEmpty()) {
         return WeightChartView(emptyList(), null, null, canGoPrev = false, canGoNext = false)
     }
 
-    val planRange: Pair<LocalDate, LocalDate>? = selectedPlanId?.let { planDateRanges[it] }
-    if (selectedPlanId != null && planRange == null) {
-        return WeightChartView(emptyList(), null, null, canGoPrev = false, canGoNext = false)
-    }
-
-    if (selectedPlanId != null) {
-        val (start, end) = planRange!!
+    if (customRange != null) {
+        val (start, end) = customRange
         val visible = weights
             .filter { it.date >= start && it.date <= end }
             .sortedBy { it.date }
         return WeightChartView(
             visibleWeights = visible,
             monthLabel = periodLabel(start, end),
-            currentMonth = end.year to end.monthNumber,
+            currentMonth = null,
             canGoPrev = false,
             canGoNext = false,
         )
     }
 
-    // 未选计划：全部体重记录首末月之间翻页
+    // 无自定义区间：全部体重记录首末月之间翻页
     val (firstY, firstM) = run {
         val first = weights.minOf { it.date }
         first.year to first.monthNumber

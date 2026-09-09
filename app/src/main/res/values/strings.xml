@@ -96,6 +96,9 @@
     <string name="label_lifts">Lifts</string>
     <string name="label_body_weight">Weight</string>
     <string name="label_body_weight_history">Weight History</string>
+    <string name="label_custom_range">Range</string>
+    <string name="label_custom_range_title">Select date range</string>
+    <string name="label_clear">Clear</string>
     <string name="label_add_body_weight">Add Weight</string>
     <string name="label_no_weight_in_period">No weight records in this period</string>
     <string name="label_edit_body_weight">Edit Weight</string>

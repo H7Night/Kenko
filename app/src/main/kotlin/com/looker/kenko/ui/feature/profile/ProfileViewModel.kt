@@ -47,7 +47,6 @@ class ProfileViewModel @Inject constructor(
     planRepo: PlanRepo,
     private val weightRepo: WeightRepo,
     exerciseRepo: ExerciseRepo,
-    sessionRepo: SessionRepo,
 ) : ViewModel() {
 
     private val currentPlan: Flow<Plan?> = planRepo.current
@@ -55,21 +54,17 @@ class ProfileViewModel @Inject constructor(
     val plans: StateFlow<List<Plan>> = planRepo.plans
         .asStateFlow(emptyList(), started = SharingStarted.Eagerly)
 
-    private val planDateRanges: Flow<Map<Int, Pair<LocalDate, LocalDate>>> =
-        sessionRepo.planDateRanges
-
-    private val _selectedPlanId = MutableStateFlow<Int?>(null)
-    val selectedPlanId: StateFlow<Int?> = _selectedPlanId.asStateFlow()
-
     private val _selectedMonth = MutableStateFlow<Pair<Int, Int>?>(null)
     val selectedMonth: StateFlow<Pair<Int, Int>?> = _selectedMonth.asStateFlow()
+
+    private val _customRange = MutableStateFlow<Pair<LocalDate, LocalDate>?>(null)
+    val customRange: StateFlow<Pair<LocalDate, LocalDate>?> = _customRange.asStateFlow()
 
     private data class Bundle(
         val plan: Plan?,
         val weights: List<Weight>,
         val numberOfExercises: Int,
         val plans: List<Plan>,
-        val planDateRanges: Map<Int, Pair<LocalDate, LocalDate>>,
     )
 
     val state: StateFlow<ProfileUiState> = combine(
@@ -78,14 +73,13 @@ class ProfileViewModel @Inject constructor(
             weightRepo.weights,
             exerciseRepo.numberOfExercise,
             plans,
-            planDateRanges,
-        ) { plan, weights, number, allPlans, ranges ->
-            Bundle(plan, weights, number, allPlans, ranges)
+        ) { plan, weights, number, allPlans ->
+            Bundle(plan, weights, number, allPlans)
         },
-        _selectedPlanId,
         _selectedMonth,
-    ) { bundle, planId, month ->
-        val view = computeWeightChartView(bundle.weights, bundle.planDateRanges, planId, month)
+        _customRange,
+    ) { bundle, month, range ->
+        val view = computeWeightChartView(bundle.weights, month, range)
         ProfileUiState(
             numberOfExercises = bundle.numberOfExercises,
             weights = bundle.weights,
@@ -99,6 +93,7 @@ class ProfileViewModel @Inject constructor(
             currentMonth = view.currentMonth,
             canGoPrev = view.canGoPrev,
             canGoNext = view.canGoNext,
+            customRangeActive = range != null,
         )
     }.asStateFlow(ProfileUiState(), started = SharingStarted.Eagerly)
 
@@ -112,9 +107,13 @@ class ProfileViewModel @Inject constructor(
         _selectedMonth.value = addMonths(current.first, current.second, 1)
     }
 
-    fun selectPlan(planId: Int?) {
-        _selectedPlanId.value = planId
+    fun setCustomRange(start: LocalDate, end: LocalDate) {
+        _customRange.value = start to end
         _selectedMonth.value = null
+    }
+
+    fun clearCustomRange() {
+        _customRange.value = null
     }
 
     private val _snackbar = MutableSharedFlow<String>()
@@ -165,4 +164,5 @@ data class ProfileUiState(
     val currentMonth: Pair<Int, Int>? = null,
     val canGoPrev: Boolean = false,
     val canGoNext: Boolean = false,
+    val customRangeActive: Boolean = false,
 )
