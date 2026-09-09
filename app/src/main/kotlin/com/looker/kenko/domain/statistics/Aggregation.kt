@@ -73,13 +73,22 @@ fun aggregateByBodyPart(
     return counts
 }
 
+/**
+ * 有氧分钟：按动作的解析部位 == [CARDIO_PART] 判定，countType 仅作时长单位
+ * （repsOrDuration 即分钟数）。无标签/unknown（部位为 null）不计入有氧。
+ */
 fun aggregateCardioMinutes(
     sessions: List<Session>,
     predicate: (LocalDate) -> Boolean,
+    tagDict: Map<String, Pair<String?, CountType>>,
 ): Int {
     var sum = 0
     for (sess in sessions) if (predicate(sess.date)) {
-        for (set in sess.sets) if (set.exercise.countType == CountType.MINUTES) sum += set.repsOrDuration
+        for (set in sess.sets) {
+            if (tagDict[set.exercise.name]?.first == CARDIO_PART) {
+                sum += set.repsOrDuration
+            }
+        }
     }
     return sum
 }

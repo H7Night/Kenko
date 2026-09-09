@@ -60,30 +60,42 @@ class AggregationTest {
 
     @Test
     fun `cardio minutes sums correctly`() {
-        val treadmill = Exercise(name = "Treadmill", tags = listOf(Tag(name = "跑步", parentName = "有氧")), countType = CountType.MINUTES)
-        val bench = Exercise(name = "Bench Press", tags = listOf(Tag(name = "中胸", parentName = "胸")), countType = CountType.REPS)
+        val treadmill = Exercise(name = "Treadmill", tags = listOf(Tag(id = 28, name = "跑步", parentId = 7)), countType = CountType.MINUTES)
+        val bench = Exercise(name = "Bench Press", tags = listOf(Tag(id = 9, name = "中胸", parentId = 1)), countType = CountType.REPS)
+        val allTags = listOf(
+            Tag(id = 1, name = "胸"),
+            Tag(id = 7, name = CARDIO_PART),
+            Tag(id = 9, name = "中胸", parentId = 1),
+            Tag(id = 28, name = "跑步", parentId = 7),
+        )
+        val tagDict = buildTagDict(listOf(treadmill, bench), allTags)
         val sessions = listOf(
             Session(date = LocalDate(2026, 9, 1), planId = 1, sets = listOf(Set(repsOrDuration = 30, weight = 0f, exercise = treadmill))),
             Session(date = LocalDate(2026, 9, 2), planId = 1, sets = listOf(Set(repsOrDuration = 20, weight = 0f, exercise = treadmill), Set(repsOrDuration = 10, weight = 50f, exercise = bench))),
         )
-        val result = aggregateCardioMinutes(sessions) { true }
+        val result = aggregateCardioMinutes(sessions, { true }, tagDict)
         assertEquals(50, result)
     }
 
     @Test
     fun `cardio minutes predicate filters`() {
-        val treadmill = Exercise(name = "Treadmill", tags = listOf(Tag(name = "跑步", parentName = "有氧")), countType = CountType.MINUTES)
+        val treadmill = Exercise(name = "Treadmill", tags = listOf(Tag(id = 28, name = "跑步", parentId = 7)), countType = CountType.MINUTES)
+        val allTags = listOf(
+            Tag(id = 7, name = CARDIO_PART),
+            Tag(id = 28, name = "跑步", parentId = 7),
+        )
+        val tagDict = buildTagDict(listOf(treadmill), allTags)
         val sessions = listOf(
             Session(date = LocalDate(2026, 9, 1), planId = 1, sets = listOf(Set(repsOrDuration = 30, weight = 0f, exercise = treadmill))),
             Session(date = LocalDate(2026, 9, 10), planId = 1, sets = listOf(Set(repsOrDuration = 20, weight = 0f, exercise = treadmill))),
         )
-        val result = aggregateCardioMinutes(sessions) { it == LocalDate(2026, 9, 1) }
+        val result = aggregateCardioMinutes(sessions, { it == LocalDate(2026, 9, 1) }, tagDict)
         assertEquals(30, result)
     }
 
     @Test
     fun `cardio minutes empty returns zero`() {
-        assertEquals(0, aggregateCardioMinutes(emptyList()) { true })
+        assertEquals(0, aggregateCardioMinutes(emptyList(), { true }, emptyMap()))
     }
 
     @Test

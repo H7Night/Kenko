@@ -71,13 +71,14 @@ class StatisticsViewModel @Inject constructor(
         val planCounts = if (plan?.id == null) emptyMap()
         else aggregateByBodyPart(summaries.filter { it.planId == plan.id }, { true }, tagDict)
 
-        val cardioWeekly = aggregateCardioMinutes(sessions, { it >= monday })
+        val cardioWeekly = aggregateCardioMinutes(sessions, { it >= monday }, tagDict)
         val cardioMonthly = aggregateCardioMinutes(
             sessions,
             { it.year == today.year && it.month == today.month },
+            tagDict,
         )
         val cardioPlan = if (plan?.id == null) 0
-        else aggregateCardioMinutes(sessions.filter { it.planId == plan.id }, { true })
+        else aggregateCardioMinutes(sessions.filter { it.planId == plan.id }, { true }, tagDict)
 
         val heatmapData = buildHeatmapData90d(dates, today)
         val weeklyTrend = buildWeeklyTrend(summaries, today)
