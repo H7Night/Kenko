@@ -29,41 +29,44 @@ import kotlinx.datetime.plus
 const val CARDIO_PART = "有氧"
 
 /**
- * 动作名 → (一级部位, 计量方式)。
+ * 动作名 → (一级部位或 null, 计量方式)。
  * 部位解析必须走 parentId → 父标签名：TagEntity 没有 parentName 列，
  * TagMapper.toExternal 从不填充 parentName（恒为 null），
  * 直接读 tag.parentName 会把所有动作误归为「有氧」并被力量统计过滤为空。
- * 一级标签（parentId==null）取自身名；无标签动作归「有氧」。
+ * 一级标签（parentId==null）取自身名；无有效部位的标签解析为 null（unknown，
+ * 不进入部位统计），仅 parentName == "有氧" 才算有氧。
  */
 fun buildTagDict(
     exercises: List<Exercise>,
     allTags: List<Tag>,
-): Map<String, Pair<String, CountType>> {
+): Map<String, Pair<String?, CountType>> {
     val tagNameById = allTags.associate { it.id to it.name }
     return exercises.associate { ex ->
         val part = ex.tags.firstOrNull()?.let { tag ->
             tag.parentId?.let { tagNameById[it] } ?: tag.name
-        } ?: CARDIO_PART
+        }
         ex.name to (part to ex.countType)
     }
 }
 
 /**
- * 动作名 → 一级部位名（导出 target 用）。解析逻辑与 [buildTagDict] 一致。
+ * 动作名 → 一级部位名（导出 target 用）。解析逻辑与 [buildTagDict] 一致；
+ * 无有效部位时为 null，调用方用空串兜底。
  */
 fun bodyPartByName(
     exercises: List<Exercise>,
     allTags: List<Tag>,
-): Map<String, String> = buildTagDict(exercises, allTags).mapValues { it.value.first }
+): Map<String, String?> = buildTagDict(exercises, allTags).mapValues { it.value.first }
 
 fun aggregateByBodyPart(
     summaries: List<SessionSummary>,
     predicate: (LocalDate) -> Boolean,
-    tagDict: Map<String, Pair<String, CountType>>,
+    tagDict: Map<String, Pair<String?, CountType>>,
 ): Map<String, Int> {
     val counts = mutableMapOf<String, Int>()
     for (s in summaries) {
         if (!predicate(s.date)) continue
+        // null（unknown）自动丢弃；仅统计非有氧的力量部位
         val parents = s.exerciseNames.mapNotNull { tagDict[it]?.first }.toSet()
         for (p in parents) if (p != CARDIO_PART) counts[p] = (counts[p] ?: 0) + 1
     }

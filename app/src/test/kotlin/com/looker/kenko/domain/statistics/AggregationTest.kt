@@ -145,10 +145,25 @@ class AggregationTest {
     }
 
     @Test
-    fun `buildTagDict without tags falls back to cardio`() {
+    fun `buildTagDict without tags yields null (unknown, not cardio)`() {
         val exercises = listOf(Exercise(name = "未知动作", tags = emptyList(), countType = CountType.REPS))
         val dict = buildTagDict(exercises, emptyList())
-        assertEquals(CARDIO_PART, dict["未知动作"]?.first)
+        assertEquals(null, dict["未知动作"]?.first)
+    }
+
+    @Test
+    fun `buildTagDict cardio only when parentName is cardio`() {
+        val exercises = listOf(
+            Exercise(name = "有氧快走", tags = listOf(Tag(id = 28, name = "跑步", parentId = 7)), countType = CountType.MINUTES),
+            Exercise(name = "无标签力量", tags = emptyList(), countType = CountType.REPS),
+        )
+        val allTags = listOf(
+            Tag(id = 7, name = CARDIO_PART),
+            Tag(id = 28, name = "跑步", parentId = 7),
+        )
+        val dict = buildTagDict(exercises, allTags)
+        assertEquals(CARDIO_PART, dict["有氧快走"]?.first)
+        assertEquals(null, dict["无标签力量"]?.first)
     }
 
     @Test

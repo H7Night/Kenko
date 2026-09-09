@@ -64,7 +64,7 @@ class PlanTransferManager @Inject constructor(
 
 private fun Plan.toTransfer(
     items: List<PlanItem>,
-    bodyPartByName: Map<String, String>,
+    bodyPartByName: Map<String, String?>,
 ): PlanTransfer = PlanTransfer(
     name = name,
     description = description,
@@ -82,7 +82,7 @@ private fun Plan.toTransfer(
     }.sortedBy { it.dayIndex },
 )
 
-private fun Exercise.toTransfer(bodyPartByName: Map<String, String>): PlanExerciseTransfer = PlanExerciseTransfer(
+private fun Exercise.toTransfer(bodyPartByName: Map<String, String?>): PlanExerciseTransfer = PlanExerciseTransfer(
     name = name,
     target = bodyPartByName[name],
     tags = tags.map { it.name },

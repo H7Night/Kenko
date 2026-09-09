@@ -93,7 +93,7 @@ class ExportManagerImpl @Inject constructor(
     }
 }
 
-private fun Session.toExport(bodyPartByName: Map<String, String>): ExportSession = ExportSession(
+private fun Session.toExport(bodyPartByName: Map<String, String?>): ExportSession = ExportSession(
     date = date,
     sets = sets.map { set ->
         ExportSet(
@@ -114,7 +114,7 @@ private fun Plan.toExport(): ExportPlan = ExportPlan(
     dayTitles = dayTitles,
 )
 
-private fun Exercise.toExport(bodyPartByName: Map<String, String>): ExportExercise = ExportExercise(
+private fun Exercise.toExport(bodyPartByName: Map<String, String?>): ExportExercise = ExportExercise(
     name = name,
     target = bodyPartByName[name] ?: "",
     tags = tags.map { it.name },
