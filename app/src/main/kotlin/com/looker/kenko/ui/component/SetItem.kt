@@ -111,18 +111,31 @@ fun SetItem(
                     onValueUpdate = { onRepsUpdate(it.toIntOrNull() ?: set.repsOrDuration) },
                 )
                 if (!isCardio) {
-                    val weightDisplay = if (set.exercise.isBodyweight) {
-                        stringResource(R.string.label_bodyweight_display)
+                    if (set.exercise.isBodyweight) {
+                        Column(
+                            modifier = Modifier,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.label_weight).uppercase(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                text = stringResource(R.string.label_bodyweight_display),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
                     } else {
-                        "${set.weight} KG"
+                        PerformedItem(
+                            title = stringResource(R.string.label_weight),
+                            performance = "${set.weight} KG",
+                            isEditMode = isEditMode,
+                            keyboardType = KeyboardType.Decimal,
+                            onValueUpdate = { onWeightUpdate(it.toFloatOrNull() ?: set.weight) },
+                        )
                     }
-                    PerformedItem(
-                        title = stringResource(R.string.label_weight),
-                        performance = weightDisplay,
-                        isEditMode = isEditMode,
-                        keyboardType = KeyboardType.Decimal,
-                        onValueUpdate = { onWeightUpdate(it.toFloatOrNull() ?: set.weight) },
-                    )
                 }
             }
         }
