@@ -188,6 +188,10 @@ class HomeViewModel @Inject constructor(
         timerManager.resume()
     }
 
+    fun resetTimer() {
+        timerManager.stop()
+    }
+
     fun endWorkout() {
         trainingSessionManager.endTraining()
         viewModelScope.launch {

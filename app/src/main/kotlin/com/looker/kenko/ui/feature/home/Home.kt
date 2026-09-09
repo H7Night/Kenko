@@ -110,10 +110,34 @@ fun Home(
     }
 
     var showEndConfirm by remember { mutableStateOf(false) }
+    var showResetConfirm by remember { mutableStateOf(false) }
     var addSetExercise by remember { mutableStateOf<Exercise?>(null) }
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showImportConfirm by remember { mutableStateOf(false) }
     var showTrainingDayPicker by remember { mutableStateOf(false) }
+
+    if (showResetConfirm) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirm = false },
+            title = { Text(stringResource(R.string.label_reset_timer_title)) },
+            text = { Text(stringResource(R.string.label_reset_timer_message)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.resetTimer()
+                        showResetConfirm = false
+                    },
+                ) {
+                    Text(stringResource(R.string.label_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetConfirm = false }) {
+                    Text(stringResource(R.string.label_cancel))
+                }
+            },
+        )
+    }
 
     if (showEndConfirm) {
         AlertDialog(
@@ -219,6 +243,7 @@ fun Home(
                 onPause = viewModel::pauseWorkout,
                 onResume = viewModel::resumeWorkout,
                 onEnd = { showEndConfirm = true },
+                onReset = { showResetConfirm = true },
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             )
 

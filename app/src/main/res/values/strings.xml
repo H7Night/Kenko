@@ -295,6 +295,9 @@
     <string name="label_start_workout">Start Workout</string>
     <string name="label_pause">Pause</string>
     <string name="label_resume">Resume</string>
+    <string name="label_reset">Reset</string>
+    <string name="label_reset_timer_title">Reset timer?</string>
+    <string name="label_reset_timer_message">This will clear the current elapsed time. Continue?</string>
     <string name="label_end_workout">End Workout</string>
     <string name="label_end_workout_confirm">End current workout?</string>
     <string name="label_current_plan_title">Current Plan: %s</string>
