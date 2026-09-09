@@ -23,6 +23,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -266,7 +267,10 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
             ) {
                 if (exercise.isBodyweight) {
                     TextButton(
-                        modifier = incrementButtonModifier,
+                        modifier = Modifier
+                            .width(72.dp)
+                            .height(44.dp),
+                        contentPadding = PaddingValues(horizontal = 4.dp),
                         onClick = { viewModel.setBodyweight() },
                         colors = if (viewModel.isBodyweightMode) {
                             ButtonDefaults.textButtonColors(
@@ -276,7 +280,11 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                             ButtonDefaults.textButtonColors()
                         },
                     ) {
-                        Text(text = stringResource(R.string.label_bodyweight))
+                        Text(
+                            text = stringResource(R.string.label_bodyweight),
+                            maxLines = 1,
+                            softWrap = false,
+                        )
                     }
                 }
                 if (viewModel.isBodyweightMode) {
@@ -284,7 +292,9 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                         text = stringResource(R.string.label_bodyweight_display),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.width(72.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 4.dp),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         maxLines = 1,
                         softWrap = false,
