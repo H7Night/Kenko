@@ -62,9 +62,9 @@ fun BalanceRingCard(
     bodyParts: List<String>,
     modifier: Modifier = Modifier,
 ) {
-    val values = bodyParts.associateWith { part ->
-        if (part == CARDIO_PART) cardioMonthly else monthlyCounts[part] ?: 0
-    }
+    // 环只统计六个力量部位；有氧单独以分钟显示，不进环。
+    val strengthParts = bodyParts.filter { it != CARDIO_PART }
+    val values = strengthParts.associateWith { monthlyCounts[it] ?: 0 }
     val total = values.values.sum()
 
     Card(
@@ -114,15 +114,14 @@ fun BalanceRingCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    // Donut canvas
+                    // Donut canvas — six strength parts only
                     Canvas(modifier = Modifier.size(128.dp)) {
                         val stroke = 18.dp.toPx()
                         val diameter = size.minDimension - stroke
                         val topLeft = Offset((size.width - diameter) / 2, (size.height - diameter) / 2)
                         val arcSize = Size(diameter, diameter)
                         var startAngle = -90f
-                        // Draw slices
-                        for (part in bodyParts) {
+                        for (part in strengthParts) {
                             val v = values[part] ?: 0
                             if (v == 0) continue
                             val sweep = 360f * v.toFloat() / total
@@ -140,20 +139,15 @@ fun BalanceRingCard(
                         }
                     }
 
-                    // Legend
+                    // Legend — six strength parts
                     Column(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
-                        bodyParts.forEach { part ->
+                        strengthParts.forEach { part ->
                             val v = values[part] ?: 0
                             val pct = if (total == 0) 0f else v.toFloat() / total
                             val color = BalanceColors[part] ?: Color.Gray
-                            val label = if (part == CARDIO_PART) {
-                                stringResource(R.string.label_count_minutes, v)
-                            } else {
-                                stringResource(R.string.label_count_times, v)
-                            }
                             val pctText = stringResource(R.string.label_percent, (pct * 100).toInt())
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -177,7 +171,7 @@ fun BalanceRingCard(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Text(
-                                    text = label,
+                                    text = stringResource(R.string.label_count_times, v),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -185,6 +179,29 @@ fun BalanceRingCard(
                         }
                     }
                 }
+            }
+
+            // 有氧单独一行：有氧 X 分钟
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .background(BalanceColors[CARDIO_PART] ?: Color.Gray, RoundedCornerShape(2.dp)),
+                )
+                Text(
+                    text = CARDIO_PART,
+                    modifier = Modifier.width(36.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+                Text(
+                    text = stringResource(R.string.label_count_minutes, cardioMonthly),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }
