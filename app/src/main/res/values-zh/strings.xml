@@ -301,6 +301,10 @@
     <string name="label_reset_timer_message">将清零当前已计时长。是否继续？</string>
     <string name="label_end_workout">结束训练</string>
     <string name="label_end_workout_confirm">确定结束当前训练？</string>
+
+    <string name="timer_status_idle">准备开始</string>
+    <string name="timer_status_running">进行中…</string>
+    <string name="timer_status_paused">已暂停</string>
     <string name="label_current_plan_title">当前计划：%s</string>
     <string name="label_today_plan">今日训练</string>
     <string name="label_no_plan_today">今日无计划</string>
