@@ -207,13 +207,7 @@ fun WeightLineChart(
                     // 尝试跳过而非重叠
                     return@forEachIndexed
                 }
-                // 绘制标签背景，避免折线/网格穿透
-                val bgRect = Rect(labelX - labelPadding, labelY - 1f, labelX + layout.size.width + labelPadding, labelY + layout.size.height + 1f)
-                drawRect(
-                    color = surfaceColor,
-                    topLeft = Offset(bgRect.left, bgRect.top),
-                    size = androidx.compose.ui.geometry.Size(bgRect.width, bgRect.height),
-                )
+                // 透明背景：不绘制底色，数值标签直接叠加在折线/网格之上
                 drawText(
                     textLayoutResult = layout,
                     topLeft = Offset(labelX, labelY),
