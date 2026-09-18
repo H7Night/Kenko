@@ -225,6 +225,9 @@
     <string name="label_language_en">English</string>
     <string name="label_language_zh">中文</string>
 
+    <string name="label_settings_appearance">外观</string>
+    <string name="label_settings_data">数据</string>
+
     <!--Backup-->
     <string name="label_backup">备份与恢复</string>
     <string name="label_backup_location">备份位置</string>

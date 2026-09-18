@@ -16,33 +16,29 @@
 package com.looker.kenko.ui.feature.settings
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,7 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -60,7 +56,8 @@ import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.ui.component.BackButton
-import com.looker.kenko.ui.component.KenkoBorderWidth
+import com.looker.kenko.ui.component.SettingsGroup
+import com.looker.kenko.ui.component.SettingsRow
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 
@@ -84,7 +81,7 @@ fun Settings(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun Settings(
     state: SettingsUiData,
@@ -98,6 +95,9 @@ private fun Settings(
 ) {
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     if (showLanguageDialog) {
         LanguageSelectionDialog(
@@ -125,12 +125,14 @@ private fun Settings(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
-            TopAppBar(
+            LargeFlexibleTopAppBar(
+                title = { Text(text = stringResource(R.string.label_settings)) },
+                navigationIcon = { BackButton(onClick = onBackPress) },
+                scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
                 ),
-                navigationIcon = { BackButton(onClick = onBackPress) },
-                title = { Text(text = stringResource(R.string.label_settings)) },
             )
         },
     ) {
@@ -138,152 +140,59 @@ private fun Settings(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
-                .verticalScroll(rememberScrollState()),
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            HorizontalDivider(thickness = KenkoBorderWidth)
-            Spacer(modifier = Modifier.height(8.dp))
+            SettingsGroup(title = stringResource(R.string.label_settings_appearance)) {
+                item {
+                    SettingsRow(
+                        icon = { Icon(imageVector = Icons.Default.Language, contentDescription = null) },
+                        title = stringResource(R.string.label_language),
+                        value = stringResource(state.language.labelRes),
+                        onClick = { showLanguageDialog = true },
+                    )
+                }
+                item {
+                    SettingsRow(
+                        icon = { Icon(painter = KenkoIcons.Lightbulb, contentDescription = null) },
+                        title = stringResource(R.string.label_theme),
+                        value = stringResource(state.selectedTheme.nameRes),
+                        onClick = { showThemeDialog = true },
+                    )
+                }
+            }
 
-            SettingsSelectionRow(
-                icon = { Icon(imageVector = Icons.Default.Language, contentDescription = null) },
-                title = stringResource(R.string.label_language),
-                value = stringResource(state.language.labelRes),
-                onClick = { showLanguageDialog = true },
-            )
+            SettingsGroup(title = stringResource(R.string.label_settings_data)) {
+                item {
+                    SettingsRow(
+                        icon = { Icon(imageVector = Icons.Default.Label, contentDescription = null) },
+                        title = stringResource(R.string.label_tag_management),
+                        onClick = onTagManagementClick,
+                    )
+                }
+                item {
+                    SettingsRow(
+                        icon = { Icon(painter = KenkoIcons.Save, contentDescription = null) },
+                        title = stringResource(R.string.label_backup),
+                        subtitle = state.backupUri?.let { extractFolderName(it) }
+                            ?: stringResource(R.string.label_backup_location_not_set),
+                        onClick = onBackupClick,
+                    )
+                }
+            }
 
-            SettingsSelectionRow(
-                icon = { Icon(painter = KenkoIcons.Lightbulb, contentDescription = null) },
-                title = stringResource(R.string.label_theme),
-                value = stringResource(state.selectedTheme.nameRes),
-                onClick = { showThemeDialog = true },
-            )
-
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                thickness = KenkoBorderWidth,
-            )
-
-            SettingsNavRow(
-                icon = { Icon(imageVector = Icons.Default.Label, contentDescription = null) },
-                title = stringResource(R.string.label_tag_management),
-                onClick = onTagManagementClick,
-            )
-
-            SettingsNavRow(
-                icon = { Icon(painter = KenkoIcons.Save, contentDescription = null) },
-                title = stringResource(R.string.label_backup),
-                subtitle = state.backupUri?.let { extractFolderName(it) }
-                    ?: stringResource(R.string.label_backup_location_not_set),
-                onClick = onBackupClick,
-            )
-
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                thickness = KenkoBorderWidth,
-            )
-
-            SettingsNavRow(
-                icon = { Icon(imageVector = Icons.Default.Info, contentDescription = null) },
-                title = stringResource(R.string.label_about),
-                onClick = onAboutClick,
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-    }
-}
-
-/**
- * A settings row that opens a selection dialog.
- * Layout: [icon] [title]                    [value] [⇅]
- */
-@Composable
-private fun SettingsSelectionRow(
-    icon: @Composable () -> Unit,
-    title: String,
-    value: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier.size(20.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            icon()
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.weight(1f),
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Icon(
-            imageVector = Icons.Default.UnfoldMore,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
-            modifier = Modifier.size(16.dp),
-        )
-    }
-}
-
-/**
- * A settings row that navigates to another screen.
- * Layout: [icon] [title / subtitle]          [>]
- */
-@Composable
-private fun SettingsNavRow(
-    icon: @Composable () -> Unit,
-    title: String,
-    subtitle: String? = null,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier.size(24.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            icon()
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            SettingsGroup {
+                item {
+                    SettingsRow(
+                        icon = { Icon(imageVector = Icons.Default.Info, contentDescription = null) },
+                        title = stringResource(R.string.label_about),
+                        onClick = onAboutClick,
+                    )
+                }
             }
         }
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = ">",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
-        )
     }
 }
 
