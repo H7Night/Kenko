@@ -21,6 +21,10 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.looker.kenko.ui.feature.statistics.Statistics
+import com.looker.kenko.ui.navigation.tabEnter
+import com.looker.kenko.ui.navigation.tabExit
+import com.looker.kenko.ui.navigation.tabPopEnter
+import com.looker.kenko.ui.navigation.tabPopExit
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -31,7 +35,12 @@ fun NavController.navigateToStatistics(navOptions: NavOptions? = null) {
 }
 
 fun NavGraphBuilder.statistics() {
-    composable<StatisticsRoute> {
+    composable<StatisticsRoute>(
+        enterTransition = { tabEnter() },
+        exitTransition = { tabExit() },
+        popEnterTransition = { tabPopEnter() },
+        popExitTransition = { tabPopExit() },
+    ) {
         Statistics(viewModel = hiltViewModel())
     }
 }

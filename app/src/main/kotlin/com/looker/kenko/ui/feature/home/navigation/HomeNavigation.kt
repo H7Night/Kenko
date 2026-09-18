@@ -23,6 +23,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import com.looker.kenko.ui.feature.home.Home
 import com.looker.kenko.ui.feature.home.HomeViewModel
+import com.looker.kenko.ui.navigation.tabEnter
+import com.looker.kenko.ui.navigation.tabExit
+import com.looker.kenko.ui.navigation.tabPopEnter
+import com.looker.kenko.ui.navigation.tabPopExit
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -40,6 +44,10 @@ fun NavGraphBuilder.home(
     onCurrentPlanClick: (Int) -> Unit,
 ) {
     composable<HomeRoute>(
+        enterTransition = { tabEnter() },
+        exitTransition = { tabExit() },
+        popEnterTransition = { tabPopEnter() },
+        popExitTransition = { tabPopExit() },
         deepLinks = listOf(navDeepLink { uriPattern = "kenko://home" }),
     ) {
         Home(

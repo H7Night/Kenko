@@ -22,6 +22,10 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import com.looker.kenko.ui.feature.session.Sessions
+import com.looker.kenko.ui.navigation.tabEnter
+import com.looker.kenko.ui.navigation.tabExit
+import com.looker.kenko.ui.navigation.tabPopEnter
+import com.looker.kenko.ui.navigation.tabPopExit
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 
@@ -37,6 +41,10 @@ fun NavGraphBuilder.sessions(
     onBackPress: () -> Unit,
 ) {
     composable<SessionRoute>(
+        enterTransition = { tabEnter() },
+        exitTransition = { tabExit() },
+        popEnterTransition = { tabPopEnter() },
+        popExitTransition = { tabPopExit() },
         deepLinks = listOf(navDeepLink { uriPattern = "kenko://sessions" }),
     ) {
         Sessions(

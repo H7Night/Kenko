@@ -23,6 +23,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.looker.kenko.ui.feature.profile.Profile
+import com.looker.kenko.ui.navigation.tabEnter
+import com.looker.kenko.ui.navigation.tabExit
+import com.looker.kenko.ui.navigation.tabPopEnter
+import com.looker.kenko.ui.navigation.tabPopExit
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -43,6 +47,10 @@ fun NavGraphBuilder.profile(
     onSettingsClick: () -> Unit,
 ) {
     composable<ProfileRoute>(
+        enterTransition = { tabEnter() },
+        exitTransition = { tabExit() },
+        popEnterTransition = { tabPopEnter() },
+        popExitTransition = { tabPopExit() },
         deepLinks = listOf(navDeepLink { uriPattern = "kenko://profile" }),
     ) {
         val route: ProfileRoute = it.toRoute()

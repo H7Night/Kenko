@@ -15,9 +15,6 @@
 
 package com.looker.kenko.ui.navigation
 
-import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
@@ -66,11 +63,11 @@ fun KenkoNavHost(
         modifier = modifier,
         navController = navController as NavHostController,
         startDestination = startDestination,
-        // Linear-style: fast 150ms fade, no slide, avoid click-through on pop.
-        enterTransition = { fadeIn(animationSpec = tween(150)) },
-        exitTransition = { ExitTransition.None },
-        popEnterTransition = { fadeIn(animationSpec = tween(150)) },
-        popExitTransition = { ExitTransition.None },
+        // Detail screens slide + fade; bottom-bar tabs override this with a quick fade.
+        enterTransition = { detailEnter() },
+        exitTransition = { detailExit() },
+        popEnterTransition = { detailPopEnter() },
+        popExitTransition = { detailPopExit() },
     ) {
         home(
             onProfileClick = {
