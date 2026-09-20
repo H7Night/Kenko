@@ -23,6 +23,7 @@ import com.looker.kenko.data.local.dao.SetsDao
 import com.looker.kenko.data.local.model.SessionDataEntity
 import com.looker.kenko.data.local.model.SetEntity
 import com.looker.kenko.data.local.model.dayTitlesMap
+import com.looker.kenko.data.mapper.mapSetEntities
 import com.looker.kenko.data.mapper.toEntity
 import com.looker.kenko.data.mapper.toExternal
 import com.looker.kenko.domain.model.Session
@@ -231,8 +232,6 @@ class LocalSessionRepo @Inject constructor(
         dao.delete(id)
     }
 
-    private suspend fun List<SetEntity>.toExternal(): List<Set> = mapNotNull {
-        val exercise = exerciseDao.get(it.exerciseId) ?: return@mapNotNull null
-        it.toExternal(exercise.toExternal())
-    }
+    private suspend fun List<SetEntity>.toExternal(): List<Set> =
+        mapSetEntities(this) { ids -> exerciseDao.getByIds(ids) }
 }

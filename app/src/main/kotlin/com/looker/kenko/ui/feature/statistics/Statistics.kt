@@ -38,6 +38,7 @@ import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.statistics.components.AdherenceCard
 import com.looker.kenko.ui.feature.statistics.components.BalanceRingCard
 import com.looker.kenko.ui.feature.statistics.components.BodyPartBarCard
+import com.looker.kenko.ui.feature.statistics.components.StatisticsSkeleton
 import com.looker.kenko.ui.feature.statistics.components.TrendCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,62 +59,67 @@ fun Statistics(
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            item {
-                HeatmapCard(
-                    sessionDates = state.sessionDates,
-                    today = state.today,
-                    countByDate = state.countByDate,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            item {
-                BalanceRingCard(
-                    monthlyCounts = state.monthlyCounts,
-                    cardioMonthly = state.cardioMonthly,
-                    bodyParts = state.bodyParts,
-                )
-            }
-            item {
-                BodyPartBarCard(
-                    title = stringResource(R.string.label_stat_week),
-                    counts = state.weeklyCounts,
-                    cardioMinutes = state.cardioWeekly,
-                    bodyParts = state.bodyParts,
-                )
-            }
-            item {
-                BodyPartBarCard(
-                    title = stringResource(R.string.label_stat_month),
-                    counts = state.monthlyCounts,
-                    cardioMinutes = state.cardioMonthly,
-                    bodyParts = state.bodyParts,
-                )
-            }
-            item {
-                BodyPartBarCard(
-                    title = stringResource(R.string.label_stat_plan),
-                    counts = state.planCounts,
-                    cardioMinutes = state.cardioPlan,
-                    bodyParts = state.bodyParts,
-                )
-            }
-            item {
-                TrendCard(
-                    weeklyTrend = state.weeklyTrend,
-                )
-            }
-            item {
-                AdherenceCard(
-                    actualDays = state.actualDays,
-                    plannedDays = state.plannedDays,
-                )
+        val content = state
+        if (content == null) {
+            StatisticsSkeleton(modifier = Modifier.padding(innerPadding))
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                item {
+                    HeatmapCard(
+                        sessionDates = content.sessionDates,
+                        today = content.today,
+                        countByDate = content.countByDate,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                item {
+                    BalanceRingCard(
+                        monthlyCounts = content.monthlyCounts,
+                        cardioMonthly = content.cardioMonthly,
+                        bodyParts = content.bodyParts,
+                    )
+                }
+                item {
+                    BodyPartBarCard(
+                        title = stringResource(R.string.label_stat_week),
+                        counts = content.weeklyCounts,
+                        cardioMinutes = content.cardioWeekly,
+                        bodyParts = content.bodyParts,
+                    )
+                }
+                item {
+                    BodyPartBarCard(
+                        title = stringResource(R.string.label_stat_month),
+                        counts = content.monthlyCounts,
+                        cardioMinutes = content.cardioMonthly,
+                        bodyParts = content.bodyParts,
+                    )
+                }
+                item {
+                    BodyPartBarCard(
+                        title = stringResource(R.string.label_stat_plan),
+                        counts = content.planCounts,
+                        cardioMinutes = content.cardioPlan,
+                        bodyParts = content.bodyParts,
+                    )
+                }
+                item {
+                    TrendCard(
+                        weeklyTrend = content.weeklyTrend,
+                    )
+                }
+                item {
+                    AdherenceCard(
+                        actualDays = content.actualDays,
+                        plannedDays = content.plannedDays,
+                    )
+                }
             }
         }
     }

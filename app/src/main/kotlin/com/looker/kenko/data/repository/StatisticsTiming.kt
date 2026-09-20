@@ -13,20 +13,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.looker.kenko.ui.feature.statistics
+package com.looker.kenko.data.repository
 
-import androidx.lifecycle.ViewModel
-import com.looker.kenko.data.repository.StatisticsRepository
-import com.looker.kenko.domain.statistics.StatisticsUiState
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-import kotlinx.coroutines.flow.StateFlow
+import android.util.Log
+import com.looker.kenko.BuildConfig
 
-@HiltViewModel
-class StatisticsViewModel @Inject constructor(
-    repository: StatisticsRepository,
-) : ViewModel() {
+/**
+ * 调试打点：统计聚合耗时与所在线程，用于验证聚合是否在后台执行、冷启动成本。
+ * 仅在 debug 构建输出（logcat tag `KenkoStats`）。
+ */
+internal object StatisticsTiming {
+    private const val TAG = "KenkoStats"
 
-    /** 应用作用域缓存；`null` 表示首次结果尚未就绪（UI 显示骨架）。 */
-    val state: StateFlow<StatisticsUiState?> = repository.state
+    fun logAggregation(durationNanos: Long, threadName: String, cold: Boolean) {
+        if (!BuildConfig.DEBUG) return
+        val ms = durationNanos / 1_000_000
+        Log.d(TAG, "aggregate ${ms}ms on $threadName${if (cold) " (cold)" else ""}")
+    }
 }

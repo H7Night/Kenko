@@ -65,6 +65,15 @@ interface ExerciseDao {
 
     @Query(
         """
+        SELECT *
+        FROM exercises
+        WHERE id IN (:ids)
+        """,
+    )
+    suspend fun getByIds(ids: List<Int>): List<ExerciseEntity>
+
+    @Query(
+        """
         SELECT COUNT(*)
         FROM exercises
         """,
