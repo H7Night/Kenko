@@ -20,13 +20,13 @@ import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.TagRepo
-import com.looker.kenko.domain.model.SessionSummary
-import com.looker.kenko.domain.statistics.HeatmapData
+import com.looker.kenko.domain.statistics.StatisticsUiState
 import com.looker.kenko.domain.statistics.aggregateByBodyPart
 import com.looker.kenko.domain.statistics.aggregateCardioMinutes
+import com.looker.kenko.domain.statistics.buildBodyParts
 import com.looker.kenko.domain.statistics.buildHeatmapData90d
 import com.looker.kenko.domain.statistics.buildTagDict
-import com.looker.kenko.domain.statistics.CARDIO_PART
+import com.looker.kenko.domain.statistics.buildWeeklyTrend
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -37,7 +37,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
-import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
 @HiltViewModel
@@ -106,50 +105,3 @@ class StatisticsViewModel @Inject constructor(
         )
     }.asStateFlow(StatisticsUiState())
 }
-
-private fun buildWeeklyTrend(summaries: List<SessionSummary>, today: LocalDate): List<Int> {
-    val monday = today.minus(today.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
-    return (0 until 12).map { idx ->
-        val weekStart = monday.minus((11 - idx) * 7, DateTimeUnit.DAY)
-        val weekEnd = weekStart.plus(6, DateTimeUnit.DAY)
-        summaries.count { it.date >= weekStart && it.date <= weekEnd }
-    }
-}
-
-/** 一级部位（parentId==null）按 sortOrder 排序；有氧恒置末位。 */
-private fun buildBodyParts(allTags: List<com.looker.kenko.domain.model.Tag>): List<String> =
-    allTags
-        .filter { it.parentId == null }
-        .sortedBy { it.sortOrder }
-        .map { it.name }
-        .let { parts ->
-            val cardio = parts.firstOrNull { it == CARDIO_PART }
-            if (cardio == null) {
-                parts
-            } else {
-                (parts - cardio) + cardio
-            }
-        }
-
-data class StatisticsUiState(
-    val sessionDates: Set<LocalDate> = emptySet(),
-    val countByDate: Map<LocalDate, Int> = emptyMap(),
-    val today: LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
-    val heatmapData: HeatmapData = buildHeatmapData90d(
-        emptySet(),
-        Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
-    ),
-    val bodyParts: List<String> = emptyList(),
-    val weeklyCounts: Map<String, Int> = emptyMap(),
-    val monthlyCounts: Map<String, Int> = emptyMap(),
-    val planCounts: Map<String, Int> = emptyMap(),
-    val cardioWeekly: Int = 0,
-    val cardioMonthly: Int = 0,
-    val cardioPlan: Int = 0,
-    val cardioMinutesWeekly: Int = 0,
-    val cardioMinutesMonthly: Int = 0,
-    val cardioMinutesPlan: Int = 0,
-    val weeklyTrend: List<Int> = emptyList(),
-    val actualDays: Int = 0,
-    val plannedDays: Int = 0,
-)
