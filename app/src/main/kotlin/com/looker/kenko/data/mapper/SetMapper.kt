@@ -15,6 +15,7 @@
 
 package com.looker.kenko.data.mapper
 
+import com.looker.kenko.data.local.model.ExerciseEntity
 import com.looker.kenko.data.local.model.SetEntity
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Set
@@ -35,3 +36,19 @@ fun Set.toEntity(sessionId: Int, order: Int): SetEntity = SetEntity(
     sessionId = sessionId,
     exerciseId = requireNotNull(exercise.id),
 )
+
+/**
+ * 批量把 SetEntity 映射为领域 Set：一次性加载所有 exercise，避免逐组查询（N+1）。
+ * loader 注入以便单测。
+ */
+suspend fun mapSetEntities(
+    entities: List<SetEntity>,
+    loadExercises: suspend (ids: List<Int>) -> List<ExerciseEntity>,
+): List<Set> {
+    if (entities.isEmpty()) return emptyList()
+    val exerciseById = loadExercises(entities.map { it.exerciseId }.distinct())
+        .associate { it.id to it.toExternal() }
+    return entities.mapNotNull { entity ->
+        exerciseById[entity.exerciseId]?.let { entity.toExternal(it) }
+    }
+}
