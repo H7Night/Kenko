@@ -118,3 +118,20 @@ fun buildHeatmapData90d(
     }
     return HeatmapData(weeks = weeks)
 }
+
+/**
+ * 解析出「解析部位 == 有氧」的动作 id 列表（与 [buildTagDict] 同一解析规则）。
+ * 供有氧分钟下推到 SQL 使用。
+ */
+fun cardioExerciseIds(
+    exercises: List<Exercise>,
+    allTags: List<Tag>,
+): List<Int> {
+    val tagNameById = allTags.associate { it.id to it.name }
+    return exercises.mapNotNull { ex ->
+        val part = ex.tags.firstOrNull()?.let { tag ->
+            tag.parentId?.let { tagNameById[it] } ?: tag.name
+        }
+        if (part == CARDIO_PART) ex.id else null
+    }
+}

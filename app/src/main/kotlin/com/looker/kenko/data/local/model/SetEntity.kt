@@ -20,6 +20,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.looker.kenko.utils.EpochDays
 
 @Entity(
     "sets",
@@ -50,4 +51,10 @@ data class SetEntity(
     val exerciseId: Int,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+)
+
+/** 轻量投影：按日期聚合的有氧分钟（供统计页下推查询）。 */
+data class CardioMinutesByDate(
+    val date: EpochDays,
+    val minutes: Int,
 )
