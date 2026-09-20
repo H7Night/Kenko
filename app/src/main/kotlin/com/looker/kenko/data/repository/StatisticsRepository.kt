@@ -60,6 +60,9 @@ class StatisticsRepository @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
 ) {
+    @Volatile
+    private var hasEmitted = false
+
     val state: StateFlow<StatisticsUiState?> =
         combine(
             sessionRepo.streamSummaries,
@@ -77,7 +80,8 @@ class StatisticsRepository @Inject constructor(
                     }
                 }
                 cardioFlow.map { cardio ->
-                    aggregateStatistics(
+                    val startNanos = System.nanoTime()
+                    val result = aggregateStatistics(
                         summaries = input.summaries,
                         cardioMinutesByDate = cardio,
                         exercises = input.exercises,
@@ -85,6 +89,13 @@ class StatisticsRepository @Inject constructor(
                         plan = input.plan,
                         today = today(),
                     )
+                    StatisticsTiming.logAggregation(
+                        durationNanos = System.nanoTime() - startNanos,
+                        threadName = Thread.currentThread().name,
+                        cold = !hasEmitted,
+                    )
+                    hasEmitted = true
+                    result
                 }
             }
             .flowOn(defaultDispatcher)
