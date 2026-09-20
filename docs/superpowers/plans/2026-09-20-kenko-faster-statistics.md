@@ -99,7 +99,7 @@ class SetMapperN1Test {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.\gradlew.bat test --tests "com.looker.kenko.data.mapper.SetMapperN1Test"`
+Run: `.\gradlew.bat :app:testDebugUnitTest --tests "com.looker.kenko.data.mapper.SetMapperN1Test"`
 Expected: FAIL（`mapSetEntities` unresolved / 编译失败）
 
 - [ ] **Step 3: Add `getByIds` to `ExerciseDao`**
@@ -154,7 +154,7 @@ suspend fun mapSetEntities(
 
 - [ ] **Step 6: Run test to verify it passes**
 
-Run: `.\gradlew.bat test --tests "com.looker.kenko.data.mapper.SetMapperN1Test"`
+Run: `.\gradlew.bat :app:testDebugUnitTest --tests "com.looker.kenko.data.mapper.SetMapperN1Test"`
 Expected: PASS
 
 - [ ] **Step 7: Commit**
@@ -216,7 +216,7 @@ class CardioExerciseIdsTest {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.\gradlew.bat test --tests "com.looker.kenko.domain.statistics.CardioExerciseIdsTest"`
+Run: `.\gradlew.bat :app:testDebugUnitTest --tests "com.looker.kenko.domain.statistics.CardioExerciseIdsTest"`
 Expected: FAIL（`cardioExerciseIds` unresolved）
 
 - [ ] **Step 3: Add `cardioExerciseIds` to `Aggregation.kt`**
@@ -273,7 +273,7 @@ data class CardioMinutesByDate(
 
 - [ ] **Step 5: Run test to verify it passes**
 
-Run: `.\gradlew.bat test --tests "com.looker.kenko.domain.statistics.CardioExerciseIdsTest"`
+Run: `.\gradlew.bat :app:testDebugUnitTest --tests "com.looker.kenko.domain.statistics.CardioExerciseIdsTest"`
 Expected: PASS
 
 - [ ] **Step 6: Commit**
@@ -358,7 +358,7 @@ class StatisticsAggregationTest {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.\gradlew.bat test --tests "com.looker.kenko.domain.statistics.StatisticsAggregationTest"`
+Run: `.\gradlew.bat :app:testDebugUnitTest --tests "com.looker.kenko.domain.statistics.StatisticsAggregationTest"`
 Expected: FAIL（`aggregateStatistics` unresolved）
 
 - [ ] **Step 3: Create `StatisticsUiState.kt`**
@@ -496,7 +496,7 @@ private fun buildBodyParts(allTags: List<Tag>): List<String> =
 
 - [ ] **Step 6: Run test to verify it passes**
 
-Run: `.\gradlew.bat test --tests "com.looker.kenko.domain.statistics.StatisticsAggregationTest"`
+Run: `.\gradlew.bat :app:testDebugUnitTest --tests "com.looker.kenko.domain.statistics.StatisticsAggregationTest"`
 Expected: PASS
 
 - [ ] **Step 7: Commit**
@@ -634,7 +634,7 @@ class StatisticsRepositoryTest {
 
 - [ ] **Step 3: Run test to verify it fails**
 
-Run: `.\gradlew.bat test --tests "com.looker.kenko.data.repository.StatisticsRepositoryTest"`
+Run: `.\gradlew.bat :app:testDebugUnitTest --tests "com.looker.kenko.data.repository.StatisticsRepositoryTest"`
 Expected: FAIL（`StatisticsRepository` unresolved）
 
 - [ ] **Step 4: Implement `StatisticsRepository`**
@@ -715,7 +715,7 @@ class StatisticsRepository @Inject constructor(
 
 - [ ] **Step 5: Run test to verify it passes**
 
-Run: `.\gradlew.bat test --tests "com.looker.kenko.data.repository.StatisticsRepositoryTest"`
+Run: `.\gradlew.bat :app:testDebugUnitTest --tests "com.looker.kenko.data.repository.StatisticsRepositoryTest"`
 Expected: PASS
 
 - [ ] **Step 6: Commit**
@@ -752,7 +752,7 @@ assertEquals(1, state.weeklyCounts["腿"])
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `.\gradlew.bat test --tests "com.looker.kenko.ui.feature.statistics.StatisticsViewModelTest"`
+Run: `.\gradlew.bat :app:testDebugUnitTest --tests "com.looker.kenko.ui.feature.statistics.StatisticsViewModelTest"`
 Expected: FAIL（`StatisticsViewModel(repository)` 构造不匹配）
 
 - [ ] **Step 3: Rewrite `StatisticsViewModel`**
@@ -777,7 +777,7 @@ class StatisticsViewModel @Inject constructor(
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `.\gradlew.bat test --tests "com.looker.kenko.ui.feature.statistics.StatisticsViewModelTest"`
+Run: `.\gradlew.bat :app:testDebugUnitTest --tests "com.looker.kenko.ui.feature.statistics.StatisticsViewModelTest"`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
