@@ -170,7 +170,7 @@
     <string name="label_profile">我的</string>
 
     <!--Statistics-->
-    <string name="label_last_90_days">最近90天</string>
+    <string name="label_heatmap_activity">活动</string>
     <string name="label_stat_week">本周</string>
     <string name="label_stat_month">本月</string>
     <string name="label_stat_plan">本计划</string>

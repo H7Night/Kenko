@@ -9,6 +9,7 @@ import com.looker.kenko.domain.model.Tag
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.isoDayNumber
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class AggregationTest {
@@ -124,6 +125,15 @@ class AggregationTest {
         val data = buildHeatmapData90d(setOf(today), today)
         val allDates = data.weeks.flatMap { it.days }.filterNotNull()
         assertEquals(true, allDates.contains(today))
+    }
+
+    @Test
+    fun `buildHeatmapData spans full range Monday to Sunday aligned`() {
+        val data = buildHeatmapData(LocalDate(2026, 1, 15), LocalDate(2026, 9, 20))
+        assertEquals(1, data.weeks.first().days.first()!!.dayOfWeek.isoDayNumber)
+        assertEquals(7, data.weeks.last().days.last()!!.dayOfWeek.isoDayNumber)
+        assertTrue(data.weeks.last().days.last()!! >= LocalDate(2026, 9, 20))
+        assertTrue(data.weeks.first().days.first()!! <= LocalDate(2026, 1, 15))
     }
 
     // ── 回归：TagMapper.toExternal 从不填充 parentName（TagEntity 无此列），

@@ -114,7 +114,26 @@ fun buildHeatmapData90d(
         val days = (0 until 7).map { d ->
             weekStart.plus(d, DateTimeUnit.DAY)
         }
-        weeks.add(HeatmapWeek(days))
+        weeks.add(HeatmapWeek(days = days))
+    }
+    return HeatmapData(weeks = weeks)
+}
+
+/**
+ * GitHub 式热力图数据：从 [from] 到 [to]（含），按周（周一~周日）对齐。
+ * 用于展示尽量长的历史（而非固定 90 天）。
+ */
+fun buildHeatmapData(
+    from: LocalDate,
+    to: LocalDate,
+): HeatmapData {
+    val startMonday = from.minus(from.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
+    val endSunday = to.plus(7 - to.dayOfWeek.isoDayNumber, DateTimeUnit.DAY)
+    val weeks = mutableListOf<HeatmapWeek>()
+    var cursor = startMonday
+    while (cursor <= endSunday) {
+        weeks.add(HeatmapWeek(days = (0 until 7).map { cursor.plus(it, DateTimeUnit.DAY) }))
+        cursor = cursor.plus(7, DateTimeUnit.DAY)
     }
     return HeatmapData(weeks = weeks)
 }

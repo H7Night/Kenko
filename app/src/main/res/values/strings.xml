@@ -176,7 +176,7 @@
     <string name="label_profile">You</string>
 
     <!--Statistics-->
-    <string name="label_last_90_days">Last 90 days</string>
+    <string name="label_heatmap_activity">Activity</string>
     <string name="label_stat_week">This Week</string>
     <string name="label_stat_month">This Month</string>
     <string name="label_stat_plan">This Plan</string>

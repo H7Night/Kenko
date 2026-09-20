@@ -21,7 +21,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +31,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -49,13 +47,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.looker.kenko.R
-import com.looker.kenko.domain.statistics.buildHeatmapData90d
+import com.looker.kenko.domain.statistics.buildHeatmapData
 import kotlin.time.Clock
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
-
-const val WeeksToShow = 13
 
 @Composable
 fun HeatmapCard(
@@ -86,18 +84,16 @@ fun HeatmapCard(
         ) {
             // Simple header for 90d window — no year navigation
             Text(
-                text = stringResource(R.string.label_last_90_days),
+                text = stringResource(R.string.label_heatmap_activity),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // Horizontal scrollable grid
-            val scrollState = rememberScrollState()
+            // Last 120 days, fitted to the card width (no horizontal scroll)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(scrollState)
                     .padding(horizontal = 8.dp),
             ) {
                 HeatmapGrid(
@@ -274,37 +270,37 @@ private fun buildHeatmapDisplayData(
     today: LocalDate,
     monthNames: List<String>,
 ): HeatmapDisplayData {
-    val raw = buildHeatmapData90d(sessionDates, today)
+    // 默认显示最近 120 天（不横向滚动，尽量在同一屏内完整展示）。
+    val from = today.minus(119, DateTimeUnit.DAY)
+    val raw = buildHeatmapData(from, today)
     val monthLabels = mutableListOf<Pair<Int, String>>()
     var maxCount = 0
 
     val weeks = raw.weeks.mapIndexed { wIndex, week ->
-        // month label if this week contains the 1st of a month
+        // 月份标注：含某月 1 号的周标月份；跨年时用年份标注。
         for (d in week.days) {
-            val date = d!!
+            val date = d ?: continue
             if (date.day == 1) {
-                monthLabels.add(wIndex to monthNames[date.month.ordinal])
+                val label = if (date.monthNumber == 1) date.year.toString() else monthNames[date.month.ordinal]
+                monthLabels.add(wIndex to label)
                 break
             }
         }
 
         val days = week.days.map { date ->
-            val d = date!!
+            val d = requireNotNull(date)
             val count = countByDate[d] ?: if (d in sessionDates) 1 else 0
             if (count > maxCount) maxCount = count
-            val isFuture = d > today
-            HeatmapDay(d, count, isFuture)
+            HeatmapDay(d, count, isFuture = d > today)
         }
         HeatmapWeekDisplay(days)
     }
 
-    // Ensure at least one label (e.g. window entirely within one month but no 1st present)
+    // 若窗口内没有任何 1 号，则至少给首周一个月份标签。
     if (monthLabels.isEmpty() && weeks.isNotEmpty()) {
         val firstDate = weeks.first().days.first().date
         monthLabels.add(0 to monthNames[firstDate.month.ordinal])
     }
-
-    check(weeks.size == WeeksToShow) { "Heatmap must have $WeeksToShow weeks, was ${weeks.size}" }
 
     return HeatmapDisplayData(
         weeks = weeks,
