@@ -35,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.ui.extension.plus
-import com.looker.kenko.ui.feature.statistics.components.AdherenceCard
 import com.looker.kenko.ui.feature.statistics.components.BalanceRingCard
 import com.looker.kenko.ui.feature.statistics.components.BodyPartBarCard
 import com.looker.kenko.ui.feature.statistics.components.StatisticsSkeleton
@@ -112,12 +111,6 @@ fun Statistics(
                 item {
                     TrendCard(
                         weeklyTrend = content.weeklyTrend,
-                    )
-                }
-                item {
-                    AdherenceCard(
-                        actualDays = content.actualDays,
-                        plannedDays = content.plannedDays,
                     )
                 }
             }

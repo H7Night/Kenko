@@ -39,6 +39,4 @@ data class StatisticsUiState(
     val cardioMinutesMonthly: Int = 0,
     val cardioMinutesPlan: Int = 0,
     val weeklyTrend: List<Int> = emptyList(),
-    val actualDays: Int = 0,
-    val plannedDays: Int = 0,
 )

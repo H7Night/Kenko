@@ -40,8 +40,6 @@ class StatisticsAggregationTest {
         assertEquals(1, state.weeklyCounts["胸"])
         assertEquals(1, state.weeklyCounts["腿"])
         assertEquals(40, state.cardioWeekly)
-        assertEquals(2, state.actualDays)
-        assertEquals(4, state.plannedDays)
         assertEquals(true, state.heatmapData.weeks.isNotEmpty())
     }
 
@@ -49,7 +47,6 @@ class StatisticsAggregationTest {
     fun `no plan yields zero planned days`() {
         val today = LocalDate(2026, 9, 18)
         val state = aggregateStatistics(emptyList(), emptyMap(), exercises, allTags, null, today)
-        assertEquals(0, state.plannedDays)
         assertEquals(12, state.weeklyTrend.size)
     }
 }

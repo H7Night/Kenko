@@ -80,9 +80,6 @@ fun aggregateStatistics(
         cardioMinutesMonthly = cardioMonthly,
         cardioMinutesPlan = cardioPlan,
         weeklyTrend = buildWeeklyTrend(summaries, today),
-        actualDays = summaries.filter { it.date.year == today.year && it.date.month == today.month }
-            .map { it.date }.toSet().size,
-        plannedDays = plan?.dayCount ?: 0,
     )
 }
 

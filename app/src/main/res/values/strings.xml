@@ -189,9 +189,6 @@
     <string name="label_weekly_count">Sessions per week</string>
     <string name="label_total_times">Total %1$d sessions</string>
     <string name="label_max_week">Peak %1$d/week</string>
-    <string name="label_plan_adherence">Plan Adherence</string>
-    <string name="label_monthly_adherence">%1$d / %2$d days this month</string>
-    <string name="label_no_plan">No plan</string>
 
     <string-array name="month_short">
         <item>Jan</item>

@@ -183,9 +183,6 @@
     <string name="label_weekly_count">每周训练次数</string>
     <string name="label_total_times">总计 %1$d 次</string>
     <string name="label_max_week">最高 %1$d 次/周</string>
-    <string name="label_plan_adherence">计划达成率</string>
-    <string name="label_monthly_adherence">本月达成 %1$d / %2$d 天</string>
-    <string name="label_no_plan">暂无计划</string>
 
     <string-array name="month_short">
         <item>1月</item>
