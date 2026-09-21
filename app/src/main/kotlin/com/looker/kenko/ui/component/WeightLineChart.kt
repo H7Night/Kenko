@@ -54,13 +54,10 @@ fun WeightLineChart(
     Canvas(modifier = modifier.fillMaxWidth()) {
         if (weights.size < 2) return@Canvas
 
-        val leftPad = 34f
         val rightPad = 8f
         val topPad = 24f
         val bottomPad = 28f
         val axisLabelRects = mutableListOf<Rect>()
-        val chartWidth = size.width - leftPad - rightPad
-        val chartHeight = size.height - topPad - bottomPad
 
         val rawMin = weights.minOf { it.value }
         val rawMax = weights.maxOf { it.value }
@@ -69,11 +66,20 @@ fun WeightLineChart(
         val yMax = rawMax + pad
         val yRange = (yMax - yMin).coerceAtLeast(1f)
 
+        // 先测量 Y 轴刻度文字，动态留出左侧内边距，保证刻度数字完整落在边界内（不与模块边缘重合）。
+        val gridLines = 4
+        val yLabelLayouts = (0 until gridLines).map { i ->
+            val t = i.toFloat() / (gridLines - 1)
+            textMeasurer.measure("%.2f".format(yMin + t * yRange), textStyle)
+        }
+        val leftPad = yLabelLayouts.maxOf { it.size.width } + 6f
+        val chartWidth = size.width - leftPad - rightPad
+        val chartHeight = size.height - topPad - bottomPad
+
         fun yFor(value: Float): Float =
             topPad + (1f - (value - yMin) / yRange) * chartHeight
 
         // 水平网格 + Y 轴刻度
-        val gridLines = 4
         for (i in 0 until gridLines) {
             val t = i.toFloat() / (gridLines - 1)
             val value = yMin + t * yRange
@@ -84,8 +90,8 @@ fun WeightLineChart(
                 end = Offset(size.width - rightPad, y),
                 strokeWidth = 1f,
             )
-            val layout = textMeasurer.measure("%.2f".format(value), textStyle)
-            val yLabelLeft = leftPad - layout.size.width - 4f
+            val layout = yLabelLayouts[i]
+            val yLabelLeft = (leftPad - layout.size.width - 4f).coerceAtLeast(0f)
             val yLabelTop = y - layout.size.height / 2f
             axisLabelRects.add(
                 Rect(yLabelLeft, yLabelTop, yLabelLeft + layout.size.width, yLabelTop + layout.size.height)
