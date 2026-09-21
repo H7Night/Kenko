@@ -9,4 +9,4 @@ if %ERRORLEVEL% EQU 0 (
     echo.
     echo Build Failed!
 )
-pause
+if not defined NO_PAUSE pause

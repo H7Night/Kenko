@@ -15,5 +15,5 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "Operation Failed! Please check the error messages above."
 }
 
-if (-not $NoPause) { Read-Host "Press Enter to exit" }
+if (-not $NoPause -and -not [Console]::IsInputRedirected) { Read-Host "Press Enter to exit" }
 exit $LASTEXITCODE
