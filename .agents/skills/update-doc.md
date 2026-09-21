@@ -1,6 +1,6 @@
 ---
 name: update-doc
-description: Kenko 项目文档维护技能。用户要求"更新 changelog / readme / agents"或功能完成后需同步文档时调用。规定 CHANGELOG.md、README.md、README_cn.md、.agents/AGENTS.md 的更新规则、内容来源、提交粒度与验证方式。
+description: Kenko 项目文档维护技能。用户要求"更新 changelog / readme / agents"或功能完成后需同步文档时调用。规定 CHANGELOG.md、README.md、README_cn.md、AGENTS.md 的更新规则、内容来源、提交粒度与验证方式。
 allowed-tools: Read, Glob, Grep, Bash, Edit
 ---
 
@@ -18,9 +18,9 @@ allowed-tools: Read, Glob, Grep, Bash, Edit
 | `CHANGELOG.md` | 用户/发布 | 用户可见的改动记录（Keep a Changelog 格式） |
 | `README.md` | 用户（英文） | 功能特性、技术栈、构建/发布说明（英文） |
 | `README_cn.md` | 用户（中文） | 功能特性、技术栈、构建/发布说明（简体中文） |
-| `.agents/AGENTS.md` | agent | 工作流、构建命令、架构说明、文档维护规范 |
+| `AGENTS.md` | agent | 工作流、构建命令、架构说明、文档维护规范 |
 
-> ⚠️ **`.agents/` 目录已被 git 跟踪**（含 `AGENTS.md`、`skills/` 技能文件）：对其修改需正常提交。`.gitignore` 已用 `docs/*` 忽略 docs 内容、`.superpowers` 忽略 SDD 工作区；`CHANGELOG.md`、`README.md`、`README_cn.md` 是被跟踪文件，正常提交。
+> ⚠️ **根 `AGENTS.md` 与 `.agents/skills/` 已被 git 跟踪**：对其修改需正常提交。`.gitignore` 已用 `docs/*` 忽略 docs 内容、`.superpowers` 忽略 SDD 工作区；`CHANGELOG.md`、`README.md`、`README_cn.md` 是被跟踪文件，正常提交。
 
 ## 二、CHANGELOG.md 规则
 
@@ -37,7 +37,7 @@ allowed-tools: Read, Glob, Grep, Bash, Edit
 3. **技术栈/构建/发布**：仅在对应部分变化时更新（如新增依赖、构建方式变更）。
 4. **克制原则**：只反映真实存在的功能，不写规划中/未实现的内容。
 
-## 四、.agents/AGENTS.md 规则
+## 四、AGENTS.md 规则
 
 1. **架构说明**（`## Architecture` → `Key patterns`）：新增功能落地后，用 2-4 行补充核心类/文件/入口位置/关键约定（如"反馈走 snackbarState 而非 _snackbar"这类易踩坑约定必写）。
 2. **文档维护小节**：本技能被引用处（`## Documentation Maintenance`）保持与技能名/路径一致，不重复技能内容。

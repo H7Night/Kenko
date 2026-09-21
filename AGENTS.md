@@ -50,7 +50,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Documentation Maintenance（文档维护）
 
-用户要求更新文档时（或功能完成后需要同步文档时），按 `.agents/skills/update-doc.md` 技能规范执行：哪些文件要更新、各文件的格式与位置、提交粒度与验证方式。涉及文件：`CHANGELOG.md`、`README.md`、`README_cn.md`、`.agents/AGENTS.md`。`CHANGELOG.md` 的发布版本化（Unreleased → 版本区块）在 Release Process 中进行。
+用户要求更新文档时（或功能完成后需要同步文档时），按 `.agents/skills/update-doc.md` 技能规范执行：哪些文件要更新、各文件的格式与位置、提交粒度与验证方式。涉及文件：`CHANGELOG.md`、`README.md`、`README_cn.md`、`AGENTS.md`。`CHANGELOG.md` 的发布版本化（Unreleased → 版本区块）在 Release Process 中进行。
 
 ## Release Process（版本发布流程）
 
