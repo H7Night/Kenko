@@ -175,7 +175,7 @@ private fun HeatmapGrid(
             data.monthLabels.forEach { (weekIndex, label) ->
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     modifier = Modifier.padding(start = (cellSize + cellGap) * weekIndex)
                 )
@@ -192,7 +192,7 @@ private fun HeatmapGrid(
                     Box(modifier = Modifier.size(cellSize)) {
                         Text(
                             text = weekdays[idx],
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center

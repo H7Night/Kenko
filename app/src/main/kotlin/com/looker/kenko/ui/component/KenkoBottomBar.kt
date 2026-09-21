@@ -28,7 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.looker.kenko.R
 import com.looker.kenko.ui.feature.home.navigation.HomeRoute
 import com.looker.kenko.ui.feature.profile.navigation.ProfileRoute
@@ -74,8 +73,7 @@ fun KenkoBottomBar(
             label = {
                 Text(
                     text = stringResource(R.string.label_home),
-                    fontSize = 10.sp,
-                    letterSpacing = 0.04.sp,
+                    style = MaterialTheme.typography.labelSmall,
                 )
             },
             colors = itemColors,
@@ -94,8 +92,7 @@ fun KenkoBottomBar(
             label = {
                 Text(
                     text = stringResource(R.string.label_records),
-                    fontSize = 10.sp,
-                    letterSpacing = 0.04.sp,
+                    style = MaterialTheme.typography.labelSmall,
                 )
             },
             colors = itemColors,
@@ -114,8 +111,7 @@ fun KenkoBottomBar(
             label = {
                 Text(
                     text = stringResource(R.string.label_statistics),
-                    fontSize = 10.sp,
-                    letterSpacing = 0.04.sp,
+                    style = MaterialTheme.typography.labelSmall,
                 )
             },
             colors = itemColors,
@@ -134,8 +130,7 @@ fun KenkoBottomBar(
             label = {
                 Text(
                     text = stringResource(R.string.label_profile),
-                    fontSize = 10.sp,
-                    letterSpacing = 0.04.sp,
+                    style = MaterialTheme.typography.labelSmall,
                 )
             },
             colors = itemColors,

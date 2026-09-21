@@ -48,7 +48,7 @@ fun WeightLineChart(
     val textMeasurer = rememberTextMeasurer()
     val textStyle = MaterialTheme.typography.labelSmall.copy(
         color = labelColor,
-        fontSize = 9.sp,
+        fontSize = 10.sp,
     )
 
     Canvas(modifier = modifier.fillMaxWidth()) {

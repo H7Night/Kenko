@@ -135,15 +135,15 @@ val Typography = Typography().copy(
     labelMedium = baseline.labelMedium.copy(
         fontFamily = displayFont,
         fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 14.sp,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
         letterSpacing = 0.04.sp,
     ),
     labelSmall = baseline.labelSmall.copy(
         fontFamily = displayFont,
         fontWeight = FontWeight.Medium,
-        fontSize = 10.sp,
-        lineHeight = 13.sp,
+        fontSize = 11.sp,
+        lineHeight = 14.sp,
         letterSpacing = 0.06.sp,
     ),
 )
