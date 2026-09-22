@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Records page no longer shows its own heatmap — the activity heatmap lives on the new Statistics page
 - Selecting a plan on the Profile page now shows all weight records across that plan's activation window (e.g. from activation date to today) instead of month-bucketing
+- Home slogan ("Stick to the plan / Not your mood.") is now shown as a large, faint English-only background watermark on the Home page
 - Cardio exercises no longer use sets: the Add Set sheet hides the set-count input and records a single duration entry
 - Export and plan-transfer files now include each exercise's body-part target (previously always empty)
 
