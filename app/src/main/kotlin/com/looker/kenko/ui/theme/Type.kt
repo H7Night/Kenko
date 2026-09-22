@@ -44,6 +44,16 @@ fun Typography.header() = displayLarge.copy(
 
 fun TextStyle.numbers() = copy(fontFamily = FontFamily.Numbers)
 
+/**
+ * Oversized decorative style for background slogans/watermarks (larger than the
+ * normal 10–28sp scale, used at low alpha behind content).
+ */
+fun Typography.watermark() = displayLarge.copy(
+    fontSize = 40.sp,
+    lineHeight = 44.sp,
+    letterSpacing = (-0.02).sp,
+)
+
 val baseline = Typography()
 
 val Typography = Typography().copy(
