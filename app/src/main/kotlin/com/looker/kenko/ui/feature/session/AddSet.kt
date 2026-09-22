@@ -238,26 +238,28 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                 StepButtonContent(text = stringResource(R.string.label_plus_int, 20), modifier = incrementButtonModifier)
             }
         }
-        Spacer(modifier = Modifier.height(24.dp))
-        SwipeableTextField(
-            modifier = Modifier.align(CenterHorizontally),
-        ) {
-            HoldRepeatWrapper(onClick = { viewModel.addSetCount(-1) }, onRepeat = { viewModel.addSetCount(-1) }) {
-                StepButtonContent(text = stringResource(R.string.label_minus_int, 1), modifier = incrementButtonModifier)
-            }
-            val sets = rememberDraggableTextFieldState(viewModel.setsBoundReached)
-            DraggableTextField(
-                dragState = sets,
-                textFieldState = viewModel.setsCount,
-                supportingText = stringResource(R.string.label_sets),
-                inputTransformation = IntTransformation,
-                modifier = zIndexModifier,
-            )
-            HoldRepeatWrapper(onClick = { viewModel.addSetCount(1) }, onRepeat = { viewModel.addSetCount(1) }) {
-                StepButtonContent(text = stringResource(R.string.label_plus_int, 1), modifier = incrementButtonModifier)
-            }
-            HoldRepeatWrapper(onClick = { viewModel.addSetCount(2) }, onRepeat = { viewModel.addSetCount(2) }) {
-                StepButtonContent(text = stringResource(R.string.label_plus_int, 2), modifier = incrementButtonModifier)
+        if (!isCardio) {
+            Spacer(modifier = Modifier.height(24.dp))
+            SwipeableTextField(
+                modifier = Modifier.align(CenterHorizontally),
+            ) {
+                HoldRepeatWrapper(onClick = { viewModel.addSetCount(-1) }, onRepeat = { viewModel.addSetCount(-1) }) {
+                    StepButtonContent(text = stringResource(R.string.label_minus_int, 1), modifier = incrementButtonModifier)
+                }
+                val sets = rememberDraggableTextFieldState(viewModel.setsBoundReached)
+                DraggableTextField(
+                    dragState = sets,
+                    textFieldState = viewModel.setsCount,
+                    supportingText = stringResource(R.string.label_sets),
+                    inputTransformation = IntTransformation,
+                    modifier = zIndexModifier,
+                )
+                HoldRepeatWrapper(onClick = { viewModel.addSetCount(1) }, onRepeat = { viewModel.addSetCount(1) }) {
+                    StepButtonContent(text = stringResource(R.string.label_plus_int, 1), modifier = incrementButtonModifier)
+                }
+                HoldRepeatWrapper(onClick = { viewModel.addSetCount(2) }, onRepeat = { viewModel.addSetCount(2) }) {
+                    StepButtonContent(text = stringResource(R.string.label_plus_int, 2), modifier = incrementButtonModifier)
+                }
             }
         }
         if (!isCardio) {
@@ -367,7 +369,7 @@ private fun AddSetHeader(
         FilledTonalIconButton(onClick = onClick) {
             Icon(
                 painter = KenkoIcons.Done,
-                contentDescription = "",
+                contentDescription = stringResource(R.string.label_confirm),
                 modifier = Modifier.size(16.dp),
             )
         }

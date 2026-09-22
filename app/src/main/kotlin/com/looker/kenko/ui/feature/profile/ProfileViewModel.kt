@@ -16,8 +16,6 @@
 package com.looker.kenko.ui.feature.profile
 
 import androidx.compose.runtime.Stable
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanStat
 import com.looker.kenko.domain.model.Weight
@@ -26,20 +24,17 @@ import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.WeightRepo
+import com.looker.kenko.ui.base.KenkoViewModel
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
 @HiltViewModel
@@ -47,7 +42,7 @@ class ProfileViewModel @Inject constructor(
     planRepo: PlanRepo,
     private val weightRepo: WeightRepo,
     exerciseRepo: ExerciseRepo,
-) : ViewModel() {
+) : KenkoViewModel() {
 
     private val currentPlan: Flow<Plan?> = planRepo.current
 
@@ -116,36 +111,21 @@ class ProfileViewModel @Inject constructor(
         _customRange.value = null
     }
 
-    private val _snackbar = MutableSharedFlow<String>()
-    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
-
     fun addWeight(value: Float) {
-        viewModelScope.launch {
-            try {
-                weightRepo.addWeight(Weight(today(), value))
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            weightRepo.addWeight(Weight(today(), value))
         }
     }
 
     fun updateWeight(weight: Weight) {
-        viewModelScope.launch {
-            try {
-                weightRepo.updateWeight(weight)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            weightRepo.updateWeight(weight)
         }
     }
 
     fun deleteWeight(id: Int) {
-        viewModelScope.launch {
-            try {
-                weightRepo.deleteWeight(id)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            weightRepo.deleteWeight(id)
         }
     }
 }

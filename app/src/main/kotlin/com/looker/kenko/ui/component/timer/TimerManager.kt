@@ -19,6 +19,7 @@ import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import com.looker.kenko.utils.AppConstants
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -112,7 +113,7 @@ class TimerManager @Inject constructor(
         tickerJob?.cancel()
         tickerJob = scope.launch {
             while (isActive) {
-                delay(1000)
+                delay(AppConstants.TIMER_TICK_MILLIS)
                 if (_state.value == TimerState.RUNNING) {
                     _elapsedSeconds.value = _elapsedSeconds.value + 1
                 }

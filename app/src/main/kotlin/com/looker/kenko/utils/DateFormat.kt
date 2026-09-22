@@ -33,6 +33,7 @@ value class DateFormat(private val value: String) {
 
     companion object {
         val YearMonthDay = DateFormat("yyyy-MM-dd")
+        val MonthDay = DateFormat("MM-dd")
     }
 }
 

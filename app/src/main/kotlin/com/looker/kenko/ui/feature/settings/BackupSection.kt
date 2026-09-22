@@ -62,6 +62,7 @@ import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.ui.theme.end
 import com.looker.kenko.ui.theme.start
+import com.looker.kenko.utils.AppConstants
 import com.looker.kenko.utils.ExportFileName
 import com.looker.kenko.utils.toFormat
 import kotlin.time.Clock
@@ -113,7 +114,7 @@ internal fun BackupSection(
     }
 
     val jsonFileLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/json"),
+        contract = ActivityResultContracts.CreateDocument(AppConstants.MIME_JSON),
     ) { uri ->
         if (uri != null) {
             pendingExportOptions?.let { onExport(it, uri) }
@@ -141,7 +142,7 @@ internal fun BackupSection(
             onDismiss = { showExportDialog = false },
             onConfirm = { options ->
                 pendingExportOptions = options
-                jsonFileLauncher.launch(ExportFileName.forProject("data", "json"))
+                jsonFileLauncher.launch(ExportFileName.forProject(ExportFileName.PROJECT_DATA, ExportFileName.EXT_JSON))
                 showExportDialog = false
             },
         )
@@ -211,7 +212,7 @@ internal fun BackupSection(
             }
 
             OutlinedButton(
-                onClick = { filePickerLauncher.launch(arrayOf("application/zip")) },
+                onClick = { filePickerLauncher.launch(arrayOf(AppConstants.MIME_ZIP)) },
                 enabled = !isBackingUp && !isRestoring && !isExporting,
                 modifier = Modifier.weight(1f),
             ) {

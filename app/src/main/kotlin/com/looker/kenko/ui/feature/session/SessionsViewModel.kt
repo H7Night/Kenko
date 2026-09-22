@@ -16,7 +16,6 @@
 package com.looker.kenko.ui.feature.session
 
 import androidx.compose.runtime.Stable
-import androidx.lifecycle.ViewModel
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.SessionRepo
@@ -25,29 +24,26 @@ import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.titlesMap
+import com.looker.kenko.ui.base.KenkoViewModel
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
 @HiltViewModel
 class SessionsViewModel @Inject constructor(
     private val repo: SessionRepo,
     private val planRepo: PlanRepo,
-) : ViewModel() {
+) : KenkoViewModel() {
     private val sessionsStream = repo.streamSummaries
     private val isCurrentSessionActive = repo.streamByDate(today()).map { it != null }
 
@@ -95,28 +91,17 @@ class SessionsViewModel @Inject constructor(
         )
     }.asStateFlow(SessionsUiData(emptyList(), false), started = SharingStarted.Eagerly)
 
-    private val _snackbar = MutableSharedFlow<String>()
-    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
-
     fun addSession(date: LocalDate, dayIndex: Int, onComplete: () -> Unit) {
-        viewModelScope.launch {
-            try {
-                repo.updateDayIndex(date, dayIndex)
-                onComplete()
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            repo.updateDayIndex(date, dayIndex)
+            onComplete()
         }
     }
 
     fun removeSession(session: SessionSummary) {
-        viewModelScope.launch {
-            try {
-                val id = session.id ?: return@launch
-                repo.deleteSessionById(id)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            val id = session.id ?: return@launchCatching
+            repo.deleteSessionById(id)
         }
     }
 }

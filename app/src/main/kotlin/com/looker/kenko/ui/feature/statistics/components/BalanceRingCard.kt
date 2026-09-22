@@ -32,6 +32,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -45,15 +46,17 @@ import com.looker.kenko.R
 import com.looker.kenko.domain.statistics.CARDIO_PART
 import com.looker.kenko.ui.theme.KenkoTheme
 
-private val BalanceColors = mapOf(
-    "胸" to Color(0xFF5E6AD2),
-    "背" to Color(0xFF10B981),
-    "腿" to Color(0xFFF59E0B),
-    "手臂" to Color(0xFFEF4444),
-    "肩" to Color(0xFF8B5CF6),
-    "核心" to Color(0xFF06B6D4),
-    CARDIO_PART to Color(0xFF9CA3AF),
+// 力量部位配色按部位在统计列表中的顺序分配（顺序由 DB 顶层标签 sortOrder 决定）。
+private val StrengthPartPalette = listOf(
+    Color(0xFF5E6AD2),
+    Color(0xFF10B981),
+    Color(0xFFF59E0B),
+    Color(0xFF8B5CF6),
+    Color(0xFFEF4444),
+    Color(0xFF06B6D4),
 )
+
+private val CardioPartColor = Color(0xFF9CA3AF)
 
 @Composable
 fun BalanceRingCard(
@@ -66,6 +69,12 @@ fun BalanceRingCard(
     val strengthParts = bodyParts.filter { it != CARDIO_PART }
     val values = strengthParts.associateWith { monthlyCounts[it] ?: 0 }
     val total = values.values.sum()
+    val outlineVariant = MaterialTheme.colorScheme.outlineVariant
+    val partColors = remember(strengthParts) {
+        strengthParts.withIndex().associate { (index, part) ->
+            part to StrengthPartPalette[index % StrengthPartPalette.size]
+        }
+    }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -92,7 +101,7 @@ fun BalanceRingCard(
                         Canvas(modifier = Modifier.size(120.dp)) {
                             val stroke = 16.dp.toPx()
                             drawArc(
-                                color = Color(0xFFE5E7EB),
+                                color = outlineVariant,
                                 startAngle = 0f,
                                 sweepAngle = 360f,
                                 useCenter = false,
@@ -125,7 +134,7 @@ fun BalanceRingCard(
                             val v = values[part] ?: 0
                             if (v == 0) continue
                             val sweep = 360f * v.toFloat() / total
-                            val color = BalanceColors[part] ?: Color.Gray
+                            val color = partColors[part] ?: CardioPartColor
                             drawArc(
                                 color = color,
                                 startAngle = startAngle,
@@ -147,7 +156,7 @@ fun BalanceRingCard(
                         strengthParts.forEach { part ->
                             val v = values[part] ?: 0
                             val pct = if (total == 0) 0f else v.toFloat() / total
-                            val color = BalanceColors[part] ?: Color.Gray
+                            val color = partColors[part] ?: CardioPartColor
                             val pctText = stringResource(R.string.label_percent, (pct * 100).toInt())
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -190,7 +199,7 @@ fun BalanceRingCard(
                 Box(
                     modifier = Modifier
                         .size(10.dp)
-                        .background(BalanceColors[CARDIO_PART] ?: Color.Gray, RoundedCornerShape(2.dp)),
+                        .background(CardioPartColor, RoundedCornerShape(2.dp)),
                 )
                 Text(
                     text = CARDIO_PART,
@@ -243,4 +252,4 @@ private fun BalanceRingCardPreviewEmpty() {
     }
 }
 
-private val PreviewBodyParts = listOf("胸", "背", "腿", "手臂", "肩", "核心", CARDIO_PART)
+private val PreviewBodyParts = listOf("胸", "背", "腿", "肩", "手臂", "核心", CARDIO_PART)

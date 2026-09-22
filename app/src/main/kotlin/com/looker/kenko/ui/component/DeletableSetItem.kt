@@ -17,18 +17,9 @@ package com.looker.kenko.ui.component
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import com.looker.kenko.R
 import com.looker.kenko.domain.model.Set
 
 /**
@@ -67,17 +58,7 @@ fun DeletableSetItem(
             Box(modifier = Modifier.weight(1f)) {
                 content()
             }
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier.size(28.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Delete,
-                    contentDescription = stringResource(R.string.label_delete),
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
-                    modifier = Modifier.size(16.dp),
-                )
-            }
+            DeleteIconButton(onClick = onDelete)
         }
     } else {
         Box(modifier = modifier) {

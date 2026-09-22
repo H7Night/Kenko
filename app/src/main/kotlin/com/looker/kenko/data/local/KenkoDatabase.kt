@@ -36,6 +36,7 @@ import com.looker.kenko.data.local.model.SessionDataEntity
 import com.looker.kenko.data.local.model.SetEntity
 import com.looker.kenko.data.local.model.TagEntity
 import com.looker.kenko.data.local.model.WeightEntity
+import com.looker.kenko.utils.AppConstants
 
 @Database(
     version = 15,
@@ -66,9 +67,9 @@ fun kenkoDatabase(context: Context) = Room
     .databaseBuilder(
         context = context,
         klass = KenkoDatabase::class.java,
-        name = "kenko_database",
+        name = AppConstants.DATABASE_NAME,
     )
-    .createFromAsset("kenko.db")
+    .createFromAsset(AppConstants.DATABASE_ASSET)
     .addMigrations(
         MIGRATION_1_2,
         MIGRATION_2_3,

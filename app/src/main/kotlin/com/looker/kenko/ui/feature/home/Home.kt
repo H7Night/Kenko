@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -50,7 +49,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,10 +58,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -71,8 +69,8 @@ import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.domain.model.today
-import com.looker.kenko.ui.component.ConfirmDialog
 import com.looker.kenko.ui.component.DeletableSetItem
+import com.looker.kenko.ui.component.SetDeleteDialog
 import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.timer.TimerCard
 import com.looker.kenko.ui.component.timer.TimerState
@@ -80,9 +78,10 @@ import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.ui.component.timer.rememberNotificationPermissionState
 import com.looker.kenko.ui.feature.session.AddSetSheet
 import com.looker.kenko.ui.feature.session.ExerciseSearchDialog
+import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.numbers
-import com.looker.kenko.utils.toast
+import com.looker.kenko.ui.theme.watermark
 import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -221,68 +220,76 @@ fun Home(
     }
 
     Scaffold { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(innerPadding),
         ) {
-            TimerCard(
-                timerState = state.timerState,
-                elapsedSeconds = timerSeconds,
-                notificationGranted = notifState.granted,
-                hasAccumulatedTime = state.timerState == TimerState.IDLE && timerSeconds > 0,
-                showStart = !state.isTodayEmpty,
-                onStart = {
-                    if (!notifState.granted) {
-                        notifState.request()
-                    } else {
-                        viewModel.startWorkout()
+            val isIdleState = state.trainingState is TrainingSessionState.Idle ||
+                state.trainingState is TrainingSessionState.Ended
+            if (isIdleState) {
+                Text(
+                    text = stringResource(R.string.home_text),
+                    style = MaterialTheme.typography.watermark().copy(lineBreak = LineBreak.Heading),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.10f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                TimerCard(
+                    timerState = state.timerState,
+                    elapsedSeconds = timerSeconds,
+                    notificationGranted = notifState.granted,
+                    hasAccumulatedTime = state.timerState == TimerState.IDLE && timerSeconds > 0,
+                    showStart = !state.isTodayEmpty,
+                    onStart = {
+                        if (!notifState.granted) {
+                            notifState.request()
+                        } else {
+                            viewModel.startWorkout()
+                        }
+                    },
+                    onPause = viewModel::pauseWorkout,
+                    onResume = viewModel::resumeWorkout,
+                    onEnd = { showEndConfirm = true },
+                    onReset = { showResetConfirm = true },
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                )
+
+                when (state.trainingState) {
+                    is TrainingSessionState.Idle,
+                    is TrainingSessionState.Ended -> {
+                        PlanInfoCard(
+                            isPlanSelected = state.isPlanSelected,
+                            planName = state.planName,
+                            dayTitle = state.dayTitle,
+                            dayIndex = state.dayIndex,
+                            dayCount = state.dayCount,
+                            isRestDay = state.isRestDay,
+                            onSelectPlanClick = onSelectPlanClick,
+                            onSwitchTrainingDay = { showTrainingDayPicker = true },
+                        )
                     }
-                },
-                onPause = viewModel::pauseWorkout,
-                onResume = viewModel::resumeWorkout,
-                onEnd = { showEndConfirm = true },
-                onReset = { showResetConfirm = true },
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            )
-
-            when (state.trainingState) {
-                is TrainingSessionState.Idle,
-                is TrainingSessionState.Ended -> {
-                    PlanInfoCard(
-                        isPlanSelected = state.isPlanSelected,
-                        planName = state.planName,
-                        dayTitle = state.dayTitle,
-                        dayIndex = state.dayIndex,
-                        dayCount = state.dayCount,
-                        isRestDay = state.isRestDay,
-                        onSelectPlanClick = onSelectPlanClick,
-                        onSwitchTrainingDay = { showTrainingDayPicker = true },
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = stringResource(R.string.home_text),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 24.dp, bottom = 16.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    )
-                }
-                is TrainingSessionState.Active -> {
-                    TrainingActionBar(
-                        onAddExercise = { showAddExerciseDialog = true },
-                        onChangePlan = { showImportConfirm = true },
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    InlineTrainingContent(
-                        exerciseSets = sessionSets,
-                        onAddSet = { exercise -> addSetExercise = exercise },
-                        onRemoveSet = viewModel::removeSet,
-                    )
+                    is TrainingSessionState.Active -> {
+                        TrainingActionBar(
+                            onAddExercise = { showAddExerciseDialog = true },
+                            onChangePlan = { showImportConfirm = true },
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        InlineTrainingContent(
+                            exerciseSets = sessionSets,
+                            onAddSet = { exercise -> addSetExercise = exercise },
+                            onRemoveSet = viewModel::removeSet,
+                        )
+                    }
                 }
             }
         }
@@ -333,19 +340,10 @@ private fun InlineTrainingContent(
 ) {
     val collapsedExercises = remember { mutableStateListOf<Int>() }
     var setToDelete by remember { mutableStateOf<Int?>(null) }
-    val context = LocalContext.current
 
     setToDelete?.let { id ->
-        val deletedMessage = stringResource(R.string.label_deleted)
-        ConfirmDialog(
-            title = stringResource(R.string.label_delete_set_title),
-            message = stringResource(R.string.label_delete_set_message),
-            confirmText = stringResource(R.string.label_delete),
-            onConfirm = {
-                onRemoveSet(id)
-                context.toast(deletedMessage)
-                setToDelete = null
-            },
+        SetDeleteDialog(
+            onConfirm = { onRemoveSet(id) },
             onDismiss = { setToDelete = null },
         )
     }
@@ -558,17 +556,4 @@ private fun SelectPlanPrompt(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun KenkoTopBar(
-    modifier: Modifier = Modifier,
-    actions: @Composable RowScope.() -> Unit = {},
-) {
-    TopAppBar(
-        title = { Text(text = "KENKO") },
-        actions = actions,
-        modifier = modifier,
-    )
-}
 
-private fun normalizeInt(value: Int): String = value.toString()

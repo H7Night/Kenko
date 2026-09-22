@@ -184,7 +184,7 @@ fun TagSelector(
                                 Text(child.name)
                                 if (alreadySelected) {
                                     Text(
-                                        text = "✓",
+                                        text = stringResource(R.string.label_check_mark),
                                         color = MaterialTheme.colorScheme.primary,
                                     )
                                 }

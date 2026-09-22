@@ -62,6 +62,7 @@ import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.TrainingDayMatch
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.ui.component.DeleteIconButton
 import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.component.timer.TimerService
@@ -79,7 +80,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.History
 
 import androidx.compose.foundation.layout.Row
@@ -241,7 +241,7 @@ private fun Sessions(
                                     value = selectedPlanName,
                                     onValueChange = {},
                                     readOnly = true,
-                                    label = { Text("Plan") },
+                                    label = { Text(stringResource(R.string.label_plan)) },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = planExpanded) },
                                     modifier = Modifier.menuAnchor().fillMaxWidth(),
                                     singleLine = true,
@@ -281,7 +281,7 @@ private fun Sessions(
                                         value = selectedDayName,
                                         onValueChange = {},
                                         readOnly = true,
-                                        label = { Text("Day") },
+                                        label = { Text(stringResource(R.string.label_day)) },
                                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dayExpanded) },
                                         modifier = Modifier.menuAnchor().fillMaxWidth(),
                                         singleLine = true,
@@ -547,17 +547,12 @@ fun SessionCard(
             )
             }
             if (onDelete != null) {
-                IconButton(
+                DeleteIconButton(
                     onClick = onDelete,
-                    modifier = Modifier.size(32.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Delete,
-                        contentDescription = stringResource(R.string.label_delete),
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
+                    buttonSize = 32.dp,
+                    iconSize = 18.dp,
+                    tintAlpha = 0.7f,
+                )
             }
         }
     }

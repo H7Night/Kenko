@@ -59,6 +59,7 @@ import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.KenkoAddButton
 import com.looker.kenko.ui.feature.plan.components.PlanItem
 import androidx.compose.ui.platform.LocalContext
+import com.looker.kenko.utils.AppConstants
 import com.looker.kenko.utils.ExportFileName
 import com.looker.kenko.utils.toast
 import com.looker.kenko.ui.theme.KenkoTheme
@@ -78,7 +79,7 @@ fun Plan(
     var pendingExportIds by remember { mutableStateOf<List<Int>?>(null) }
 
     val exportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/json"),
+        contract = ActivityResultContracts.CreateDocument(AppConstants.MIME_JSON),
     ) { uri ->
         if (uri != null) {
             pendingExportIds?.let { viewModel.exportPlans(it, uri) }
@@ -98,7 +99,7 @@ fun Plan(
             onConfirm = { ids ->
                 pendingExportIds = ids
                 showExportDialog = false
-                exportLauncher.launch(ExportFileName.forProject("plans", "json"))
+                exportLauncher.launch(ExportFileName.forProject(ExportFileName.PROJECT_PLANS, ExportFileName.EXT_JSON))
             },
             onDismiss = { showExportDialog = false },
         )
@@ -120,7 +121,7 @@ fun Plan(
         onPlanClick = onPlanClick,
         onRequestRemove = { planToDelete = it },
         onExportPlans = { showExportDialog = true },
-        onImportPlan = { importLauncher.launch(arrayOf("application/json")) },
+        onImportPlan = { importLauncher.launch(arrayOf(AppConstants.MIME_JSON)) },
         snackbarHostState = viewModel.snackbarState,
     )
 

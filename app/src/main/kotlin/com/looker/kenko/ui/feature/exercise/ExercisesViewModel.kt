@@ -18,7 +18,6 @@ package com.looker.kenko.ui.feature.exercise
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.platform.UriHandler
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.looker.kenko.R
 import com.looker.kenko.data.StringHandler
@@ -26,18 +25,15 @@ import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.TagRepo
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Tag
+import com.looker.kenko.ui.base.KenkoViewModel
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -47,12 +43,9 @@ class ExercisesViewModel @Inject constructor(
     private val tagRepo: TagRepo,
     private val uriHandler: UriHandler,
     private val stringHandler: StringHandler,
-) : ViewModel() {
+) : KenkoViewModel() {
 
     val snackbarState = SnackbarHostState()
-
-    private val _snackbar = MutableSharedFlow<String>()
-    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
 
     val selectedParentFilter = MutableStateFlow<Int?>(null)
     val selectedChildFilter = MutableStateFlow<Int?>(null)
@@ -93,16 +86,12 @@ class ExercisesViewModel @Inject constructor(
     }
 
     fun removeExercise(id: Int?) {
-        viewModelScope.launch {
-            try {
-                if (id == null) {
-                    snackbarState.showSnackbar(stringHandler.getString(R.string.error_unknown))
-                    return@launch
-                }
-                repo.remove(id)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
+        launchCatching {
+            if (id == null) {
+                snackbarState.showSnackbar(stringHandler.getString(R.string.error_unknown))
+                return@launchCatching
             }
+            repo.remove(id)
         }
     }
 

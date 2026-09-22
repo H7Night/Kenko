@@ -18,8 +18,6 @@ package com.looker.kenko.ui.feature.exercise
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.looker.kenko.R
 import com.looker.kenko.data.StringHandler
@@ -28,21 +26,19 @@ import com.looker.kenko.data.repository.TagRepo
 import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Tag
+import com.looker.kenko.ui.base.KenkoViewModel
 import com.looker.kenko.ui.feature.exercise.navigation.AddEditExerciseRoute
+import com.looker.kenko.utils.AppConstants
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.launch
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -51,7 +47,7 @@ class AddEditExerciseViewModel @Inject constructor(
     private val tagRepo: TagRepo,
     private val stringHandler: StringHandler,
     savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+) : KenkoViewModel() {
 
     private val routeData: AddEditExerciseRoute = savedStateHandle.toRoute()
 
@@ -71,9 +67,6 @@ class AddEditExerciseViewModel @Inject constructor(
 
     val snackbarState = SnackbarHostState()
 
-    private val _snackbar = MutableSharedFlow<String>()
-    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
-
     val tagState = combine(
         tagRepo.streamParents,
         tagRepo.stream,
@@ -83,7 +76,7 @@ class AddEditExerciseViewModel @Inject constructor(
     }.asStateFlow(TagSelectorState())
 
     private val exerciseAlreadyExistError = exerciseName
-        .debounce(200.milliseconds)
+        .debounce(AppConstants.DEBOUNCE_SHORT_MILLIS.milliseconds)
         .mapLatest { repo.isExerciseAvailable(it) && it != originalName }
 
     val state = combine(
@@ -138,36 +131,28 @@ class AddEditExerciseViewModel @Inject constructor(
     }
 
     fun saveExercise(onDone: () -> Unit) {
-        viewModelScope.launch {
-            try {
-                val name = exerciseName.value
-                if (name.isBlank()) {
-                    snackbarState.showSnackbar(stringHandler.getString(R.string.error_exercise_name_empty))
-                    return@launch
-                }
-                if (selectedTags.value.isEmpty()) {
-                    snackbarState.showSnackbar(stringHandler.getString(R.string.label_at_least_one_tag))
-                    return@launch
-                }
-                if (exerciseId != null && name != originalName && repo.hasHistory(exerciseId)) {
-                    showRenameConfirmation.value = true
-                    return@launch
-                }
-                commitSave(onDone)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
+        launchCatching {
+            val name = exerciseName.value
+            if (name.isBlank()) {
+                snackbarState.showSnackbar(stringHandler.getString(R.string.error_exercise_name_empty))
+                return@launchCatching
             }
+            if (selectedTags.value.isEmpty()) {
+                snackbarState.showSnackbar(stringHandler.getString(R.string.label_at_least_one_tag))
+                return@launchCatching
+            }
+            if (exerciseId != null && name != originalName && repo.hasHistory(exerciseId)) {
+                showRenameConfirmation.value = true
+                return@launchCatching
+            }
+            commitSave(onDone)
         }
     }
 
     fun confirmRename(onDone: () -> Unit) {
-        viewModelScope.launch {
-            try {
-                showRenameConfirmation.value = false
-                commitSave(onDone)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            showRenameConfirmation.value = false
+            commitSave(onDone)
         }
     }
 
@@ -186,22 +171,18 @@ class AddEditExerciseViewModel @Inject constructor(
     }
 
     init {
-        viewModelScope.launch {
-            try {
-                if (exerciseId != null) {
-                    val exercise = repo.get(exerciseId)
-                    exercise?.let {
-                        originalName = it.name
-                        exerciseName.value = it.name
-                        isBodyweightFlow.value = it.isBodyweight
-                        countTypeFlow.value = it.countType
-                        selectedTags.value = it.tags
-                    }
-                } else {
-                    if (routeData.name != null) exerciseName.value = routeData.name
+        launchCatching {
+            if (exerciseId != null) {
+                val exercise = repo.get(exerciseId)
+                exercise?.let {
+                    originalName = it.name
+                    exerciseName.value = it.name
+                    isBodyweightFlow.value = it.isBodyweight
+                    countTypeFlow.value = it.countType
+                    selectedTags.value = it.tags
                 }
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
+            } else {
+                if (routeData.name != null) exerciseName.value = routeData.name
             }
         }
     }

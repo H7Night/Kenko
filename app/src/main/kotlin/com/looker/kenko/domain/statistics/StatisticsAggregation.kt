@@ -85,8 +85,8 @@ fun aggregateStatistics(
 
 internal fun buildWeeklyTrend(summaries: List<SessionSummary>, today: LocalDate): List<Int> {
     val monday = today.minus(today.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
-    return (0 until 12).map { idx ->
-        val weekStart = monday.minus((11 - idx) * 7, DateTimeUnit.DAY)
+    return (0 until TREND_WEEKS).map { idx ->
+        val weekStart = monday.minus((TREND_WEEKS - 1 - idx) * 7, DateTimeUnit.DAY)
         val weekEnd = weekStart.plus(6, DateTimeUnit.DAY)
         summaries.count { it.date >= weekStart && it.date <= weekEnd }
     }

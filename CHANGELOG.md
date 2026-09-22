@@ -15,11 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Records page no longer shows its own heatmap — the activity heatmap lives on the new Statistics page
 - Selecting a plan on the Profile page now shows all weight records across that plan's activation window (e.g. from activation date to today) instead of month-bucketing
+- Home slogan ("Stick to the plan / Not your mood.") is now shown as a large, faint English-only background watermark on the Home page
+- Cardio exercises no longer use sets: the Add Set sheet hides the set-count input and records a single duration entry
 - Export and plan-transfer files now include each exercise's body-part target (previously always empty)
 
 ### Fixed
 - Body-part statistics are now populated correctly: body parts are resolved from a tag's parent id instead of a field that was never populated
 - Scheduled (periodic) backups are re-registered on app startup after an app update
+- Set numbers in the Home workout list are now zero-padded (e.g. `01`) to match the session detail and plan edit screens
+- Several UI labels (set count, tag list, check mark, generic error, version prefix) are now translated instead of hardcoded, and previously missing Chinese translations were added
 
 ## [1.8.0] - 2026-08-31
 

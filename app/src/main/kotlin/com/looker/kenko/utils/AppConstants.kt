@@ -15,23 +15,21 @@
 
 package com.looker.kenko.utils
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+/**
+ * Central place for otherwise-hardcoded app-wide constants (file names, MIME
+ * types, timings). Keep literals out of call sites and reference these instead.
+ */
+object AppConstants {
 
-const val SharingStartedDefault = 5_000L
+    const val DATABASE_NAME = "kenko_database"
+    const val DATABASE_ASSET = "kenko.db"
+    const val TEMP_BACKUP_FILE = "temp_backup.zip"
 
-context(viewModel: ViewModel)
-fun <T> Flow<T>.asStateFlow(
-    initial: T,
-    coroutineScope: CoroutineScope = viewModel.viewModelScope,
-    started: SharingStarted = SharingStarted.WhileSubscribed(SharingStartedDefault)
-): StateFlow<T> = stateIn(
-    scope = coroutineScope,
-    started = started,
-    initialValue = initial
-)
+    const val MIME_JSON = "application/json"
+    const val MIME_ZIP = "application/zip"
+
+    const val TIMER_TICK_MILLIS = 1_000L
+
+    const val DEBOUNCE_SHORT_MILLIS = 200L
+    const val DEBOUNCE_LONG_MILLIS = 500L
+}

@@ -78,9 +78,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -93,15 +92,14 @@ import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.BodyPartMuscleFilter
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.StickyHeader
-import com.looker.kenko.ui.component.ConfirmDialog
 import com.looker.kenko.ui.component.DeletableSetItem
+import com.looker.kenko.ui.component.SetDeleteDialog
 import com.looker.kenko.ui.component.SetItem
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.utils.DateFormat
-import com.looker.kenko.utils.toast
 import com.looker.kenko.utils.formatDate
 import java.util.*
 import kotlin.time.Clock
@@ -326,7 +324,6 @@ private fun SetsList(
     var showImportSheet by remember { mutableStateOf(false) }
     var showAddExerciseDialog by rememberSaveable { mutableStateOf(false) }
     var setToDelete by remember { mutableStateOf<Int?>(null) }
-    val context = LocalContext.current
 
     if (showImportDialog) {
         AlertDialog(
@@ -509,16 +506,8 @@ private fun SetsList(
     }
 
     setToDelete?.let { setId ->
-        val deletedMessage = stringResource(R.string.label_deleted)
-        ConfirmDialog(
-            title = stringResource(R.string.label_delete_set_title),
-            message = stringResource(R.string.label_delete_set_message),
-            confirmText = stringResource(R.string.label_delete),
-            onConfirm = {
-                onRemoveSet(setId)
-                context.toast(deletedMessage)
-                setToDelete = null
-            },
+        SetDeleteDialog(
+            onConfirm = { onRemoveSet(setId) },
             onDismiss = { setToDelete = null },
         )
     }
@@ -658,7 +647,7 @@ fun ExerciseSearchDialog(
                             )
                             if (exercise == selectedExercise) {
                                 Text(
-                                    text = "✓",
+                                    text = stringResource(R.string.label_check_mark),
                                     color = MaterialTheme.colorScheme.primary,
                                     style = MaterialTheme.typography.bodyLarge,
                                 )

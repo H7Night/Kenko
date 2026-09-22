@@ -49,6 +49,8 @@ android {
         versionName = "1.8.0"
         versionCode = versionCodeFor(versionName)
 
+        buildConfigField("String", "GITHUB_REPO_URL", "\"https://github.com/H7Night/Kenko\"")
+
         testInstrumentationRunner = "com.looker.kenko.KenkoTestRunner"
     }
 
@@ -127,10 +129,6 @@ android {
         getByName("androidTest").assets.srcDir("$projectDir/schemas")
     }
 
-    lint {
-        disable += "MissingTranslation"
-    }
-
     composeCompiler {
         metricsDestination = file("$projectDir/reports/metrics")
         reportsDestination = file("$projectDir/reports")
@@ -161,8 +159,8 @@ dependencies {
     implementation(libs.bundles.lifecycle)
     implementation(libs.activity.compose)
     implementation(libs.navigation.compose)
-    implementation("androidx.compose.material:material-icons-core")
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.compose.material.icons.core)
+    implementation(libs.androidx.compose.material.icons.extended)
 
     implementation(libs.savedstate)
 
@@ -185,10 +183,10 @@ dependencies {
     implementation(libs.bundles.room)
     ksp(libs.room.compiler)
 
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:${libs.versions.kotlin.get()}")
+    testImplementation(libs.kotlin.test.junit5)
     testImplementation(libs.kotlinx.coroutines.test)
 
-    androidTestImplementation("org.jetbrains.kotlin:kotlin-test-junit5:${libs.versions.kotlin.get()}")
+    androidTestImplementation(libs.kotlin.test.junit5)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.bundles.instrumented.test)
     androidTestImplementation(libs.room.test)

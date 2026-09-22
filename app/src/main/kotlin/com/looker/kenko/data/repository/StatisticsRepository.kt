@@ -27,6 +27,7 @@ import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.statistics.StatisticsUiState
 import com.looker.kenko.domain.statistics.aggregateStatistics
 import com.looker.kenko.domain.statistics.cardioExerciseIds
+import com.looker.kenko.utils.SharingStartedDefault
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
@@ -99,7 +100,7 @@ class StatisticsRepository @Inject constructor(
                 }
             }
             .flowOn(defaultDispatcher)
-            .stateIn(appScope, SharingStarted.WhileSubscribed(5_000), initialValue = null)
+            .stateIn(appScope, SharingStarted.WhileSubscribed(SharingStartedDefault), initialValue = null)
 
     private data class Inputs(
         val summaries: List<SessionSummary>,

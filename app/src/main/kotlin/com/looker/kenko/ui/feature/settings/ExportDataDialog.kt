@@ -23,13 +23,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +38,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
 import com.looker.kenko.data.export.ExportOptions
+import com.looker.kenko.ui.component.KenkoDatePickerDialog
+import com.looker.kenko.utils.DateFormat
+import com.looker.kenko.utils.formatDate
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -69,59 +69,25 @@ internal fun ExportDataDialog(
     var showEndDatePicker by remember { mutableStateOf(false) }
 
     if (showStartDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = startDate.toEpochDayMillis(),
+        KenkoDatePickerDialog(
+            initialDate = startDate,
+            onDismiss = { showStartDatePicker = false },
+            onConfirm = { selected ->
+                selected?.let { startDate = it }
+                showStartDatePicker = false
+            },
         )
-        DatePickerDialog(
-            onDismissRequest = { showStartDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { millis ->
-                            startDate = millis.toLocalDate()
-                        }
-                        showStartDatePicker = false
-                    },
-                ) {
-                    Text(stringResource(R.string.label_ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showStartDatePicker = false }) {
-                    Text(stringResource(R.string.label_cancel))
-                }
-            },
-        ) {
-            DatePicker(state = datePickerState)
-        }
     }
 
     if (showEndDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = endDate.toEpochDayMillis(),
+        KenkoDatePickerDialog(
+            initialDate = endDate,
+            onDismiss = { showEndDatePicker = false },
+            onConfirm = { selected ->
+                selected?.let { endDate = it }
+                showEndDatePicker = false
+            },
         )
-        DatePickerDialog(
-            onDismissRequest = { showEndDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { millis ->
-                            endDate = millis.toLocalDate()
-                        }
-                        showEndDatePicker = false
-                    },
-                ) {
-                    Text(stringResource(R.string.label_ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEndDatePicker = false }) {
-                    Text(stringResource(R.string.label_cancel))
-                }
-            },
-        ) {
-            DatePicker(state = datePickerState)
-        }
     }
 
     AlertDialog(
@@ -230,18 +196,11 @@ private fun DateRangeRow(
         )
         TextButton(onClick = onClick) {
             Text(
-                text = "${date.year}-${date.month.toString().padStart(2, '0')}-${date.dayOfMonth.toString().padStart(2, '0')}",
+                text = formatDate(date, DateFormat.YearMonthDay),
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
     }
 }
 
-private fun LocalDate.toEpochDayMillis(): Long {
-    return toEpochDays().toInt().toLong() * 86_400_000L
-}
 
-private fun Long.toLocalDate(): LocalDate {
-    return Instant.fromEpochMilliseconds(this)
-        .toLocalDateTime(TimeZone.UTC).date
-}

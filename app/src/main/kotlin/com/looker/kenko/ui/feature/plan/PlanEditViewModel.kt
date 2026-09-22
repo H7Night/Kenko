@@ -20,8 +20,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.looker.kenko.R
 import com.looker.kenko.data.StringHandler
@@ -31,7 +29,9 @@ import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.withDayTitle
+import com.looker.kenko.ui.base.KenkoViewModel
 import com.looker.kenko.ui.feature.plan.navigation.PlanEditRoute
+import com.looker.kenko.utils.AppConstants
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -42,12 +42,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -56,7 +52,7 @@ class PlanEditViewModel @Inject constructor(
     private val stringHandler: StringHandler,
     private val sessionRepo: com.looker.kenko.data.repository.SessionRepo,
     savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+) : KenkoViewModel() {
 
     private val routeData: PlanEditRoute = savedStateHandle.toRoute()
 
@@ -68,9 +64,6 @@ class PlanEditViewModel @Inject constructor(
     val planNameState: TextFieldState = TextFieldState("")
 
     val snackbarState = SnackbarHostState()
-
-    private val _snackbar = MutableSharedFlow<String>()
-    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
 
     private val _isBackAlreadyPressedOnce = MutableStateFlow(false)
     private val _isSavingDayTitle = MutableStateFlow<Int?>(null)
@@ -86,81 +79,65 @@ class PlanEditViewModel @Inject constructor(
     val dayTitleState: TextFieldState = TextFieldState("")
 
     init {
-        viewModelScope.launch {
-            try {
-                combine(_planStream, _dayIndex) { plan, dayIndex ->
-                    (plan?.titlesMap?.get(dayIndex) ?: "") to dayIndex
-                }.collect { (title, dayIndex) ->
-                    // 仅当不是正在保存该天的标题时才回写，避免覆盖用户正在输入的内容
-                    if (_isSavingDayTitle.value != dayIndex && dayTitleState.text.toString() != title) {
-                        dayTitleState.edit {
-                            replace(0, length, title)
-                        }
+        launchCatching {
+            combine(_planStream, _dayIndex) { plan, dayIndex ->
+                (plan?.titlesMap?.get(dayIndex) ?: "") to dayIndex
+            }.collect { (title, dayIndex) ->
+                // 仅当不是正在保存该天的标题时才回写，避免覆盖用户正在输入的内容
+                if (_isSavingDayTitle.value != dayIndex && dayTitleState.text.toString() != title) {
+                    dayTitleState.edit {
+                        replace(0, length, title)
                     }
                 }
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
 
-        viewModelScope.launch {
-            try {
-                _planStream.collect { plan ->
-                    if (plan != null && planNameState.text.toString() != plan.name) {
-                        planNameState.edit {
-                            replace(0, length, plan.name)
-                        }
+        launchCatching {
+            _planStream.collect { plan ->
+                if (plan != null && planNameState.text.toString() != plan.name) {
+                    planNameState.edit {
+                        replace(0, length, plan.name)
                     }
                 }
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
             }
         }
 
-        viewModelScope.launch {
-            try {
-                // 捕获编辑时的 dayIndex，避免切换天后 debounce 将文本保存到错误的天
-                snapshotFlow { dayTitleState.text.toString() }
-                    .map { it to _dayIndex.value }
-                    .debounce(200.milliseconds)
-                    .collect { (title, day) ->
-                        _isSavingDayTitle.value = day
-                        try {
-                            val currentPlan = repo.plan(planIdStream.value) ?: return@collect
-                            if ((currentPlan.titlesMap[day] ?: "") != title) {
-                                repo.updatePlan(currentPlan.withDayTitle(day, title))
-                            }
-                        } finally {
-                            _isSavingDayTitle.value = null
+        launchCatching {
+            // 捕获编辑时的 dayIndex，避免切换天后 debounce 将文本保存到错误的天
+            snapshotFlow { dayTitleState.text.toString() }
+                .map { it to _dayIndex.value }
+                .debounce(AppConstants.DEBOUNCE_SHORT_MILLIS.milliseconds)
+                .collect { (title, day) ->
+                    _isSavingDayTitle.value = day
+                    try {
+                        val currentPlan = repo.plan(planIdStream.value) ?: return@collect
+                        if ((currentPlan.titlesMap[day] ?: "") != title) {
+                            repo.updatePlan(currentPlan.withDayTitle(day, title))
                         }
+                    } finally {
+                        _isSavingDayTitle.value = null
                     }
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+                }
         }
 
-        viewModelScope.launch {
-            try {
-                snapshotFlow { planNameState.text.toString() }
-                    .debounce(500.milliseconds)
-                    .collect { name ->
-                        val id = planIdStream.value
-                        if (id == -1 || name.isBlank() || isNameAlreadyUsed.value) return@collect
-                        val currentPlan = repo.plan(id) ?: return@collect
-                        if (currentPlan.name != name) {
-                            repo.updatePlan(currentPlan.copy(name = name))
-                        }
+        launchCatching {
+            snapshotFlow { planNameState.text.toString() }
+                .debounce(AppConstants.DEBOUNCE_LONG_MILLIS.milliseconds)
+                .collect { name ->
+                    val id = planIdStream.value
+                    if (id == -1 || name.isBlank() || isNameAlreadyUsed.value) return@collect
+                    val currentPlan = repo.plan(id) ?: return@collect
+                    if (currentPlan.name != name) {
+                        repo.updatePlan(currentPlan.copy(name = name))
                     }
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+                }
         }
     }
 
     private val _isSheetVisible: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     val isNameAlreadyUsed = snapshotFlow { planNameState.text.trim().toString() }
-        .debounce(200.milliseconds)
+        .debounce(AppConstants.DEBOUNCE_SHORT_MILLIS.milliseconds)
         .flatMapLatest { name ->
             _planStream.map { plan ->
                 if (name.isBlank() || plan?.name == name) false
@@ -197,166 +174,114 @@ class PlanEditViewModel @Inject constructor(
     )
 
     fun saveName() {
-        viewModelScope.launch {
-            try {
-                if (planNameState.text.isBlank()) {
-                    snackbarState.showSnackbar(stringHandler.getString(R.string.error_plan_name_empty))
-                    return@launch
-                }
-                if (isNameAlreadyUsed.value) {
-                    snackbarState.showSnackbar(stringHandler.getString(R.string.error_plan_name_exists))
-                    return@launch
-                }
-                val createId = repo.createPlan(planNameState.text.toString())
-                planIdStream.emit(createId)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
+        launchCatching {
+            if (planNameState.text.isBlank()) {
+                snackbarState.showSnackbar(stringHandler.getString(R.string.error_plan_name_empty))
+                return@launchCatching
             }
+            if (isNameAlreadyUsed.value) {
+                snackbarState.showSnackbar(stringHandler.getString(R.string.error_plan_name_exists))
+                return@launchCatching
+            }
+            val createId = repo.createPlan(planNameState.text.toString())
+            planIdStream.emit(createId)
         }
     }
 
     fun setCurrentDay(dayIndex: Int) {
-        viewModelScope.launch {
-            try {
-                _dayIndex.emit(dayIndex)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            _dayIndex.emit(dayIndex)
         }
     }
 
     fun openSheet() {
-        viewModelScope.launch {
-            try {
-                _isSheetVisible.emit(true)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            _isSheetVisible.emit(true)
         }
     }
 
     fun closeSheet() {
-        viewModelScope.launch {
-            try {
-                _isSheetVisible.emit(false)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            _isSheetVisible.emit(false)
         }
     }
 
     fun addExercise(exercise: Exercise) {
-        viewModelScope.launch {
-            try {
-                repo.addItem(
-                    PlanItem(
-                        dayIndex = _dayIndex.value,
-                        exercise = exercise,
-                        planId = planIdStream.value,
-                    ),
-                )
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            repo.addItem(
+                PlanItem(
+                    dayIndex = _dayIndex.value,
+                    exercise = exercise,
+                    planId = planIdStream.value,
+                ),
+            )
         }
     }
 
     fun removePlanItem(planItemId: Long) {
-        viewModelScope.launch {
-            try {
-                repo.removeItem(planItemId)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            repo.removeItem(planItemId)
         }
     }
 
     fun updateOrder(exercises: List<Exercise>) {
-        viewModelScope.launch {
-            try {
-                repo.updateOrder(planIdStream.value, _dayIndex.value, exercises)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            repo.updateOrder(planIdStream.value, _dayIndex.value, exercises)
         }
     }
 
     fun addDay() {
-        viewModelScope.launch {
-            try {
-                repo.addDay(planIdStream.value)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            repo.addDay(planIdStream.value)
         }
     }
 
     fun renameDay(dayIndex: Int) {
-        viewModelScope.launch {
-            try {
-                // 切换到该天,使标题输入框(dayTitleState)聚焦到对应天的标题
-                _dayIndex.emit(dayIndex)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            // 切换到该天,使标题输入框(dayTitleState)聚焦到对应天的标题
+            _dayIndex.emit(dayIndex)
         }
     }
 
     fun deleteDay(dayIndex: Int) {
-        viewModelScope.launch {
-            try {
-                repo.deleteDay(planIdStream.value, dayIndex)
-                _dayIndex.emit(1)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            repo.deleteDay(planIdStream.value, dayIndex)
+            _dayIndex.emit(1)
         }
     }
 
     fun setDayAsRest(dayIndex: Int) {
-        viewModelScope.launch {
-            try {
-                // 清空该天动作即成为休息日
-                repo.getPlanItems(planIdStream.value, dayIndex)
-                    .forEach { repo.removeItem(requireNotNull(it.id)) }
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            // 清空该天动作即成为休息日
+            repo.getPlanItems(planIdStream.value, dayIndex)
+                .forEach { repo.removeItem(requireNotNull(it.id)) }
         }
     }
 
     fun moveDay(from: Int, to: Int) {
-        viewModelScope.launch {
-            try {
-                repo.moveDay(planIdStream.value, from, to)
-                _dayIndex.emit(to)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            repo.moveDay(planIdStream.value, from, to)
+            _dayIndex.emit(to)
         }
     }
 
     fun onBackPress(stage: PlanEditStage, onBackPress: () -> Unit) {
-        viewModelScope.launch {
-            try {
-                if (stage == PlanEditStage.NameEdit) {
-                    onBackPress()
-                    return@launch
-                }
-                if (_isBackAlreadyPressedOnce.value) {
-                    repo.deletePlan(planIdStream.value)
-                    onBackPress()
-                    return@launch
-                }
-                if (repo.getPlanItems(planIdStream.value).isEmpty()) {
-                    _isBackAlreadyPressedOnce.emit(true)
-                    snackbarState.showSnackbar(stringHandler.getString(R.string.error_plan_empty_prompt))
-                    return@launch
-                }
+        launchCatching {
+            if (stage == PlanEditStage.NameEdit) {
                 onBackPress()
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
+                return@launchCatching
             }
+            if (_isBackAlreadyPressedOnce.value) {
+                repo.deletePlan(planIdStream.value)
+                onBackPress()
+                return@launchCatching
+            }
+            if (repo.getPlanItems(planIdStream.value).isEmpty()) {
+                _isBackAlreadyPressedOnce.emit(true)
+                snackbarState.showSnackbar(stringHandler.getString(R.string.error_plan_empty_prompt))
+                return@launchCatching
+            }
+            onBackPress()
         }
     }
 }

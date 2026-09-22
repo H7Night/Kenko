@@ -16,7 +16,6 @@
 package com.looker.kenko.ui.feature.home
 
 import androidx.compose.runtime.Immutable
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
@@ -25,6 +24,7 @@ import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.domain.model.orderTrainingExercises
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.titlesMap
+import com.looker.kenko.ui.base.KenkoViewModel
 import com.looker.kenko.ui.component.timer.TimerManager
 import com.looker.kenko.ui.component.timer.TimerState
 import com.looker.kenko.ui.component.timer.TrainingSessionManager
@@ -33,18 +33,14 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
 @HiltViewModel
@@ -55,14 +51,11 @@ class HomeViewModel @Inject constructor(
     exerciseRepo: ExerciseRepo,
     val timerManager: TimerManager,
     val trainingSessionManager: TrainingSessionManager,
-) : ViewModel() {
+) : KenkoViewModel() {
 
     private val planStream = planRepo.current
     val sessionStream = sessionRepo.streamByDate(today())
     private val sessionsStream = sessionRepo.stream
-
-    private val _snackbar = MutableSharedFlow<String>()
-    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
 
     private val planItemStream = combine(
         sessionStream,
@@ -74,15 +67,11 @@ class HomeViewModel @Inject constructor(
     }
 
     init {
-        viewModelScope.launch {
-            try {
-                val existingSession = sessionRepo.streamByDate(today()).first()
-                val existingDuration = existingSession?.durationSeconds ?: 0L
-                if (existingDuration > 0 && timerManager.state.value == TimerState.IDLE) {
-                    timerManager.setElapsedSeconds(existingDuration)
-                }
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
+        launchCatching {
+            val existingSession = sessionRepo.streamByDate(today()).first()
+            val existingDuration = existingSession?.durationSeconds ?: 0L
+            if (existingDuration > 0 && timerManager.state.value == TimerState.IDLE) {
+                timerManager.setElapsedSeconds(existingDuration)
             }
         }
     }
@@ -194,17 +183,13 @@ class HomeViewModel @Inject constructor(
 
     fun endWorkout() {
         trainingSessionManager.endTraining()
-        viewModelScope.launch {
-            try {
-                val plan = planStream.first() ?: return@launch
-                val session = sessionStream.first()
-                if (session?.sets?.isNotEmpty() == true) {
-                    val day = session.dayIndexOverride ?: plan.currentDayIndex
-                    sessionRepo.updateDayIndex(today(), day)
-                    planRepo.advanceDay(requireNotNull(plan.id), day)
-                }
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
+        launchCatching {
+            val plan = planStream.first() ?: return@launchCatching
+            val session = sessionStream.first()
+            if (session?.sets?.isNotEmpty() == true) {
+                val day = session.dayIndexOverride ?: plan.currentDayIndex
+                sessionRepo.updateDayIndex(today(), day)
+                planRepo.advanceDay(requireNotNull(plan.id), day)
             }
         }
     }
@@ -214,34 +199,22 @@ class HomeViewModel @Inject constructor(
     }
 
     fun selectTrainingDay(dayIndex: Int) {
-        viewModelScope.launch {
-            try {
-                val planId = planStream.first()?.id ?: return@launch
-                sessionRepo.updateDayIndex(today(), dayIndex)
-                planRepo.updateDayIndex(planId, dayIndex)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            val planId = planStream.first()?.id ?: return@launchCatching
+            sessionRepo.updateDayIndex(today(), dayIndex)
+            planRepo.updateDayIndex(planId, dayIndex)
         }
     }
 
     fun clearTodaySets() {
-        viewModelScope.launch {
-            try {
-                sessionRepo.clearSets(today())
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            sessionRepo.clearSets(today())
         }
     }
 
     fun removeSet(setId: Int) {
-        viewModelScope.launch {
-            try {
-                sessionRepo.removeSet(setId)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            sessionRepo.removeSet(setId)
         }
     }
 }

@@ -25,6 +25,7 @@
     <string name="label_explore_exercises">查看\n动作</string>
     <string name="label_add_new_exercises_home">添加\n动作</string>
     <string name="label_current_plan_home">当前\n计划</string>
+    <string name="label_session_history_home">训练\n历史</string>
 
     <!--Sessions-->
     <string name="label_sessions_title">训练记录</string>
@@ -52,6 +53,7 @@
     <string name="label_train_anyway">还是要练</string>
     <string name="label_missed_day">你错过今天了吗？</string>
     <string name="label_import_from_other_day">从其他计划日导入：</string>
+    <string name="label_import_plan">导入计划</string>
 
     <!--Plan Import/Export-->
     <string name="label_export_plan">导出计划</string>
@@ -161,6 +163,7 @@
     <string name="label_bodyweight_display">自重</string>
     <string name="label_use_bodyweight">是否使用自重</string>
     <string name="label_sets">组数</string>
+    <string name="label_sets_count">%1$s 组</string>
     <string name="label_coming_soon">敬请期待</string>
 
     <!--Navigation-->
@@ -204,6 +207,7 @@
     <string name="error_invalid_reference_format">无效参考格式</string>
     <string name="error_invalid_url">无效 URL</string>
     <string name="error_unknown">未知错误</string>
+    <string name="error_generic">出错了</string>
     <string name="error_plan_name_empty">请输入计划名称</string>
     <string name="error_plan_name_exists">计划名称已存在</string>
     <string name="error_exercise_name_empty">请输入动作名称</string>
@@ -271,6 +275,7 @@
 
     <!--Tags-->
     <string name="label_tag_management">标签管理</string>
+    <string name="label_child_tag_item">• %1$s</string>
     <string name="label_add_tag">添加标签</string>
     <string name="label_edit_tag">编辑标签</string>
     <string name="label_delete_tag">删除标签</string>
@@ -328,6 +333,7 @@
     <!--Day of Week-->
     <string name="label_today">.今天</string>
     <string name="label_plan">计划</string>
+    <string name="label_day">训练日</string>
     <string name="label_select_a_plan">选择一个计划</string>
     <string name="label_selecting_a_plan">从选择计划开始</string>
     <string name="label_start_first_session">开始你的第一次训练</string>
@@ -335,6 +341,7 @@
     <string name="label_continue_session_heading">继续今天的训练</string>
     <string name="label_next">下一步</string>
     <string name="label_boarding_quote">你的下一次蜕变从这里开始。</string>
+    <string name="label_no_sessions">暂无训练记录</string>
 
     <string-array name="label_features">
         <item>进度跟踪</item>
