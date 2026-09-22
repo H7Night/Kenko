@@ -133,7 +133,9 @@ class AddSetViewModel @AssistedInject constructor(
     fun addSet() {
         launchCatching {
             val sessionId = sessionRepo.getSessionIdOrCreate(date ?: today())
-            repeat(setsInt) {
+            // 有氧只记录一条时长，不涉及组数概念。
+            val count = if (isCardio) 1 else setsInt
+            repeat(count) {
                 sessionRepo.addSet(
                     sessionId = sessionId,
                     exerciseId = id,
