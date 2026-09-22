@@ -45,6 +45,11 @@ inline operator fun DayOfWeek.minus(days: Int): DayOfWeek = plus(-days)
 val LocalDate.isToday: Boolean
     get() = daysUntil(Clock.System.todayIn(TimeZone.currentSystemDefault())) == 0
 
+fun LocalDate.toEpochDayMillis(): Long = toEpochDays().toInt().toLong() * 86_400_000L
+
+fun Long.toLocalDate(): LocalDate =
+    Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.UTC).date
+
 fun Instant.toFormat(): String {
     val dateTime = toLocalDateTime(TimeZone.currentSystemDefault())
     val formatter = LocalDateTime.Format {

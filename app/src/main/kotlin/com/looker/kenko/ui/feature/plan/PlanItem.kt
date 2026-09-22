@@ -27,10 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.draw.clip
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconToggleButton
 import androidx.compose.material3.Surface
@@ -49,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanPreviewParameters
+import com.looker.kenko.ui.component.DeleteIconButton
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
@@ -111,17 +109,7 @@ fun PlanItem(
                     Icon(painter = KenkoIcons.Done, contentDescription = null, modifier = Modifier.size(16.dp))
                 }
                 if (onDelete != null) {
-                    IconButton(
-                        onClick = onDelete,
-                        modifier = Modifier.size(28.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Delete,
-                            contentDescription = stringResource(R.string.label_delete),
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
+                    DeleteIconButton(onClick = onDelete)
                 }
             }
             val stats = remember(plan) { plan.stat }

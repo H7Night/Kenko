@@ -25,23 +25,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.core.text.isDigitsOnly
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.SessionRepo
+import com.looker.kenko.ui.base.KenkoViewModel
 import com.looker.kenko.ui.feature.session.components.BoundReached
 import com.looker.kenko.ui.feature.session.components.Direction
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
 /**
@@ -57,7 +51,7 @@ class AddSetViewModel @AssistedInject constructor(
     private val exerciseRepo: ExerciseRepo,
     @Assisted("id") private val id: Int,
     @Assisted("date") private val date: LocalDate?,
-) : ViewModel() {
+) : KenkoViewModel() {
 
     val reps: TextFieldState = TextFieldState("10")
     val weights: TextFieldState = TextFieldState("20.0")
@@ -71,22 +65,15 @@ class AddSetViewModel @AssistedInject constructor(
 
     private var weightBeforeBodyweight = "20.0"
 
-    private val _snackbar = MutableSharedFlow<String>()
-    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
-
     init {
-        viewModelScope.launch {
-            try {
-                val exercise = exerciseRepo.get(id)
-                isCardio = exercise?.countType == CountType.MINUTES
-                if (isCardio) {
-                    reps.setTextAndPlaceCursorAtEnd("20")
-                    // 有氧只记录时长,不记录重量;UI 虽隐藏重量行,底层值也必须为 0,
-                    // 否则会用默认 "20.0" 记录成错误的 20kg × N 次。
-                    weights.setTextAndPlaceCursorAtEnd("0")
-                }
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
+        launchCatching {
+            val exercise = exerciseRepo.get(id)
+            isCardio = exercise?.countType == CountType.MINUTES
+            if (isCardio) {
+                reps.setTextAndPlaceCursorAtEnd("20")
+                // 有氧只记录时长,不记录重量;UI 虽隐藏重量行,底层值也必须为 0,
+                // 否则会用默认 "20.0" 记录成错误的 20kg × N 次。
+                weights.setTextAndPlaceCursorAtEnd("0")
             }
         }
     }
@@ -144,19 +131,15 @@ class AddSetViewModel @AssistedInject constructor(
     }
 
     fun addSet() {
-        viewModelScope.launch {
-            try {
-                val sessionId = sessionRepo.getSessionIdOrCreate(date ?: today())
-                repeat(setsInt) {
-                    sessionRepo.addSet(
-                        sessionId = sessionId,
-                        exerciseId = id,
-                        weight = if (isCardio) 0F else weightFloat,
-                        reps = repInt,
-                    )
-                }
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
+        launchCatching {
+            val sessionId = sessionRepo.getSessionIdOrCreate(date ?: today())
+            repeat(setsInt) {
+                sessionRepo.addSet(
+                    sessionId = sessionId,
+                    exerciseId = id,
+                    weight = if (isCardio) 0F else weightFloat,
+                    reps = repInt,
+                )
             }
         }
     }

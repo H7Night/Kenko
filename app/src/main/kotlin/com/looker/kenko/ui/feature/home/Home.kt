@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -50,7 +49,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,7 +58,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
@@ -71,8 +68,8 @@ import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.domain.model.today
-import com.looker.kenko.ui.component.ConfirmDialog
 import com.looker.kenko.ui.component.DeletableSetItem
+import com.looker.kenko.ui.component.SetDeleteDialog
 import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.timer.TimerCard
 import com.looker.kenko.ui.component.timer.TimerState
@@ -80,9 +77,9 @@ import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.ui.component.timer.rememberNotificationPermissionState
 import com.looker.kenko.ui.feature.session.AddSetSheet
 import com.looker.kenko.ui.feature.session.ExerciseSearchDialog
+import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.numbers
-import com.looker.kenko.utils.toast
 import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -333,19 +330,10 @@ private fun InlineTrainingContent(
 ) {
     val collapsedExercises = remember { mutableStateListOf<Int>() }
     var setToDelete by remember { mutableStateOf<Int?>(null) }
-    val context = LocalContext.current
 
     setToDelete?.let { id ->
-        val deletedMessage = stringResource(R.string.label_deleted)
-        ConfirmDialog(
-            title = stringResource(R.string.label_delete_set_title),
-            message = stringResource(R.string.label_delete_set_message),
-            confirmText = stringResource(R.string.label_delete),
-            onConfirm = {
-                onRemoveSet(id)
-                context.toast(deletedMessage)
-                setToDelete = null
-            },
+        SetDeleteDialog(
+            onConfirm = { onRemoveSet(id) },
             onDismiss = { setToDelete = null },
         )
     }
@@ -558,17 +546,4 @@ private fun SelectPlanPrompt(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun KenkoTopBar(
-    modifier: Modifier = Modifier,
-    actions: @Composable RowScope.() -> Unit = {},
-) {
-    TopAppBar(
-        title = { Text(text = "KENKO") },
-        actions = actions,
-        modifier = modifier,
-    )
-}
 
-private fun normalizeInt(value: Int): String = value.toString()

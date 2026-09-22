@@ -21,15 +21,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -48,6 +44,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Weight
 import com.looker.kenko.ui.component.ConfirmDialog
+import com.looker.kenko.ui.component.DeleteIconButton
 import com.looker.kenko.ui.theme.numbers
 import com.looker.kenko.utils.DateFormat
 import com.looker.kenko.utils.toast
@@ -116,17 +113,12 @@ fun WeightHistorySheet(
                                     text = "${weight.value} ${stringResource(R.string.label_weight_unit)}",
                                     style = MaterialTheme.typography.titleMedium.numbers()
                                 )
-                                IconButton(
+                                DeleteIconButton(
                                     onClick = { weightToDelete = weight.id },
-                                    modifier = Modifier.size(32.dp),
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Delete,
-                                        contentDescription = stringResource(R.string.label_delete),
-                                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                                        modifier = Modifier.size(18.dp),
-                                    )
-                                }
+                                    buttonSize = 32.dp,
+                                    iconSize = 18.dp,
+                                    tintAlpha = 0.7f,
+                                )
                             }
                         }
                     }

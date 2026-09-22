@@ -15,22 +15,26 @@
 
 package com.looker.kenko.ui.component
 
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.remember
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 
+/**
+ * A [NestedScrollConnection] that consumes nothing and passes all available
+ * scroll back to the parent, effectively disabling scrolling for the wrapped
+ * content.
+ */
 @Composable
-fun TargetChip(
-    selected: Boolean,
-    onClick: () -> Unit,
-    text: String,
-    modifier: Modifier = Modifier,
-) {
-    FilterChip(
-        selected = selected,
-        onClick = onClick,
-        label = { Text(text = text) },
-        modifier = modifier,
-    )
+fun disableScrollConnection() = remember {
+    object : NestedScrollConnection {
+        override fun onPostScroll(
+            consumed: Offset,
+            available: Offset,
+            source: NestedScrollSource,
+        ): Offset {
+            return available
+        }
+    }
 }

@@ -39,8 +39,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,7 +48,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,8 +64,8 @@ import com.looker.kenko.R
 import com.looker.kenko.domain.model.PlanStat
 import com.looker.kenko.domain.model.Weight
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.toLocalDateTime
 import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.ui.component.KenkoDatePickerDialog
 import com.looker.kenko.ui.component.OutlineBorder
 import com.looker.kenko.ui.component.SecondaryBorder
 import com.looker.kenko.ui.component.WeightLineChart
@@ -485,43 +482,25 @@ private fun WeightRangeDialog(
     var showEndPicker by remember { mutableStateOf(false) }
 
     if (showStartPicker) {
-        val pickerState = rememberDatePickerState(
-            initialSelectedDateMillis = (startDate ?: today).toEpochDayMillis(),
+        KenkoDatePickerDialog(
+            initialDate = startDate ?: today,
+            onDismiss = { showStartPicker = false },
+            onConfirm = { selected ->
+                selected?.let { startDate = it }
+                showStartPicker = false
+            },
         )
-        DatePickerDialog(
-            onDismissRequest = { showStartPicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        pickerState.selectedDateMillis?.let { startDate = it.toLocalDate() }
-                        showStartPicker = false
-                    },
-                ) { Text(stringResource(R.string.label_ok)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showStartPicker = false }) { Text(stringResource(R.string.label_cancel)) }
-            },
-        ) { DatePicker(state = pickerState) }
     }
 
     if (showEndPicker) {
-        val pickerState = rememberDatePickerState(
-            initialSelectedDateMillis = (endDate ?: today).toEpochDayMillis(),
+        KenkoDatePickerDialog(
+            initialDate = endDate ?: today,
+            onDismiss = { showEndPicker = false },
+            onConfirm = { selected ->
+                selected?.let { endDate = it }
+                showEndPicker = false
+            },
         )
-        DatePickerDialog(
-            onDismissRequest = { showEndPicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        pickerState.selectedDateMillis?.let { endDate = it.toLocalDate() }
-                        showEndPicker = false
-                    },
-                ) { Text(stringResource(R.string.label_ok)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEndPicker = false }) { Text(stringResource(R.string.label_cancel)) }
-            },
-        ) { DatePicker(state = pickerState) }
     }
 
     AlertDialog(
@@ -578,13 +557,6 @@ private fun RangeDateRow(
         }
     }
 }
-
-private fun LocalDate.toEpochDayMillis(): Long =
-    toEpochDays().toInt().toLong() * 86_400_000L
-
-private fun Long.toLocalDate(): LocalDate =
-    kotlin.time.Instant.fromEpochMilliseconds(this)
-        .toLocalDateTime(kotlinx.datetime.TimeZone.UTC).date
 
 @Preview(showBackground = true)
 @Composable

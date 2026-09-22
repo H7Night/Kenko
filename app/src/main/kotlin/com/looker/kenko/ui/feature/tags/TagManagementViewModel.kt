@@ -15,28 +15,23 @@
 
 package com.looker.kenko.ui.feature.tags
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.repository.TagRepo
 import com.looker.kenko.domain.model.Tag
+import com.looker.kenko.ui.base.KenkoViewModel
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class TagManagementViewModel @Inject constructor(
     private val tagRepo: TagRepo,
-) : ViewModel() {
+) : KenkoViewModel() {
 
     private val refreshTrigger = MutableStateFlow(0)
 
@@ -53,90 +48,59 @@ class TagManagementViewModel @Inject constructor(
         )
     }.asStateFlow(TagManagementUiState())
 
-    private val _snackbar = MutableSharedFlow<String>()
-    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
-
     fun refresh() {
         refreshTrigger.value++
     }
 
     fun addParent(name: String) {
-        viewModelScope.launch {
-            try {
-                val maxOrder = state.value.parents.maxOfOrNull { it.sortOrder } ?: 0
-                tagRepo.upsert(Tag(name = name, sortOrder = maxOrder + 1))
-                refresh()
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            val maxOrder = state.value.parents.maxOfOrNull { it.sortOrder } ?: 0
+            tagRepo.upsert(Tag(name = name, sortOrder = maxOrder + 1))
+            refresh()
         }
     }
 
     fun addChild(name: String, parentId: Int) {
-        viewModelScope.launch {
-            try {
-                val siblings = state.value.children.filter { it.parentId == parentId }
-                val maxOrder = siblings.maxOfOrNull { it.sortOrder } ?: 0
-                tagRepo.upsert(Tag(name = name, parentId = parentId, sortOrder = maxOrder + 1))
-                refresh()
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            val siblings = state.value.children.filter { it.parentId == parentId }
+            val maxOrder = siblings.maxOfOrNull { it.sortOrder } ?: 0
+            tagRepo.upsert(Tag(name = name, parentId = parentId, sortOrder = maxOrder + 1))
+            refresh()
         }
     }
 
     fun updateTag(tag: Tag) {
-        viewModelScope.launch {
-            try {
-                tagRepo.upsert(tag)
-                refresh()
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            tagRepo.upsert(tag)
+            refresh()
         }
     }
 
     fun deleteTag(tag: Tag) {
-        viewModelScope.launch {
-            try {
-                tagRepo.delete(tag)
-                refresh()
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            tagRepo.delete(tag)
+            refresh()
         }
     }
 
     fun deleteTagById(id: Int) {
-        viewModelScope.launch {
-            try {
-                tagRepo.deleteById(id)
-                refresh()
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            tagRepo.deleteById(id)
+            refresh()
         }
     }
 
     fun exerciseCount(tagId: Int, callback: (Int) -> Unit) {
-        viewModelScope.launch {
-            try {
-                callback(tagRepo.exerciseCount(tagId))
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            callback(tagRepo.exerciseCount(tagId))
         }
     }
 
     fun updateSortOrder(tagId: Int, newOrder: Int) {
-        viewModelScope.launch {
-            try {
-                val tag = tagRepo.get(tagId) ?: return@launch
-                tagRepo.upsert(tag.copy(sortOrder = newOrder))
-                refresh()
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            val tag = tagRepo.get(tagId) ?: return@launchCatching
+            tagRepo.upsert(tag.copy(sortOrder = newOrder))
+            refresh()
         }
     }
 }

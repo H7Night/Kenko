@@ -19,7 +19,6 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.platform.UriHandler
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.looker.kenko.R
@@ -35,6 +34,7 @@ import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.TrainingDayMatch
+import com.looker.kenko.ui.base.KenkoViewModel
 import com.looker.kenko.ui.feature.session.navigation.SessionDetailRoute
 import com.looker.kenko.utils.asStateFlow
 import com.looker.kenko.utils.isToday
@@ -44,19 +44,15 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 
@@ -68,7 +64,7 @@ class SessionDetailViewModel @Inject constructor(
     private val settingsRepo: SettingsRepo,
     private val savedStateHandle: SavedStateHandle,
     private val uriHandler: UriHandler,
-) : ViewModel() {
+) : KenkoViewModel() {
 
     private val routeData: SessionDetailRoute = savedStateHandle.toRoute<SessionDetailRoute>()
 
@@ -180,9 +176,6 @@ class SessionDetailViewModel @Inject constructor(
     private val _isEditMode: MutableStateFlow<Boolean> = MutableStateFlow(isTodaySession)
     val isEditMode: StateFlow<Boolean> = _isEditMode
 
-    private val _snackbar = MutableSharedFlow<String>()
-    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
-
     private val _currentExercise: MutableStateFlow<Exercise?> = MutableStateFlow(null)
     val current: StateFlow<Exercise?> = _currentExercise
 
@@ -257,75 +250,47 @@ class SessionDetailViewModel @Inject constructor(
     }
 
     fun importPlanFromDay(dayIndex: Int) {
-        viewModelScope.launch {
-            try {
-                repo.updateDayIndex(sessionDate, dayIndex)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            repo.updateDayIndex(sessionDate, dayIndex)
         }
     }
 
     fun clearTodaySets() {
-        viewModelScope.launch {
-            try {
-                repo.clearSets(sessionDate)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            repo.clearSets(sessionDate)
         }
     }
 
     fun removeSet(setId: Int?) {
         if (setId == null) return
-        viewModelScope.launch {
-            try {
-                repo.removeSet(setId)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            repo.removeSet(setId)
         }
     }
 
     fun updateSet(setId: Int?, reps: Int, weight: Float) {
         if (setId == null) return
-        viewModelScope.launch {
-            try {
-                repo.updateSet(setId, reps, weight)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            repo.updateSet(setId, reps, weight)
         }
     }
 
     fun showBottomSheet(exercise: Exercise) {
         if (!isEditMode.value) return
-        viewModelScope.launch {
-            try {
-                _currentExercise.emit(exercise)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            _currentExercise.emit(exercise)
         }
     }
 
     fun hideSheet() {
-        viewModelScope.launch {
-            try {
-                _currentExercise.emit(null)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            _currentExercise.emit(null)
         }
     }
 
     fun openReference(reference: String) {
-        viewModelScope.launch {
-            try {
-                uriHandler.openUri(reference)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            uriHandler.openUri(reference)
         }
     }
 }

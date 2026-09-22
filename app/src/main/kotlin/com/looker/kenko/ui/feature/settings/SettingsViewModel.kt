@@ -18,7 +18,6 @@ package com.looker.kenko.ui.feature.settings
 import android.net.Uri
 import androidx.compose.runtime.Stable
 import androidx.core.net.toUri
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.backup.BackupManager
 import com.looker.kenko.data.backup.BackupResult
@@ -29,17 +28,15 @@ import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.data.repository.SettingsRepo
+import com.looker.kenko.ui.base.KenkoViewModel
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -51,14 +48,11 @@ class SettingsViewModel @Inject constructor(
     private val backupManager: BackupManager,
     private val exportManager: ExportManager,
     sessionRepo: SessionRepo,
-) : ViewModel() {
+) : KenkoViewModel() {
 
     private val earliestSessionDate: Flow<LocalDate?> = sessionRepo.earliestSessionDate
 
     private val _backupState = MutableStateFlow(BackupState())
-
-    private val _snackbar = MutableSharedFlow<String>()
-    val snackbar: SharedFlow<String> = _snackbar.asSharedFlow()
 
     val state: StateFlow<SettingsUiData> = combine(
         repo.stream,
@@ -93,46 +87,30 @@ class SettingsViewModel @Inject constructor(
     )
 
     fun updateTheme(theme: Theme) {
-        viewModelScope.launch {
-            try {
-                repo.setTheme(theme)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            repo.setTheme(theme)
         }
     }
 
     fun updateLanguage(language: Language) {
-        viewModelScope.launch {
-            try {
-                repo.setLanguage(language)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            repo.setLanguage(language)
         }
     }
 
     fun setBackupLocation(uri: Uri) {
-        viewModelScope.launch {
-            try {
-                repo.setBackupUri(uri.toString())
-                backupManager.schedulePeriodicBackup(state.value.backupInterval, uri)
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
-            }
+        launchCatching {
+            repo.setBackupUri(uri.toString())
+            backupManager.schedulePeriodicBackup(state.value.backupInterval, uri)
         }
     }
 
     fun setBackupInterval(interval: BackupInterval) {
-        viewModelScope.launch {
-            try {
-                repo.setBackupInterval(interval)
-                val backupUri = state.value.backupUri?.toUri()
-                if (backupUri != null) {
-                    backupManager.schedulePeriodicBackup(interval, backupUri)
-                }
-            } catch (e: Exception) {
-                _snackbar.emit(e.message ?: "An error occurred")
+        launchCatching {
+            repo.setBackupInterval(interval)
+            val backupUri = state.value.backupUri?.toUri()
+            if (backupUri != null) {
+                backupManager.schedulePeriodicBackup(interval, backupUri)
             }
         }
     }
@@ -160,7 +138,7 @@ class SettingsViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _backupState.update { it.copy(isBackingUp = false) }
-                _snackbar.emit(e.message ?: "An error occurred")
+                emitSnackbar(e.message ?: "An error occurred")
             }
         }
     }
@@ -187,7 +165,7 @@ class SettingsViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _backupState.update { it.copy(isRestoring = false) }
-                _snackbar.emit(e.message ?: "An error occurred")
+                emitSnackbar(e.message ?: "An error occurred")
             }
         }
     }
@@ -212,7 +190,7 @@ class SettingsViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _backupState.update { it.copy(isExporting = false) }
-                _snackbar.emit(e.message ?: "An error occurred")
+                emitSnackbar(e.message ?: "An error occurred")
             }
         }
     }

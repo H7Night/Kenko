@@ -15,12 +15,9 @@
 
 package com.looker.kenko.ui.feature.settings
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -28,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -36,7 +32,6 @@ import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -44,7 +39,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
@@ -56,6 +50,7 @@ import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.ui.component.SelectionDialog
 import com.looker.kenko.ui.component.SettingsGroup
 import com.looker.kenko.ui.component.SettingsRow
 import com.looker.kenko.ui.theme.KenkoIcons
@@ -100,8 +95,11 @@ private fun Settings(
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     if (showLanguageDialog) {
-        LanguageSelectionDialog(
+        SelectionDialog(
+            title = stringResource(R.string.label_language),
+            items = Language.entries,
             selected = state.language,
+            label = { stringResource(it.labelRes) },
             onSelect = { language ->
                 onSelectLanguage(language)
                 showLanguageDialog = false
@@ -111,8 +109,11 @@ private fun Settings(
     }
 
     if (showThemeDialog) {
-        ThemeSelectionDialog(
+        SelectionDialog(
+            title = stringResource(R.string.label_theme),
+            items = Theme.entries,
             selected = state.selectedTheme,
+            label = { stringResource(it.nameRes) },
             onSelect = { theme ->
                 onSelectTheme(theme)
                 showThemeDialog = false
@@ -194,92 +195,6 @@ private fun Settings(
             }
         }
     }
-}
-
-@Composable
-private fun LanguageSelectionDialog(
-    selected: Language,
-    onSelect: (Language) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.label_language)) },
-        text = {
-            Column {
-                Language.entries.forEach { language ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelect(language) }
-                            .padding(vertical = 12.dp, horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = stringResource(language.labelRes),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f),
-                        )
-                        if (language == selected) {
-                            Text(
-                                text = "✓",
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.label_cancel))
-            }
-        },
-    )
-}
-
-@Composable
-private fun ThemeSelectionDialog(
-    selected: Theme,
-    onSelect: (Theme) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.label_theme)) },
-        text = {
-            Column {
-                Theme.entries.forEach { theme ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelect(theme) }
-                            .padding(vertical = 12.dp, horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = stringResource(theme.nameRes),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f),
-                        )
-                        if (theme == selected) {
-                            Text(
-                                text = "✓",
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.label_cancel))
-            }
-        },
-    )
 }
 
 @Preview

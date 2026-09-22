@@ -33,7 +33,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -43,7 +42,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -77,6 +75,7 @@ import com.looker.kenko.ui.component.KenkoBorderStrong
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.SecondaryKenkoButton
 import com.looker.kenko.ui.component.ConfirmDialog
+import com.looker.kenko.ui.component.DeleteIconButton
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
@@ -350,17 +349,7 @@ private fun ExercisesList(
                             }
                         }
                     }
-                    IconButton(
-                        onClick = { onRequestRemove(exerciseId) },
-                        modifier = Modifier.size(28.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Delete,
-                            contentDescription = stringResource(R.string.label_delete),
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
+                    DeleteIconButton(onClick = { onRequestRemove(exerciseId) })
                 }
             }
         }
