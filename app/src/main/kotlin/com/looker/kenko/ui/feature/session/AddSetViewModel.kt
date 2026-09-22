@@ -53,9 +53,9 @@ class AddSetViewModel @AssistedInject constructor(
     @Assisted("date") private val date: LocalDate?,
 ) : KenkoViewModel() {
 
-    val reps: TextFieldState = TextFieldState("10")
-    val weights: TextFieldState = TextFieldState("20.0")
-    val setsCount: TextFieldState = TextFieldState("2")
+    val reps: TextFieldState = TextFieldState(DEFAULT_REPS)
+    val weights: TextFieldState = TextFieldState(DEFAULT_WEIGHT)
+    val setsCount: TextFieldState = TextFieldState(DEFAULT_SETS)
 
     private var isCardio by mutableStateOf(false)
 
@@ -63,17 +63,17 @@ class AddSetViewModel @AssistedInject constructor(
     var isBodyweightMode by mutableStateOf(false)
         private set
 
-    private var weightBeforeBodyweight = "20.0"
+    private var weightBeforeBodyweight = DEFAULT_WEIGHT
 
     init {
         launchCatching {
             val exercise = exerciseRepo.get(id)
             isCardio = exercise?.countType == CountType.MINUTES
             if (isCardio) {
-                reps.setTextAndPlaceCursorAtEnd("20")
+                reps.setTextAndPlaceCursorAtEnd(CARDIO_REPS)
                 // 有氧只记录时长,不记录重量;UI 虽隐藏重量行,底层值也必须为 0,
                 // 否则会用默认 "20.0" 记录成错误的 20kg × N 次。
-                weights.setTextAndPlaceCursorAtEnd("0")
+                weights.setTextAndPlaceCursorAtEnd(CARDIO_WEIGHT)
             }
         }
     }
@@ -151,7 +151,15 @@ class AddSetViewModel @AssistedInject constructor(
         get() = weights.text.toString().toFloatOrNull() ?: 0F
 
     private inline val setsInt: Int
-        get() = setsCount.text.toString().toIntOrNull() ?: 2
+        get() = setsCount.text.toString().toIntOrNull() ?: DEFAULT_SETS.toInt()
+
+    private companion object {
+        const val DEFAULT_REPS = "10"
+        const val DEFAULT_WEIGHT = "20.0"
+        const val DEFAULT_SETS = "2"
+        const val CARDIO_REPS = "20"
+        const val CARDIO_WEIGHT = "0"
+    }
 
     @AssistedFactory
     interface AddSetViewModelFactory {

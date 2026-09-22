@@ -26,6 +26,7 @@ import androidx.work.workDataOf
 import com.looker.kenko.data.local.KenkoDatabase
 import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.di.IoDispatcher
+import com.looker.kenko.utils.AppConstants
 import com.looker.kenko.utils.ExportFileName
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -43,7 +44,7 @@ class BackupManagerImpl @Inject constructor(
     private val database: KenkoDatabase,
 ) : BackupManager {
 
-    private val databaseName = "kenko_database"
+    private val databaseName = AppConstants.DATABASE_NAME
     private val datastoreFileName = "settings.preferences_pb"
 
     override suspend fun createBackup(destinationUri: Uri): BackupResult =
@@ -52,7 +53,7 @@ class BackupManagerImpl @Inject constructor(
                 // Checkpoint database to ensure WAL is flushed
                 database.query("PRAGMA wal_checkpoint(TRUNCATE)", null).close()
 
-                val tempZipFile = File(context.cacheDir, "temp_backup.zip")
+                val tempZipFile = File(context.cacheDir, AppConstants.TEMP_BACKUP_FILE)
 
                 ZipOutputStream(tempZipFile.outputStream()).use { zipOut ->
                     val dbFiles = databaseFiles()
@@ -172,9 +173,9 @@ class BackupManagerImpl @Inject constructor(
         val treeDoc = DocumentFile.fromTreeUri(context, treeUri)
             ?: error("Cannot access directory: $treeUri")
 
-        val fileName = ExportFileName.forProject("app", "zip")
+        val fileName = ExportFileName.forProject(ExportFileName.PROJECT_APP, ExportFileName.EXT_ZIP)
         val backupFile = treeDoc.findFile(fileName)
-            ?: treeDoc.createFile("application/zip", fileName)
+            ?: treeDoc.createFile(AppConstants.MIME_ZIP, fileName)
             ?: error("Cannot create backup file in: $treeUri")
 
         context.contentResolver.openOutputStream(backupFile.uri)?.use { output ->

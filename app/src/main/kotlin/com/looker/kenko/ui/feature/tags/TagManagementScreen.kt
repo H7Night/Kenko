@@ -249,7 +249,7 @@ private fun ChildTagRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "• ${tag.name}",
+            text = stringResource(R.string.label_child_tag_item, tag.name),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

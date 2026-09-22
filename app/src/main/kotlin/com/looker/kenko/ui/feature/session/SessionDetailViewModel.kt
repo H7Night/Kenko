@@ -36,6 +36,7 @@ import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.TrainingDayMatch
 import com.looker.kenko.ui.base.KenkoViewModel
 import com.looker.kenko.ui.feature.session.navigation.SessionDetailRoute
+import com.looker.kenko.utils.SharingStartedDefault
 import com.looker.kenko.utils.asStateFlow
 import com.looker.kenko.utils.isToday
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -111,7 +112,7 @@ class SessionDetailViewModel @Inject constructor(
                     array.map { it as Pair<Int, Map<Int, kotlin.collections.Set<String>>> }.toMap()
                 }
             }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(SharingStartedDefault), emptyMap())
 
     val allExercises: StateFlow<List<Exercise>> = exerciseRepo.stream
         .asStateFlow(initial = emptyList())

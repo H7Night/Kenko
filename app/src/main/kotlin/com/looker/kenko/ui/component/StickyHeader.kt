@@ -32,7 +32,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.looker.kenko.R
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.numbers
@@ -80,7 +82,7 @@ fun StickyHeader(
                 if (setCount > 0) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "${normalizeInt(setCount)} sets",
+                        text = stringResource(R.string.label_sets_count, normalizeInt(setCount)),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

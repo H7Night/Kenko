@@ -37,12 +37,16 @@ abstract class KenkoViewModel : ViewModel() {
         _snackbar.emit(message)
     }
 
+    protected suspend fun emitError(error: Throwable) {
+        _snackbar.emit(error.message ?: DEFAULT_ERROR)
+    }
+
     protected fun launchCatching(block: suspend () -> Unit) {
         viewModelScope.launch {
             try {
                 block()
             } catch (e: Exception) {
-                _snackbar.emit(e.message ?: DEFAULT_ERROR)
+                emitError(e)
             }
         }
     }

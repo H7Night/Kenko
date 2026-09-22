@@ -64,7 +64,7 @@ fun <T> SelectionDialog(
                         )
                         if (item == selected) {
                             Text(
-                                text = "✓",
+                                text = stringResource(R.string.label_check_mark),
                                 color = MaterialTheme.colorScheme.primary,
                                 style = MaterialTheme.typography.bodyLarge,
                             )

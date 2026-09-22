@@ -138,7 +138,7 @@ class SettingsViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _backupState.update { it.copy(isBackingUp = false) }
-                emitSnackbar(e.message ?: "An error occurred")
+                emitError(e)
             }
         }
     }
@@ -165,7 +165,7 @@ class SettingsViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _backupState.update { it.copy(isRestoring = false) }
-                emitSnackbar(e.message ?: "An error occurred")
+                emitError(e)
             }
         }
     }
@@ -190,7 +190,7 @@ class SettingsViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _backupState.update { it.copy(isExporting = false) }
-                emitSnackbar(e.message ?: "An error occurred")
+                emitError(e)
             }
         }
     }

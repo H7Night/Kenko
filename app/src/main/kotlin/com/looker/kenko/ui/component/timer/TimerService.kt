@@ -25,6 +25,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.looker.kenko.R
 import com.looker.kenko.ui.MainActivity
+import com.looker.kenko.utils.AppConstants
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -84,7 +85,7 @@ class TimerService : Service() {
             while (isActive) {
                 val elapsed = timerManager.elapsedSeconds.value
                 updateNotification(elapsed)
-                delay(1000)
+                delay(AppConstants.TIMER_TICK_MILLIS)
             }
         }
     }

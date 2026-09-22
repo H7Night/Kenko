@@ -85,7 +85,7 @@ class PlanViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                snackbarState.showSnackbar(e.message ?: "An error occurred")
+                snackbarState.showSnackbar(e.message ?: stringHandler.getString(R.string.error_generic))
             }
         }
     }
@@ -100,7 +100,7 @@ class PlanViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                snackbarState.showSnackbar(e.message ?: "An error occurred")
+                snackbarState.showSnackbar(e.message ?: stringHandler.getString(R.string.error_generic))
             }
         }
     }
@@ -110,7 +110,7 @@ class PlanViewModel @Inject constructor(
             try {
                 repo.deletePlan(id)
             } catch (e: Exception) {
-                snackbarState.showSnackbar(e.message ?: "An error occurred")
+                snackbarState.showSnackbar(e.message ?: stringHandler.getString(R.string.error_generic))
             }
         }
     }
@@ -127,7 +127,7 @@ class PlanViewModel @Inject constructor(
                     settingsRepo.setOnboardingDone()
                 }
             } catch (e: Exception) {
-                snackbarState.showSnackbar(e.message ?: "An error occurred")
+                snackbarState.showSnackbar(e.message ?: stringHandler.getString(R.string.error_generic))
             }
         }
     }

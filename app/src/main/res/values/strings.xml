@@ -167,6 +167,8 @@
     <string name="label_bodyweight_display">Body Weight</string>
     <string name="label_use_bodyweight">Use Body Weight</string>
     <string name="label_sets">sets</string>
+    <string name="label_sets_count">%1$s sets</string>
+    <string name="label_check_mark" translatable="false">✓</string>
     <string name="label_coming_soon">Coming Soon</string>
 
     <!--Navigation-->
@@ -210,6 +212,7 @@
     <string name="error_invalid_reference_format">Invalid reference format</string>
     <string name="error_invalid_url">Invalid URL</string>
     <string name="error_unknown">Unknown Error</string>
+    <string name="error_generic">An error occurred</string>
     <string name="error_plan_name_empty">Enter a plan name</string>
     <string name="error_plan_name_exists">Plan name already in use</string>
     <string name="error_exercise_name_empty">Enter an exercise name</string>
@@ -276,6 +279,7 @@
 
     <!--Tags-->
     <string name="label_tag_management">Tag Management</string>
+    <string name="label_child_tag_item">• %1$s</string>
     <string name="label_add_tag">Add Tag</string>
     <string name="label_edit_tag">Edit Tag</string>
     <string name="label_delete_tag">Delete Tag</string>
@@ -333,6 +337,7 @@
     <!--Day of Week-->
     <string name="label_today">.today</string>
     <string name="label_plan">Plan</string>
+    <string name="label_day">Day</string>
     <string name="label_select_a_plan">Select A Plan</string>
     <string name="label_selecting_a_plan">Start by Selecting a Plan</string>
     <string name="label_start_first_session">Start your first session</string>
@@ -359,10 +364,11 @@
         <item>Sun</item>
     </string-array>
     <string name="label_about">About</string>
+    <string name="label_version_format" translatable="false">v%1$s</string>
     <string name="label_view_source_on_github">View source on GitHub</string>
 
     <!-- Crash log -->
-    <string name="timer_service_subtype">Workout timer foreground service</string>
+    <string name="timer_service_subtype" translatable="false">Workout timer foreground service</string>
     <string name="label_crash_dialog_title">App Crashed</string>
     <string name="label_crash_dialog_message">Kenko encountered an unexpected error. Would you like to save the crash log for debugging?</string>
     <string name="label_crash_dialog_hint">The log will be saved to your chosen location.</string>

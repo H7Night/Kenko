@@ -31,6 +31,8 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.looker.kenko.domain.model.Weight
+import com.looker.kenko.utils.DateFormat
+import com.looker.kenko.utils.formatDate
 
 /**
  * 渐变面积折线图：折线 + 半透明渐变填充 + 水平网格 + 坐标刻度。
@@ -148,7 +150,7 @@ fun WeightLineChart(
         }
         xLabelIndices.forEach { index ->
             val layout = textMeasurer.measure(
-                text = "%02d-%02d".format(weights[index].date.monthNumber, weights[index].date.day),
+                text = formatDate(weights[index].date, DateFormat.MonthDay),
                 style = textStyle,
             )
             val xLeft = points[index].x - layout.size.width / 2f

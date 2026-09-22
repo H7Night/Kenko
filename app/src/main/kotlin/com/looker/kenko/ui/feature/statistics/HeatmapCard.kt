@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.looker.kenko.R
+import com.looker.kenko.domain.statistics.HEATMAP_WINDOW_DAYS
 import com.looker.kenko.domain.statistics.buildHeatmapData
 import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
@@ -271,7 +272,7 @@ private fun buildHeatmapDisplayData(
     monthNames: List<String>,
 ): HeatmapDisplayData {
     // 默认显示最近 120 天（不横向滚动，尽量在同一屏内完整展示）。
-    val from = today.minus(119, DateTimeUnit.DAY)
+    val from = today.minus(HEATMAP_WINDOW_DAYS - 1, DateTimeUnit.DAY)
     val raw = buildHeatmapData(from, today)
     val monthLabels = mutableListOf<Pair<Int, String>>()
     var maxCount = 0

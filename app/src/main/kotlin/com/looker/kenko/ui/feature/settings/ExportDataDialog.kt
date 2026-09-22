@@ -39,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
 import com.looker.kenko.data.export.ExportOptions
 import com.looker.kenko.ui.component.KenkoDatePickerDialog
+import com.looker.kenko.utils.DateFormat
+import com.looker.kenko.utils.formatDate
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -194,7 +196,7 @@ private fun DateRangeRow(
         )
         TextButton(onClick = onClick) {
             Text(
-                text = "${date.year}-${date.month.toString().padStart(2, '0')}-${date.dayOfMonth.toString().padStart(2, '0')}",
+                text = formatDate(date, DateFormat.YearMonthDay),
                 style = MaterialTheme.typography.bodyMedium,
             )
         }

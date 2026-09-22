@@ -101,7 +101,7 @@ fun AboutScreen(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "v${BuildConfig.VERSION_NAME}",
+                text = stringResource(R.string.label_version_format, BuildConfig.VERSION_NAME),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -110,7 +110,7 @@ fun AboutScreen(
 
             Button(
                 onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/H7Night/Kenko"))
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.GITHUB_REPO_URL))
                     try {
                         context.startActivity(intent)
                     } catch (_: ActivityNotFoundException) {

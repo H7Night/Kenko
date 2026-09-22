@@ -80,7 +80,7 @@ class CrashSaveActivity : ComponentActivity() {
     }
 
     private fun launchFilePicker() {
-        val fileName = ExportFileName.forProject("crash", "log")
+        val fileName = ExportFileName.forProject(ExportFileName.PROJECT_CRASH, ExportFileName.EXT_LOG)
         // Default to Downloads via initial URI
         val initialUri = "content://com.android.externalstorage.documents/document/primary:Download".toUri()
         createDocLauncher.launch(fileName)

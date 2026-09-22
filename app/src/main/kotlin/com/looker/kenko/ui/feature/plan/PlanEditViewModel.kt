@@ -31,6 +31,7 @@ import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.withDayTitle
 import com.looker.kenko.ui.base.KenkoViewModel
 import com.looker.kenko.ui.feature.plan.navigation.PlanEditRoute
+import com.looker.kenko.utils.AppConstants
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -105,7 +106,7 @@ class PlanEditViewModel @Inject constructor(
             // 捕获编辑时的 dayIndex，避免切换天后 debounce 将文本保存到错误的天
             snapshotFlow { dayTitleState.text.toString() }
                 .map { it to _dayIndex.value }
-                .debounce(200.milliseconds)
+                .debounce(AppConstants.DEBOUNCE_SHORT_MILLIS.milliseconds)
                 .collect { (title, day) ->
                     _isSavingDayTitle.value = day
                     try {
@@ -121,7 +122,7 @@ class PlanEditViewModel @Inject constructor(
 
         launchCatching {
             snapshotFlow { planNameState.text.toString() }
-                .debounce(500.milliseconds)
+                .debounce(AppConstants.DEBOUNCE_LONG_MILLIS.milliseconds)
                 .collect { name ->
                     val id = planIdStream.value
                     if (id == -1 || name.isBlank() || isNameAlreadyUsed.value) return@collect
@@ -136,7 +137,7 @@ class PlanEditViewModel @Inject constructor(
     private val _isSheetVisible: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     val isNameAlreadyUsed = snapshotFlow { planNameState.text.trim().toString() }
-        .debounce(200.milliseconds)
+        .debounce(AppConstants.DEBOUNCE_SHORT_MILLIS.milliseconds)
         .flatMapLatest { name ->
             _planStream.map { plan ->
                 if (name.isBlank() || plan?.name == name) false

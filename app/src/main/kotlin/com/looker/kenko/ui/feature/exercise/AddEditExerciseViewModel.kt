@@ -28,6 +28,7 @@ import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.base.KenkoViewModel
 import com.looker.kenko.ui.feature.exercise.navigation.AddEditExerciseRoute
+import com.looker.kenko.utils.AppConstants
 import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -75,7 +76,7 @@ class AddEditExerciseViewModel @Inject constructor(
     }.asStateFlow(TagSelectorState())
 
     private val exerciseAlreadyExistError = exerciseName
-        .debounce(200.milliseconds)
+        .debounce(AppConstants.DEBOUNCE_SHORT_MILLIS.milliseconds)
         .mapLatest { repo.isExerciseAvailable(it) && it != originalName }
 
     val state = combine(

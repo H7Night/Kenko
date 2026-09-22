@@ -647,7 +647,7 @@ fun ExerciseSearchDialog(
                             )
                             if (exercise == selectedExercise) {
                                 Text(
-                                    text = "✓",
+                                    text = stringResource(R.string.label_check_mark),
                                     color = MaterialTheme.colorScheme.primary,
                                     style = MaterialTheme.typography.bodyLarge,
                                 )

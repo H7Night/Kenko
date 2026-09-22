@@ -39,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
+import com.looker.kenko.domain.statistics.TREND_WEEKS
 import com.looker.kenko.ui.theme.KenkoTheme
 
 @Composable
@@ -86,12 +87,12 @@ fun TrendCard(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                 )
             } else if (weeklyTrend.isEmpty()) {
+                val outlineVariant = MaterialTheme.colorScheme.outlineVariant
                 Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(80.dp),
                 ) {
-                    val outlineVariant = androidx.compose.ui.graphics.Color(0xFFE5E7EB)
                     // minimal grey grid placeholder
                     val stroke = 1.dp.toPx()
                     val gridLines = 3
@@ -147,6 +148,7 @@ private fun TrendSparkline(
 ) {
     val outlineVariant = MaterialTheme.colorScheme.outlineVariant
     val primary = MaterialTheme.colorScheme.primary
+    val surface = MaterialTheme.colorScheme.surface
     Canvas(modifier = modifier) {
         // outlineVariant grid — horizontal lines
         val gridStroke = 1.dp.toPx()
@@ -210,7 +212,7 @@ private fun TrendSparkline(
                 center = Offset(x, y),
             )
             drawCircle(
-                color = androidx.compose.ui.graphics.Color.White,
+                color = surface,
                 radius = 1.2.dp.toPx(),
                 center = Offset(x, y),
             )
@@ -233,7 +235,7 @@ private fun TrendCardPreviewVaried() {
 private fun TrendCardPreviewFlat() {
     KenkoTheme {
         TrendCard(
-            weeklyTrend = List(12) { 0 },
+            weeklyTrend = List(TREND_WEEKS) { 0 },
         )
     }
 }

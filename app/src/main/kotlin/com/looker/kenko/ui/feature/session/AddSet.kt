@@ -367,7 +367,7 @@ private fun AddSetHeader(
         FilledTonalIconButton(onClick = onClick) {
             Icon(
                 painter = KenkoIcons.Done,
-                contentDescription = "",
+                contentDescription = stringResource(R.string.label_confirm),
                 modifier = Modifier.size(16.dp),
             )
         }

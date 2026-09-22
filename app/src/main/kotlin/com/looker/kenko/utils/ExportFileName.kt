@@ -32,6 +32,15 @@ import kotlinx.datetime.toLocalDateTime
  */
 object ExportFileName {
 
+    const val PROJECT_PLANS = "plans"
+    const val PROJECT_DATA = "data"
+    const val PROJECT_APP = "app"
+    const val PROJECT_CRASH = "crash"
+
+    const val EXT_JSON = "json"
+    const val EXT_ZIP = "zip"
+    const val EXT_LOG = "log"
+
     fun forProject(project: String, extension: String): String {
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         val timestamp = buildString {
