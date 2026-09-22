@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Body-part statistics are now populated correctly: body parts are resolved from a tag's parent id instead of a field that was never populated
 - Scheduled (periodic) backups are re-registered on app startup after an app update
 - Set numbers in the Home workout list are now zero-padded (e.g. `01`) to match the session detail and plan edit screens
+- Several UI labels (set count, tag list, check mark, generic error, version prefix) are now translated instead of hardcoded, and previously missing Chinese translations were added
 
 ## [1.8.0] - 2026-08-31
 
