@@ -234,9 +234,9 @@ fun Home(
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.10f),
                     textAlign = TextAlign.Center,
                     modifier = Modifier
-                        .align(Alignment.Center)
+                        .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
+                        .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
                 )
             }
             Column(
