@@ -1,7 +1,3 @@
-param(
-    [switch]$NoPause
-)
-
 $projectRoot = Split-Path -Parent $PSScriptRoot
 
 Write-Host "Starting to build Debug APK..."
@@ -16,5 +12,4 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "Build Failed!"
 }
 
-if (-not $NoPause -and -not [Console]::IsInputRedirected) { Read-Host "Press Enter to exit" }
 exit $LASTEXITCODE

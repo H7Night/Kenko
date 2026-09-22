@@ -8,4 +8,3 @@ if %ERRORLEVEL% EQU 0 (
     echo.
     echo Install Failed! Make sure your device is connected and USB debugging is enabled.
 )
-if not defined NO_PAUSE pause

@@ -8,4 +8,3 @@ if %ERRORLEVEL% EQU 0 (
     echo.
     echo Operation Failed! Please check the error messages above.
 )
-if not defined NO_PAUSE pause
