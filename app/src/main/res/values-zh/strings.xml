@@ -300,7 +300,7 @@
     <string name="label_resume">继续</string>
     <string name="label_reset">重置</string>
     <string name="label_reset_timer_title">重置计时器？</string>
-    <string name="label_reset_timer_message">将清零当前已计时长。是否继续？</string>
+    <string name="label_reset_timer_message">将结束本次训练并清零计时。是否继续？</string>
     <string name="label_end_workout">结束训练</string>
     <string name="label_end_workout_confirm">确定结束当前训练？</string>
 

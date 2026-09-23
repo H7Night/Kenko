@@ -80,6 +80,7 @@ fun TimerCard(
     elapsedSeconds: Long,
     notificationGranted: Boolean,
     hasAccumulatedTime: Boolean = false,
+    hasSets: Boolean = false,
     showStart: Boolean = true,
     onStart: () -> Unit,
     onPause: () -> Unit,
@@ -91,7 +92,7 @@ fun TimerCard(
     val isActive = timerState != TimerState.IDLE
     val isIdle = timerState == TimerState.IDLE
     val isRunning = timerState == TimerState.RUNNING
-    val showReset = onReset != null && (isActive || hasAccumulatedTime)
+    val showReset = onReset != null && isActive && !hasSets
     val showPrimary = !(isIdle && !showStart)
     val showEnd = isActive
 

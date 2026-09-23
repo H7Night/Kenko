@@ -249,6 +249,7 @@ fun Home(
                     elapsedSeconds = timerSeconds,
                     notificationGranted = notifState.granted,
                     hasAccumulatedTime = state.timerState == TimerState.IDLE && timerSeconds > 0,
+                    hasSets = state.isSessionStarted,
                     showStart = !state.isTodayEmpty,
                     onStart = {
                         if (!notifState.granted) {

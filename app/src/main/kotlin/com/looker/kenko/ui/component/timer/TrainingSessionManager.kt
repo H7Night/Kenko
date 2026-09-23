@@ -93,6 +93,35 @@ class TrainingSessionManager @Inject constructor(
         }
     }
 
+    /**
+     * Aborts a blank workout: discards the set-less session, zeroes the timer and
+     * returns to idle. The reset button is only offered while no set was recorded,
+     * so this never throws away logged sets.
+     */
+    fun endAndReset() {
+        scope.launch {
+            val sessionId = (_sessionState.value as? TrainingSessionState.Active)?.sessionId
+
+            timerManager.stop()
+
+            if (sessionId != null) {
+                val sets = sessionRepo.getSets(sessionId)
+                if (sets.isEmpty()) {
+                    sessionRepo.deleteSession(
+                        com.looker.kenko.domain.model.Session(
+                            date = today(),
+                            sets = emptyList(),
+                            planId = null,
+                            id = sessionId,
+                        )
+                    )
+                }
+            }
+
+            _sessionState.value = TrainingSessionState.Idle
+        }
+    }
+
     fun reset() {
         timerManager.forceStop()
         _sessionState.value = TrainingSessionState.Idle

@@ -178,7 +178,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun resetTimer() {
-        timerManager.stop()
+        trainingSessionManager.endAndReset()
     }
 
     fun endWorkout() {
