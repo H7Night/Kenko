@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Scheduled (periodic) backups are re-registered on app startup after an app update
 - Set numbers in the Home workout list are now zero-padded (e.g. `01`) to match the session detail and plan edit screens
 - Several UI labels (set count, tag list, check mark, generic error, version prefix) are now translated instead of hardcoded, and previously missing Chinese translations were added
+- Home timer reset now only appears before any set is recorded and ends the blank workout when used, so training can be started again immediately instead of leaving the Start button unresponsive until the app is restarted
 
 ## [1.8.0] - 2026-08-31
 
