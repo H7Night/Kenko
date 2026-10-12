@@ -22,8 +22,10 @@ import com.looker.kenko.data.mapper.toEntity
 import com.looker.kenko.data.mapper.toExternal
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.statistics.ExerciseSetRecord
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 
 class LocalExerciseRepo @Inject constructor(
@@ -41,6 +43,17 @@ class LocalExerciseRepo @Inject constructor(
         }
 
     override val numberOfExercise: Flow<Int> = dao.number()
+
+    override fun streamExerciseSets(exerciseId: Int): Flow<List<ExerciseSetRecord>> =
+        setsDao.streamSetsForExercise(exerciseId).map { rows ->
+            rows.map {
+                ExerciseSetRecord(
+                    date = LocalDate.fromEpochDays(it.date.value),
+                    weight = it.weight,
+                    reps = it.reps,
+                )
+            }
+        }
 
     override suspend fun get(id: Int): Exercise? {
         val entity = dao.get(id) ?: return null

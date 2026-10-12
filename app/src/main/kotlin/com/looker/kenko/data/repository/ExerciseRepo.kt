@@ -16,6 +16,7 @@
 package com.looker.kenko.data.repository
 
 import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.statistics.ExerciseSetRecord
 import kotlinx.coroutines.flow.Flow
 
 interface ExerciseRepo {
@@ -23,6 +24,9 @@ interface ExerciseRepo {
     val stream: Flow<List<Exercise>>
 
     val numberOfExercise: Flow<Int>
+
+    /** 某动作的所有组 + 所属训练日（按日期升序），供"单动作进步"页面使用。 */
+    fun streamExerciseSets(exerciseId: Int): Flow<List<ExerciseSetRecord>>
 
     suspend fun get(id: Int): Exercise?
 

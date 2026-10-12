@@ -69,6 +69,9 @@ class PlanImportApplierTest {
         val createdNames = mutableListOf<String>()
         override val stream: Flow<List<Exercise>> = emptyFlow()
         override val numberOfExercise: Flow<Int> = emptyFlow()
+        override fun streamExerciseSets(
+            exerciseId: Int,
+        ): Flow<List<com.looker.kenko.domain.statistics.ExerciseSetRecord>> = emptyFlow()
         override suspend fun get(id: Int): Exercise? = known.find { it.id == id }
         override suspend fun upsert(exercise: Exercise) = Unit
         override suspend fun remove(id: Int) = Unit

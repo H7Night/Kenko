@@ -80,6 +80,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.History
 
 import androidx.compose.foundation.layout.Row
@@ -102,6 +103,7 @@ fun Sessions(
     viewModel: SessionsViewModel,
     onSessionClick: (LocalDate?) -> Unit,
     onBackPress: () -> Unit,
+    onCalendarClick: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -126,7 +128,8 @@ fun Sessions(
         onSessionClick = onSessionClick,
         onRemoveSession = viewModel::removeSession,
         onBackPress = onBackPress,
-        onAddClick = { showAddHistoryDialog = true }
+        onAddClick = { showAddHistoryDialog = true },
+        onCalendarClick = onCalendarClick,
     )
 }
 
@@ -138,6 +141,7 @@ private fun Sessions(
     onRemoveSession: (SessionSummary) -> Unit,
     onBackPress: () -> Unit,
     onAddClick: () -> Unit,
+    onCalendarClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var sessionToDelete by remember { mutableStateOf<SessionSummary?>(null) }
@@ -198,6 +202,12 @@ private fun Sessions(
                     Text(text = stringResource(id = R.string.label_sessions_title))
                 },
                 actions = {
+                    IconButton(onClick = onCalendarClick) {
+                        Icon(
+                            imageVector = Icons.Rounded.CalendarMonth,
+                            contentDescription = stringResource(R.string.label_calendar),
+                        )
+                    }
                     IconButton(onClick = onAddClick) {
                         Icon(
                             painter = KenkoIcons.Add,
@@ -593,6 +603,7 @@ private fun SessionsPreview() {
             onSessionClick = {},
             onRemoveSession = {},
             onAddClick = {},
+            onCalendarClick = {},
         )
     }
 }

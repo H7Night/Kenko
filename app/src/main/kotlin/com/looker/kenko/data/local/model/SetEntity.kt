@@ -58,3 +58,10 @@ data class CardioMinutesByDate(
     val date: EpochDays,
     val minutes: Int,
 )
+
+/** 轻量投影：某动作的每组数据 + 所属训练日（供"单动作进步"查询）。 */
+data class ExerciseSetRow(
+    val date: EpochDays,
+    val weight: Float,
+    val reps: Int,
+)

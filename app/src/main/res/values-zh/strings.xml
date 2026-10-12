@@ -99,6 +99,28 @@
     <string name="label_edit_body_weight">编辑体重</string>
     <string name="placeholder_set_day_title">设置标题（如：胸部训练）</string>
     <string name="label_weight_unit">kg</string>
+    <string name="label_exercise_progress">动作进步</string>
+    <string name="label_progress_no_data">暂无记录</string>
+    <string name="label_progress_history">历史</string>
+    <string name="label_metric_heaviest_weight">最重重量</string>
+    <string name="label_metric_estimated_1rm">估算 1RM</string>
+    <string name="label_metric_best_set">最佳组</string>
+    <string name="label_metric_volume">总容量</string>
+    <string name="label_best_set_value">最佳组 %1$s kg × %2$d</string>
+    <string name="label_estimated_1rm_value">1RM %1$s kg</string>
+    <string name="label_volume_value">容量 %1$s kg</string>
+    <string name="label_calendar">日历</string>
+    <string name="label_month_training_days">本月训练 %1$d 天</string>
+    <string name="label_year_month">%1$d年%2$d月</string>
+    <string-array name="calendar_weekdays">
+        <item>一</item>
+        <item>二</item>
+        <item>三</item>
+        <item>四</item>
+        <item>五</item>
+        <item>六</item>
+        <item>日</item>
+    </string-array>
     <string name="label_delete_weight_title">删除体重记录？</string>
     <string name="label_delete_weight_message">这将永久删除该条体重记录。</string>
 
