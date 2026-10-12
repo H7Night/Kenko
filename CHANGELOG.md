@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exercise progress page: open any exercise from the browse list to see its heaviest weight, estimated 1RM (Epley), best set, and total volume over time, with a per-session history
 - Calendar view of training history: days with a workout are highlighted and open the session detail
 
+### Fixed
+- Bodyweight exercises now count toward progress correctly: pure bodyweight sets use the body weight recorded nearest to that session, weighted sets add the extra weight, and legacy sets logged before the bodyweight option existed are corrected on upgrade
+
 ## [1.9.0] - 2026-10-12
 
 ### Added
