@@ -35,6 +35,7 @@ import com.looker.kenko.data.local.MIGRATION_11_12
 import com.looker.kenko.data.local.MIGRATION_12_13
 import com.looker.kenko.data.local.MIGRATION_13_14
 import com.looker.kenko.data.local.MIGRATION_14_15
+import com.looker.kenko.data.local.MIGRATION_15_16
 import com.looker.kenko.data.local.dao.ExerciseDao
 import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.model.ExerciseEntity
@@ -226,6 +227,27 @@ class RoomDatabaseTesting {
     }
 
     @Test
+    fun schemaMigration15To16() = runTest {
+        val db = helper.createDatabase(DB_NAME, 15)
+        db.execSQL("INSERT INTO exercises (name, countType, reference, isBodyweight) VALUES ('Dips', 'REPS', NULL, 1)")
+        db.execSQL("INSERT INTO exercises (name, countType, reference, isBodyweight) VALUES ('Bench', 'REPS', NULL, 0)")
+        db.execSQL("INSERT INTO sessions (date, planId) VALUES (20000, NULL)")
+        // legacy bodyweight value (pre 2026-07-02) should be zeroed
+        db.execSQL("INSERT INTO sets (reps, weight, \"order\", sessionId, exerciseId) VALUES (10, 65.0, 0, 1, 1)")
+        // non-bodyweight set must be untouched
+        db.execSQL("INSERT INTO sets (reps, weight, \"order\", sessionId, exerciseId) VALUES (10, 70.0, 0, 1, 2)")
+        val migrated = helper.runMigrationsAndValidate(DB_NAME, 16, true, MIGRATION_15_16)
+        migrated.query("SELECT weight FROM sets WHERE exerciseId = 1").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals(0f, cursor.getFloat(0))
+        }
+        migrated.query("SELECT weight FROM sets WHERE exerciseId = 2").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals(70f, cursor.getFloat(0))
+        }
+    }
+
+    @Test
     fun dataMigration12To13() = runTest {
         val db = helper.createDatabase(DB_NAME, 12)
         db.execSQL("INSERT INTO plans (name, dayTitles) VALUES ('Test Plan', '{\"1\":\"Chest\"}')")
@@ -235,7 +257,7 @@ class RoomDatabaseTesting {
             InstrumentationRegistry.getInstrumentation().targetContext,
             KenkoDatabase::class.java,
             DB_NAME,
-        ).addMigrations(MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15).build()
+        ).addMigrations(MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16).build()
         val plan = updatedDb.planDao().getPlanById(1)
         assertEquals(7, plan?.dayCount)
         assertEquals(1, plan?.currentDayIndex)

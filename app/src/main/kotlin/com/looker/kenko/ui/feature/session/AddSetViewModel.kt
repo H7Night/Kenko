@@ -74,6 +74,9 @@ class AddSetViewModel @AssistedInject constructor(
                 // 有氧只记录时长,不记录重量;UI 虽隐藏重量行,底层值也必须为 0,
                 // 否则会用默认 "20.0" 记录成错误的 20kg × N 次。
                 weights.setTextAndPlaceCursorAtEnd(CARDIO_WEIGHT)
+            } else if (exercise?.isBodyweight == true) {
+                // 自重动作默认进入"自重"模式(重量 0),避免误把默认重量当附加重量记录。
+                setBodyweight()
             }
         }
     }

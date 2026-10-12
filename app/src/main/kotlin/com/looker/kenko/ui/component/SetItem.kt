@@ -111,7 +111,8 @@ fun SetItem(
                     onValueUpdate = { onRepsUpdate(it.toIntOrNull() ?: set.repsOrDuration) },
                 )
                 if (!isCardio) {
-                    if (set.exercise.isBodyweight) {
+                    // 自重动作: 重量为 0 表示纯自重(显示"自重"); 非 0 表示附加重量,显示数值。
+                    if (set.exercise.isBodyweight && set.weight <= 0F) {
                         Column(
                             modifier = Modifier,
                             horizontalAlignment = Alignment.CenterHorizontally,

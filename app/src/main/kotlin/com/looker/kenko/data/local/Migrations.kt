@@ -636,3 +636,21 @@ val MIGRATION_14_15 = object : Migration(14, 15) {
         db.execSQL("ALTER TABLE `sessions` ADD COLUMN `dayTitleOverride` TEXT")
     }
 }
+
+val MIGRATION_15_16 = object : Migration(15, 16) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // 自重动作的"自重"选项于 2026-07-02 才引入；在此之前用户只能手动填写重量
+        // (通常填的是自身体重),这些值会被"单动作进步"当作附加重量(体重+该值)而虚高。
+        // 把该日期之前、自重动作的数值重量清零,使其改按"当时体重"计算。
+        // 2026-07-02 的 epoch day = 20636。
+        db.execSQL(
+            """
+            UPDATE `sets`
+            SET `weight` = 0
+            WHERE `weight` > 0
+              AND `sessionId` IN (SELECT `id` FROM `sessions` WHERE `date` < 20636)
+              AND `exerciseId` IN (SELECT `id` FROM `exercises` WHERE `isBodyweight` = 1)
+            """.trimIndent(),
+        )
+    }
+}
