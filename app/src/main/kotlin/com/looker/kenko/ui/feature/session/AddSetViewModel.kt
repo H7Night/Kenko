@@ -110,8 +110,8 @@ class AddSetViewModel @AssistedInject constructor(
 
     val repsBoundReached = BoundReached { direction ->
         when (direction) {
-            Direction.Left -> addRep(if (isCardio) -10 else -1)
-            Direction.Right -> addRep(if (isCardio) 10 else 1)
+            Direction.Left -> addRep(if (isCardio) -5 else -1)
+            Direction.Right -> addRep(if (isCardio) 5 else 1)
         }
     }
 

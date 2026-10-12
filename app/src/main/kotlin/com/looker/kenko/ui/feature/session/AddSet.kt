@@ -210,8 +210,8 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
         SwipeableTextField(
             modifier = Modifier.align(CenterHorizontally),
         ) {
-            HoldRepeatWrapper(onClick = { viewModel.addRep(-10) }, onRepeat = { viewModel.addRep(-10) }) {
-                StepButtonContent(text = stringResource(R.string.label_minus_int, 10), modifier = incrementButtonModifier)
+            HoldRepeatWrapper(onClick = { viewModel.addRep(-5) }, onRepeat = { viewModel.addRep(-5) }) {
+                StepButtonContent(text = stringResource(R.string.label_minus_int, 5), modifier = incrementButtonModifier)
             }
             if (!isCardio) {
                 HoldRepeatWrapper(onClick = { viewModel.addRep(-1) }, onRepeat = { viewModel.addRep(-1) }) {
@@ -231,11 +231,11 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                     StepButtonContent(text = stringResource(R.string.label_plus_int, 1), modifier = incrementButtonModifier)
                 }
             }
+            HoldRepeatWrapper(onClick = { viewModel.addRep(5) }, onRepeat = { viewModel.addRep(5) }) {
+                StepButtonContent(text = stringResource(R.string.label_plus_int, 5), modifier = incrementButtonModifier)
+            }
             HoldRepeatWrapper(onClick = { viewModel.addRep(10) }, onRepeat = { viewModel.addRep(10) }) {
                 StepButtonContent(text = stringResource(R.string.label_plus_int, 10), modifier = incrementButtonModifier)
-            }
-            HoldRepeatWrapper(onClick = { viewModel.addRep(20) }, onRepeat = { viewModel.addRep(20) }) {
-                StepButtonContent(text = stringResource(R.string.label_plus_int, 20), modifier = incrementButtonModifier)
             }
         }
         if (!isCardio) {
