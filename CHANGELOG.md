@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-10-12
+
 ### Added
 - New Statistics page (bottom-nav "Statistics" tab): a 90-day GitHub-style activity heatmap, body-part frequency bars (this week / this month / current plan) across 7 primary parts, a monthly balance ring that flags weak parts (<8%), a 12-week session trend line, and a plan-adherence bar
 - Cardio (e.g. brisk walking) now shows duration in minutes in the statistics bars instead of a set count

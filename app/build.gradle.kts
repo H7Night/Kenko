@@ -46,7 +46,7 @@ android {
         applicationId = "com.looker.kenko"
         minSdk = 26
         targetSdk = 36
-        versionName = "1.8.0"
+        versionName = "1.9.0"
         versionCode = versionCodeFor(versionName)
 
         buildConfigField("String", "GITHUB_REPO_URL", "\"https://github.com/H7Night/Kenko\"")
