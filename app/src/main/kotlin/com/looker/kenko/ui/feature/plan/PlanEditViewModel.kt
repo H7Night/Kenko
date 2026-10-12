@@ -68,6 +68,10 @@ class PlanEditViewModel @Inject constructor(
     private val _isBackAlreadyPressedOnce = MutableStateFlow(false)
     private val _isSavingDayTitle = MutableStateFlow<Int?>(null)
 
+    // 已把计划中的标题同步进输入框的训练日集合(仅 Main 线程访问)。在标题同步前,
+    // dayTitleState 仍是初始空串;若此时持久化会把它当成"用户清空标题"写回,导致标题丢失。
+    private val syncedDayTitles = mutableSetOf<Int>()
+
     private val _planItemsStream = planIdStream.flatMapLatest { repo.planItemsByPlan(it) }
 
     private val _planStream = planIdStream.flatMapLatest { id ->
@@ -89,6 +93,8 @@ class PlanEditViewModel @Inject constructor(
                         replace(0, length, title)
                     }
                 }
+                // 该天标题已同步,后续对该天的文本变更才可视为用户编辑并持久化
+                syncedDayTitles.add(dayIndex)
             }
         }
 
@@ -108,6 +114,8 @@ class PlanEditViewModel @Inject constructor(
                 .map { it to _dayIndex.value }
                 .debounce(AppConstants.DEBOUNCE_SHORT_MILLIS.milliseconds)
                 .collect { (title, day) ->
+                    // 该天标题尚未从计划同步到输入框时不要持久化,否则初始空值会清掉已存在的标题
+                    if (day !in syncedDayTitles) return@collect
                     _isSavingDayTitle.value = day
                     try {
                         val currentPlan = repo.plan(planIdStream.value) ?: return@collect
