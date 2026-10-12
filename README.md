@@ -22,12 +22,24 @@ thought-out plans
 - **Interactive Heatmap**: View your training consistency with a scrollable 90-day heatmap and day-of-week labels on the Statistics page.
 - **Progressive Overload**: Monitor your progress over time with detailed session history and performance insights.
 - **Body Weight Tracking**: Record your body weight and view progress on interactive line charts. Selecting a plan shows weight records across its activation window.
+- **Exercise Progress**: Open any exercise's progress from the browse list to see its heaviest weight, estimated 1RM, best set, and total volume over time, plus a per-session history.
+- **Calendar View**: Browse your training history as a month calendar — days with a workout are highlighted and open the session detail.
 - **Safe Deletion**: Delete exercises, plans, sets, weight records, and sessions via explicit delete buttons with confirmation dialogs.
 - **Modern Navigation**: Effortlessly switch between Home, Records, Statistics, and Profile using the fixed bottom navigation bar.
 - **Material Design 3**: Fully rounded and unified UI components following the latest MD3 guidelines, with dynamic color on Android 12+.
 - **Backup & Export**: Full app backup (ZIP, auto-scheduled via WorkManager) and selective training data export (JSON, with date range filtering).
 - **Multi-language**: Support for English and Chinese (Simplified).
 - **Adjustable Font Size**: Scale the entire app typography (Small / Medium / Large) from Settings, applied immediately.
+
+## Estimated 1RM
+
+The Exercise Progress page plots an estimated one-rep max (1RM) using the **Epley formula**:
+
+```
+estimated 1RM = weight × (1 + reps / 30)
+```
+
+It estimates the maximum weight you could lift for a single rep, based on a set you actually performed. For example, 80 kg × 8 estimates ≈ 101.3 kg, which ranks higher than a heavier 90 kg × 3 (≈ 99.0 kg); a single-rep set uses the actual weight. For a bodyweight exercise the load is the body weight recorded closest to that session plus any added weight (pure bodyweight sets use your body weight alone). Cardio has no weight and is excluded from this metric.
 
 ## Tech Stack
 
