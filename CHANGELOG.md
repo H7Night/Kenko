@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Home slogan ("Stick to the plan / Not your mood.") is now shown as a large, faint English-only background watermark on the Home page
 - Cardio exercises no longer use sets: the Add Set sheet hides the set-count input and records a single duration entry
 - Export and plan-transfer files now include each exercise's body-part target (previously always empty)
+- Add Set steppers retuned: reps step by -5 / -1 / +1 / +5 / +10, and cardio duration by -5 / +5 / +10
 
 ### Fixed
 - Body-part statistics are now populated correctly: body parts are resolved from a tag's parent id instead of a field that was never populated
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set numbers in the Home workout list are now zero-padded (e.g. `01`) to match the session detail and plan edit screens
 - Several UI labels (set count, tag list, check mark, generic error, version prefix) are now translated instead of hardcoded, and previously missing Chinese translations were added
 - Home timer reset now only appears before any set is recorded and ends the blank workout when used, so training can be started again immediately instead of leaving the Start button unresponsive until the app is restarted
+- Editing a plan no longer clears the first training day's title
 
 ## [1.8.0] - 2026-08-31
 
