@@ -48,6 +48,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Instrumented tests: in `app/src/androidTest/`, run with a custom `KenkoTestRunner` that uses `HiltTestApplication`
 - Room schema files live in `app/schemas/` and are sourced into the `androidTest` assets for migration tests
 
+**测试数据安全（重要，真机）:**
+- `connectedAndroidTest` 中的 `RepositoryTest` 通过 Hilt 注入的是**生产** `KenkoDatabase`（真实文件库），会新建/删除计划、训练、组等。在**持有真实数据的设备**上运行会破坏/清空用户数据。
+- **禁止**在持有个人真实数据的设备上运行 `connectedAndroidTest`；请在模拟器或 CI 上运行。
+- 若确需在真机运行：**先导出一份备份**，向用户报告备份文件路径与日期，**取得用户明确确认后**再执行。
+- 单元测试（`./gradlew test`）在 JVM 运行，不接触设备数据，安全。
+- 待修缺陷：`RepositoryTest` 与生产库无隔离。建议在 `androidTest` 用 `@TestInstallIn` 覆盖 `DatabaseModule`，改用 `Room.inMemoryDatabaseBuilder` 内存库，使 instrumented 测试永不触碰真实文件库。
+
 ## Documentation Maintenance（文档维护）
 
 用户要求更新文档时（或功能完成后需要同步文档时），按 `.agents/skills/update-doc.md` 技能规范执行：哪些文件要更新、各文件的格式与位置、提交粒度与验证方式。涉及文件：`CHANGELOG.md`、`README.md`、`README_cn.md`、`AGENTS.md`。`CHANGELOG.md` 的发布版本化（Unreleased → 版本区块）在 Release Process 中进行。
