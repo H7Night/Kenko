@@ -14,7 +14,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adding sets now only asks for the number of sets; reps and weight are entered afterwards by tapping each set row, which shows the previous session's sets as a faded reference to beat
 - Adding exercises now supports multi-select; exercises not in the plan can be added to a workout and appear even before any set is logged
 - Exercises now carry equipment and a primary muscle (the remaining tags are secondary); equipment can be used to filter the exercise library and both are set in the exercise editor
-- Statistics now shows a training-time-of-day distribution and the actual elapsed time (first start to last end) for sessions that recorded a start time
 
 ### Fixed
 - Bodyweight exercises now count toward progress correctly: pure bodyweight sets use the body weight recorded nearest to that session, weighted sets add the extra weight, and legacy sets logged before the bodyweight option existed are corrected on upgrade

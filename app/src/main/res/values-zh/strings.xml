@@ -169,8 +169,7 @@
     <string name="label_equipment_cable">绳索</string>
     <string name="label_equipment_bodyweight">自重</string>
     <string name="label_equipment_other">其它</string>
-    <string name="label_stat_time_of_day">训练时段</string>
-    <string name="label_stat_actual_duration">实际时长 %1$s</string>
+
     <string name="label_delete_set_title">删除训练组</string>
     <string name="label_delete_set_message">确定要删除这组训练数据吗？此操作不可撤销。</string>
     <string name="label_plus_int">+%s</string>

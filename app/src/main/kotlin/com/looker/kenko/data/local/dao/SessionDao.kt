@@ -148,7 +148,6 @@ interface SessionDao {
     @Query(
         """
         SELECT s.id, s.date, s.planId, s.dayIndexOverride, s.dayTitleOverride, s.durationSeconds,
-               s.startedAt, s.endedAt,
                GROUP_CONCAT(DISTINCT e.name) AS exerciseNames,
                COUNT(st.id) AS setCount
         FROM sessions s

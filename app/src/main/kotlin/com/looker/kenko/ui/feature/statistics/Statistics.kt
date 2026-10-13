@@ -37,7 +37,6 @@ import com.looker.kenko.R
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.statistics.components.BalanceRingCard
 import com.looker.kenko.ui.feature.statistics.components.BodyPartBarCard
-import com.looker.kenko.ui.feature.statistics.components.SessionTimeCard
 import com.looker.kenko.ui.feature.statistics.components.StatisticsSkeleton
 import com.looker.kenko.ui.feature.statistics.components.TrendCard
 
@@ -112,12 +111,6 @@ fun Statistics(
                 item {
                     TrendCard(
                         weeklyTrend = content.weeklyTrend,
-                    )
-                }
-                item {
-                    SessionTimeCard(
-                        sessionStartHours = content.sessionStartHours,
-                        actualMinutesTotal = content.actualMinutesTotal,
                     )
                 }
             }

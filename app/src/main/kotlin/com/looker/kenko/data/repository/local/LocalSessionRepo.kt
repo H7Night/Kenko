@@ -88,8 +88,6 @@ class LocalSessionRepo @Inject constructor(
                     dayIndexOverride = entity.dayIndexOverride,
                     dayTitleOverride = entity.dayTitleOverride,
                     durationSeconds = entity.durationSeconds,
-                    startedAt = entity.startedAt,
-                    endedAt = entity.endedAt,
                     exerciseNames = entity.exerciseNames
                         ?.split(",")
                         ?.filter { it.isNotBlank() }
