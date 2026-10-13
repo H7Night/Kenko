@@ -27,6 +27,7 @@ import com.looker.kenko.data.health.HealthConnectManager
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.domain.health.toHealthExerciseSession
 import com.looker.kenko.domain.model.settings.BackupInterval
+import com.looker.kenko.domain.model.settings.ColorPalette
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.data.repository.SettingsRepo
@@ -83,6 +84,7 @@ class SettingsViewModel @Inject constructor(
             healthConnectAvailable = healthConnectAvailable,
             healthConnectPermissions = healthConnectManager.permissions,
             healthConnectSyncCount = healthSyncCount,
+            colorPalette = settings.colorPalette,
             earliestSessionDate = earliestDate,
         )
     }.asStateFlow(
@@ -101,6 +103,7 @@ class SettingsViewModel @Inject constructor(
             healthConnectAvailable = false,
             healthConnectPermissions = emptySet(),
             healthConnectSyncCount = null,
+            colorPalette = ColorPalette.Line,
             earliestSessionDate = null,
         ),
     )
@@ -120,6 +123,12 @@ class SettingsViewModel @Inject constructor(
     fun updateBodyWeightEnabled(enabled: Boolean) {
         launchCatching {
             repo.setBodyWeightEnabled(enabled)
+        }
+    }
+
+    fun updateColorPalette(palette: ColorPalette) {
+        launchCatching {
+            repo.setColorPalette(palette)
         }
     }
 
@@ -280,5 +289,6 @@ data class SettingsUiData(
     val healthConnectAvailable: Boolean,
     val healthConnectPermissions: Set<String>,
     val healthConnectSyncCount: Int?,
+    val colorPalette: ColorPalette,
     val earliestSessionDate: LocalDate?,
 )

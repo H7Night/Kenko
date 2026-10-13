@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.settings.BackupInterval
+import com.looker.kenko.domain.model.settings.ColorPalette
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.ui.component.BackButton
@@ -73,6 +74,7 @@ fun Settings(
         state = state,
         onSelectLanguage = viewModel::updateLanguage,
         onSelectTheme = viewModel::updateTheme,
+        onSelectColorPalette = viewModel::updateColorPalette,
         onToggleBodyWeight = viewModel::updateBodyWeightEnabled,
         onToggleHealthConnect = viewModel::updateHealthConnectEnabled,
         onHealthPermissionsResult = viewModel::onHealthPermissionsResult,
@@ -89,6 +91,7 @@ private fun Settings(
     state: SettingsUiData,
     onSelectLanguage: (Language) -> Unit,
     onSelectTheme: (Theme) -> Unit,
+    onSelectColorPalette: (ColorPalette) -> Unit,
     onToggleBodyWeight: (Boolean) -> Unit,
     onToggleHealthConnect: (Boolean) -> Unit,
     onHealthPermissionsResult: (Boolean) -> Unit,
@@ -100,6 +103,7 @@ private fun Settings(
 ) {
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showColorStyleDialog by remember { mutableStateOf(false) }
 
     val healthPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -135,6 +139,20 @@ private fun Settings(
                 showThemeDialog = false
             },
             onDismiss = { showThemeDialog = false },
+        )
+    }
+
+    if (showColorStyleDialog) {
+        SelectionDialog(
+            title = stringResource(R.string.label_color_style),
+            items = ColorPalette.entries,
+            selected = state.colorPalette,
+            label = { stringResource(it.nameRes) },
+            onSelect = { palette ->
+                onSelectColorPalette(palette)
+                showColorStyleDialog = false
+            },
+            onDismiss = { showColorStyleDialog = false },
         )
     }
 
@@ -177,6 +195,14 @@ private fun Settings(
                         title = stringResource(R.string.label_theme),
                         value = stringResource(state.selectedTheme.nameRes),
                         onClick = { showThemeDialog = true },
+                    )
+                }
+                item {
+                    SettingsRow(
+                        icon = { Icon(painter = KenkoIcons.Lightbulb, contentDescription = null) },
+                        title = stringResource(R.string.label_color_style),
+                        value = stringResource(state.colorPalette.nameRes),
+                        onClick = { showColorStyleDialog = true },
                     )
                 }
             }
@@ -264,10 +290,12 @@ private fun SettingsPreview() {
                 healthConnectAvailable = false,
                 healthConnectPermissions = emptySet(),
                 healthConnectSyncCount = null,
+                colorPalette = ColorPalette.Line,
                 earliestSessionDate = null,
             ),
             onSelectLanguage = {},
             onSelectTheme = {},
+            onSelectColorPalette = {},
             onToggleBodyWeight = {},
             onToggleHealthConnect = {},
             onHealthPermissionsResult = {},
