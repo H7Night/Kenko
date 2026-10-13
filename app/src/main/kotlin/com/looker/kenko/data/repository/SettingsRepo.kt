@@ -41,4 +41,6 @@ interface SettingsRepo {
     suspend fun setLastBackupTime(instant: Instant?)
 
     suspend fun setLanguage(language: Language)
+
+    suspend fun setBodyWeightEnabled(enabled: Boolean)
 }

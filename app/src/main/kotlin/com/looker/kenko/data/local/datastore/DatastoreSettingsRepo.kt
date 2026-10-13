@@ -95,6 +95,10 @@ class DatastoreSettingsRepo @Inject constructor(
         LANGUAGE.update(language.name)
     }
 
+    override suspend fun setBodyWeightEnabled(enabled: Boolean) {
+        BODY_WEIGHT_ENABLED.update(enabled)
+    }
+
     private suspend inline fun <T> Preferences.Key<T>.update(value: T) {
         dataStore.edit { preference ->
             preference[this] = value
@@ -109,6 +113,7 @@ class DatastoreSettingsRepo @Inject constructor(
         val backupInterval = preferences[BACKUP_INTERVAL] ?: BackupInterval.Off.name
         val lastBackupTime = preferences[LAST_BACKUP_TIME_SECONDS]
         val language = preferences[LANGUAGE] ?: Language.System.name
+        val bodyWeightEnabled = preferences[BODY_WEIGHT_ENABLED] ?: true
         return Settings(
             isOnboardingDone = isOnboardingDone,
             theme = Theme.valueOf(theme),
@@ -117,6 +122,7 @@ class DatastoreSettingsRepo @Inject constructor(
             backupInterval = BackupInterval.valueOf(backupInterval),
             lastBackupTime = lastBackupTime?.let { Instant.fromEpochSeconds(it) },
             language = Language.valueOf(language),
+            bodyWeightEnabled = bodyWeightEnabled,
         )
     }
 
@@ -130,5 +136,7 @@ class DatastoreSettingsRepo @Inject constructor(
         val LAST_BACKUP_TIME_SECONDS: Preferences.Key<Long> =
             longPreferencesKey("last_backup_time_seconds")
         val LANGUAGE: Preferences.Key<String> = stringPreferencesKey("language")
+        val BODY_WEIGHT_ENABLED: Preferences.Key<Boolean> =
+            booleanPreferencesKey("body_weight_enabled")
     }
 }
