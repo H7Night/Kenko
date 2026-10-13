@@ -39,6 +39,8 @@ internal class FakeSessionRepo(
     override suspend fun clearSets(date: LocalDate) = Unit
     override suspend fun updateDayIndex(date: LocalDate, dayIndex: Int) = Unit
     override suspend fun updateSessionDuration(sessionId: Int, durationSeconds: Long) = Unit
+    override suspend fun ensureSessionStarted(sessionId: Int, startedAtMillis: Long) = Unit
+    override suspend fun updateSessionEnded(sessionId: Int, endedAtMillis: Long) = Unit
     override suspend fun getSessionIdOrCreate(date: LocalDate): Int = 1
     override suspend fun snapshotPlanDayTitles(planId: Int) = Unit
     override fun streamByDate(date: LocalDate): Flow<Session?> = MutableStateFlow(null)

@@ -51,6 +51,10 @@ data class SessionDataEntity(
     val dayIndexOverride: Int? = null,
     val dayTitleOverride: String? = null,
     val durationSeconds: Long? = null,
+    /** 开始训练时刻(epoch millis)；仅在该 session 首次"开始训练"时写入,随 session 生命周期存亡。 */
+    val startedAt: Long? = null,
+    /** 最近一次"结束训练"时刻(epoch millis)；继续训练不改开始时间,只在再次结束时更新此值。 */
+    val endedAt: Long? = null,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 )

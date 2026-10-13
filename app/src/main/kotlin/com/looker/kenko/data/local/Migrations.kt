@@ -654,3 +654,17 @@ val MIGRATION_15_16 = object : Migration(15, 16) {
         )
     }
 }
+
+val MIGRATION_16_17 = object : Migration(16, 17) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // "开始训练"时刻(epoch millis):随 session 生命周期存亡——重置删除空白会话时随之消失。
+        db.execSQL("ALTER TABLE `sessions` ADD COLUMN `startedAt` INTEGER")
+    }
+}
+
+val MIGRATION_17_18 = object : Migration(17, 18) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // "结束训练"时刻(epoch millis):继续训练不改开始时间,只在再次结束时更新此值。
+        db.execSQL("ALTER TABLE `sessions` ADD COLUMN `endedAt` INTEGER")
+    }
+}

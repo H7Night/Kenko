@@ -182,6 +182,14 @@ class LocalSessionRepo @Inject constructor(
         dao.updateDuration(sessionId, durationSeconds)
     }
 
+    override suspend fun ensureSessionStarted(sessionId: Int, startedAtMillis: Long) {
+        dao.setStartedAtIfNull(sessionId, startedAtMillis)
+    }
+
+    override suspend fun updateSessionEnded(sessionId: Int, endedAtMillis: Long) {
+        dao.setEndedAt(sessionId, endedAtMillis)
+    }
+
     override suspend fun getSessionIdOrCreate(date: LocalDate): Int = mutex.withLock {
         val currentPlanId = requireNotNull(historyDao.getCurrentId()) { "No plan active" }
         val existingId = dao.getSessionId(date.toLocalEpochDays())

@@ -193,6 +193,25 @@ interface SessionDao {
 
     @Query(
         """
+        UPDATE sessions
+        SET startedAt = :startedAt
+        WHERE id = :sessionId AND startedAt IS NULL
+        """,
+    )
+    suspend fun setStartedAtIfNull(sessionId: Int, startedAt: Long)
+
+    /** 更新最近一次"结束训练"时刻(继续训练不改开始时间,只在再次结束时更新此值)。 */
+    @Query(
+        """
+        UPDATE sessions
+        SET endedAt = :endedAt
+        WHERE id = :sessionId
+        """,
+    )
+    suspend fun setEndedAt(sessionId: Int, endedAt: Long)
+
+    @Query(
+        """
         DELETE FROM sessions
         WHERE id = :sessionId
         """,

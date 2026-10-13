@@ -17,6 +17,7 @@ package com.looker.kenko.ui.component.timer
 
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.domain.model.today
+import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,6 +47,8 @@ class TrainingSessionManager @Inject constructor(
         if (_sessionState.value is TrainingSessionState.Active) return
         scope.launch {
             val sessionId = sessionRepo.getSessionIdOrCreate(today())
+            // 首次"开始训练"即记录开始时刻;已存在(继续训练)则保留原值。
+            sessionRepo.ensureSessionStarted(sessionId, Clock.System.now().toEpochMilliseconds())
             _sessionState.value = TrainingSessionState.Active(sessionId)
             // Continue from existing duration if any
             val existingSession = sessionRepo.streamByDate(today()).first()
@@ -68,6 +71,9 @@ class TrainingSessionManager @Inject constructor(
             timerManager.setElapsedSeconds(elapsed)
 
             if (sessionId != null) {
+                // 记录本次结束时刻;开始时间保持不变(继续训练后再次结束会更新此值)。
+                sessionRepo.updateSessionEnded(sessionId, Clock.System.now().toEpochMilliseconds())
+
                 // Save duration to session
                 if (elapsed > 0) {
                     sessionRepo.updateSessionDuration(sessionId, elapsed)

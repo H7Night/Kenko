@@ -29,6 +29,8 @@ fun Session.data(): SessionDataEntity = SessionDataEntity(
     dayIndexOverride = dayIndexOverride,
     dayTitleOverride = dayTitleOverride,
     durationSeconds = durationSeconds,
+    startedAt = startedAt,
+    endedAt = endedAt,
     id = id ?: 0,
 )
 
@@ -45,5 +47,7 @@ fun SessionEntity.toExternal(
     dayIndexOverride = data.dayIndexOverride,
     dayTitleOverride = data.dayTitleOverride,
     durationSeconds = data.durationSeconds,
+    startedAt = data.startedAt,
+    endedAt = data.endedAt,
     id = data.id,
 )

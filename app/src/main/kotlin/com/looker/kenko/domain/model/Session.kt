@@ -26,6 +26,8 @@ data class Session(
     val dayIndexOverride: Int? = null,
     val dayTitleOverride: String? = null,
     val durationSeconds: Long? = null,
+    val startedAt: Long? = null,
+    val endedAt: Long? = null,
     val id: Int? = null,
 ) {
     val performExercises: List<Exercise>

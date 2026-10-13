@@ -39,7 +39,7 @@ import com.looker.kenko.data.local.model.WeightEntity
 import com.looker.kenko.utils.AppConstants
 
 @Database(
-    version = 16,
+    version = 18,
     entities = [
         SessionDataEntity::class,
         ExerciseEntity::class,
@@ -86,5 +86,7 @@ fun kenkoDatabase(context: Context) = Room
         MIGRATION_13_14,
         MIGRATION_14_15,
         MIGRATION_15_16,
+        MIGRATION_16_17,
+        MIGRATION_17_18,
     )
     .build()
