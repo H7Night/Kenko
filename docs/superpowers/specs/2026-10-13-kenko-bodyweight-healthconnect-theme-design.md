@@ -29,7 +29,6 @@ runs the target stack); no changes to hackqing or MihealthReader in this documen
   - Profile screen hides the weight card (`WeightCard`, `Profile.kt:227`, `:305`),
     the add-weight entry, the `WeightRangeDialog`, and the `WeightHistorySheet`
     entry (`Profile.kt:163-171`, `:474`).
-  - `PlanCards` hides the weight-across-activation-window section.
   - Weight records are **retained** in the DB; nothing is deleted.
   - Bodyweight-exercise load calculation **keeps using the last recorded weight**
     (`ExerciseProgress.kt:85` `bodyWeightOnOrBefore`), so historical 1RM is unchanged.
