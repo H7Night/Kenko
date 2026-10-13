@@ -24,6 +24,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.looker.kenko.BuildConfig
 import com.looker.kenko.domain.model.settings.BackupInterval
+import com.looker.kenko.domain.model.settings.ColorPalette
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Settings
 import com.looker.kenko.domain.model.settings.Theme
@@ -103,6 +104,10 @@ class DatastoreSettingsRepo @Inject constructor(
         HEALTH_CONNECT_ENABLED.update(enabled)
     }
 
+    override suspend fun setColorPalette(palette: ColorPalette) {
+        COLOR_PALETTE.update(palette.name)
+    }
+
     private suspend inline fun <T> Preferences.Key<T>.update(value: T) {
         dataStore.edit { preference ->
             preference[this] = value
@@ -119,6 +124,7 @@ class DatastoreSettingsRepo @Inject constructor(
         val language = preferences[LANGUAGE] ?: Language.System.name
         val bodyWeightEnabled = preferences[BODY_WEIGHT_ENABLED] ?: true
         val healthConnectEnabled = preferences[HEALTH_CONNECT_ENABLED] ?: false
+        val colorPalette = preferences[COLOR_PALETTE] ?: ColorPalette.Line.name
         return Settings(
             isOnboardingDone = isOnboardingDone,
             theme = Theme.valueOf(theme),
@@ -129,6 +135,7 @@ class DatastoreSettingsRepo @Inject constructor(
             language = Language.valueOf(language),
             bodyWeightEnabled = bodyWeightEnabled,
             healthConnectEnabled = healthConnectEnabled,
+            colorPalette = ColorPalette.valueOf(colorPalette),
         )
     }
 
@@ -146,5 +153,6 @@ class DatastoreSettingsRepo @Inject constructor(
             booleanPreferencesKey("body_weight_enabled")
         val HEALTH_CONNECT_ENABLED: Preferences.Key<Boolean> =
             booleanPreferencesKey("health_connect_enabled")
+        val COLOR_PALETTE: Preferences.Key<String> = stringPreferencesKey("color_palette")
     }
 }

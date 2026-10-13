@@ -16,6 +16,7 @@
 package com.looker.kenko.data.repository
 
 import com.looker.kenko.domain.model.settings.BackupInterval
+import com.looker.kenko.domain.model.settings.ColorPalette
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Settings
 import com.looker.kenko.domain.model.settings.Theme
@@ -45,4 +46,6 @@ interface SettingsRepo {
     suspend fun setBodyWeightEnabled(enabled: Boolean)
 
     suspend fun setHealthConnectEnabled(enabled: Boolean)
+
+    suspend fun setColorPalette(palette: ColorPalette)
 }

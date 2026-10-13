@@ -2,6 +2,7 @@ package com.looker.kenko.testutil
 
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.domain.model.settings.BackupInterval
+import com.looker.kenko.domain.model.settings.ColorPalette
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Settings
 import com.looker.kenko.domain.model.settings.Theme
@@ -21,6 +22,7 @@ internal class FakeSettingsRepo(
         language = Language.System,
         bodyWeightEnabled = true,
         healthConnectEnabled = false,
+        colorPalette = ColorPalette.Line,
     ),
 ) : SettingsRepo {
     private val state = MutableStateFlow(initial)
@@ -39,5 +41,9 @@ internal class FakeSettingsRepo(
 
     override suspend fun setHealthConnectEnabled(enabled: Boolean) {
         state.value = state.value.copy(healthConnectEnabled = enabled)
+    }
+
+    override suspend fun setColorPalette(palette: ColorPalette) {
+        state.value = state.value.copy(colorPalette = palette)
     }
 }

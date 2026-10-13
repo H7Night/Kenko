@@ -1,8 +1,10 @@
 package com.looker.kenko.data.local.datastore
 
+import com.looker.kenko.domain.model.settings.ColorPalette
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -21,5 +23,18 @@ class DatastoreSettingsRepoTest {
         assertFalse(repo.stream.first().bodyWeightEnabled)
         repo.setBodyWeightEnabled(true)
         assertTrue(repo.stream.first().bodyWeightEnabled)
+    }
+
+    @Test
+    fun `color palette defaults to Line`() = runTest {
+        val repo = DatastoreSettingsRepo(FakePreferencesDataStore())
+        assertEquals(ColorPalette.Line, repo.stream.first().colorPalette)
+    }
+
+    @Test
+    fun `setColorPalette persists Material`() = runTest {
+        val repo = DatastoreSettingsRepo(FakePreferencesDataStore())
+        repo.setColorPalette(ColorPalette.Material)
+        assertEquals(ColorPalette.Material, repo.stream.first().colorPalette)
     }
 }

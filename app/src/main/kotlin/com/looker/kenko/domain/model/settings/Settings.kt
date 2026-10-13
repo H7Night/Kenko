@@ -27,4 +27,5 @@ data class Settings(
     val language: Language,
     val bodyWeightEnabled: Boolean,
     val healthConnectEnabled: Boolean,
+    val colorPalette: ColorPalette,
 )
