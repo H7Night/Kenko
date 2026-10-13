@@ -429,6 +429,14 @@ private fun SetsList(
                                 contentDescription = null,
                             )
                         }
+                    } else if (isEditMode) {
+                        // 历史记录:进入编辑模式后也可添加动作(含计划里没有的动作)
+                        IconButton(onClick = { showAddExerciseDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                            )
+                        }
                     }
 
                     if (isToday && previousSessionDate != null) {
