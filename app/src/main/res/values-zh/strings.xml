@@ -266,6 +266,7 @@
     <string name="label_color_style">配色风格</string>
     <string name="label_color_style_line">Line</string>
     <string name="label_color_style_material">Material 3</string>
+    <string name="label_health_connect_rationale">Kenko 会把训练记录写入 Health Connect，数据仅保存在本机。</string>
 
     <!--Backup-->
     <string name="label_backup">备份与恢复</string>

@@ -271,6 +271,7 @@
     <string name="label_color_style">Color style</string>
     <string name="label_color_style_line">Line</string>
     <string name="label_color_style_material">Material 3</string>
+    <string name="label_health_connect_rationale">Kenko writes your workout sessions to Health Connect. Your data stays on this device.</string>
 
     <string name="label_backup">Backup &amp; Restore</string>
     <string name="label_backup_location">Backup Location</string>

@@ -163,6 +163,7 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
 
     implementation(libs.savedstate)
+    implementation(libs.health.connect.client)
 
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.serialization.json)
