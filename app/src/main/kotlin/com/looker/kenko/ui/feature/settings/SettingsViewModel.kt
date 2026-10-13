@@ -25,8 +25,11 @@ import com.looker.kenko.data.export.ExportManager
 import com.looker.kenko.data.export.ExportOptions
 import com.looker.kenko.data.health.HealthConnectManager
 import com.looker.kenko.data.repository.SessionRepo
+import com.looker.kenko.domain.health.excludingActiveSession
 import com.looker.kenko.domain.health.toHealthExerciseSession
 import com.looker.kenko.domain.model.settings.BackupInterval
+import com.looker.kenko.ui.component.timer.TrainingSessionManager
+import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.domain.model.settings.ColorPalette
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
@@ -53,6 +56,7 @@ class SettingsViewModel @Inject constructor(
     private val exportManager: ExportManager,
     private val sessionRepo: SessionRepo,
     private val healthConnectManager: HealthConnectManager,
+    private val trainingSessionManager: TrainingSessionManager,
 ) : KenkoViewModel() {
 
     private val earliestSessionDate: Flow<LocalDate?> = sessionRepo.earliestSessionDate
@@ -149,7 +153,10 @@ class SettingsViewModel @Inject constructor(
     fun syncHealthConnect() {
         launchCatching {
             if (!healthConnectManager.hasAllPermissions()) return@launchCatching
+            val activeSessionId =
+                (trainingSessionManager.sessionState.value as? TrainingSessionState.Active)?.sessionId
             val dtos = sessionRepo.stream.first()
+                .excludingActiveSession(activeSessionId)
                 .mapNotNull { it.toHealthExerciseSession(it.performExercises.map { ex -> ex.name }) }
             _healthSyncCount.value = healthConnectManager.syncAll(dtos)
         }
