@@ -69,6 +69,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.ExercisesPreviewParameter
+import com.looker.kenko.domain.model.labelRes
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.component.ErrorSnackbar
@@ -96,6 +97,7 @@ fun Exercises(
     val allTags by viewModel.allTags.collectAsStateWithLifecycle()
     val selectedParent by viewModel.selectedParentFilter.collectAsStateWithLifecycle()
     val selectedChild by viewModel.selectedChildFilter.collectAsStateWithLifecycle()
+    val selectedEquipment by viewModel.selectedEquipment.collectAsStateWithLifecycle()
 
     Exercises(
         state = state,
@@ -103,8 +105,10 @@ fun Exercises(
         allTags = allTags,
         selectedParent = selectedParent,
         selectedChild = selectedChild,
+        selectedEquipment = selectedEquipment,
         onSelectParent = viewModel::setParentFilter,
         onSelectChild = viewModel::setChildFilter,
+        onSelectEquipment = { viewModel.selectedEquipment.value = it },
         snackbarState = viewModel.snackbarState,
         onBackPress = onBackPress,
         onExerciseClick = onExerciseClick,
@@ -125,6 +129,8 @@ private fun Exercises(
     selectedChild: Int?,
     onSelectParent: (Int?) -> Unit,
     onSelectChild: (Int?) -> Unit,
+    selectedEquipment: com.looker.kenko.domain.model.ExerciseEquipment? = null,
+    onSelectEquipment: (com.looker.kenko.domain.model.ExerciseEquipment?) -> Unit = {},
     snackbarState: SnackbarHostState,
     onExerciseClick: (id: Int?) -> Unit,
     onCreateClick: () -> Unit,
@@ -238,6 +244,28 @@ private fun Exercises(
                                 border = if (isSelected) KenkoBorderStrong else KenkoBorder,
                             )
                         }
+                    }
+                }
+                // 器械筛选
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 12.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    com.looker.kenko.domain.model.ExerciseEquipment.entries.forEach { equipment ->
+                        val isSelected = equipment == selectedEquipment
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { onSelectEquipment(if (isSelected) null else equipment) },
+                            label = { Text(stringResource(equipment.labelRes)) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                selectedLabelColor = MaterialTheme.colorScheme.primary,
+                            ),
+                            border = if (isSelected) KenkoBorderStrong else KenkoBorder,
+                        )
                     }
                 }
             }

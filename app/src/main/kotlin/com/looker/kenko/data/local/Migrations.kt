@@ -691,3 +691,11 @@ val MIGRATION_18_19 = object : Migration(18, 19) {
         )
     }
 }
+
+val MIGRATION_19_20 = object : Migration(19, 20) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // 动作级器械与主肌群(其余 tags 视为次肌群)。
+        db.execSQL("ALTER TABLE `exercises` ADD COLUMN `equipment` TEXT")
+        db.execSQL("ALTER TABLE `exercises` ADD COLUMN `primaryTagId` INTEGER")
+    }
+}

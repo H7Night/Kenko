@@ -32,8 +32,19 @@ data class Exercise(
     val countType: CountType = CountType.REPS,
     val isBodyweight: Boolean = false,
     val reference: String? = null,
+    val equipment: ExerciseEquipment? = null,
+    /** 主肌群 tag id；其余 tags 视为次肌群。 */
+    val primaryTagId: Int? = null,
     val id: Int? = null,
-)
+) {
+    /** 主肌群 tag（若 [primaryTagId] 有效且存在）；否则取第一个标签作回退。 */
+    val primaryTag: Tag?
+        get() = tags.firstOrNull { it.id == primaryTagId } ?: tags.firstOrNull()
+
+    /** 次肌群 tags。 */
+    val secondaryTags: List<Tag>
+        get() = primaryTag?.let { primary -> tags.filter { it.id != primary.id } } ?: emptyList()
+}
 
 @Stable
 val Exercise.repDurationStringRes: Int

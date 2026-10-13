@@ -161,6 +161,14 @@
     <!--Add Sets-->
     <string name="label_add_set_for">添加组数：</string>
     <string name="label_add_minutes_for">添加时长：</string>
+    <string name="label_equipment">器械</string>
+    <string name="label_primary_muscle">主肌群</string>
+    <string name="label_equipment_barbell">杠铃</string>
+    <string name="label_equipment_dumbbell">哑铃</string>
+    <string name="label_equipment_machine">器械</string>
+    <string name="label_equipment_cable">绳索</string>
+    <string name="label_equipment_bodyweight">自重</string>
+    <string name="label_equipment_other">其它</string>
     <string name="label_delete_set_title">删除训练组</string>
     <string name="label_delete_set_message">确定要删除这组训练数据吗？此操作不可撤销。</string>
     <string name="label_plus_int">+%s</string>

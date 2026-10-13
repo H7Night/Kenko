@@ -165,6 +165,14 @@
     <!--Add Sets-->
     <string name="label_add_set_for">Add Set for</string>
     <string name="label_add_minutes_for">Add minutes for</string>
+    <string name="label_equipment">Equipment</string>
+    <string name="label_primary_muscle">Primary muscle</string>
+    <string name="label_equipment_barbell">Barbell</string>
+    <string name="label_equipment_dumbbell">Dumbbell</string>
+    <string name="label_equipment_machine">Machine</string>
+    <string name="label_equipment_cable">Cable</string>
+    <string name="label_equipment_bodyweight">Bodyweight</string>
+    <string name="label_equipment_other">Other</string>
     <string name="label_delete_set_title">Delete Set?</string>
     <string name="label_delete_set_message">This will permanently delete this set.</string>
     <string name="label_plus_int">+%s</string>

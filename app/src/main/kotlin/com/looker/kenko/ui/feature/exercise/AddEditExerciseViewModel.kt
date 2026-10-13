@@ -25,6 +25,7 @@ import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.TagRepo
 import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.ExerciseEquipment
 import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.base.KenkoViewModel
 import com.looker.kenko.ui.feature.exercise.navigation.AddEditExerciseRoute
@@ -59,6 +60,10 @@ class AddEditExerciseViewModel @Inject constructor(
 
     val countTypeFlow = MutableStateFlow(CountType.REPS)
 
+    val equipmentFlow = MutableStateFlow<ExerciseEquipment?>(null)
+
+    val primaryTagIdFlow = MutableStateFlow<Int?>(null)
+
     val selectedTags = MutableStateFlow<List<Tag>>(emptyList())
 
     private var originalName: String = ""
@@ -86,6 +91,8 @@ class AddEditExerciseViewModel @Inject constructor(
         selectedTags,
         exerciseName,
         showRenameConfirmation,
+        equipmentFlow,
+        primaryTagIdFlow,
     ) { array: Array<*> ->
         AddEditExerciseUiState(
             isError = array[0] as Boolean,
@@ -94,6 +101,8 @@ class AddEditExerciseViewModel @Inject constructor(
             selectedTags = @Suppress("UNCHECKED_CAST") array[3] as List<Tag>,
             exerciseName = array[4] as String,
             showRenameConfirmation = array[5] as Boolean,
+            equipment = array[6] as ExerciseEquipment?,
+            primaryTagId = array[7] as Int?,
         )
     }.asStateFlow(
         AddEditExerciseUiState(
@@ -124,6 +133,14 @@ class AddEditExerciseViewModel @Inject constructor(
 
     fun setCountType(type: CountType) {
         countTypeFlow.value = type
+    }
+
+    fun setEquipment(equipment: ExerciseEquipment?) {
+        equipmentFlow.value = equipment
+    }
+
+    fun setPrimaryTag(tagId: Int?) {
+        primaryTagIdFlow.value = tagId
     }
 
     fun dismissRenameConfirmation() {
@@ -164,6 +181,8 @@ class AddEditExerciseViewModel @Inject constructor(
                 tags = selectedTags.value,
                 countType = countTypeFlow.value,
                 isBodyweight = isBodyweightFlow.value,
+                equipment = equipmentFlow.value,
+                primaryTagId = primaryTagIdFlow.value,
                 id = exerciseId,
             ),
         )
@@ -180,6 +199,8 @@ class AddEditExerciseViewModel @Inject constructor(
                     isBodyweightFlow.value = it.isBodyweight
                     countTypeFlow.value = it.countType
                     selectedTags.value = it.tags
+                    equipmentFlow.value = it.equipment
+                    primaryTagIdFlow.value = it.primaryTagId
                 }
             } else {
                 if (routeData.name != null) exerciseName.value = routeData.name
@@ -196,6 +217,8 @@ data class AddEditExerciseUiState(
     val selectedTags: List<Tag> = emptyList(),
     val exerciseName: String = "",
     val showRenameConfirmation: Boolean = false,
+    val equipment: ExerciseEquipment? = null,
+    val primaryTagId: Int? = null,
 )
 
 data class TagSelectorState(

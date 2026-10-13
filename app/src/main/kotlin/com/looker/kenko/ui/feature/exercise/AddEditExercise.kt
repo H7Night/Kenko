@@ -56,6 +56,9 @@ import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.ErrorSnackbar
 import com.looker.kenko.ui.component.KenkoButton
+import androidx.compose.material3.FilterChip
+import com.looker.kenko.domain.model.ExerciseEquipment
+import com.looker.kenko.domain.model.labelRes
 import com.looker.kenko.ui.component.TagSelector
 import com.looker.kenko.ui.component.kenkoTextFieldColor
 import com.looker.kenko.ui.extension.plus
@@ -102,6 +105,8 @@ fun AddEditExercise(
         onRemoveTag = viewModel::removeTag,
         onSetCountType = viewModel::setCountType,
         onBodyweightChange = { viewModel.isBodyweightFlow.value = it },
+        onSetEquipment = viewModel::setEquipment,
+        onSetPrimaryTag = viewModel::setPrimaryTag,
         onNameChange = viewModel::setName,
         onBackPress = onBackPress,
         onDone = { viewModel.saveExercise(onDone) },
@@ -119,6 +124,8 @@ private fun AddEditExercise(
     onRemoveTag: (com.looker.kenko.domain.model.Tag) -> Unit,
     onSetCountType: (CountType) -> Unit,
     onBodyweightChange: (Boolean) -> Unit,
+    onSetEquipment: (com.looker.kenko.domain.model.ExerciseEquipment?) -> Unit = {},
+    onSetPrimaryTag: (Int?) -> Unit = {},
     onNameChange: (String) -> Unit,
     onDone: () -> Unit,
     onBackPress: () -> Unit,
@@ -217,6 +224,60 @@ private fun AddEditExercise(
                         ),
                     ) {
                         Text(stringResource(type.labelRes))
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Equipment selector (动作级器械)
+            Text(
+                text = stringResource(R.string.label_equipment),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            androidx.compose.foundation.layout.FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                com.looker.kenko.domain.model.ExerciseEquipment.entries.forEach { equipment ->
+                    FilterChip(
+                        selected = state.equipment == equipment,
+                        onClick = {
+                            focusManager.clearFocus()
+                            onSetEquipment(if (state.equipment == equipment) null else equipment)
+                        },
+                        label = { Text(stringResource(equipment.labelRes)) },
+                    )
+                }
+            }
+
+            if (state.selectedTags.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.label_primary_muscle),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    state.selectedTags.forEach { tag ->
+                        val isPrimary = state.primaryTagId == tag.id ||
+                            (state.primaryTagId == null && tag == state.selectedTags.first())
+                        FilterChip(
+                            selected = isPrimary,
+                            onClick = {
+                                focusManager.clearFocus()
+                                onSetPrimaryTag(if (state.primaryTagId == tag.id) null else tag.id)
+                            },
+                            label = { Text(tag.name) },
+                        )
                     }
                 }
             }

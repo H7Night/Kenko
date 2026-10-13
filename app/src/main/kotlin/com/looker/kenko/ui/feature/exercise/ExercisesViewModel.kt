@@ -49,6 +49,7 @@ class ExercisesViewModel @Inject constructor(
 
     val selectedParentFilter = MutableStateFlow<Int?>(null)
     val selectedChildFilter = MutableStateFlow<Int?>(null)
+    val selectedEquipment = MutableStateFlow<com.looker.kenko.domain.model.ExerciseEquipment?>(null)
 
     val parentTags: StateFlow<List<Tag>> = tagRepo.streamParents
         .asStateFlow(emptyList(), started = SharingStarted.Eagerly)
@@ -60,7 +61,8 @@ class ExercisesViewModel @Inject constructor(
         repo.stream,
         selectedParentFilter,
         selectedChildFilter,
-    ) { allExercises, parentId, childId ->
+        selectedEquipment,
+    ) { allExercises, parentId, childId, equipment ->
         var filtered = allExercises
 
         if (childId != null) {
@@ -71,6 +73,10 @@ class ExercisesViewModel @Inject constructor(
             filtered = filtered.filter { exercise ->
                 exercise.tags.any { it.parentId == parentId }
             }
+        }
+
+        if (equipment != null) {
+            filtered = filtered.filter { it.equipment == equipment }
         }
 
         filtered
