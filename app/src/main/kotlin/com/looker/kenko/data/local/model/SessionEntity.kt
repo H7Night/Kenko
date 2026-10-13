@@ -19,6 +19,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.looker.kenko.utils.EpochDays
@@ -57,6 +58,35 @@ data class SessionDataEntity(
     val endedAt: Long? = null,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+)
+
+/**
+ * 本次训练"显式添加"的动作（计划里没有的、或暂时没有组也要显示的）。
+ * 随 session 级联删除;动作删除时级联删除。
+ */
+@Entity(
+    "session_exercises",
+    primaryKeys = ["sessionId", "exerciseId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = SessionDataEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["sessionId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+        ForeignKey(
+            entity = ExerciseEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["exerciseId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index("sessionId"), Index("exerciseId")],
+)
+data class SessionExerciseEntity(
+    val sessionId: Int,
+    val exerciseId: Int,
+    val order: Int = 0,
 )
 
 /** 轻量投影：仅 date + planId（供计划训练日期区间计算，不加载 sets）。 */

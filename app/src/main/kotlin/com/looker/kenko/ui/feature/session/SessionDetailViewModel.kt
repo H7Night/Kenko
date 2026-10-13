@@ -50,6 +50,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -118,6 +119,26 @@ class SessionDetailViewModel @Inject constructor(
     val allExercises: StateFlow<List<Exercise>> = exerciseRepo.stream
         .asStateFlow(initial = emptyList())
 
+    /** 本记录显式添加的动作(计划外/暂无组的空动作)。 */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val extraExercises: Flow<List<Exercise>> = sessionStream.flatMapLatest { session ->
+        val id = session?.id
+        if (id == null) {
+            flowOf(emptyList())
+        } else {
+            combine(repo.streamSessionExerciseIds(id), allExercises) { ids, all ->
+                ids.mapNotNull { eid -> all.find { it.id == eid } }
+            }
+        }
+    }
+
+    /** 供 UI 判断哪些动作是"手动添加的",以便显示移除入口。 */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val extraExerciseIds: StateFlow<List<Int>> = sessionStream.flatMapLatest { session ->
+        val id = session?.id
+        if (id == null) flowOf(emptyList()) else repo.streamSessionExerciseIds(id)
+    }.asStateFlow(emptyList(), started = SharingStarted.Eagerly)
+
     @OptIn(ExperimentalCoroutinesApi::class)
     private val exercisesToday: Flow<List<Exercise>> =
         combine(
@@ -174,6 +195,7 @@ class SessionDetailViewModel @Inject constructor(
                 result.distinctBy { it.id }
             }
         }
+            .combine(extraExercises) { base, extra -> (base + extra).distinctBy { it.id } }
 
     private val _isEditMode: MutableStateFlow<Boolean> = MutableStateFlow(isTodaySession)
     val isEditMode: StateFlow<Boolean> = _isEditMode
@@ -259,6 +281,24 @@ class SessionDetailViewModel @Inject constructor(
 
     fun toggleEditMode() {
         _isEditMode.value = !_isEditMode.value
+    }
+
+    /** 多选添加动作(计划外/空动作也算入本记录)。 */
+    fun addExercises(exercises: List<Exercise>) {
+        launchCatching {
+            val sessionId = repo.getSessionIdOrCreate(sessionDate)
+            exercises.forEach { exercise ->
+                exercise.id?.let { repo.addSessionExercise(sessionId, it) }
+            }
+        }
+    }
+
+    fun removeExtraExercise(exercise: Exercise) {
+        launchCatching {
+            val exerciseId = exercise.id ?: return@launchCatching
+            val sessionId = sessionStream.first()?.id ?: return@launchCatching
+            repo.removeSessionExercise(sessionId, exerciseId)
+        }
     }
 
     fun importPlanFromDay(dayIndex: Int) {

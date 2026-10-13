@@ -72,6 +72,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -122,11 +123,13 @@ fun SessionDetails(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val allExercises by viewModel.allExercises.collectAsStateWithLifecycle()
     val previousSets by viewModel.previousSets.collectAsStateWithLifecycle()
+    val extraExerciseIds by viewModel.extraExerciseIds.collectAsStateWithLifecycle()
     val previousSessionDate = (state as? SessionDetailState.Success)?.data?.previousSessionDate
     SessionDetail(
         state = state,
         allExercises = allExercises,
         previousSets = previousSets,
+        extraExerciseIds = extraExerciseIds,
         onBackPress = onBackPress,
         onRemoveSet = viewModel::removeSet,
         onUpdateSet = viewModel::updateSet,
@@ -137,6 +140,8 @@ fun SessionDetails(
         onClearSets = viewModel::clearTodaySets,
         showBackButton = showBackButton,
         onAddExerciseClick = onAddExerciseClick,
+        onAddExercises = viewModel::addExercises,
+        onRemoveExtraExercise = viewModel::removeExtraExercise,
     )
     val exercise by viewModel.current.collectAsStateWithLifecycle()
     if (exercise != null) {
@@ -154,6 +159,9 @@ private fun SessionDetail(
     state: SessionDetailState,
     allExercises: List<Exercise> = emptyList(),
     previousSets: Map<Int, List<ReferenceSet>> = emptyMap(),
+    extraExerciseIds: List<Int> = emptyList(),
+    onAddExercises: (List<Exercise>) -> Unit = {},
+    onRemoveExtraExercise: (Exercise) -> Unit = {},
     onBackPress: () -> Unit = {},
     onRemoveSet: (Int?) -> Unit = {},
     onUpdateSet: (Int?, Int, Float) -> Unit = { _, _, _ -> },
@@ -284,6 +292,7 @@ private fun SessionDetail(
                 dayTitles = data.dayTitles,
                 allExercises = allExercises,
                 previousSets = previousSets,
+                extraExerciseIds = extraExerciseIds,
                 onBackPress = onBackPress,
                 onRemoveSet = onRemoveSet,
                 onUpdateSet = onUpdateSet,
@@ -294,6 +303,8 @@ private fun SessionDetail(
                 onClearSets = onClearSets,
                 showBackButton = showBackButton,
                 onAddExerciseClick = onAddExerciseClick,
+                onAddExercises = onAddExercises,
+                onRemoveExtraExercise = onRemoveExtraExercise,
             )
         }
         }
@@ -314,6 +325,7 @@ private fun SetsList(
     dayTitles: Map<Int, String>,
     allExercises: List<Exercise> = emptyList(),
     previousSets: Map<Int, List<ReferenceSet>> = emptyMap(),
+    extraExerciseIds: List<Int> = emptyList(),
     onBackPress: () -> Unit,
     onRemoveSet: (Int?) -> Unit,
     onUpdateSet: (Int?, Int, Float) -> Unit,
@@ -324,6 +336,8 @@ private fun SetsList(
     onClearSets: () -> Unit,
     showBackButton: Boolean = true,
     onAddExerciseClick: (String) -> Unit = {},
+    onAddExercises: (List<Exercise>) -> Unit = {},
+    onRemoveExtraExercise: (Exercise) -> Unit = {},
 ) {
     var collapsedExercises by rememberSaveable { mutableStateOf(emptySet<Int>()) }
     var showImportDialog by remember { mutableStateOf(false) }
@@ -394,9 +408,9 @@ private fun SetsList(
     if (showAddExerciseDialog) {
         ExerciseSearchDialog(
             exercises = allExercises,
-            onExerciseSelected = { exercise ->
+            onExercisesSelected = { exercises ->
                 showAddExerciseDialog = false
-                onSelectBottomSheet(exercise)
+                onAddExercises(exercises)
             },
             onCreateNew = { name ->
                 showAddExerciseDialog = false
@@ -485,15 +499,23 @@ private fun SetsList(
                         }
                     }
                 ) {
-                    if (isEditMode) {
-                        FilledTonalIconButton(
-                            shapes = IconButtonShapes(
-                                shape = MaterialShapes.Circle.toShape(),
-                                pressedShape = MaterialShapes.Cookie6Sided.toShape(),
-                            ),
-                            onClick = { onSelectBottomSheet(exercise) },
-                        ) {
-                            Icon(painter = KenkoIcons.Add, contentDescription = null)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // 手动添加的动作可移除
+                        if (exercise.id in extraExerciseIds && (isToday || isEditMode)) {
+                            IconButton(onClick = { onRemoveExtraExercise(exercise) }) {
+                                Icon(painter = KenkoIcons.Remove, contentDescription = null)
+                            }
+                        }
+                        if (isEditMode) {
+                            FilledTonalIconButton(
+                                shapes = IconButtonShapes(
+                                    shape = MaterialShapes.Circle.toShape(),
+                                    pressedShape = MaterialShapes.Cookie6Sided.toShape(),
+                                ),
+                                onClick = { onSelectBottomSheet(exercise) },
+                            ) {
+                                Icon(painter = KenkoIcons.Add, contentDescription = null)
+                            }
                         }
                     }
                 }
@@ -612,7 +634,7 @@ private fun SessionError(
 @Composable
 fun ExerciseSearchDialog(
     exercises: List<Exercise>,
-    onExerciseSelected: (Exercise) -> Unit,
+    onExercisesSelected: (List<Exercise>) -> Unit,
     onCreateNew: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -620,7 +642,8 @@ fun ExerciseSearchDialog(
     val parentTags by viewModel.parentTags.collectAsStateWithLifecycle()
     val allTags by viewModel.allTags.collectAsStateWithLifecycle()
 
-    var selectedExercise by remember { mutableStateOf<Exercise?>(null) }
+    // 多选：一次可添加多个动作(含计划外)。添加后没有组,需手动"添加组"。
+    val selectedExercises = remember { mutableStateListOf<Exercise>() }
     var selectedParentId by remember { mutableStateOf<Int?>(null) }
     var selectedChildId by remember { mutableStateOf<Int?>(null) }
 
@@ -638,11 +661,6 @@ fun ExerciseSearchDialog(
             }
         }
         filtered
-    }
-
-    // Clear the pending selection when the visible result set changes
-    LaunchedEffect(selectedParentId, selectedChildId) {
-        selectedExercise = null
     }
 
     AlertDialog(
@@ -668,10 +686,14 @@ fun ExerciseSearchDialog(
                     modifier = Modifier.height(300.dp),
                 ) {
                     items(filteredExercises, key = { it.id ?: it.name }) { exercise ->
+                        val isSelected = exercise in selectedExercises
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { selectedExercise = exercise }
+                                .clickable {
+                                    if (isSelected) selectedExercises.remove(exercise)
+                                    else selectedExercises.add(exercise)
+                                }
                                 .padding(vertical = 10.dp, horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
@@ -680,7 +702,7 @@ fun ExerciseSearchDialog(
                                 style = MaterialTheme.typography.bodyLarge,
                                 modifier = Modifier.weight(1f),
                             )
-                            if (exercise == selectedExercise) {
+                            if (isSelected) {
                                 Text(
                                     text = stringResource(R.string.label_check_mark),
                                     color = MaterialTheme.colorScheme.primary,
@@ -695,9 +717,9 @@ fun ExerciseSearchDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    selectedExercise?.let(onExerciseSelected)
+                    onExercisesSelected(selectedExercises.toList())
                 },
-                enabled = selectedExercise != null,
+                enabled = selectedExercises.isNotEmpty(),
             ) {
                 Text(stringResource(R.string.label_confirm))
             }

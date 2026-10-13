@@ -33,13 +33,14 @@ import com.looker.kenko.data.local.model.PlanDayEntity
 import com.looker.kenko.data.local.model.PlanEntity
 import com.looker.kenko.data.local.model.PlanHistoryEntity
 import com.looker.kenko.data.local.model.SessionDataEntity
+import com.looker.kenko.data.local.model.SessionExerciseEntity
 import com.looker.kenko.data.local.model.SetEntity
 import com.looker.kenko.data.local.model.TagEntity
 import com.looker.kenko.data.local.model.WeightEntity
 import com.looker.kenko.utils.AppConstants
 
 @Database(
-    version = 18,
+    version = 19,
     entities = [
         SessionDataEntity::class,
         ExerciseEntity::class,
@@ -47,6 +48,7 @@ import com.looker.kenko.utils.AppConstants
         PlanHistoryEntity::class,
         PlanDayEntity::class,
         SetEntity::class,
+        SessionExerciseEntity::class,
         WeightEntity::class,
         TagEntity::class,
         ExerciseTagEntity::class,
@@ -88,5 +90,6 @@ fun kenkoDatabase(context: Context) = Room
         MIGRATION_15_16,
         MIGRATION_16_17,
         MIGRATION_17_18,
+        MIGRATION_18_19,
     )
     .build()

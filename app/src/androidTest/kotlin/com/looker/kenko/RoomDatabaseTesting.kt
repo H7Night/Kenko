@@ -38,6 +38,7 @@ import com.looker.kenko.data.local.MIGRATION_14_15
 import com.looker.kenko.data.local.MIGRATION_15_16
 import com.looker.kenko.data.local.MIGRATION_16_17
 import com.looker.kenko.data.local.MIGRATION_17_18
+import com.looker.kenko.data.local.MIGRATION_18_19
 import com.looker.kenko.data.local.dao.ExerciseDao
 import com.looker.kenko.data.local.dao.PlanDao
 import com.looker.kenko.data.local.model.ExerciseEntity
@@ -116,6 +117,7 @@ class RoomDatabaseTesting {
             MIGRATION_15_16,
             MIGRATION_16_17,
             MIGRATION_17_18,
+            MIGRATION_18_19,
         ).build()
         val exercises = updatedDb.exerciseDao().stream().first()
         val planHistory = updatedDb.historyDao().getCurrent()
@@ -271,6 +273,15 @@ class RoomDatabaseTesting {
     }
 
     @Test
+    fun schemaMigration18To19() = runTest {
+        val db = helper.createDatabase(DB_NAME, 18)
+        db.execSQL("INSERT INTO plans (name, dayTitles) VALUES ('Test Plan', '{\"1\":\"Chest\"}')")
+        db.execSQL("INSERT INTO plan_day (planId, exerciseId, dayIndex, sortOrder) VALUES (1, 1, 3, 0)")
+        db.execSQL("INSERT INTO sessions (date, planId, dayIndexOverride) VALUES (20000, 1, 5)")
+        helper.runMigrationsAndValidate(DB_NAME, 19, true, MIGRATION_18_19)
+    }
+
+    @Test
     fun dataMigration12To13() = runTest {
         val db = helper.createDatabase(DB_NAME, 12)
         db.execSQL("INSERT INTO plans (name, dayTitles) VALUES ('Test Plan', '{\"1\":\"Chest\"}')")
@@ -287,6 +298,7 @@ class RoomDatabaseTesting {
             MIGRATION_15_16,
             MIGRATION_16_17,
             MIGRATION_17_18,
+            MIGRATION_18_19,
         ).build()
         val plan = updatedDb.planDao().getPlanById(1)
         assertEquals(7, plan?.dayCount)

@@ -63,6 +63,13 @@ interface SessionRepo {
     /** 记录本次"结束训练"时刻(epoch millis);继续训练不改开始时间,只在再次结束时更新此值。 */
     suspend fun updateSessionEnded(sessionId: Int, endedAtMillis: Long)
 
+    /** 某 session 显式添加的动作 id(有序),含暂无组的空动作。 */
+    fun streamSessionExerciseIds(sessionId: Int): Flow<List<Int>>
+
+    suspend fun addSessionExercise(sessionId: Int, exerciseId: Int)
+
+    suspend fun removeSessionExercise(sessionId: Int, exerciseId: Int)
+
     suspend fun getSessionIdOrCreate(date: LocalDate): Int
 
     /**

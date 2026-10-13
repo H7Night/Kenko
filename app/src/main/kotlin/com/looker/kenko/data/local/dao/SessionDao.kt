@@ -23,6 +23,7 @@ import androidx.room.Transaction
 import com.looker.kenko.data.local.model.SessionDataEntity
 import com.looker.kenko.data.local.model.SessionDateEntity
 import com.looker.kenko.data.local.model.SessionEntity
+import com.looker.kenko.data.local.model.SessionExerciseEntity
 import com.looker.kenko.data.local.model.SessionSnapshotEntity
 import com.looker.kenko.data.local.model.SessionSummaryEntity
 import com.looker.kenko.utils.EpochDays
@@ -209,6 +210,15 @@ interface SessionDao {
         """,
     )
     suspend fun setEndedAt(sessionId: Int, endedAt: Long)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertSessionExercise(item: SessionExerciseEntity)
+
+    @Query("DELETE FROM session_exercises WHERE sessionId = :sessionId AND exerciseId = :exerciseId")
+    suspend fun deleteSessionExercise(sessionId: Int, exerciseId: Int)
+
+    @Query("SELECT exerciseId FROM session_exercises WHERE sessionId = :sessionId ORDER BY `order`")
+    fun streamSessionExerciseIds(sessionId: Int): Flow<List<Int>>
 
     @Query(
         """

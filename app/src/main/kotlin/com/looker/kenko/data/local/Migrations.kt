@@ -668,3 +668,26 @@ val MIGRATION_17_18 = object : Migration(17, 18) {
         db.execSQL("ALTER TABLE `sessions` ADD COLUMN `endedAt` INTEGER")
     }
 }
+
+val MIGRATION_18_19 = object : Migration(18, 19) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // 本次训练显式添加的动作(计划外的、或暂无组也需显示的动作),随 session 级联删除。
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `session_exercises` (
+            `sessionId` INTEGER NOT NULL,
+            `exerciseId` INTEGER NOT NULL,
+            `order` INTEGER NOT NULL,
+            PRIMARY KEY(`sessionId`, `exerciseId`),
+            FOREIGN KEY(`sessionId`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+            FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)
+            """.trimIndent(),
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_session_exercises_sessionId` ON `session_exercises` (`sessionId`)",
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_session_exercises_exerciseId` ON `session_exercises` (`exerciseId`)",
+        )
+    }
+}

@@ -71,6 +71,7 @@ import com.looker.kenko.domain.model.ReferenceSet
 import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.ui.component.DeletableSetItem
+import com.looker.kenko.ui.component.DeleteIconButton
 import com.looker.kenko.ui.component.SetDeleteDialog
 import com.looker.kenko.ui.component.StickyHeader
 import com.looker.kenko.ui.component.timer.TimerCard
@@ -98,6 +99,7 @@ fun Home(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val sessionSets by viewModel.sessionSets.collectAsStateWithLifecycle()
     val previousSets by viewModel.previousSets.collectAsStateWithLifecycle()
+    val extraExerciseIds by viewModel.extraExerciseIds.collectAsStateWithLifecycle()
     val timerSeconds by viewModel.timerManager.elapsedSeconds.collectAsStateWithLifecycle()
     val allExercises by viewModel.allExercises.collectAsStateWithLifecycle()
     val availablePlanDays by viewModel.availablePlanDays.collectAsStateWithLifecycle()
@@ -177,9 +179,9 @@ fun Home(
     if (showAddExerciseDialog) {
         ExerciseSearchDialog(
             exercises = allExercises,
-            onExerciseSelected = { exercise ->
+            onExercisesSelected = { exercises ->
                 showAddExerciseDialog = false
-                addSetExercise = exercise
+                viewModel.addExercises(exercises)
             },
             onCreateNew = { _ ->
                 showAddExerciseDialog = false
@@ -290,9 +292,11 @@ fun Home(
                         InlineTrainingContent(
                             exerciseSets = sessionSets,
                             previousSets = previousSets,
+                            extraExerciseIds = extraExerciseIds,
                             onAddSet = { exercise -> addSetExercise = exercise },
                             onRemoveSet = viewModel::removeSet,
                             onUpdateSet = viewModel::updateSet,
+                            onRemoveExercise = viewModel::removeExtraExercise,
                         )
                     }
                 }
@@ -340,9 +344,11 @@ private fun TrainingActionBar(
 private fun InlineTrainingContent(
     exerciseSets: List<TrainingExercise>,
     previousSets: Map<Int, List<ReferenceSet>>,
+    extraExerciseIds: List<Int>,
     onAddSet: (Exercise) -> Unit,
     onRemoveSet: (Int) -> Unit,
     onUpdateSet: (Int, Int, Float) -> Unit,
+    onRemoveExercise: (Exercise) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val collapsedExercises = remember { mutableStateListOf<Int>() }
@@ -373,6 +379,9 @@ private fun InlineTrainingContent(
                     }
                 },
                 actions = {
+                    if (exercise.id in extraExerciseIds) {
+                        DeleteIconButton(onClick = { onRemoveExercise(exercise) })
+                    }
                     OutlinedButton(
                         onClick = { onAddSet(exercise) },
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),

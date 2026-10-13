@@ -20,6 +20,7 @@ import androidx.lifecycle.viewModelScope
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
+import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.ReferenceSet
 import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.domain.model.orderTrainingExercises
@@ -34,6 +35,7 @@ import com.looker.kenko.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -80,8 +82,28 @@ class HomeViewModel @Inject constructor(
     val planName: StateFlow<String?> = planStream.map { it?.name }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val allExercises: StateFlow<List<com.looker.kenko.domain.model.Exercise>> = exerciseRepo.stream
+    val allExercises: StateFlow<List<Exercise>> = exerciseRepo.stream
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** 本次训练显式添加的动作(计划外、或暂无组也要显示的"空动作")。 */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val extraExercises: Flow<List<Exercise>> = sessionStream.flatMapLatest { session ->
+        val id = session?.id
+        if (id == null) {
+            flowOf(emptyList())
+        } else {
+            combine(sessionRepo.streamSessionExerciseIds(id), allExercises) { ids, all ->
+                ids.mapNotNull { eid -> all.find { it.id == eid } }
+            }
+        }
+    }
+
+    /** 供 UI 判断哪些动作是"手动添加的",以便显示移除入口。 */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val extraExerciseIds: StateFlow<List<Int>> = sessionStream.flatMapLatest { session ->
+        val id = session?.id
+        if (id == null) flowOf(emptyList()) else sessionRepo.streamSessionExerciseIds(id)
+    }.asStateFlow(emptyList(), started = SharingStarted.Eagerly)
 
     val availablePlanDays: StateFlow<Map<Int, List<com.looker.kenko.domain.model.PlanItem>>> =
         planRepo.planItems.map { items ->
@@ -105,9 +127,9 @@ class HomeViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val sessionSets: StateFlow<List<TrainingExercise>> =
-        combine(sessionStream, planItemStream) { session, planItems ->
+        combine(sessionStream, planItemStream, extraExercises) { session, planItems, extra ->
             orderTrainingExercises(
-                planned = planItems.map { it.exercise }.distinct(),
+                planned = (planItems.map { it.exercise } + extra).distinct(),
                 sets = session?.sets ?: emptyList(),
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -231,6 +253,25 @@ class HomeViewModel @Inject constructor(
     fun updateSet(setId: Int, reps: Int, weight: Float) {
         launchCatching {
             sessionRepo.updateSet(setId, reps, weight)
+        }
+    }
+
+    /** 多选添加动作(计划外/空动作也算入本次训练)。 */
+    fun addExercises(exercises: List<Exercise>) {
+        launchCatching {
+            val sessionId = sessionRepo.getSessionIdOrCreate(today())
+            exercises.forEach { exercise ->
+                exercise.id?.let { sessionRepo.addSessionExercise(sessionId, it) }
+            }
+        }
+    }
+
+    /** 移除手动添加的动作。 */
+    fun removeExtraExercise(exercise: Exercise) {
+        launchCatching {
+            val exerciseId = exercise.id ?: return@launchCatching
+            val sessionId = sessionRepo.streamByDate(today()).first()?.id ?: return@launchCatching
+            sessionRepo.removeSessionExercise(sessionId, exerciseId)
         }
     }
 }

@@ -190,6 +190,22 @@ class LocalSessionRepo @Inject constructor(
         dao.setEndedAt(sessionId, endedAtMillis)
     }
 
+    override fun streamSessionExerciseIds(sessionId: Int): Flow<List<Int>> =
+        dao.streamSessionExerciseIds(sessionId)
+
+    override suspend fun addSessionExercise(sessionId: Int, exerciseId: Int) {
+        dao.insertSessionExercise(
+            com.looker.kenko.data.local.model.SessionExerciseEntity(
+                sessionId = sessionId,
+                exerciseId = exerciseId,
+            ),
+        )
+    }
+
+    override suspend fun removeSessionExercise(sessionId: Int, exerciseId: Int) {
+        dao.deleteSessionExercise(sessionId, exerciseId)
+    }
+
     override suspend fun getSessionIdOrCreate(date: LocalDate): Int = mutex.withLock {
         val currentPlanId = requireNotNull(historyDao.getCurrentId()) { "No plan active" }
         val existingId = dao.getSessionId(date.toLocalEpochDays())

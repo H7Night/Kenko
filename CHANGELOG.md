@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Calendar view of training history: days with a workout are highlighted and open the session detail
 - Editing a past workout record now lets you add exercises that are not part of the plan
 - Adding sets now only asks for the number of sets; reps and weight are entered afterwards by tapping each set row, which shows the previous session's sets as a faded reference to beat
+- Adding exercises now supports multi-select; exercises not in the plan can be added to a workout and appear even before any set is logged
 
 ### Fixed
 - Bodyweight exercises now count toward progress correctly: pure bodyweight sets use the body weight recorded nearest to that session, weighted sets add the extra weight, and legacy sets logged before the bodyweight option existed are corrected on upgrade
