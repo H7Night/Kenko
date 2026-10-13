@@ -6,6 +6,7 @@
 package com.looker.kenko.data.health
 
 import android.content.Context
+import android.util.Log
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ExerciseSessionRecord
@@ -42,7 +43,8 @@ class HealthConnectManager @Inject constructor(
         return runCatching {
             client.insertRecords(listOf(session.toRecord()))
             true
-        }.getOrDefault(false)
+        }.onFailure { Log.w(TAG, "Health Connect write failed for ${session.clientRecordId}", it) }
+            .getOrDefault(false)
     }
 
     /** Writes every session not yet present, using clientRecordId idempotency. Returns count written. */
@@ -53,10 +55,15 @@ class HealthConnectManager @Inject constructor(
             val ok = runCatching {
                 client.insertRecords(listOf(session.toRecord()))
                 true
-            }.getOrDefault(false)
+            }.onFailure { Log.w(TAG, "Health Connect sync failed for ${session.clientRecordId}", it) }
+                .getOrDefault(false)
             if (ok) written++
         }
         return written
+    }
+
+    private companion object {
+        const val TAG = "HealthConnectManager"
     }
 }
 

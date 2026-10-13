@@ -32,6 +32,12 @@ class DatastoreSettingsRepoTest {
     }
 
     @Test
+    fun `health connect defaults to disabled`() = runTest {
+        val repo = DatastoreSettingsRepo(FakePreferencesDataStore())
+        assertFalse(repo.stream.first().healthConnectEnabled)
+    }
+
+    @Test
     fun `setColorPalette persists Material`() = runTest {
         val repo = DatastoreSettingsRepo(FakePreferencesDataStore())
         repo.setColorPalette(ColorPalette.Material)

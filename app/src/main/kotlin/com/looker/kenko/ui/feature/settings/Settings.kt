@@ -16,7 +16,6 @@
 package com.looker.kenko.ui.feature.settings
 
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,6 +47,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.settings.BackupInterval
@@ -78,6 +79,7 @@ fun Settings(
         onToggleBodyWeight = viewModel::updateBodyWeightEnabled,
         onToggleHealthConnect = viewModel::updateHealthConnectEnabled,
         onHealthPermissionsResult = viewModel::onHealthPermissionsResult,
+        onSyncHealthConnect = viewModel::syncHealthConnect,
         onBackPress = onBackPress,
         onTagManagementClick = onTagManagementClick,
         onBackupClick = onBackupClick,
@@ -95,6 +97,7 @@ private fun Settings(
     onToggleBodyWeight: (Boolean) -> Unit,
     onToggleHealthConnect: (Boolean) -> Unit,
     onHealthPermissionsResult: (Boolean) -> Unit,
+    onSyncHealthConnect: () -> Unit,
     onBackPress: () -> Unit,
     onTagManagementClick: () -> Unit,
     onBackupClick: () -> Unit,
@@ -106,9 +109,9 @@ private fun Settings(
     var showColorStyleDialog by remember { mutableStateOf(false) }
 
     val healthPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions(),
-    ) { result ->
-        onHealthPermissionsResult(result.isNotEmpty() && result.values.all { it })
+        PermissionController.createRequestPermissionResultContract(),
+    ) { granted ->
+        onHealthPermissionsResult(granted.containsAll(state.healthConnectPermissions))
     }
 
     val scrollBehavior =
@@ -226,14 +229,24 @@ private fun Settings(
                             checked = state.healthConnectEnabled,
                             onCheckedChange = { checked ->
                                 if (checked) {
-                                    healthPermissionLauncher.launch(
-                                        state.healthConnectPermissions.toTypedArray(),
-                                    )
+                                    healthPermissionLauncher.launch(state.healthConnectPermissions)
                                 } else {
                                     onToggleHealthConnect(false)
                                 }
                             },
                         )
+                    }
+                    if (state.healthConnectEnabled) {
+                        item {
+                            SettingsRow(
+                                icon = { Icon(imageVector = Icons.Default.Refresh, contentDescription = null) },
+                                title = stringResource(R.string.label_health_connect_sync_now),
+                                value = state.healthConnectSyncCount?.let {
+                                    stringResource(R.string.label_health_connect_synced, it)
+                                },
+                                onClick = onSyncHealthConnect,
+                            )
+                        }
                     }
                 }
             }
@@ -299,6 +312,7 @@ private fun SettingsPreview() {
             onToggleBodyWeight = {},
             onToggleHealthConnect = {},
             onHealthPermissionsResult = {},
+            onSyncHealthConnect = {},
             onBackPress = {},
             onTagManagementClick = {},
             onBackupClick = {},

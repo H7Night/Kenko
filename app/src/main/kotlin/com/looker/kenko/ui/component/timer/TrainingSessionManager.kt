@@ -19,6 +19,7 @@ import com.looker.kenko.data.health.HealthConnectManager
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.SettingsRepo
 import com.looker.kenko.domain.health.toHealthExerciseSession
+import com.looker.kenko.domain.model.shouldKeepSession
 import com.looker.kenko.domain.model.today
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
@@ -84,10 +85,10 @@ class TrainingSessionManager @Inject constructor(
                     sessionRepo.updateSessionDuration(sessionId, elapsed)
                 }
 
-                syncSessionToHealth(sessionId)
-
                 val sets = sessionRepo.getSets(sessionId)
-                if (sets.isEmpty() && elapsed < 60) {
+                if (shouldKeepSession(sets.size, elapsed)) {
+                    syncSessionToHealth()
+                } else {
                     sessionRepo.deleteSession(
                         com.looker.kenko.domain.model.Session(
                             date = today(),
@@ -141,7 +142,7 @@ class TrainingSessionManager @Inject constructor(
     }
 
     /** Best-effort write of a just-ended session to Health Connect. Never throws. */
-    private suspend fun syncSessionToHealth(sessionId: Int) {
+    private suspend fun syncSessionToHealth() {
         if (!settingsRepo.get { healthConnectEnabled }.first()) return
         val session = sessionRepo.streamByDate(today()).first() ?: return
         val names = session.performExercises.map { it.name }
