@@ -24,6 +24,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 
 /** 纯函数：把统计输入聚合成 UI 状态（无副作用，可在后台线程调用）。 */
 fun aggregateStatistics(
@@ -64,6 +65,22 @@ fun aggregateStatistics(
     }
     val cardioPlan = cardioSum { it in planDates }
 
+    // 训练时段分布 + 实际时长(仅含时间戳的新数据)
+    val zone = kotlinx.datetime.TimeZone.currentSystemDefault()
+    val sessionStartHours = MutableList(24) { 0 }
+    var actualMinutesTotal = 0L
+    summaries.forEach { s ->
+        s.startedAt?.let { ms ->
+            val hour = kotlin.time.Instant.fromEpochMilliseconds(ms).toLocalDateTime(zone).hour
+            sessionStartHours[hour] += 1
+        }
+        val started = s.startedAt
+        val ended = s.endedAt
+        if (started != null && ended != null && ended > started) {
+            actualMinutesTotal += (ended - started) / 60_000L
+        }
+    }
+
     return StatisticsUiState(
         sessionDates = dates,
         countByDate = countByDate,
@@ -80,6 +97,8 @@ fun aggregateStatistics(
         cardioMinutesMonthly = cardioMonthly,
         cardioMinutesPlan = cardioPlan,
         weeklyTrend = buildWeeklyTrend(summaries, today),
+        sessionStartHours = sessionStartHours,
+        actualMinutesTotal = actualMinutesTotal,
     )
 }
 

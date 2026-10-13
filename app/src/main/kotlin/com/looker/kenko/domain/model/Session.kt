@@ -47,6 +47,8 @@ data class SessionSummary(
     val dayIndexOverride: Int? = null,
     val dayTitleOverride: String? = null,
     val durationSeconds: Long? = null,
+    val startedAt: Long? = null,
+    val endedAt: Long? = null,
     val exerciseNames: List<String> = emptyList(),
     val setCount: Int = 0,
     val id: Int? = null,

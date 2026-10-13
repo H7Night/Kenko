@@ -39,4 +39,8 @@ data class StatisticsUiState(
     val cardioMinutesMonthly: Int = 0,
     val cardioMinutesPlan: Int = 0,
     val weeklyTrend: List<Int> = emptyList(),
+    /** 按"开始训练"的本地小时(0..23)计数;无 startedAt 的历史会话不计入。 */
+    val sessionStartHours: List<Int> = List(24) { 0 },
+    /** 所有含 startedAt/endedAt 的会话的实际总时长(分钟,= 结束 - 开始,含组间休息)。 */
+    val actualMinutesTotal: Long = 0L,
 )

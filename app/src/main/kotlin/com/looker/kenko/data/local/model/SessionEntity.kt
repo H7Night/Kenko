@@ -102,6 +102,8 @@ data class SessionSummaryEntity(
     val dayIndexOverride: Int? = null,
     val dayTitleOverride: String? = null,
     val durationSeconds: Long? = null,
+    val startedAt: Long? = null,
+    val endedAt: Long? = null,
     val exerciseNames: String? = null,
     val setCount: Int = 0,
     @PrimaryKey(autoGenerate = true)
