@@ -11,12 +11,14 @@ import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.TagRepo
+import com.looker.kenko.data.repository.WeightRepo
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.Set
 import com.looker.kenko.domain.model.Tag
+import com.looker.kenko.domain.model.Weight
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.LocalDate
@@ -151,4 +153,13 @@ internal class FakeSetsDao(
         exerciseId: Int,
         beforeEpochDay: Int,
     ): List<com.looker.kenko.data.local.model.PreviousSetRow> = emptyList()
+}
+
+internal class FakeWeightRepo : WeightRepo {
+    private val _weights = MutableStateFlow(emptyList<Weight>())
+    override val weights: Flow<List<Weight>> = _weights
+    override val latestWeight: Flow<Weight?> = MutableStateFlow(null)
+    override suspend fun addWeight(weight: Weight) { _weights.value = _weights.value + weight }
+    override suspend fun updateWeight(weight: Weight) = Unit
+    override suspend fun deleteWeight(id: Int) = Unit
 }

@@ -134,6 +134,7 @@ private fun Profile(
     var weightDialog by remember { mutableStateOf<WeightDialogState>(WeightDialogState.Hidden) }
     var showWeightHistory by remember { mutableStateOf(false) }
 
+    if (state.bodyWeightEnabled) {
     when (val dialog = weightDialog) {
         is WeightDialogState.Add -> {
             WeightDialog(
@@ -170,6 +171,7 @@ private fun Profile(
             },
             onDelete = onDeleteWeight
         )
+    }
     }
 
     Scaffold(
@@ -224,20 +226,22 @@ private fun Profile(
                 onExercisesClick = onExercisesClick,
             )
             Spacer(modifier = Modifier.height(12.dp))
-            WeightCard(
-                weights = state.weights,
-                filteredWeights = state.filteredWeights,
-                selectedMonthLabel = state.selectedMonthLabel,
-                canGoPrev = state.canGoPrev,
-                canGoNext = state.canGoNext,
-                customRangeActive = state.customRangeActive,
-                onPrevMonth = onPrevMonth,
-                onNextMonth = onNextMonth,
-                onSetCustomRange = onSetCustomRange,
-                onClearCustomRange = onClearCustomRange,
-                onAddClick = { weightDialog = WeightDialogState.Add(state.weights.lastOrNull()?.value ?: 60f) },
-                onHistoryClick = { showWeightHistory = true }
-            )
+            if (state.bodyWeightEnabled) {
+                WeightCard(
+                    weights = state.weights,
+                    filteredWeights = state.filteredWeights,
+                    selectedMonthLabel = state.selectedMonthLabel,
+                    canGoPrev = state.canGoPrev,
+                    canGoNext = state.canGoNext,
+                    customRangeActive = state.customRangeActive,
+                    onPrevMonth = onPrevMonth,
+                    onNextMonth = onNextMonth,
+                    onSetCustomRange = onSetCustomRange,
+                    onClearCustomRange = onClearCustomRange,
+                    onAddClick = { weightDialog = WeightDialogState.Add(state.weights.lastOrNull()?.value ?: 60f) },
+                    onHistoryClick = { showWeightHistory = true },
+                )
+            }
         }
     }
 }
