@@ -17,6 +17,7 @@ package com.looker.kenko.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.looker.kenko.domain.model.settings.ColorPalette
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.domain.model.today
@@ -49,6 +50,9 @@ class MainViewModel @Inject constructor(
 
     val language: StateFlow<Language> = repo.get { language }
         .asStateFlow(Language.System)
+
+    val palette: StateFlow<ColorPalette> = repo.get { colorPalette }
+        .asStateFlow(ColorPalette.Line)
 
     val isExerciseVisible: StateFlow<Boolean> = sessionRepo.streamByDate(today())
         .map { it != null && it.sets.isNotEmpty() }

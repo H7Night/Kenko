@@ -17,20 +17,25 @@ package com.looker.kenko.ui.theme
 
 import android.app.Activity
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.view.View
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.looker.kenko.domain.model.settings.ColorPalette
 import com.looker.kenko.domain.model.settings.Theme
 
 /**
@@ -38,7 +43,7 @@ import com.looker.kenko.domain.model.settings.Theme
  * Single accent: #5E6AD2 (Linear violet-blue) + neutral Zinc palette.
  * Hierarchy via border/alpha, not filled containers.
  */
-private val CatppuccinLatteColorScheme: ColorScheme = lightColorScheme(
+private val LineLightColorScheme: ColorScheme = lightColorScheme(
     primary = Color(0xFF5E6AD2),
     onPrimary = Color(0xFFFFFFFF),
     primaryContainer = Color(0xFFE8EAFB),
@@ -80,7 +85,7 @@ private val CatppuccinLatteColorScheme: ColorScheme = lightColorScheme(
  * Linear-inspired dark color scheme.
  * Base #080A0E + Zinc borders + single accent #7C83FD (lighter for dark).
  */
-private val CatppuccinMochaColorScheme: ColorScheme = darkColorScheme(
+private val LineDarkColorScheme: ColorScheme = darkColorScheme(
     primary = Color(0xFF7C83FD),
     onPrimary = Color(0xFF080A0E),
     primaryContainer = Color(0xFF1A1D3A),
@@ -118,10 +123,14 @@ private val CatppuccinMochaColorScheme: ColorScheme = darkColorScheme(
     surfaceContainerHighest = Color(0xFF23252B),
 )
 
+private val MaterialBaselineLight: ColorScheme = lightColorScheme()
+private val MaterialBaselineDark: ColorScheme = darkColorScheme()
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun KenkoTheme(
     theme: Theme = Theme.System,
+    palette: ColorPalette = ColorPalette.Line,
     content: @Composable () -> Unit,
 ) {
     val systemTheme = isSystemInDarkTheme()
@@ -132,10 +141,18 @@ fun KenkoTheme(
             Theme.Dark -> true
         }
     }
-    val colorScheme = if (isDarkTheme) {
-        CatppuccinMochaColorScheme
-    } else {
-        CatppuccinLatteColorScheme
+    val context = LocalContext.current
+    val colorScheme = when (palette) {
+        ColorPalette.Line ->
+            if (isDarkTheme) LineDarkColorScheme else LineLightColorScheme
+
+        ColorPalette.Material ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (isDarkTheme) dynamicDarkColorScheme(context)
+                else dynamicLightColorScheme(context)
+            } else {
+                if (isDarkTheme) MaterialBaselineDark else MaterialBaselineLight
+            }
     }
     val localView = LocalView.current
     SideEffect {
