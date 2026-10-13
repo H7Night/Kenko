@@ -15,6 +15,8 @@
 
 package com.looker.kenko.ui.feature.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Language
@@ -71,6 +74,8 @@ fun Settings(
         onSelectLanguage = viewModel::updateLanguage,
         onSelectTheme = viewModel::updateTheme,
         onToggleBodyWeight = viewModel::updateBodyWeightEnabled,
+        onToggleHealthConnect = viewModel::updateHealthConnectEnabled,
+        onHealthPermissionsResult = viewModel::onHealthPermissionsResult,
         onBackPress = onBackPress,
         onTagManagementClick = onTagManagementClick,
         onBackupClick = onBackupClick,
@@ -85,6 +90,8 @@ private fun Settings(
     onSelectLanguage: (Language) -> Unit,
     onSelectTheme: (Theme) -> Unit,
     onToggleBodyWeight: (Boolean) -> Unit,
+    onToggleHealthConnect: (Boolean) -> Unit,
+    onHealthPermissionsResult: (Boolean) -> Unit,
     onBackPress: () -> Unit,
     onTagManagementClick: () -> Unit,
     onBackupClick: () -> Unit,
@@ -93,6 +100,12 @@ private fun Settings(
 ) {
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+
+    val healthPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { result ->
+        onHealthPermissionsResult(result.isNotEmpty() && result.values.all { it })
+    }
 
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -178,6 +191,25 @@ private fun Settings(
                         onCheckedChange = onToggleBodyWeight,
                     )
                 }
+                if (state.healthConnectAvailable) {
+                    item {
+                        SwitchSettingsRow(
+                            icon = { Icon(imageVector = Icons.Default.Favorite, contentDescription = null) },
+                            title = stringResource(R.string.label_health_connect),
+                            subtitle = stringResource(R.string.label_health_connect_sync),
+                            checked = state.healthConnectEnabled,
+                            onCheckedChange = { checked ->
+                                if (checked) {
+                                    healthPermissionLauncher.launch(
+                                        state.healthConnectPermissions.toTypedArray(),
+                                    )
+                                } else {
+                                    onToggleHealthConnect(false)
+                                }
+                            },
+                        )
+                    }
+                }
             }
 
             SettingsGroup(title = stringResource(R.string.label_settings_data)) {
@@ -228,11 +260,17 @@ private fun SettingsPreview() {
                 backupMessage = null,
                 language = Language.System,
                 bodyWeightEnabled = true,
+                healthConnectEnabled = false,
+                healthConnectAvailable = false,
+                healthConnectPermissions = emptySet(),
+                healthConnectSyncCount = null,
                 earliestSessionDate = null,
             ),
             onSelectLanguage = {},
             onSelectTheme = {},
             onToggleBodyWeight = {},
+            onToggleHealthConnect = {},
+            onHealthPermissionsResult = {},
             onBackPress = {},
             onTagManagementClick = {},
             onBackupClick = {},

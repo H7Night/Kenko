@@ -26,4 +26,5 @@ data class Settings(
     val lastBackupTime: Instant?,
     val language: Language,
     val bodyWeightEnabled: Boolean,
+    val healthConnectEnabled: Boolean,
 )

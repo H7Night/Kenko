@@ -43,4 +43,6 @@ interface SettingsRepo {
     suspend fun setLanguage(language: Language)
 
     suspend fun setBodyWeightEnabled(enabled: Boolean)
+
+    suspend fun setHealthConnectEnabled(enabled: Boolean)
 }

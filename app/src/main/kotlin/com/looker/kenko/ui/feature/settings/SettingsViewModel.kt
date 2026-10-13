@@ -23,7 +23,9 @@ import com.looker.kenko.data.backup.BackupManager
 import com.looker.kenko.data.backup.BackupResult
 import com.looker.kenko.data.export.ExportManager
 import com.looker.kenko.data.export.ExportOptions
+import com.looker.kenko.data.health.HealthConnectManager
 import com.looker.kenko.data.repository.SessionRepo
+import com.looker.kenko.domain.health.toHealthExerciseSession
 import com.looker.kenko.domain.model.settings.BackupInterval
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
@@ -38,6 +40,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -47,18 +50,24 @@ class SettingsViewModel @Inject constructor(
     private val repo: SettingsRepo,
     private val backupManager: BackupManager,
     private val exportManager: ExportManager,
-    sessionRepo: SessionRepo,
+    private val sessionRepo: SessionRepo,
+    private val healthConnectManager: HealthConnectManager,
 ) : KenkoViewModel() {
 
     private val earliestSessionDate: Flow<LocalDate?> = sessionRepo.earliestSessionDate
 
     private val _backupState = MutableStateFlow(BackupState())
 
+    private val _healthSyncCount = MutableStateFlow<Int?>(null)
+
+    private val healthConnectAvailable = healthConnectManager.isAvailable()
+
     val state: StateFlow<SettingsUiData> = combine(
         repo.stream,
         _backupState,
         earliestSessionDate,
-    ) { settings, backupState, earliestDate ->
+        _healthSyncCount,
+    ) { settings, backupState, earliestDate, healthSyncCount ->
         SettingsUiData(
             selectedTheme = settings.theme,
             backupUri = settings.backupUri,
@@ -70,6 +79,10 @@ class SettingsViewModel @Inject constructor(
             backupMessage = backupState.message,
             language = settings.language,
             bodyWeightEnabled = settings.bodyWeightEnabled,
+            healthConnectEnabled = settings.healthConnectEnabled,
+            healthConnectAvailable = healthConnectAvailable,
+            healthConnectPermissions = healthConnectManager.permissions,
+            healthConnectSyncCount = healthSyncCount,
             earliestSessionDate = earliestDate,
         )
     }.asStateFlow(
@@ -84,6 +97,10 @@ class SettingsViewModel @Inject constructor(
             backupMessage = null,
             language = Language.System,
             bodyWeightEnabled = true,
+            healthConnectEnabled = false,
+            healthConnectAvailable = false,
+            healthConnectPermissions = emptySet(),
+            healthConnectSyncCount = null,
             earliestSessionDate = null,
         ),
     )
@@ -103,6 +120,29 @@ class SettingsViewModel @Inject constructor(
     fun updateBodyWeightEnabled(enabled: Boolean) {
         launchCatching {
             repo.setBodyWeightEnabled(enabled)
+        }
+    }
+
+    fun updateHealthConnectEnabled(enabled: Boolean) {
+        launchCatching {
+            repo.setHealthConnectEnabled(enabled)
+            if (enabled) syncHealthConnect()
+        }
+    }
+
+    fun onHealthPermissionsResult(granted: Boolean) {
+        launchCatching {
+            repo.setHealthConnectEnabled(granted)
+            if (granted) syncHealthConnect()
+        }
+    }
+
+    fun syncHealthConnect() {
+        launchCatching {
+            if (!healthConnectManager.hasAllPermissions()) return@launchCatching
+            val dtos = sessionRepo.stream.first()
+                .mapNotNull { it.toHealthExerciseSession(it.performExercises.map { ex -> ex.name }) }
+            _healthSyncCount.value = healthConnectManager.syncAll(dtos)
         }
     }
 
@@ -236,5 +276,9 @@ data class SettingsUiData(
     val backupMessage: BackupMessage?,
     val language: Language,
     val bodyWeightEnabled: Boolean,
+    val healthConnectEnabled: Boolean,
+    val healthConnectAvailable: Boolean,
+    val healthConnectPermissions: Set<String>,
+    val healthConnectSyncCount: Int?,
     val earliestSessionDate: LocalDate?,
 )

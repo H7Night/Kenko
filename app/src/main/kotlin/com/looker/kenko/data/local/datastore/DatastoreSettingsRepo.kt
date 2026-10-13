@@ -99,6 +99,10 @@ class DatastoreSettingsRepo @Inject constructor(
         BODY_WEIGHT_ENABLED.update(enabled)
     }
 
+    override suspend fun setHealthConnectEnabled(enabled: Boolean) {
+        HEALTH_CONNECT_ENABLED.update(enabled)
+    }
+
     private suspend inline fun <T> Preferences.Key<T>.update(value: T) {
         dataStore.edit { preference ->
             preference[this] = value
@@ -114,6 +118,7 @@ class DatastoreSettingsRepo @Inject constructor(
         val lastBackupTime = preferences[LAST_BACKUP_TIME_SECONDS]
         val language = preferences[LANGUAGE] ?: Language.System.name
         val bodyWeightEnabled = preferences[BODY_WEIGHT_ENABLED] ?: true
+        val healthConnectEnabled = preferences[HEALTH_CONNECT_ENABLED] ?: false
         return Settings(
             isOnboardingDone = isOnboardingDone,
             theme = Theme.valueOf(theme),
@@ -123,6 +128,7 @@ class DatastoreSettingsRepo @Inject constructor(
             lastBackupTime = lastBackupTime?.let { Instant.fromEpochSeconds(it) },
             language = Language.valueOf(language),
             bodyWeightEnabled = bodyWeightEnabled,
+            healthConnectEnabled = healthConnectEnabled,
         )
     }
 
@@ -138,5 +144,7 @@ class DatastoreSettingsRepo @Inject constructor(
         val LANGUAGE: Preferences.Key<String> = stringPreferencesKey("language")
         val BODY_WEIGHT_ENABLED: Preferences.Key<Boolean> =
             booleanPreferencesKey("body_weight_enabled")
+        val HEALTH_CONNECT_ENABLED: Preferences.Key<Boolean> =
+            booleanPreferencesKey("health_connect_enabled")
     }
 }

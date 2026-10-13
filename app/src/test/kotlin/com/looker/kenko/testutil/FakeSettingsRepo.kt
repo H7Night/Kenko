@@ -20,6 +20,7 @@ internal class FakeSettingsRepo(
         lastBackupTime = null,
         language = Language.System,
         bodyWeightEnabled = true,
+        healthConnectEnabled = false,
     ),
 ) : SettingsRepo {
     private val state = MutableStateFlow(initial)
@@ -34,5 +35,9 @@ internal class FakeSettingsRepo(
     override suspend fun setLanguage(language: Language) = Unit
     override suspend fun setBodyWeightEnabled(enabled: Boolean) {
         state.value = state.value.copy(bodyWeightEnabled = enabled)
+    }
+
+    override suspend fun setHealthConnectEnabled(enabled: Boolean) {
+        state.value = state.value.copy(healthConnectEnabled = enabled)
     }
 }
