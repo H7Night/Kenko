@@ -58,6 +58,10 @@ internal class FakeExerciseRepo(exercises: List<Exercise> = emptyList()) : Exerc
     override fun streamExerciseSets(
         exerciseId: Int,
     ): Flow<List<com.looker.kenko.domain.statistics.ExerciseSetRecord>> = MutableStateFlow(emptyList())
+    override suspend fun previousSets(
+        exerciseId: Int,
+        before: kotlinx.datetime.LocalDate,
+    ): List<com.looker.kenko.domain.model.ReferenceSet> = emptyList()
     override suspend fun get(id: Int): Exercise? = null
     override suspend fun upsert(exercise: Exercise) = Unit
     override suspend fun remove(id: Int) = Unit
@@ -139,4 +143,9 @@ internal class FakeSetsDao(
 
     override fun streamSetsForExercise(exerciseId: Int): Flow<List<com.looker.kenko.data.local.model.ExerciseSetRow>> =
         MutableStateFlow(emptyList())
+
+    override suspend fun getPreviousSets(
+        exerciseId: Int,
+        beforeEpochDay: Int,
+    ): List<com.looker.kenko.data.local.model.PreviousSetRow> = emptyList()
 }

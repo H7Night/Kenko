@@ -41,6 +41,9 @@ import kotlinx.datetime.LocalDate
 /**
  * ViewModel for the AddSet bottom sheet.
  *
+ * 现在的语义：**只选组数**——确认后创建 N 条空组（次数/重量留待训练页手动输入，
+ * 输入时会显示"上次对照"）。有氧仍只记一条"分钟"。
+ *
  * Uses [AssistedInject] because parameters are passed directly by the
  * composable caller, not via Navigation routes. Navigation-based ViewModels
  * use [SavedStateHandle] instead.
@@ -53,17 +56,11 @@ class AddSetViewModel @AssistedInject constructor(
     @Assisted("date") private val date: LocalDate?,
 ) : KenkoViewModel() {
 
+    /** 有氧用的分钟数；力量动作用不到。 */
     val reps: TextFieldState = TextFieldState(DEFAULT_REPS)
-    val weights: TextFieldState = TextFieldState(DEFAULT_WEIGHT)
     val setsCount: TextFieldState = TextFieldState(DEFAULT_SETS)
 
     private var isCardio by mutableStateOf(false)
-
-    /** 是否处于“自重”选中状态：为 true 时重量输入显示“自重”而非数字。 */
-    var isBodyweightMode by mutableStateOf(false)
-        private set
-
-    private var weightBeforeBodyweight = DEFAULT_WEIGHT
 
     init {
         launchCatching {
@@ -71,12 +68,6 @@ class AddSetViewModel @AssistedInject constructor(
             isCardio = exercise?.countType == CountType.MINUTES
             if (isCardio) {
                 reps.setTextAndPlaceCursorAtEnd(CARDIO_REPS)
-                // 有氧只记录时长,不记录重量;UI 虽隐藏重量行,底层值也必须为 0,
-                // 否则会用默认 "20.0" 记录成错误的 20kg × N 次。
-                weights.setTextAndPlaceCursorAtEnd(CARDIO_WEIGHT)
-            } else if (exercise?.isBodyweight == true) {
-                // 自重动作默认进入"自重"模式(重量 0),避免误把默认重量当附加重量记录。
-                setBodyweight()
             }
         }
     }
@@ -85,44 +76,14 @@ class AddSetViewModel @AssistedInject constructor(
         reps.setTextAndPlaceCursorAtEnd((repInt + value).coerceAtLeast(0).toString())
     }
 
-    fun setBodyweight() {
-        isBodyweightMode = !isBodyweightMode
-        if (isBodyweightMode) {
-            weightBeforeBodyweight = weights.text.toString()
-            weights.setTextAndPlaceCursorAtEnd("0")
-        } else {
-            weights.setTextAndPlaceCursorAtEnd(weightBeforeBodyweight)
-        }
-    }
-
-    fun addWeight(value: Float) {
-        if (isBodyweightMode) {
-            isBodyweightMode = false
-            weights.setTextAndPlaceCursorAtEnd(weightBeforeBodyweight)
-            return
-        }
-        weights.setTextAndPlaceCursorAtEnd((weightFloat + value).coerceAtLeast(0F).toString())
-    }
-
-    val isWeightZero: Boolean
-        get() = weightFloat == 0F
-
     fun addSetCount(value: Int) {
         setsCount.setTextAndPlaceCursorAtEnd((setsInt + value).coerceAtLeast(1).toString())
     }
 
     val repsBoundReached = BoundReached { direction ->
         when (direction) {
-            Direction.Left -> addRep(if (isCardio) -5 else -1)
-            Direction.Right -> addRep(if (isCardio) 5 else 1)
-        }
-    }
-
-    val weightsBoundReached = BoundReached { direction ->
-        if (isCardio) return@BoundReached
-        when (direction) {
-            Direction.Left -> addWeight(-1F)
-            Direction.Right -> addWeight(1F)
+            Direction.Left -> addRep(-5)
+            Direction.Right -> addRep(5)
         }
     }
 
@@ -136,15 +97,14 @@ class AddSetViewModel @AssistedInject constructor(
     fun addSet() {
         launchCatching {
             val sessionId = sessionRepo.getSessionIdOrCreate(date ?: today())
-            // 有氧只记录一条时长，不涉及组数概念。
-            val count = if (isCardio) 1 else setsInt
-            repeat(count) {
-                sessionRepo.addSet(
-                    sessionId = sessionId,
-                    exerciseId = id,
-                    weight = if (isCardio) 0F else weightFloat,
-                    reps = repInt,
-                )
+            if (isCardio) {
+                // 有氧只记录一条时长，不涉及组数概念。
+                sessionRepo.addSet(sessionId = sessionId, exerciseId = id, weight = 0F, reps = repInt)
+            } else {
+                // 只创建空组：次数/重量稍后在训练页手动输入。
+                repeat(setsInt) {
+                    sessionRepo.addSet(sessionId = sessionId, exerciseId = id, weight = 0F, reps = 0)
+                }
             }
         }
     }
@@ -152,18 +112,13 @@ class AddSetViewModel @AssistedInject constructor(
     private inline val repInt: Int
         get() = reps.text.toString().toIntOrNull() ?: 0
 
-    private inline val weightFloat: Float
-        get() = weights.text.toString().toFloatOrNull() ?: 0F
-
     private inline val setsInt: Int
         get() = setsCount.text.toString().toIntOrNull() ?: DEFAULT_SETS.toInt()
 
     private companion object {
         const val DEFAULT_REPS = "10"
-        const val DEFAULT_WEIGHT = "20.0"
         const val DEFAULT_SETS = "2"
         const val CARDIO_REPS = "20"
-        const val CARDIO_WEIGHT = "0"
     }
 
     @AssistedFactory

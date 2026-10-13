@@ -44,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -70,16 +71,20 @@ fun SetItem(
     modifier: Modifier = Modifier,
     isToday: Boolean = true,
     isEditMode: Boolean = false,
+    ghost: Boolean = false,
     onRepsUpdate: (Int) -> Unit = {},
     onWeightUpdate: (Float) -> Unit = {},
     title: @Composable () -> Unit,
 ) {
     val isCardio = set.exercise.countType == CountType.MINUTES
+    // 幽灵行: 上一次训练的对照片,半透明且不可编辑
+    val editable = isEditMode && !ghost
     val containerColor = MaterialTheme.colorScheme.surface
     val containerShape = MaterialTheme.shapes.small
     Surface(
         modifier = Modifier
             .widthIn(200.dp, 420.dp)
+            .then(if (ghost) Modifier.alpha(0.4f) else Modifier)
             .then(modifier),
         shape = containerShape,
         color = containerColor,
@@ -106,7 +111,7 @@ fun SetItem(
                 PerformedItem(
                     title = stringResource(set.exercise.repDurationStringRes),
                     performance = if (isCardio) "${set.repsOrDuration} ${stringResource(R.string.label_min)}" else "${set.repsOrDuration}",
-                    isEditMode = isEditMode,
+                    isEditMode = editable,
                     keyboardType = KeyboardType.Number,
                     onValueUpdate = { onRepsUpdate(it.toIntOrNull() ?: set.repsOrDuration) },
                 )
@@ -132,7 +137,7 @@ fun SetItem(
                         PerformedItem(
                             title = stringResource(R.string.label_weight),
                             performance = "${set.weight} KG",
-                            isEditMode = isEditMode,
+                            isEditMode = editable,
                             keyboardType = KeyboardType.Decimal,
                             onValueUpdate = { onWeightUpdate(it.toFloatOrNull() ?: set.weight) },
                         )
@@ -170,7 +175,7 @@ private fun PerformedItem(
             .combinedClickable(
                 enabled = isEditMode,
                 onDoubleClick = { isEditing = true },
-                onClick = {},
+                onClick = { isEditing = true },
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

@@ -164,6 +164,7 @@
 
     <!--Add Sets-->
     <string name="label_add_set_for">Add Set for</string>
+    <string name="label_add_minutes_for">Add minutes for</string>
     <string name="label_delete_set_title">Delete Set?</string>
     <string name="label_delete_set_message">This will permanently delete this set.</string>
     <string name="label_plus_int">+%s</string>

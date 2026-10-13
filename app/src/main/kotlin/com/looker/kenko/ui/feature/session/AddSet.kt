@@ -36,13 +36,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -62,17 +60,16 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import kotlinx.coroutines.delay
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.repDurationStringRes
-import com.looker.kenko.ui.feature.session.AddSetViewModel.FloatTransformation
 import com.looker.kenko.ui.feature.session.AddSetViewModel.IntTransformation
 import com.looker.kenko.ui.feature.session.components.DraggableTextField
 import com.looker.kenko.ui.feature.session.components.rememberDraggableTextFieldState
 import com.looker.kenko.ui.theme.KenkoIcons
+import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDate
 
 private val incrementButtonModifier = Modifier
@@ -84,8 +81,6 @@ private val zIndexModifier = Modifier.zIndex(1F)
 
 /**
  * 长按连发容器：按住 400ms 后每 80ms 重复触发 [onRepeat]，松开取消。
- * 短按通过 wrapper 的 [onClick] 单次触发；长按（>400ms）抑制抬起时的额外 click。
- * 使用 [rememberUpdatedState] 稳定跨协程 [heldLong] 读取，避免 stale；提供 semantics/indication 恢复 TalkBack 与波纹。
  */
 @Composable
 private fun HoldRepeatWrapper(
@@ -141,30 +136,6 @@ private fun HoldRepeatWrapper(
     }
 }
 
-/**
- * 紧凑的微调步进按钮的纯展示：不含 clickable/semantics，click 与无障碍由外层
- * HoldRepeatWrapper 统一通过 pointerInput + semantics + indication 承担，以避免 I1 长按额外 +1 并恢复 TalkBack。
- */
-@Composable
-private fun CompactStepButton(
-    text: String,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .height(48.dp)
-            .clip(CircleShape)
-            .padding(horizontal = 6.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
-        )
-    }
-}
-
 @Composable
 private fun StepButtonContent(
     text: String,
@@ -199,6 +170,7 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
         AddSetHeader(
             modifier = Modifier.fillMaxWidth(),
+            subtitleRes = if (isCardio) R.string.label_add_minutes_for else R.string.label_add_set_for,
             exerciseName = exercise.name,
             onClick = {
                 viewModel.addSet()
@@ -210,39 +182,27 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
         SwipeableTextField(
             modifier = Modifier.align(CenterHorizontally),
         ) {
-            HoldRepeatWrapper(onClick = { viewModel.addRep(-5) }, onRepeat = { viewModel.addRep(-5) }) {
-                StepButtonContent(text = stringResource(R.string.label_minus_int, 5), modifier = incrementButtonModifier)
-            }
-            if (!isCardio) {
-                HoldRepeatWrapper(onClick = { viewModel.addRep(-1) }, onRepeat = { viewModel.addRep(-1) }) {
-                    StepButtonContent(text = stringResource(R.string.label_minus_int, 1), modifier = incrementButtonModifier)
+            if (isCardio) {
+                // 有氧：只记一条时长（分钟）
+                HoldRepeatWrapper(onClick = { viewModel.addRep(-5) }, onRepeat = { viewModel.addRep(-5) }) {
+                    StepButtonContent(text = stringResource(R.string.label_minus_int, 5), modifier = incrementButtonModifier)
                 }
-            }
-            val reps = rememberDraggableTextFieldState(viewModel.repsBoundReached)
-            DraggableTextField(
-                dragState = reps,
-                textFieldState = viewModel.reps,
-                inputTransformation = IntTransformation,
-                supportingText = stringResource(exercise.repDurationStringRes),
-                modifier = zIndexModifier,
-            )
-            if (!isCardio) {
-                HoldRepeatWrapper(onClick = { viewModel.addRep(1) }, onRepeat = { viewModel.addRep(1) }) {
-                    StepButtonContent(text = stringResource(R.string.label_plus_int, 1), modifier = incrementButtonModifier)
+                val reps = rememberDraggableTextFieldState(viewModel.repsBoundReached)
+                DraggableTextField(
+                    dragState = reps,
+                    textFieldState = viewModel.reps,
+                    inputTransformation = IntTransformation,
+                    supportingText = stringResource(exercise.repDurationStringRes),
+                    modifier = zIndexModifier,
+                )
+                HoldRepeatWrapper(onClick = { viewModel.addRep(5) }, onRepeat = { viewModel.addRep(5) }) {
+                    StepButtonContent(text = stringResource(R.string.label_plus_int, 5), modifier = incrementButtonModifier)
                 }
-            }
-            HoldRepeatWrapper(onClick = { viewModel.addRep(5) }, onRepeat = { viewModel.addRep(5) }) {
-                StepButtonContent(text = stringResource(R.string.label_plus_int, 5), modifier = incrementButtonModifier)
-            }
-            HoldRepeatWrapper(onClick = { viewModel.addRep(10) }, onRepeat = { viewModel.addRep(10) }) {
-                StepButtonContent(text = stringResource(R.string.label_plus_int, 10), modifier = incrementButtonModifier)
-            }
-        }
-        if (!isCardio) {
-            Spacer(modifier = Modifier.height(24.dp))
-            SwipeableTextField(
-                modifier = Modifier.align(CenterHorizontally),
-            ) {
+                HoldRepeatWrapper(onClick = { viewModel.addRep(10) }, onRepeat = { viewModel.addRep(10) }) {
+                    StepButtonContent(text = stringResource(R.string.label_plus_int, 10), modifier = incrementButtonModifier)
+                }
+            } else {
+                // 力量/自重：只选组数；次数与重量稍后在训练页手动输入
                 HoldRepeatWrapper(onClick = { viewModel.addSetCount(-1) }, onRepeat = { viewModel.addSetCount(-1) }) {
                     StepButtonContent(text = stringResource(R.string.label_minus_int, 1), modifier = incrementButtonModifier)
                 }
@@ -250,8 +210,8 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                 DraggableTextField(
                     dragState = sets,
                     textFieldState = viewModel.setsCount,
-                    supportingText = stringResource(R.string.label_sets),
                     inputTransformation = IntTransformation,
+                    supportingText = stringResource(R.string.label_sets),
                     modifier = zIndexModifier,
                 )
                 HoldRepeatWrapper(onClick = { viewModel.addSetCount(1) }, onRepeat = { viewModel.addSetCount(1) }) {
@@ -262,83 +222,6 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                 }
             }
         }
-        if (!isCardio) {
-            Spacer(modifier = Modifier.height(24.dp))
-            SwipeableTextField(
-                modifier = Modifier.align(CenterHorizontally),
-            ) {
-                if (exercise.isBodyweight) {
-                    TextButton(
-                        modifier = Modifier
-                            .width(72.dp)
-                            .height(44.dp),
-                        contentPadding = PaddingValues(horizontal = 4.dp),
-                        onClick = { viewModel.setBodyweight() },
-                        colors = if (viewModel.isBodyweightMode) {
-                            ButtonDefaults.textButtonColors(
-                                contentColor = MaterialTheme.colorScheme.primary,
-                            )
-                        } else {
-                            ButtonDefaults.textButtonColors()
-                        },
-                    ) {
-                        Text(
-                            text = stringResource(R.string.label_bodyweight),
-                            maxLines = 1,
-                            softWrap = false,
-                        )
-                    }
-                }
-                if (viewModel.isBodyweightMode) {
-                    Text(
-                        text = stringResource(R.string.label_bodyweight_display),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 4.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        maxLines = 1,
-                        softWrap = false,
-                    )
-                } else {
-                    if (!viewModel.isWeightZero) {
-                        HoldRepeatWrapper(onClick = { viewModel.addWeight(-1F) }, onRepeat = { viewModel.addWeight(-1F) }) {
-                            StepButtonContent(text = stringResource(R.string.label_minus_int, 1), modifier = incrementButtonModifier)
-                        }
-                    }
-                    HoldRepeatWrapper(onClick = { viewModel.addWeight(-0.5F) }, onRepeat = { viewModel.addWeight(-0.5F) }) {
-                        CompactStepButton(
-                            text = stringResource(R.string.label_minus_int, 0.5F),
-                            modifier = Modifier.width(48.dp),
-                        )
-                    }
-                    val weights = rememberDraggableTextFieldState(viewModel.weightsBoundReached)
-                    DraggableTextField(
-                        dragState = weights,
-                        textFieldState = viewModel.weights,
-                        supportingText = stringResource(R.string.label_weight),
-                        inputTransformation = FloatTransformation,
-                        modifier = zIndexModifier,
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        ),
-                    )
-                    HoldRepeatWrapper(onClick = { viewModel.addWeight(0.5F) }, onRepeat = { viewModel.addWeight(0.5F) }) {
-                        CompactStepButton(
-                            text = stringResource(R.string.label_plus_int, 0.5F),
-                            modifier = Modifier.width(48.dp),
-                        )
-                    }
-                    HoldRepeatWrapper(onClick = { viewModel.addWeight(1F) }, onRepeat = { viewModel.addWeight(1F) }) {
-                        StepButtonContent(text = stringResource(R.string.label_plus_int, 1), modifier = incrementButtonModifier)
-                    }
-                    HoldRepeatWrapper(onClick = { viewModel.addWeight(5F) }, onRepeat = { viewModel.addWeight(5F) }) {
-                        StepButtonContent(text = stringResource(R.string.label_plus_int, 5), modifier = incrementButtonModifier)
-                    }
-                }
-            }
-        }
         Spacer(modifier = Modifier.height(36.dp))
     }
 }
@@ -346,6 +229,7 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
 @Composable
 private fun AddSetHeader(
     exerciseName: String,
+    subtitleRes: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -356,7 +240,7 @@ private fun AddSetHeader(
     ) {
         Column(modifier = Modifier.weight(1F)) {
             Text(
-                text = stringResource(R.string.label_add_set_for).uppercase(),
+                text = stringResource(subtitleRes).uppercase(),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

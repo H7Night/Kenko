@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
+import com.looker.kenko.domain.model.ReferenceSet
 import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.ui.component.DeletableSetItem
@@ -96,6 +97,7 @@ fun Home(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val sessionSets by viewModel.sessionSets.collectAsStateWithLifecycle()
+    val previousSets by viewModel.previousSets.collectAsStateWithLifecycle()
     val timerSeconds by viewModel.timerManager.elapsedSeconds.collectAsStateWithLifecycle()
     val allExercises by viewModel.allExercises.collectAsStateWithLifecycle()
     val availablePlanDays by viewModel.availablePlanDays.collectAsStateWithLifecycle()
@@ -287,8 +289,10 @@ fun Home(
                         Spacer(modifier = Modifier.height(4.dp))
                         InlineTrainingContent(
                             exerciseSets = sessionSets,
+                            previousSets = previousSets,
                             onAddSet = { exercise -> addSetExercise = exercise },
                             onRemoveSet = viewModel::removeSet,
+                            onUpdateSet = viewModel::updateSet,
                         )
                     }
                 }
@@ -335,8 +339,10 @@ private fun TrainingActionBar(
 @Composable
 private fun InlineTrainingContent(
     exerciseSets: List<TrainingExercise>,
+    previousSets: Map<Int, List<ReferenceSet>>,
     onAddSet: (Exercise) -> Unit,
     onRemoveSet: (Int) -> Unit,
+    onUpdateSet: (Int, Int, Float) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val collapsedExercises = remember { mutableStateListOf<Int>() }
@@ -380,9 +386,33 @@ private fun InlineTrainingContent(
             )
             if (!isCollapsed) {
                 sets.forEachIndexed { index, set ->
+                    val setId = set.id
                     DeletableSetItem(
                         set = set,
-                        onDelete = { set.id?.let { setToDelete = it } },
+                        isEditMode = true,
+                        onRepsUpdate = { reps -> setId?.let { onUpdateSet(it, reps, set.weight) } },
+                        onWeightUpdate = { weight -> setId?.let { onUpdateSet(it, set.repsOrDuration, weight) } },
+                        onDelete = { setId?.let { setToDelete = it } },
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        title = {
+                            Text(
+                                text = normalizeInt(index + 1),
+                                style = MaterialTheme.typography.displayMedium.numbers(),
+                            )
+                        },
+                    )
+                }
+                // 上一次训练的"剩余组"以半透明对照片补位（真实组按序号覆盖）
+                val previous = exercise.id?.let { previousSets[it] } ?: emptyList()
+                for (index in sets.size until previous.size) {
+                    val ref = previous[index]
+                    DeletableSetItem(
+                        set = com.looker.kenko.domain.model.Set(
+                            repsOrDuration = ref.reps,
+                            weight = ref.weight,
+                            exercise = exercise,
+                        ),
+                        ghost = true,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         title = {
                             Text(
