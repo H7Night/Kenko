@@ -260,6 +260,12 @@
 
     <string name="label_settings_appearance">外观</string>
     <string name="label_settings_data">数据</string>
+    <string name="label_settings_system">系统</string>
+    <string name="label_body_weight_toggle">体重模块</string>
+    <string name="label_body_weight_toggle_subtitle">显示体重记录与趋势图</string>
+    <string name="label_color_style">配色风格</string>
+    <string name="label_color_style_line">Line</string>
+    <string name="label_color_style_material">Material 3</string>
 
     <!--Backup-->
     <string name="label_backup">备份与恢复</string>

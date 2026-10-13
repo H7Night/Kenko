@@ -53,6 +53,7 @@ import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.SelectionDialog
 import com.looker.kenko.ui.component.SettingsGroup
 import com.looker.kenko.ui.component.SettingsRow
+import com.looker.kenko.ui.component.SwitchSettingsRow
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 
@@ -69,6 +70,7 @@ fun Settings(
         state = state,
         onSelectLanguage = viewModel::updateLanguage,
         onSelectTheme = viewModel::updateTheme,
+        onToggleBodyWeight = viewModel::updateBodyWeightEnabled,
         onBackPress = onBackPress,
         onTagManagementClick = onTagManagementClick,
         onBackupClick = onBackupClick,
@@ -82,6 +84,7 @@ private fun Settings(
     state: SettingsUiData,
     onSelectLanguage: (Language) -> Unit,
     onSelectTheme: (Theme) -> Unit,
+    onToggleBodyWeight: (Boolean) -> Unit,
     onBackPress: () -> Unit,
     onTagManagementClick: () -> Unit,
     onBackupClick: () -> Unit,
@@ -165,6 +168,18 @@ private fun Settings(
                 }
             }
 
+            SettingsGroup(title = stringResource(R.string.label_settings_system)) {
+                item {
+                    SwitchSettingsRow(
+                        icon = { Icon(painter = KenkoIcons.Person, contentDescription = null) },
+                        title = stringResource(R.string.label_body_weight_toggle),
+                        subtitle = stringResource(R.string.label_body_weight_toggle_subtitle),
+                        checked = state.bodyWeightEnabled,
+                        onCheckedChange = onToggleBodyWeight,
+                    )
+                }
+            }
+
             SettingsGroup(title = stringResource(R.string.label_settings_data)) {
                 item {
                     SettingsRow(
@@ -212,10 +227,12 @@ private fun SettingsPreview() {
                 isExporting = false,
                 backupMessage = null,
                 language = Language.System,
+                bodyWeightEnabled = true,
                 earliestSessionDate = null,
             ),
             onSelectLanguage = {},
             onSelectTheme = {},
+            onToggleBodyWeight = {},
             onBackPress = {},
             onTagManagementClick = {},
             onBackupClick = {},

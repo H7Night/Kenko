@@ -69,6 +69,7 @@ class SettingsViewModel @Inject constructor(
             isExporting = backupState.isExporting,
             backupMessage = backupState.message,
             language = settings.language,
+            bodyWeightEnabled = settings.bodyWeightEnabled,
             earliestSessionDate = earliestDate,
         )
     }.asStateFlow(
@@ -82,6 +83,7 @@ class SettingsViewModel @Inject constructor(
             isExporting = false,
             backupMessage = null,
             language = Language.System,
+            bodyWeightEnabled = true,
             earliestSessionDate = null,
         ),
     )
@@ -95,6 +97,12 @@ class SettingsViewModel @Inject constructor(
     fun updateLanguage(language: Language) {
         launchCatching {
             repo.setLanguage(language)
+        }
+    }
+
+    fun updateBodyWeightEnabled(enabled: Boolean) {
+        launchCatching {
+            repo.setBodyWeightEnabled(enabled)
         }
     }
 
@@ -227,5 +235,6 @@ data class SettingsUiData(
     val isExporting: Boolean,
     val backupMessage: BackupMessage?,
     val language: Language,
+    val bodyWeightEnabled: Boolean,
     val earliestSessionDate: LocalDate?,
 )
