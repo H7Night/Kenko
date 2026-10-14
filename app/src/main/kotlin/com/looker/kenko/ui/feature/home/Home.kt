@@ -394,11 +394,16 @@ private fun InlineTrainingContent(
                 },
             )
             if (!isCollapsed) {
+                // 上一次训练的对照片（按组序号），用作空组输入时的浅色占位。
+                val previous = exercise.id?.let { previousSets[it] } ?: emptyList()
                 sets.forEachIndexed { index, set ->
                     val setId = set.id
+                    val ref = previous.getOrNull(index)
                     DeletableSetItem(
                         set = set,
                         isEditMode = true,
+                        referenceReps = ref?.reps,
+                        referenceWeight = ref?.weight,
                         onRepsUpdate = { reps -> setId?.let { onUpdateSet(it, reps, set.weight) } },
                         onWeightUpdate = { weight -> setId?.let { onUpdateSet(it, set.repsOrDuration, weight) } },
                         onDelete = { setId?.let { setToDelete = it } },
@@ -412,7 +417,6 @@ private fun InlineTrainingContent(
                     )
                 }
                 // 上一次训练的"剩余组"以半透明对照片补位（真实组按序号覆盖）
-                val previous = exercise.id?.let { previousSets[it] } ?: emptyList()
                 for (index in sets.size until previous.size) {
                     val ref = previous[index]
                     DeletableSetItem(

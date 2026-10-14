@@ -521,7 +521,10 @@ private fun SetsList(
                 }
             }
             if (!isCollapsed) {
+                // 上一次训练的对照片（按组序号），用作空组输入时的浅色占位。
+                val previous = exercise.id?.let { previousSets[it] } ?: emptyList()
                 itemsIndexed(items = sets) { index, set ->
+                    val ref = previous.getOrNull(index)
                     DeletableSetItem(
                         modifier = Modifier
                             .animateItem()
@@ -529,6 +532,8 @@ private fun SetsList(
                         set = set,
                         isToday = isToday,
                         isEditMode = isEditMode,
+                        referenceReps = ref?.reps,
+                        referenceWeight = ref?.weight,
                         onRepsUpdate = { onUpdateSet(set.id, it, set.weight) },
                         onWeightUpdate = { onUpdateSet(set.id, set.repsOrDuration, it) },
                         onDelete = if (isEditMode) { { setToDelete = set.id } } else null,
@@ -538,7 +543,6 @@ private fun SetsList(
                     )
                 }
                 // 上一次训练的"剩余组"以半透明对照片补位（真实组按序号覆盖）
-                val previous = exercise.id?.let { previousSets[it] } ?: emptyList()
                 if (previous.size > sets.size) {
                     itemsIndexed(items = previous.subList(sets.size, previous.size)) { i, ref ->
                         val index = sets.size + i
