@@ -49,11 +49,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Room schema files live in `app/schemas/` and are sourced into the `androidTest` assets for migration tests
 
 **测试数据安全（重要，真机）:**
-- `connectedAndroidTest` 中的 `RepositoryTest` 通过 Hilt 注入的是**生产** `KenkoDatabase`（真实文件库），会新建/删除计划、训练、组等。在**持有真实数据的设备**上运行会破坏/清空用户数据。
-- **禁止**在持有个人真实数据的设备上运行 `connectedAndroidTest`；请在模拟器或 CI 上运行。
-- 若确需在真机运行：**先导出一份备份**，向用户报告备份文件路径与日期，**取得用户明确确认后**再执行。
+- 风险：`connectedAndroidTest` 跑完后 AGP 默认会**卸载 App（连同数据一起清空）**；且其中的 instrumented 测试会读写生产库。二者都会导致真机数据丢失。
+- 真机执行流程（必须遵守）：
+  1. **执行前**：先导出一份备份，把**备份文件名与日期**告知用户；
+  2. **取得用户明确确认后**才开始执行 `connectedAndroidTest`；
+  3. **执行后**：用该备份**恢复数据**（`kenko_database` + `-wal` + `files/datastore/settings.preferences_pb`，丢弃旧 `-shm`），并确认记录完好。
+- 仍建议优先在模拟器 / CI 上跑。
 - 单元测试（`./gradlew test`）在 JVM 运行，不接触设备数据，安全。
-- 待修缺陷：`RepositoryTest` 与生产库无隔离。建议在 `androidTest` 用 `@TestInstallIn` 覆盖 `DatabaseModule`，改用 `Room.inMemoryDatabaseBuilder` 内存库，使 instrumented 测试永不触碰真实文件库。
 
 ## Documentation Maintenance（文档维护）
 
