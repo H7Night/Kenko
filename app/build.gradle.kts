@@ -170,6 +170,7 @@ dependencies {
     implementation(libs.bundles.coroutines)
 
     implementation(libs.bundles.compose)
+    implementation(libs.material.kolor)
     debugImplementation(libs.bundles.compose.debug)
 
     implementation(libs.hilt.android)

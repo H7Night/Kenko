@@ -15,7 +15,6 @@
 
 package com.looker.kenko.ui.component
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -47,10 +46,8 @@ fun KenkoBottomBar(
     // 固定底部导航栏(非悬浮):作为 Scaffold 的 bottomBar 全宽贴合屏幕底部,
     // 圆角/阴影/悬浮间距由 Scaffold 的 innerPadding 保证内容不被遮挡。
     NavigationBar(
-        modifier = modifier
-            .fillMaxWidth()
-            .border(width = 1.dp, color = MaterialTheme.colorScheme.outlineVariant),
-        containerColor = MaterialTheme.colorScheme.surface,
+        modifier = modifier.fillMaxWidth(),
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         val itemColors = NavigationBarItemDefaults.colors(
             indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),

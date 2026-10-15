@@ -21,6 +21,7 @@ kotlin = "2.2.21"
 ksp = "2.2.21-2.0.4"
 lifecycle = "2.9.4"
 material = "1.5.0-alpha08"
+materialKolor = "4.0.5"
 navigation = "2.9.6"
 room = "2.8.3"
 savedstate = "1.4.0"
@@ -64,6 +65,7 @@ compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 compose-ui-material3 = { module = "androidx.compose.material3:material3", version.ref = "material" }
+material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 androidx-compose-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }

@@ -187,8 +187,7 @@ private fun ProgressChartCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surface,
-        border = KenkoBorder,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
@@ -226,8 +225,7 @@ private fun SessionEntryCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surface,
-        border = KenkoBorder,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         onClick = onClick,
     ) {
         Row(

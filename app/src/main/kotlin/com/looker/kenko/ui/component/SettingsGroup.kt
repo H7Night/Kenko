@@ -75,8 +75,7 @@ fun SettingsGroup(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surface,
-            border = KenkoBorder,
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
         ) {
             Column {
                 scope.items.forEachIndexed { index, itemContent ->

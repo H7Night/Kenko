@@ -264,7 +264,12 @@
     <string name="label_body_weight_toggle_subtitle">显示体重记录与趋势图</string>
     <string name="label_color_style">配色风格</string>
     <string name="label_color_style_line">Line</string>
-    <string name="label_color_style_material">Material 3</string>
+    <string name="label_color_style_material">Material 3（动态）</string>
+    <string name="label_color_style_blue">蓝色</string>
+    <string name="label_color_style_green">绿色</string>
+    <string name="label_color_style_amber">琥珀</string>
+    <string name="label_color_style_pink">粉色</string>
+    <string name="label_color_style_monochrome">单色</string>
     <string name="label_health_connect_rationale">Kenko 会把训练记录写入 Health Connect，数据仅保存在本机。</string>
     <string name="label_health_connect">Health Connect</string>
     <string name="label_health_connect_sync">同步训练到 Health Connect</string>

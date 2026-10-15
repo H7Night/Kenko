@@ -73,8 +73,7 @@ fun HeatmapCard(
             .fillMaxWidth()
             .padding(horizontal = 4.dp, vertical = 6.dp),
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Column(
             modifier = Modifier

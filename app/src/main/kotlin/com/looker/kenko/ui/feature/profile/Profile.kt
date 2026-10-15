@@ -265,8 +265,7 @@ private fun ExerciseCard(
         Surface(
             modifier = Modifier.weight(1.5F),
             shape = surfaceShape,
-            color = MaterialTheme.colorScheme.surface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
             onClick = onExercisesClick,
         ) {
             Column(Modifier.padding(16.dp)) {
@@ -336,8 +335,7 @@ private fun WeightCard(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surface,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Column(
             modifier = Modifier.padding(14.dp),

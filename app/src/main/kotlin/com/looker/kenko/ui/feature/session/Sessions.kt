@@ -474,13 +474,9 @@ fun SessionCard(
     val isToday = session.date.isToday
     Surface(
         modifier = modifier,
-        color = MaterialTheme.colorScheme.surface,
+        color = if (isToday) MaterialTheme.colorScheme.primaryContainer
+        else MaterialTheme.colorScheme.surfaceContainerLow,
         shape = MaterialTheme.shapes.medium,
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-            else MaterialTheme.colorScheme.outlineVariant
-        ),
         onClick = onClick,
     ) {
         Row(

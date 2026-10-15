@@ -15,11 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exercises now carry equipment and a primary muscle (the remaining tags are secondary); equipment can be used to filter the exercise library and both are set in the exercise editor
 - A body-weight module toggle (Settings → System): turning it off hides the Profile weight card, entry, and history while keeping all recorded data
 - Health Connect sync (Settings → System, opt-in): completed workouts are written as exercise sessions, with a one-time backfill and an idempotent re-sync
-- A color style setting (Settings → Appearance) with `Line` (default) and `Material 3` (dynamic color on Android 12+) presets, alongside the light/dark theme
+- A color style setting (Settings → Appearance): `Line` (default), `Material 3` (dynamic color / Monet on Android 12+), and seed presets (`Blue`, `Green`, `Amber`, `Pink`, `Monochrome`), alongside the light/dark theme
 - When today has a training plan, the Home page lists today's exercises in order beneath "Today's Plan"
 
 ### Changed
 - Home no longer shows the "Stick to the plan / Not your mood." slogan watermark
+- Adopted standard Material 3 shapes (4–28dp) and tonal surfaces for cards, settings groups, lists, and the navigation bar, replacing the hairline-bordered flat look for a more Material appearance
 
 ### Fixed
 - Bodyweight exercises now count toward progress correctly: pure bodyweight sets use the body weight recorded nearest to that session, weighted sets add the extra weight, and legacy sets logged before the bodyweight option existed are corrected on upgrade

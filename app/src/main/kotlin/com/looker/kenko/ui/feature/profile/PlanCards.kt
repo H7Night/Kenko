@@ -69,7 +69,6 @@ fun CurrentPlanCard(
             .aspectRatio(PHI),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shape = MaterialTheme.shapes.extraLarge,
-        border = SecondaryBorder,
         onClick = onPlanClick,
     ) {
         Column(

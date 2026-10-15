@@ -37,6 +37,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.looker.kenko.domain.model.settings.ColorPalette
 import com.looker.kenko.domain.model.settings.Theme
+import com.materialkolor.PaletteStyle
+import com.materialkolor.rememberDynamicColorScheme
 
 /**
  * Linear-inspired light color scheme.
@@ -123,8 +125,8 @@ private val LineDarkColorScheme: ColorScheme = darkColorScheme(
     surfaceContainerHighest = Color(0xFF23252B),
 )
 
-private val MaterialBaselineLight: ColorScheme = lightColorScheme()
-private val MaterialBaselineDark: ColorScheme = darkColorScheme()
+/** Fallback seed for dynamic/baseline Material schemes on API < 31. */
+private val MaterialBaselineSeed = Color(0xFF6750A4)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -151,8 +153,19 @@ fun KenkoTheme(
                 if (isDarkTheme) dynamicDarkColorScheme(context)
                 else dynamicLightColorScheme(context)
             } else {
-                if (isDarkTheme) MaterialBaselineDark else MaterialBaselineLight
+                rememberDynamicColorScheme(
+                    seedColor = MaterialBaselineSeed,
+                    isDark = isDarkTheme,
+                    style = PaletteStyle.Expressive,
+                )
             }
+
+        else ->
+            rememberDynamicColorScheme(
+                seedColor = Color(requireNotNull(palette.seedArgb)),
+                isDark = isDarkTheme,
+                style = PaletteStyle.Expressive,
+            )
     }
     val localView = LocalView.current
     SideEffect {

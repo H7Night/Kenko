@@ -75,7 +75,7 @@ fun SetItem(
     title: @Composable () -> Unit,
 ) {
     val isCardio = set.exercise.countType == CountType.MINUTES
-    val containerColor = MaterialTheme.colorScheme.surface
+    val containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
     val containerShape = MaterialTheme.shapes.small
     Surface(
         modifier = Modifier
@@ -83,7 +83,6 @@ fun SetItem(
             .then(modifier),
         shape = containerShape,
         color = containerColor,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(
             modifier = Modifier

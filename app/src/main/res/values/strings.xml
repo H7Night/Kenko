@@ -268,7 +268,12 @@
     <string name="label_body_weight_toggle_subtitle">Show body weight recording and charts</string>
     <string name="label_color_style">Color style</string>
     <string name="label_color_style_line">Line</string>
-    <string name="label_color_style_material">Material 3</string>
+    <string name="label_color_style_material">Material 3 (Dynamic)</string>
+    <string name="label_color_style_blue">Blue</string>
+    <string name="label_color_style_green">Green</string>
+    <string name="label_color_style_amber">Amber</string>
+    <string name="label_color_style_pink">Pink</string>
+    <string name="label_color_style_monochrome">Monochrome</string>
     <string name="label_health_connect_rationale">Kenko writes your workout sessions to Health Connect. Your data stays on this device.</string>
     <string name="label_health_connect">Health Connect</string>
     <string name="label_health_connect_sync">Sync workouts to Health Connect</string>
