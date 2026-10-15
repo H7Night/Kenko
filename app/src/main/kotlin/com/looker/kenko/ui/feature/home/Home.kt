@@ -61,7 +61,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -82,7 +81,6 @@ import com.looker.kenko.ui.feature.session.ExerciseSearchDialog
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.numbers
-import com.looker.kenko.ui.theme.watermark
 import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -227,20 +225,6 @@ fun Home(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            val isIdleState = state.trainingState is TrainingSessionState.Idle ||
-                state.trainingState is TrainingSessionState.Ended
-            if (isIdleState) {
-                Text(
-                    text = stringResource(R.string.home_text),
-                    style = MaterialTheme.typography.watermark().copy(lineBreak = LineBreak.Heading),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.10f),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
-                )
-            }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -277,6 +261,7 @@ fun Home(
                             dayIndex = state.dayIndex,
                             dayCount = state.dayCount,
                             isRestDay = state.isRestDay,
+                            todayExercises = state.todayExercises,
                             onSelectPlanClick = onSelectPlanClick,
                             onSwitchTrainingDay = { showTrainingDayPicker = true },
                         )
@@ -414,6 +399,7 @@ private fun PlanInfoCard(
     dayIndex: Int?,
     dayCount: Int,
     isRestDay: Boolean,
+    todayExercises: List<Exercise> = emptyList(),
     onSelectPlanClick: () -> Unit,
     onSwitchTrainingDay: () -> Unit,
     modifier: Modifier = Modifier,
@@ -460,6 +446,17 @@ private fun PlanInfoCard(
                     },
                     style = MaterialTheme.typography.titleSmall,
                 )
+                if (!isRestDay && todayExercises.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    todayExercises.forEachIndexed { index, exercise ->
+                        Text(
+                            text = "${index + 1}. ${exercise.name}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = 1.dp),
+                        )
+                    }
+                }
                 if (isRestDay) {
                     Spacer(modifier = Modifier.height(10.dp))
                     OutlinedButton(onClick = onSwitchTrainingDay) {
