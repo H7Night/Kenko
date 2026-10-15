@@ -44,11 +44,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -72,22 +70,16 @@ fun SetItem(
     modifier: Modifier = Modifier,
     isToday: Boolean = true,
     isEditMode: Boolean = false,
-    ghost: Boolean = false,
-    referenceReps: Int? = null,
-    referenceWeight: Float? = null,
     onRepsUpdate: (Int) -> Unit = {},
     onWeightUpdate: (Float) -> Unit = {},
     title: @Composable () -> Unit,
 ) {
     val isCardio = set.exercise.countType == CountType.MINUTES
-    // 幽灵行: 上一次训练的对照片,半透明且不可编辑
-    val editable = isEditMode && !ghost
     val containerColor = MaterialTheme.colorScheme.surface
     val containerShape = MaterialTheme.shapes.small
     Surface(
         modifier = Modifier
             .widthIn(200.dp, 420.dp)
-            .then(if (ghost) Modifier.alpha(0.4f) else Modifier)
             .then(modifier),
         shape = containerShape,
         color = containerColor,
@@ -114,9 +106,7 @@ fun SetItem(
                 PerformedItem(
                     title = stringResource(set.exercise.repDurationStringRes),
                     performance = if (isCardio) "${set.repsOrDuration} ${stringResource(R.string.label_min)}" else "${set.repsOrDuration}",
-                    rawValue = "${set.repsOrDuration}",
-                    reference = referenceReps?.toString(),
-                    isEditMode = editable,
+                    isEditMode = isEditMode,
                     keyboardType = KeyboardType.Number,
                     onValueUpdate = { onRepsUpdate(it.toIntOrNull() ?: set.repsOrDuration) },
                 )
@@ -142,9 +132,7 @@ fun SetItem(
                         PerformedItem(
                             title = stringResource(R.string.label_weight),
                             performance = "${set.weight} KG",
-                            rawValue = "${set.weight}",
-                            reference = referenceWeight?.toString(),
-                            isEditMode = editable,
+                            isEditMode = isEditMode,
                             keyboardType = KeyboardType.Decimal,
                             onValueUpdate = { onWeightUpdate(it.toFloatOrNull() ?: set.weight) },
                         )
@@ -160,37 +148,29 @@ fun SetItem(
 private fun PerformedItem(
     title: String,
     performance: String,
-    rawValue: String,
-    reference: String?,
     isEditMode: Boolean,
     keyboardType: KeyboardType,
     onValueUpdate: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var isEditing by remember { mutableStateOf(false) }
-    var focused by remember { mutableStateOf(false) }
-    // 编辑时从空白开始（不预填当前数字）；清空时以浅色显示"上一个数字"作为占位。
-    var textValue by remember { mutableStateOf(TextFieldValue("")) }
-    val focusRequester = remember { FocusRequester() }
-
-    val isZero = rawValue == "0" || rawValue == "0.0"
-    val showReference = isZero && !reference.isNullOrBlank()
-    val referenceColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-
-    fun commit() {
-        val text = textValue.text.trim()
-        if (text.isNotEmpty()) onValueUpdate(text)
-        isEditing = false
-        focused = false
-        textValue = TextFieldValue("")
+    val initialValue = performance.replace(" KG", "")
+    var textValue by remember(performance) {
+        mutableStateOf(
+            TextFieldValue(
+                text = initialValue,
+                selection = TextRange(initialValue.length),
+            ),
+        )
     }
+    val focusRequester = remember { FocusRequester() }
 
     Column(
         modifier = modifier
             .combinedClickable(
                 enabled = isEditMode,
                 onDoubleClick = { isEditing = true },
-                onClick = { isEditing = true },
+                onClick = {},
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -203,14 +183,7 @@ private fun PerformedItem(
             BasicTextField(
                 modifier = Modifier
                     .width(48.dp)
-                    .focusRequester(focusRequester)
-                    .onFocusChanged { focus ->
-                        if (focus.isFocused) {
-                            focused = true
-                        } else if (focused) {
-                            commit()
-                        }
-                    },
+                    .focusRequester(focusRequester),
                 value = textValue,
                 onValueChange = { textValue = it },
                 textStyle = MaterialTheme.typography.titleMedium.numbers().copy(
@@ -221,30 +194,20 @@ private fun PerformedItem(
                     imeAction = ImeAction.Done,
                 ),
                 keyboardActions = KeyboardActions(
-                    onDone = { commit() },
+                    onDone = {
+                        onValueUpdate(textValue.text)
+                        isEditing = false
+                    },
                 ),
                 singleLine = true,
-                decorationBox = { innerTextField ->
-                    Box(contentAlignment = Alignment.Center) {
-                        if (textValue.text.isEmpty() && !reference.isNullOrBlank()) {
-                            Text(
-                                text = reference,
-                                style = MaterialTheme.typography.titleMedium.numbers(),
-                                color = referenceColor,
-                            )
-                        }
-                        innerTextField()
-                    }
-                },
             )
             LaunchedEffect(Unit) {
                 focusRequester.requestFocus()
             }
         } else {
             Text(
-                text = if (showReference) reference!! else performance,
+                text = performance,
                 style = MaterialTheme.typography.titleMedium.numbers(),
-                color = if (showReference) referenceColor else LocalContentColor.current,
             )
         }
     }

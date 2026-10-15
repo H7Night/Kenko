@@ -28,10 +28,3 @@ data class Set(
     val id: Int? = null,
 )
 
-/** 上一次训练的某一组（只含数值，供训练页"上次对照"幽灵行）。 */
-@Immutable
-data class ReferenceSet(
-    val reps: Int,
-    val weight: Float,
-)
-
