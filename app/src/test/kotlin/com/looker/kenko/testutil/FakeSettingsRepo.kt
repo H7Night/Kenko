@@ -22,7 +22,7 @@ internal class FakeSettingsRepo(
         language = Language.System,
         bodyWeightEnabled = true,
         healthConnectEnabled = false,
-        colorPalette = ColorPalette.Line,
+        colorPalette = ColorPalette.Material,
     ),
 ) : SettingsRepo {
     private val state = MutableStateFlow(initial)

@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exercises now carry equipment and a primary muscle (the remaining tags are secondary); equipment can be used to filter the exercise library and both are set in the exercise editor
 - A body-weight module toggle (Settings → System): turning it off hides the Profile weight card, entry, and history while keeping all recorded data
 - Health Connect sync (Settings → System, opt-in): completed workouts are written as exercise sessions, with a one-time backfill and an idempotent re-sync
-- A color style setting (Settings → Appearance): `Line` (default), `Material 3` (dynamic color / Monet on Android 12+), and seed presets (`Blue`, `Green`, `Amber`, `Pink`, `Monochrome`), alongside the light/dark theme
+- A color style setting (Settings → Appearance): `Material 3` (default; dynamic color / Monet on Android 12+), plus `Blue`, `Green`, `Amber`, `Pink`, and `Monochrome` seed presets, alongside the light/dark theme
 - When today has a training plan, the Home page lists today's exercises in order beneath "Today's Plan"
 
 ### Changed

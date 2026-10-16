@@ -124,7 +124,9 @@ class DatastoreSettingsRepo @Inject constructor(
         val language = preferences[LANGUAGE] ?: Language.System.name
         val bodyWeightEnabled = preferences[BODY_WEIGHT_ENABLED] ?: true
         val healthConnectEnabled = preferences[HEALTH_CONNECT_ENABLED] ?: false
-        val colorPalette = preferences[COLOR_PALETTE] ?: ColorPalette.Line.name
+        val colorPalette = preferences[COLOR_PALETTE]
+            ?.let { runCatching { ColorPalette.valueOf(it) }.getOrNull() }
+            ?: ColorPalette.Material
         return Settings(
             isOnboardingDone = isOnboardingDone,
             theme = Theme.valueOf(theme),
@@ -135,7 +137,7 @@ class DatastoreSettingsRepo @Inject constructor(
             language = Language.valueOf(language),
             bodyWeightEnabled = bodyWeightEnabled,
             healthConnectEnabled = healthConnectEnabled,
-            colorPalette = ColorPalette.valueOf(colorPalette),
+            colorPalette = colorPalette,
         )
     }
 

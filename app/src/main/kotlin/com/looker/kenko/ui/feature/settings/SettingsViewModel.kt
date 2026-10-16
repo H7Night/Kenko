@@ -107,7 +107,7 @@ class SettingsViewModel @Inject constructor(
             healthConnectAvailable = false,
             healthConnectPermissions = emptySet(),
             healthConnectSyncCount = null,
-            colorPalette = ColorPalette.Line,
+            colorPalette = ColorPalette.Material,
             earliestSessionDate = null,
         ),
     )

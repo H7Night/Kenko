@@ -20,13 +20,10 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.view.View
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
@@ -40,91 +37,6 @@ import com.looker.kenko.domain.model.settings.Theme
 import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
 
-/**
- * Linear-inspired light color scheme.
- * Single accent: #5E6AD2 (Linear violet-blue) + neutral Zinc palette.
- * Hierarchy via border/alpha, not filled containers.
- */
-private val LineLightColorScheme: ColorScheme = lightColorScheme(
-    primary = Color(0xFF5E6AD2),
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFE8EAFB),
-    onPrimaryContainer = Color(0xFF2F3764),
-    secondary = Color(0xFF6B7280),
-    onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFF2F3F5),
-    onSecondaryContainer = Color(0xFF363A43),
-    tertiary = Color(0xFF6B7280),
-    onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFF8F9FA),
-    onTertiaryContainer = Color(0xFF363A43),
-    error = Color(0xFFEF4444),
-    onError = Color(0xFFFFFFFF),
-    errorContainer = Color(0xFFFEE2E2),
-    onErrorContainer = Color(0xFF7F1D1D),
-    background = Color(0xFFFFFFFF),
-    onBackground = Color(0xFF0E0E10),
-    surface = Color(0xFFFFFFFF),
-    onSurface = Color(0xFF0E0E10),
-    surfaceVariant = Color(0xFFF8F9FA),
-    onSurfaceVariant = Color(0xFF6B7280),
-    outline = Color(0xFFB8BDC4),
-    outlineVariant = Color(0xFFD0D5DD),
-    scrim = Color(0xFF000000),
-    inverseSurface = Color(0xFF0E0E10),
-    inverseOnSurface = Color(0xFFF7F8F8),
-    inversePrimary = Color(0xFF8B92FF),
-    surfaceDim = Color(0xFFD9DCE0),
-    surfaceBright = Color(0xFFFFFFFF),
-    surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF8F9FA),
-    surfaceContainer = Color(0xFFF2F3F5),
-    surfaceContainerHigh = Color(0xFFE8EAED),
-    surfaceContainerHighest = Color(0xFFD9DCE0),
-)
-
-/**
- * Linear-inspired dark color scheme.
- * Base #080A0E + Zinc borders + single accent #7C83FD (lighter for dark).
- */
-private val LineDarkColorScheme: ColorScheme = darkColorScheme(
-    primary = Color(0xFF7C83FD),
-    onPrimary = Color(0xFF080A0E),
-    primaryContainer = Color(0xFF1A1D3A),
-    onPrimaryContainer = Color(0xFFC2C8FD),
-    secondary = Color(0xFF8A8F98),
-    onSecondary = Color(0xFF080A0E),
-    secondaryContainer = Color(0xFF1E2025),
-    onSecondaryContainer = Color(0xFFD0D4DA),
-    tertiary = Color(0xFF8A8F98),
-    onTertiary = Color(0xFF080A0E),
-    tertiaryContainer = Color(0xFF1E2025),
-    onTertiaryContainer = Color(0xFFD0D4DA),
-    error = Color(0xFFF87171),
-    onError = Color(0xFF080A0E),
-    errorContainer = Color(0xFF3A1F24),
-    onErrorContainer = Color(0xFFFECACA),
-    background = Color(0xFF080A0E),
-    onBackground = Color(0xFFF7F8F8),
-    surface = Color(0xFF080A0E),
-    onSurface = Color(0xFFF7F8F8),
-    surfaceVariant = Color(0xFF12151D),
-    onSurfaceVariant = Color(0xFF8A8F98),
-    outline = Color(0xFF333845),
-    outlineVariant = Color(0xFF2A2E38),
-    scrim = Color(0xFF000000),
-    inverseSurface = Color(0xFFF7F8F8),
-    inverseOnSurface = Color(0xFF0E0E10),
-    inversePrimary = Color(0xFF5E6AD2),
-    surfaceDim = Color(0xFF23252B),
-    surfaceBright = Color(0xFF1A1E2A),
-    surfaceContainerLowest = Color(0xFF06080C),
-    surfaceContainerLow = Color(0xFF0E1015),
-    surfaceContainer = Color(0xFF12151D),
-    surfaceContainerHigh = Color(0xFF1A1E2A),
-    surfaceContainerHighest = Color(0xFF23252B),
-)
-
 /** Fallback seed for dynamic/baseline Material schemes on API < 31. */
 private val MaterialBaselineSeed = Color(0xFF6750A4)
 
@@ -132,7 +44,7 @@ private val MaterialBaselineSeed = Color(0xFF6750A4)
 @Composable
 fun KenkoTheme(
     theme: Theme = Theme.System,
-    palette: ColorPalette = ColorPalette.Line,
+    palette: ColorPalette = ColorPalette.Material,
     content: @Composable () -> Unit,
 ) {
     val systemTheme = isSystemInDarkTheme()
@@ -145,9 +57,6 @@ fun KenkoTheme(
     }
     val context = LocalContext.current
     val colorScheme = when (palette) {
-        ColorPalette.Line ->
-            if (isDarkTheme) LineDarkColorScheme else LineLightColorScheme
-
         ColorPalette.Material ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 if (isDarkTheme) dynamicDarkColorScheme(context)

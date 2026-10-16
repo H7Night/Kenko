@@ -26,9 +26,9 @@ class DatastoreSettingsRepoTest {
     }
 
     @Test
-    fun `color palette defaults to Line`() = runTest {
+    fun `color palette defaults to Material`() = runTest {
         val repo = DatastoreSettingsRepo(FakePreferencesDataStore())
-        assertEquals(ColorPalette.Line, repo.stream.first().colorPalette)
+        assertEquals(ColorPalette.Material, repo.stream.first().colorPalette)
     }
 
     @Test

@@ -267,7 +267,6 @@
     <string name="label_body_weight_toggle">Body Weight</string>
     <string name="label_body_weight_toggle_subtitle">Show body weight recording and charts</string>
     <string name="label_color_style">Color style</string>
-    <string name="label_color_style_line">Line</string>
     <string name="label_color_style_material">Material 3 (Dynamic)</string>
     <string name="label_color_style_blue">Blue</string>
     <string name="label_color_style_green">Green</string>

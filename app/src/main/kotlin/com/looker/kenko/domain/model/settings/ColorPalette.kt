@@ -12,15 +12,11 @@ import com.looker.kenko.R
  * Selectable color style for the app theme.
  *
  * [seedArgb] is the Material Color Utilities seed for the palette; the UI layer
- * generates the full light/dark scheme from it (MaterialKolor). `null` marks the
- * two special options: [Line] (the hand-authored Linear-style scheme) and
- * [Material] (Android dynamic color / Monet).
+ * generates the full light/dark scheme from it (MaterialKolor). `null` marks
+ * [Material], which uses Android dynamic color (Monet) instead.
  */
 enum class ColorPalette(@StringRes val nameRes: Int, val seedArgb: Long? = null) {
-    /** The hand-authored Kenko accent (Linear-style violet on Zinc neutrals). */
-    Line(R.string.label_color_style_line),
-
-    /** Android dynamic color (Monet on Android 12+), Material baseline below. */
+    /** Android dynamic color (Monet on Android 12+); MaterialKolor baseline below. */
     Material(R.string.label_color_style_material),
 
     Blue(R.string.label_color_style_blue, 0xFF4285F4),

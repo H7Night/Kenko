@@ -52,7 +52,7 @@ class MainViewModel @Inject constructor(
         .asStateFlow(Language.System)
 
     val palette: StateFlow<ColorPalette> = repo.get { colorPalette }
-        .asStateFlow(ColorPalette.Line)
+        .asStateFlow(ColorPalette.Material)
 
     val isExerciseVisible: StateFlow<Boolean> = sessionRepo.streamByDate(today())
         .map { it != null && it.sets.isNotEmpty() }
