@@ -11,12 +11,14 @@ import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.data.repository.TagRepo
+import com.looker.kenko.data.repository.WeightRepo
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.SessionSummary
 import com.looker.kenko.domain.model.Set
 import com.looker.kenko.domain.model.Tag
+import com.looker.kenko.domain.model.Weight
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.LocalDate
@@ -61,10 +63,6 @@ internal class FakeExerciseRepo(exercises: List<Exercise> = emptyList()) : Exerc
     override fun streamExerciseSets(
         exerciseId: Int,
     ): Flow<List<com.looker.kenko.domain.statistics.ExerciseSetRecord>> = MutableStateFlow(emptyList())
-    override suspend fun previousSets(
-        exerciseId: Int,
-        before: kotlinx.datetime.LocalDate,
-    ): List<com.looker.kenko.domain.model.ReferenceSet> = emptyList()
     override suspend fun get(id: Int): Exercise? = null
     override suspend fun upsert(exercise: Exercise) = Unit
     override suspend fun remove(id: Int) = Unit
@@ -146,9 +144,13 @@ internal class FakeSetsDao(
 
     override fun streamSetsForExercise(exerciseId: Int): Flow<List<com.looker.kenko.data.local.model.ExerciseSetRow>> =
         MutableStateFlow(emptyList())
+}
 
-    override suspend fun getPreviousSets(
-        exerciseId: Int,
-        beforeEpochDay: Int,
-    ): List<com.looker.kenko.data.local.model.PreviousSetRow> = emptyList()
+internal class FakeWeightRepo : WeightRepo {
+    private val _weights = MutableStateFlow(emptyList<Weight>())
+    override val weights: Flow<List<Weight>> = _weights
+    override val latestWeight: Flow<Weight?> = MutableStateFlow(null)
+    override suspend fun addWeight(weight: Weight) { _weights.value = _weights.value + weight }
+    override suspend fun updateWeight(weight: Weight) = Unit
+    override suspend fun deleteWeight(id: Int) = Unit
 }

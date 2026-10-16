@@ -346,8 +346,7 @@ private fun ExercisesList(
                 modifier = Modifier.animateItem(),
                 onClick = { onExerciseClick(exerciseId) },
                 shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.surface,
-                border = KenkoBorder,
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
             ) {
                 Row(
                     modifier = Modifier
@@ -370,8 +369,7 @@ private fun ExercisesList(
                                     val label = tag.parentName?.let { "${it}→${tag.name}" } ?: tag.name
                                     Surface(
                                         shape = MaterialTheme.shapes.extraSmall,
-                                        color = MaterialTheme.colorScheme.surface,
-                                        border = KenkoBorder,
+                                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
                                     ) {
                                         Text(
                                             text = label,

@@ -16,10 +16,8 @@
 package com.looker.kenko.data.repository
 
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.ReferenceSet
 import com.looker.kenko.domain.statistics.ExerciseSetRecord
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.LocalDate
 
 interface ExerciseRepo {
 
@@ -29,9 +27,6 @@ interface ExerciseRepo {
 
     /** 某动作的所有组 + 所属训练日（按日期升序），供"单动作进步"页面使用。 */
     fun streamExerciseSets(exerciseId: Int): Flow<List<ExerciseSetRecord>>
-
-    /** 某动作"上一次训练"(早于 [before]) 的各组,按序号;供训练页"上次对照"。无则空。 */
-    suspend fun previousSets(exerciseId: Int, before: LocalDate): List<ReferenceSet>
 
     suspend fun get(id: Int): Exercise?
 

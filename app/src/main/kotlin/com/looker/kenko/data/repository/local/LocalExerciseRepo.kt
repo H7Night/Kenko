@@ -22,9 +22,7 @@ import com.looker.kenko.data.mapper.toEntity
 import com.looker.kenko.data.mapper.toExternal
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.ReferenceSet
 import com.looker.kenko.domain.statistics.ExerciseSetRecord
-import com.looker.kenko.utils.toLocalEpochDays
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
@@ -56,10 +54,6 @@ class LocalExerciseRepo @Inject constructor(
                 )
             }
         }
-
-    override suspend fun previousSets(exerciseId: Int, before: LocalDate): List<ReferenceSet> =
-        setsDao.getPreviousSets(exerciseId, before.toLocalEpochDays().value)
-            .map { ReferenceSet(reps = it.reps, weight = it.weight) }
 
     override suspend fun get(id: Int): Exercise? {
         val entity = dao.get(id) ?: return null

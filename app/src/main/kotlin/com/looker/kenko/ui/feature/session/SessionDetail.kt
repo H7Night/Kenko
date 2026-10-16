@@ -87,7 +87,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.ReferenceSet
 import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.ui.feature.session.AddSet
 import com.looker.kenko.ui.component.BackButton
@@ -122,13 +121,11 @@ fun SessionDetails(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val allExercises by viewModel.allExercises.collectAsStateWithLifecycle()
-    val previousSets by viewModel.previousSets.collectAsStateWithLifecycle()
     val extraExerciseIds by viewModel.extraExerciseIds.collectAsStateWithLifecycle()
     val previousSessionDate = (state as? SessionDetailState.Success)?.data?.previousSessionDate
     SessionDetail(
         state = state,
         allExercises = allExercises,
-        previousSets = previousSets,
         extraExerciseIds = extraExerciseIds,
         onBackPress = onBackPress,
         onRemoveSet = viewModel::removeSet,
@@ -158,7 +155,6 @@ fun SessionDetails(
 private fun SessionDetail(
     state: SessionDetailState,
     allExercises: List<Exercise> = emptyList(),
-    previousSets: Map<Int, List<ReferenceSet>> = emptyMap(),
     extraExerciseIds: List<Int> = emptyList(),
     onAddExercises: (List<Exercise>) -> Unit = {},
     onRemoveExtraExercise: (Exercise) -> Unit = {},
@@ -291,7 +287,6 @@ private fun SessionDetail(
                 availablePlanDays = data.availablePlanDays,
                 dayTitles = data.dayTitles,
                 allExercises = allExercises,
-                previousSets = previousSets,
                 extraExerciseIds = extraExerciseIds,
                 onBackPress = onBackPress,
                 onRemoveSet = onRemoveSet,
@@ -324,7 +319,6 @@ private fun SetsList(
     availablePlanDays: Map<Int, List<Exercise>>,
     dayTitles: Map<Int, String>,
     allExercises: List<Exercise> = emptyList(),
-    previousSets: Map<Int, List<ReferenceSet>> = emptyMap(),
     extraExerciseIds: List<Int> = emptyList(),
     onBackPress: () -> Unit,
     onRemoveSet: (Int?) -> Unit,
@@ -536,27 +530,6 @@ private fun SetsList(
                             Text(normalizeInt(index + 1))
                         },
                     )
-                }
-                // 上一次训练的"剩余组"以半透明对照片补位（真实组按序号覆盖）
-                val previous = exercise.id?.let { previousSets[it] } ?: emptyList()
-                if (previous.size > sets.size) {
-                    itemsIndexed(items = previous.subList(sets.size, previous.size)) { i, ref ->
-                        val index = sets.size + i
-                        DeletableSetItem(
-                            modifier = Modifier
-                                .animateItem()
-                                .padding(horizontal = 16.dp, vertical = 6.dp),
-                            set = com.looker.kenko.domain.model.Set(
-                                repsOrDuration = ref.reps,
-                                weight = ref.weight,
-                                exercise = exercise,
-                            ),
-                            ghost = true,
-                            title = {
-                                Text(normalizeInt(index + 1))
-                            },
-                        )
-                    }
                 }
             }
         }

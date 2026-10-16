@@ -23,8 +23,14 @@ import com.looker.kenko.data.backup.BackupManager
 import com.looker.kenko.data.backup.BackupResult
 import com.looker.kenko.data.export.ExportManager
 import com.looker.kenko.data.export.ExportOptions
+import com.looker.kenko.data.health.HealthConnectManager
 import com.looker.kenko.data.repository.SessionRepo
+import com.looker.kenko.domain.health.excludingActiveSession
+import com.looker.kenko.domain.health.toHealthExerciseSession
 import com.looker.kenko.domain.model.settings.BackupInterval
+import com.looker.kenko.ui.component.timer.TrainingSessionManager
+import com.looker.kenko.ui.component.timer.TrainingSessionState
+import com.looker.kenko.domain.model.settings.ColorPalette
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.data.repository.SettingsRepo
@@ -38,6 +44,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -47,18 +54,25 @@ class SettingsViewModel @Inject constructor(
     private val repo: SettingsRepo,
     private val backupManager: BackupManager,
     private val exportManager: ExportManager,
-    sessionRepo: SessionRepo,
+    private val sessionRepo: SessionRepo,
+    private val healthConnectManager: HealthConnectManager,
+    private val trainingSessionManager: TrainingSessionManager,
 ) : KenkoViewModel() {
 
     private val earliestSessionDate: Flow<LocalDate?> = sessionRepo.earliestSessionDate
 
     private val _backupState = MutableStateFlow(BackupState())
 
+    private val _healthSyncCount = MutableStateFlow<Int?>(null)
+
+    private val healthConnectAvailable = healthConnectManager.isAvailable()
+
     val state: StateFlow<SettingsUiData> = combine(
         repo.stream,
         _backupState,
         earliestSessionDate,
-    ) { settings, backupState, earliestDate ->
+        _healthSyncCount,
+    ) { settings, backupState, earliestDate, healthSyncCount ->
         SettingsUiData(
             selectedTheme = settings.theme,
             backupUri = settings.backupUri,
@@ -69,6 +83,12 @@ class SettingsViewModel @Inject constructor(
             isExporting = backupState.isExporting,
             backupMessage = backupState.message,
             language = settings.language,
+            bodyWeightEnabled = settings.bodyWeightEnabled,
+            healthConnectEnabled = settings.healthConnectEnabled,
+            healthConnectAvailable = healthConnectAvailable,
+            healthConnectPermissions = healthConnectManager.permissions,
+            healthConnectSyncCount = healthSyncCount,
+            colorPalette = settings.colorPalette,
             earliestSessionDate = earliestDate,
         )
     }.asStateFlow(
@@ -82,6 +102,12 @@ class SettingsViewModel @Inject constructor(
             isExporting = false,
             backupMessage = null,
             language = Language.System,
+            bodyWeightEnabled = true,
+            healthConnectEnabled = false,
+            healthConnectAvailable = false,
+            healthConnectPermissions = emptySet(),
+            healthConnectSyncCount = null,
+            colorPalette = ColorPalette.Material,
             earliestSessionDate = null,
         ),
     )
@@ -95,6 +121,44 @@ class SettingsViewModel @Inject constructor(
     fun updateLanguage(language: Language) {
         launchCatching {
             repo.setLanguage(language)
+        }
+    }
+
+    fun updateBodyWeightEnabled(enabled: Boolean) {
+        launchCatching {
+            repo.setBodyWeightEnabled(enabled)
+        }
+    }
+
+    fun updateColorPalette(palette: ColorPalette) {
+        launchCatching {
+            repo.setColorPalette(palette)
+        }
+    }
+
+    fun updateHealthConnectEnabled(enabled: Boolean) {
+        launchCatching {
+            repo.setHealthConnectEnabled(enabled)
+            if (enabled) syncHealthConnect()
+        }
+    }
+
+    fun onHealthPermissionsResult(granted: Boolean) {
+        launchCatching {
+            repo.setHealthConnectEnabled(granted)
+            if (granted) syncHealthConnect()
+        }
+    }
+
+    fun syncHealthConnect() {
+        launchCatching {
+            if (!healthConnectManager.hasAllPermissions()) return@launchCatching
+            val activeSessionId =
+                (trainingSessionManager.sessionState.value as? TrainingSessionState.Active)?.sessionId
+            val dtos = sessionRepo.stream.first()
+                .excludingActiveSession(activeSessionId)
+                .mapNotNull { it.toHealthExerciseSession(it.performExercises.map { ex -> ex.name }) }
+            _healthSyncCount.value = healthConnectManager.syncAll(dtos)
         }
     }
 
@@ -227,5 +291,11 @@ data class SettingsUiData(
     val isExporting: Boolean,
     val backupMessage: BackupMessage?,
     val language: Language,
+    val bodyWeightEnabled: Boolean,
+    val healthConnectEnabled: Boolean,
+    val healthConnectAvailable: Boolean,
+    val healthConnectPermissions: Set<String>,
+    val healthConnectSyncCount: Int?,
+    val colorPalette: ColorPalette,
     val earliestSessionDate: LocalDate?,
 )

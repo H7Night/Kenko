@@ -61,13 +61,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.ReferenceSet
 import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.ui.component.DeletableSetItem
@@ -83,7 +81,6 @@ import com.looker.kenko.ui.feature.session.ExerciseSearchDialog
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.numbers
-import com.looker.kenko.ui.theme.watermark
 import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,7 +95,6 @@ fun Home(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val sessionSets by viewModel.sessionSets.collectAsStateWithLifecycle()
-    val previousSets by viewModel.previousSets.collectAsStateWithLifecycle()
     val extraExerciseIds by viewModel.extraExerciseIds.collectAsStateWithLifecycle()
     val timerSeconds by viewModel.timerManager.elapsedSeconds.collectAsStateWithLifecycle()
     val allExercises by viewModel.allExercises.collectAsStateWithLifecycle()
@@ -229,20 +225,6 @@ fun Home(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            val isIdleState = state.trainingState is TrainingSessionState.Idle ||
-                state.trainingState is TrainingSessionState.Ended
-            if (isIdleState) {
-                Text(
-                    text = stringResource(R.string.home_text),
-                    style = MaterialTheme.typography.watermark().copy(lineBreak = LineBreak.Heading),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.10f),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
-                )
-            }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -279,6 +261,7 @@ fun Home(
                             dayIndex = state.dayIndex,
                             dayCount = state.dayCount,
                             isRestDay = state.isRestDay,
+                            todayExercises = state.todayExercises,
                             onSelectPlanClick = onSelectPlanClick,
                             onSwitchTrainingDay = { showTrainingDayPicker = true },
                         )
@@ -291,11 +274,9 @@ fun Home(
                         Spacer(modifier = Modifier.height(4.dp))
                         InlineTrainingContent(
                             exerciseSets = sessionSets,
-                            previousSets = previousSets,
                             extraExerciseIds = extraExerciseIds,
                             onAddSet = { exercise -> addSetExercise = exercise },
                             onRemoveSet = viewModel::removeSet,
-                            onUpdateSet = viewModel::updateSet,
                             onRemoveExercise = viewModel::removeExtraExercise,
                         )
                     }
@@ -343,11 +324,9 @@ private fun TrainingActionBar(
 @Composable
 private fun InlineTrainingContent(
     exerciseSets: List<TrainingExercise>,
-    previousSets: Map<Int, List<ReferenceSet>>,
     extraExerciseIds: List<Int>,
     onAddSet: (Exercise) -> Unit,
     onRemoveSet: (Int) -> Unit,
-    onUpdateSet: (Int, Int, Float) -> Unit,
     onRemoveExercise: (Exercise) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -395,33 +374,9 @@ private fun InlineTrainingContent(
             )
             if (!isCollapsed) {
                 sets.forEachIndexed { index, set ->
-                    val setId = set.id
                     DeletableSetItem(
                         set = set,
-                        isEditMode = true,
-                        onRepsUpdate = { reps -> setId?.let { onUpdateSet(it, reps, set.weight) } },
-                        onWeightUpdate = { weight -> setId?.let { onUpdateSet(it, set.repsOrDuration, weight) } },
-                        onDelete = { setId?.let { setToDelete = it } },
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                        title = {
-                            Text(
-                                text = normalizeInt(index + 1),
-                                style = MaterialTheme.typography.displayMedium.numbers(),
-                            )
-                        },
-                    )
-                }
-                // 上一次训练的"剩余组"以半透明对照片补位（真实组按序号覆盖）
-                val previous = exercise.id?.let { previousSets[it] } ?: emptyList()
-                for (index in sets.size until previous.size) {
-                    val ref = previous[index]
-                    DeletableSetItem(
-                        set = com.looker.kenko.domain.model.Set(
-                            repsOrDuration = ref.reps,
-                            weight = ref.weight,
-                            exercise = exercise,
-                        ),
-                        ghost = true,
+                        onDelete = { set.id?.let { setToDelete = it } },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         title = {
                             Text(
@@ -444,6 +399,7 @@ private fun PlanInfoCard(
     dayIndex: Int?,
     dayCount: Int,
     isRestDay: Boolean,
+    todayExercises: List<Exercise> = emptyList(),
     onSelectPlanClick: () -> Unit,
     onSwitchTrainingDay: () -> Unit,
     modifier: Modifier = Modifier,
@@ -458,8 +414,7 @@ private fun PlanInfoCard(
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 6.dp),
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Row(modifier = Modifier.padding(14.dp)) {
             Column(modifier = Modifier.weight(1f)) {
@@ -490,6 +445,17 @@ private fun PlanInfoCard(
                     },
                     style = MaterialTheme.typography.titleSmall,
                 )
+                if (!isRestDay && todayExercises.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    todayExercises.forEachIndexed { index, exercise ->
+                        Text(
+                            text = "${index + 1}. ${exercise.name}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = 1.dp),
+                        )
+                    }
+                }
                 if (isRestDay) {
                     Spacer(modifier = Modifier.height(10.dp))
                     OutlinedButton(onClick = onSwitchTrainingDay) {

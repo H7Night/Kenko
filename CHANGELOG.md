@@ -11,9 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exercise progress page: open any exercise from the browse list to see its heaviest weight, estimated 1RM (Epley), best set, and total volume over time, with a per-session history
 - Calendar view of training history: days with a workout are highlighted and open the session detail
 - Editing a past workout record now lets you add exercises that are not part of the plan
-- Adding sets now only asks for the number of sets; reps and weight are entered afterwards by tapping each set row, which shows the previous session's sets as a faded reference to beat
 - Adding exercises now supports multi-select; exercises not in the plan can be added to a workout and appear even before any set is logged
 - Exercises now carry equipment and a primary muscle (the remaining tags are secondary); equipment can be used to filter the exercise library and both are set in the exercise editor
+- A body-weight module toggle (Settings → System): turning it off hides the Profile weight card, entry, and history while keeping all recorded data
+- Health Connect sync (Settings → System, opt-in): completed workouts are written as exercise sessions, with a one-time backfill and an idempotent re-sync
+- A color style setting (Settings → Appearance): `Material 3` (default; dynamic color / Monet on Android 12+), plus `Blue`, `Green`, `Amber`, `Pink`, and `Monochrome` seed presets, alongside the light/dark theme
+- When today has a training plan, the Home page lists today's exercises in order beneath "Today's Plan"
+
+### Changed
+- Home no longer shows the "Stick to the plan / Not your mood." slogan watermark
+- Adopted standard Material 3 shapes (4–28dp) and tonal surfaces for cards, settings groups, lists, and the navigation bar, replacing the hairline-bordered flat look for a more Material appearance
 
 ### Fixed
 - Bodyweight exercises now count toward progress correctly: pure bodyweight sets use the body weight recorded nearest to that session, weighted sets add the extra weight, and legacy sets logged before the bodyweight option existed are corrected on upgrade

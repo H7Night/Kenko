@@ -15,6 +15,7 @@
 
 package com.looker.kenko.ui.feature.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,7 +23,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,15 +47,18 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.settings.BackupInterval
+import com.looker.kenko.domain.model.settings.ColorPalette
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.SelectionDialog
 import com.looker.kenko.ui.component.SettingsGroup
 import com.looker.kenko.ui.component.SettingsRow
+import com.looker.kenko.ui.component.SwitchSettingsRow
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 
@@ -69,6 +75,11 @@ fun Settings(
         state = state,
         onSelectLanguage = viewModel::updateLanguage,
         onSelectTheme = viewModel::updateTheme,
+        onSelectColorPalette = viewModel::updateColorPalette,
+        onToggleBodyWeight = viewModel::updateBodyWeightEnabled,
+        onToggleHealthConnect = viewModel::updateHealthConnectEnabled,
+        onHealthPermissionsResult = viewModel::onHealthPermissionsResult,
+        onSyncHealthConnect = viewModel::syncHealthConnect,
         onBackPress = onBackPress,
         onTagManagementClick = onTagManagementClick,
         onBackupClick = onBackupClick,
@@ -82,6 +93,11 @@ private fun Settings(
     state: SettingsUiData,
     onSelectLanguage: (Language) -> Unit,
     onSelectTheme: (Theme) -> Unit,
+    onSelectColorPalette: (ColorPalette) -> Unit,
+    onToggleBodyWeight: (Boolean) -> Unit,
+    onToggleHealthConnect: (Boolean) -> Unit,
+    onHealthPermissionsResult: (Boolean) -> Unit,
+    onSyncHealthConnect: () -> Unit,
     onBackPress: () -> Unit,
     onTagManagementClick: () -> Unit,
     onBackupClick: () -> Unit,
@@ -90,6 +106,13 @@ private fun Settings(
 ) {
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showColorStyleDialog by remember { mutableStateOf(false) }
+
+    val healthPermissionLauncher = rememberLauncherForActivityResult(
+        PermissionController.createRequestPermissionResultContract(),
+    ) { granted ->
+        onHealthPermissionsResult(granted.containsAll(state.healthConnectPermissions))
+    }
 
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -119,6 +142,20 @@ private fun Settings(
                 showThemeDialog = false
             },
             onDismiss = { showThemeDialog = false },
+        )
+    }
+
+    if (showColorStyleDialog) {
+        SelectionDialog(
+            title = stringResource(R.string.label_color_style),
+            items = ColorPalette.entries,
+            selected = state.colorPalette,
+            label = { stringResource(it.nameRes) },
+            onSelect = { palette ->
+                onSelectColorPalette(palette)
+                showColorStyleDialog = false
+            },
+            onDismiss = { showColorStyleDialog = false },
         )
     }
 
@@ -162,6 +199,55 @@ private fun Settings(
                         value = stringResource(state.selectedTheme.nameRes),
                         onClick = { showThemeDialog = true },
                     )
+                }
+                item {
+                    SettingsRow(
+                        icon = { Icon(painter = KenkoIcons.Lightbulb, contentDescription = null) },
+                        title = stringResource(R.string.label_color_style),
+                        value = stringResource(state.colorPalette.nameRes),
+                        onClick = { showColorStyleDialog = true },
+                    )
+                }
+            }
+
+            SettingsGroup(title = stringResource(R.string.label_settings_system)) {
+                item {
+                    SwitchSettingsRow(
+                        icon = { Icon(painter = KenkoIcons.Person, contentDescription = null) },
+                        title = stringResource(R.string.label_body_weight_toggle),
+                        subtitle = stringResource(R.string.label_body_weight_toggle_subtitle),
+                        checked = state.bodyWeightEnabled,
+                        onCheckedChange = onToggleBodyWeight,
+                    )
+                }
+                if (state.healthConnectAvailable) {
+                    item {
+                        SwitchSettingsRow(
+                            icon = { Icon(imageVector = Icons.Default.Favorite, contentDescription = null) },
+                            title = stringResource(R.string.label_health_connect),
+                            subtitle = stringResource(R.string.label_health_connect_sync),
+                            checked = state.healthConnectEnabled,
+                            onCheckedChange = { checked ->
+                                if (checked) {
+                                    healthPermissionLauncher.launch(state.healthConnectPermissions)
+                                } else {
+                                    onToggleHealthConnect(false)
+                                }
+                            },
+                        )
+                    }
+                    if (state.healthConnectEnabled) {
+                        item {
+                            SettingsRow(
+                                icon = { Icon(imageVector = Icons.Default.Refresh, contentDescription = null) },
+                                title = stringResource(R.string.label_health_connect_sync_now),
+                                value = state.healthConnectSyncCount?.let {
+                                    stringResource(R.string.label_health_connect_synced, it)
+                                },
+                                onClick = onSyncHealthConnect,
+                            )
+                        }
+                    }
                 }
             }
 
@@ -212,10 +298,21 @@ private fun SettingsPreview() {
                 isExporting = false,
                 backupMessage = null,
                 language = Language.System,
+                bodyWeightEnabled = true,
+                healthConnectEnabled = false,
+                healthConnectAvailable = false,
+                healthConnectPermissions = emptySet(),
+                healthConnectSyncCount = null,
+                colorPalette = ColorPalette.Material,
                 earliestSessionDate = null,
             ),
             onSelectLanguage = {},
             onSelectTheme = {},
+            onSelectColorPalette = {},
+            onToggleBodyWeight = {},
+            onToggleHealthConnect = {},
+            onHealthPermissionsResult = {},
+            onSyncHealthConnect = {},
             onBackPress = {},
             onTagManagementClick = {},
             onBackupClick = {},

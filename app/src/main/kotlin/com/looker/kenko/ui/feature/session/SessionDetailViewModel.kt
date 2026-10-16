@@ -24,7 +24,6 @@ import androidx.navigation.toRoute
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.domain.model.PlanItem
-import com.looker.kenko.domain.model.ReferenceSet
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.domain.model.orderTrainingExercises
@@ -268,16 +267,6 @@ class SessionDetailViewModel @Inject constructor(
             )
         }.onStart { emit(SessionDetailState.Loading) }
             .asStateFlow(SessionDetailState.Loading)
-
-    /** 每个动作"上一次训练"(早于本记录日期)的各组, 供半透明对照。 */
-    val previousSets: StateFlow<Map<Int, List<ReferenceSet>>> = state
-        .map { st ->
-            val rows = (st as? SessionDetailState.Success)?.data?.sets ?: emptyList()
-            rows.mapNotNull { it.exercise.id }
-                .distinct()
-                .associateWith { id -> exerciseRepo.previousSets(id, sessionDate) }
-        }
-        .asStateFlow(emptyMap(), started = SharingStarted.Eagerly)
 
     fun toggleEditMode() {
         _isEditMode.value = !_isEditMode.value

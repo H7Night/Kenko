@@ -35,7 +35,6 @@ fun DeletableSetItem(
     modifier: Modifier = Modifier,
     isToday: Boolean = true,
     isEditMode: Boolean = false,
-    ghost: Boolean = false,
     onRepsUpdate: (Int) -> Unit = {},
     onWeightUpdate: (Float) -> Unit = {},
     onDelete: (() -> Unit)? = null,
@@ -46,13 +45,12 @@ fun DeletableSetItem(
             set = set,
             isToday = isToday,
             isEditMode = isEditMode,
-            ghost = ghost,
             onRepsUpdate = onRepsUpdate,
             onWeightUpdate = onWeightUpdate,
             title = title,
         )
     }
-    if (onDelete != null && !ghost) {
+    if (onDelete != null) {
         Row(
             modifier = modifier,
             verticalAlignment = Alignment.CenterVertically,

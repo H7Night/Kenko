@@ -30,7 +30,6 @@
     <string name="label_add_new_exercises_home">Add\nExercise</string>
     <string name="label_session_history_home">Session\nHistory</string>
     <string name="label_current_plan_home">Current\nPlan</string>
-    <string name="home_text" translatable="false">Stick to the plan\nNot your mood.</string>
 
     <!--Sessions-->
     <string name="label_sessions_title">History</string>
@@ -164,7 +163,6 @@
 
     <!--Add Sets-->
     <string name="label_add_set_for">Add Set for</string>
-    <string name="label_add_minutes_for">Add minutes for</string>
     <string name="label_equipment">Equipment</string>
     <string name="label_primary_muscle">Primary muscle</string>
     <string name="label_equipment_barbell">Barbell</string>
@@ -265,6 +263,21 @@
 
     <string name="label_settings_appearance">Appearance</string>
     <string name="label_settings_data">Data</string>
+    <string name="label_settings_system">System</string>
+    <string name="label_body_weight_toggle">Body Weight</string>
+    <string name="label_body_weight_toggle_subtitle">Show body weight recording and charts</string>
+    <string name="label_color_style">Color style</string>
+    <string name="label_color_style_material">Material 3 (Dynamic)</string>
+    <string name="label_color_style_blue">Blue</string>
+    <string name="label_color_style_green">Green</string>
+    <string name="label_color_style_amber">Amber</string>
+    <string name="label_color_style_pink">Pink</string>
+    <string name="label_color_style_monochrome">Monochrome</string>
+    <string name="label_health_connect_rationale">Kenko writes your workout sessions to Health Connect. Your data stays on this device.</string>
+    <string name="label_health_connect">Health Connect</string>
+    <string name="label_health_connect_sync">Sync workouts to Health Connect</string>
+    <string name="label_health_connect_sync_now">Sync now</string>
+    <string name="label_health_connect_synced">Synced %1$d sessions</string>
 
     <string name="label_backup">Backup &amp; Restore</string>
     <string name="label_backup_location">Backup Location</string>

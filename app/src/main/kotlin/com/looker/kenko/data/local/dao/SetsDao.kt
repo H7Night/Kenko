@@ -21,7 +21,6 @@ import androidx.room.Query
 import androidx.room.Update
 import com.looker.kenko.data.local.model.CardioMinutesByDate
 import com.looker.kenko.data.local.model.ExerciseSetRow
-import com.looker.kenko.data.local.model.PreviousSetRow
 import com.looker.kenko.data.local.model.SetEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -108,24 +107,6 @@ interface SetsDao {
         """,
     )
     fun streamSetsForExercise(exerciseId: Int): Flow<List<ExerciseSetRow>>
-
-    @Query(
-        """
-        SELECT st.reps AS reps, st.weight AS weight
-        FROM sets st
-        WHERE st.exerciseId = :exerciseId
-          AND st.sessionId = (
-            SELECT s.id
-            FROM sessions s
-            JOIN sets prev ON prev.sessionId = s.id
-            WHERE prev.exerciseId = :exerciseId AND s.date < :beforeEpochDay
-            ORDER BY s.date DESC
-            LIMIT 1
-          )
-        ORDER BY st.`order` ASC
-        """,
-    )
-    suspend fun getPreviousSets(exerciseId: Int, beforeEpochDay: Int): List<PreviousSetRow>
 
     @Query(
         """

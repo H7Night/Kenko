@@ -21,7 +21,6 @@ import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
 import com.looker.kenko.data.repository.SessionRepo
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.domain.model.ReferenceSet
 import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.domain.model.orderTrainingExercises
 import com.looker.kenko.domain.model.today
@@ -134,15 +133,6 @@ class HomeViewModel @Inject constructor(
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    /** 每个动作"上一次训练"的各组(早于今天), 供训练页半透明对照。 */
-    val previousSets: StateFlow<Map<Int, List<ReferenceSet>>> = sessionSets
-        .map { rows ->
-            rows.mapNotNull { it.exercise.id }
-                .distinct()
-                .associateWith { id -> exerciseRepo.previousSets(id, today()) }
-        }
-        .asStateFlow(emptyMap(), started = SharingStarted.Eagerly)
-
     val state: StateFlow<HomeUiData> = combine(
         planStream,
         sessionStream,
@@ -247,12 +237,6 @@ class HomeViewModel @Inject constructor(
     fun removeSet(setId: Int) {
         launchCatching {
             sessionRepo.removeSet(setId)
-        }
-    }
-
-    fun updateSet(setId: Int, reps: Int, weight: Float) {
-        launchCatching {
-            sessionRepo.updateSet(setId, reps, weight)
         }
     }
 

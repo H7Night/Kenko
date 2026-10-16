@@ -160,7 +160,6 @@
 
     <!--Add Sets-->
     <string name="label_add_set_for">添加组数：</string>
-    <string name="label_add_minutes_for">添加时长：</string>
     <string name="label_equipment">器械</string>
     <string name="label_primary_muscle">主肌群</string>
     <string name="label_equipment_barbell">杠铃</string>
@@ -260,6 +259,21 @@
 
     <string name="label_settings_appearance">外观</string>
     <string name="label_settings_data">数据</string>
+    <string name="label_settings_system">系统</string>
+    <string name="label_body_weight_toggle">体重模块</string>
+    <string name="label_body_weight_toggle_subtitle">显示体重记录与趋势图</string>
+    <string name="label_color_style">配色风格</string>
+    <string name="label_color_style_material">Material 3（动态）</string>
+    <string name="label_color_style_blue">蓝色</string>
+    <string name="label_color_style_green">绿色</string>
+    <string name="label_color_style_amber">琥珀</string>
+    <string name="label_color_style_pink">粉色</string>
+    <string name="label_color_style_monochrome">单色</string>
+    <string name="label_health_connect_rationale">Kenko 会把训练记录写入 Health Connect，数据仅保存在本机。</string>
+    <string name="label_health_connect">Health Connect</string>
+    <string name="label_health_connect_sync">同步训练到 Health Connect</string>
+    <string name="label_health_connect_sync_now">立即同步</string>
+    <string name="label_health_connect_synced">已同步 %1$d 条训练</string>
 
     <!--Backup-->
     <string name="label_backup">备份与恢复</string>

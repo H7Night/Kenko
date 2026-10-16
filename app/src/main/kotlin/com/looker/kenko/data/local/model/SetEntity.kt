@@ -65,9 +65,3 @@ data class ExerciseSetRow(
     val weight: Float,
     val reps: Int,
 )
-
-/** 轻量投影：某动作"上一次训练"的各组（供训练页"上次对照"）。 */
-data class PreviousSetRow(
-    val reps: Int,
-    val weight: Float,
-)
