@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Bodyweight exercises now count toward progress correctly: pure bodyweight sets use the body weight recorded nearest to that session, weighted sets add the extra weight, and legacy sets logged before the bodyweight option existed are corrected on upgrade
 - Adding an exercise during a workout no longer shows it twice (one row with sets and one empty row at its original position)
+- Completed timer-only workouts without sets (e.g. cardio) are no longer missing from Records and the calendar
 
 ## [1.9.0] - 2026-10-12
 
