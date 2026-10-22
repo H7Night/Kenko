@@ -128,7 +128,7 @@ class HomeViewModel @Inject constructor(
     val sessionSets: StateFlow<List<TrainingExercise>> =
         combine(sessionStream, planItemStream, extraExercises) { session, planItems, extra ->
             orderTrainingExercises(
-                planned = (planItems.map { it.exercise } + extra).distinct(),
+                planned = (planItems.map { it.exercise } + extra).distinctBy { it.id },
                 sets = session?.sets ?: emptyList(),
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())

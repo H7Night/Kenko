@@ -82,6 +82,18 @@ class TrainingOrderTest {
     }
 
     @Test
+    fun extraExerciseWithTagsIsNotDuplicatedByTaglessSetExercise() {
+        val pullUp = exercise("引体向上", 9)
+        // 计划/额外动作来自 ExerciseRepo.stream(带 tags),而组来自 SessionRepo(不带 tags);
+        // 两者 id 相同但对象不相等,不能因此被当成两个动作。
+        val planned = listOf(pullUp.copy(tags = listOf(Tag(id = 12, name = "背阔肌", parentId = 2))))
+        val set = setOf(pullUp, 0)
+        val result = orderTrainingExercises(planned, listOf(set))
+        assertEquals(listOf("引体向上"), result.map { it.exercise.name })
+        assertEquals(1, result.single().sequence)
+    }
+
+    @Test
     fun unorderedSetsStillSortedByOrder() {
         val pullDown = exercise("高位下拉", 1)
         val raise = exercise("侧平举", 2)
