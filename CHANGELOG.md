@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Home no longer shows the "Stick to the plan / Not your mood." slogan watermark
 - Adopted standard Material 3 shapes (4–28dp) and tonal surfaces for cards, settings groups, lists, and the navigation bar, replacing the hairline-bordered flat look for a more Material appearance
+- Bottom navigation now uses Material 3 icon and label sizing with the default indicator color, and add actions are extended floating action buttons at the bottom end
+- Plans use a radio button with a "Current" badge for the active plan; Settings uses a compact top app bar and a palette icon for the color style
 
 ### Fixed
 - Bodyweight exercises now count toward progress correctly: pure bodyweight sets use the body weight recorded nearest to that session, weighted sets add the extra weight, and legacy sets logged before the bodyweight option existed are corrected on upgrade
@@ -31,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Starting a workout is no longer blocked when notification permission is denied
 - Past records hide unperformed plan exercises, group each exercise's sets into one compact card, and show the session duration; icon-only actions now have accessibility labels
 - Set labels are no longer forced uppercase and the weight unit follows the app language instead of a hard-coded `KG`
+- Set values in edit mode are editable with a single tap, icon-only actions meet the 48dp touch target, and adding an exercise uses a distinct dumbbell icon
 
 ## [1.9.0] - 2026-10-12
 
