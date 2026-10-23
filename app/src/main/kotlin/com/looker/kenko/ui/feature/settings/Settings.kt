@@ -18,6 +18,7 @@ package com.looker.kenko.ui.feature.settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -28,22 +29,20 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,6 +54,7 @@ import com.looker.kenko.domain.model.settings.ColorPalette
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.utils.toFormat
 import com.looker.kenko.ui.component.SelectionDialog
 import com.looker.kenko.ui.component.SettingsGroup
 import com.looker.kenko.ui.component.SettingsRow
@@ -87,7 +87,7 @@ fun Settings(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Settings(
     state: SettingsUiData,
@@ -113,9 +113,6 @@ private fun Settings(
     ) { granted ->
         onHealthPermissionsResult(granted.containsAll(state.healthConnectPermissions))
     }
-
-    val scrollBehavior =
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     if (showLanguageDialog) {
         SelectionDialog(
@@ -162,11 +159,11 @@ private fun Settings(
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            LargeFlexibleTopAppBar(
+            TopAppBar(
                 title = { Text(text = stringResource(R.string.label_settings)) },
                 navigationIcon = { BackButton(onClick = onBackPress) },
-                scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface,
@@ -178,7 +175,6 @@ private fun Settings(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -202,7 +198,7 @@ private fun Settings(
                 }
                 item {
                     SettingsRow(
-                        icon = { Icon(painter = KenkoIcons.Lightbulb, contentDescription = null) },
+                        icon = { Icon(imageVector = Icons.Outlined.Palette, contentDescription = null) },
                         title = stringResource(R.string.label_color_style),
                         value = stringResource(state.colorPalette.nameRes),
                         onClick = { showColorStyleDialog = true },
@@ -263,8 +259,20 @@ private fun Settings(
                     SettingsRow(
                         icon = { Icon(painter = KenkoIcons.Save, contentDescription = null) },
                         title = stringResource(R.string.label_backup),
-                        subtitle = state.backupUri?.let { extractFolderName(it) }
-                            ?: stringResource(R.string.label_backup_location_not_set),
+                        subtitle = when {
+                            state.isBackingUp -> stringResource(R.string.label_backup_in_progress)
+                            state.lastBackupTime != null -> stringResource(
+                                R.string.label_last_backup,
+                                state.lastBackupTime.toFormat(),
+                            )
+
+                            state.backupUri != null -> stringResource(
+                                R.string.label_backup_folder,
+                                extractFolderName(state.backupUri),
+                            )
+
+                            else -> stringResource(R.string.label_backup_location_not_set)
+                        },
                         onClick = onBackupClick,
                     )
                 }

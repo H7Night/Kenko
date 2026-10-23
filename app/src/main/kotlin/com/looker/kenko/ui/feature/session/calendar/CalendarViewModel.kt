@@ -42,7 +42,7 @@ class CalendarViewModel @Inject constructor(
         _month,
     ) { sessions, monthPair ->
         val (year, month) = monthPair
-        val sessionDates = sessions.filter { it.setCount > 0 }.map { it.date }.toSet()
+        val sessionDates = sessions.filter { it.hasRecordedWorkout }.map { it.date }.toSet()
         val weeks = buildMonthGrid(year, month)
         CalendarUiData(
             year = year,

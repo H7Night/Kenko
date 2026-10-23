@@ -22,11 +22,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -50,7 +52,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -72,7 +73,9 @@ import com.looker.kenko.ui.component.DeletableSetItem
 import com.looker.kenko.ui.component.DeleteIconButton
 import com.looker.kenko.ui.component.SetDeleteDialog
 import com.looker.kenko.ui.component.StickyHeader
+import com.looker.kenko.ui.component.TooltipIconButton
 import com.looker.kenko.ui.component.timer.TimerCard
+import com.looker.kenko.ui.component.timer.TimerService
 import com.looker.kenko.ui.component.timer.TimerState
 import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.ui.component.timer.rememberNotificationPermissionState
@@ -100,13 +103,8 @@ fun Home(
     val allExercises by viewModel.allExercises.collectAsStateWithLifecycle()
     val availablePlanDays by viewModel.availablePlanDays.collectAsStateWithLifecycle()
     val planDayTitles by viewModel.planDayTitles.collectAsStateWithLifecycle()
+    val weeklySummary by viewModel.weeklySummary.collectAsStateWithLifecycle()
     val notifState = rememberNotificationPermissionState()
-
-    LaunchedEffect(Unit) {
-        if (!notifState.granted) {
-            notifState.request()
-        }
-    }
 
     var showEndConfirm by remember { mutableStateOf(false) }
     var showResetConfirm by remember { mutableStateOf(false) }
@@ -219,7 +217,9 @@ fun Home(
         )
     }
 
-    Scaffold { innerPadding ->
+    Scaffold(
+        contentWindowInsets = WindowInsets.statusBars,
+    ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -233,23 +233,42 @@ fun Home(
                 TimerCard(
                     timerState = state.timerState,
                     elapsedSeconds = timerSeconds,
-                    notificationGranted = notifState.granted,
                     hasAccumulatedTime = state.timerState == TimerState.IDLE && timerSeconds > 0,
                     hasSets = state.isSessionStarted,
                     showStart = !state.isTodayEmpty,
-                    onStart = {
-                        if (!notifState.granted) {
-                            notifState.request()
-                        } else {
-                            viewModel.startWorkout()
-                        }
-                    },
+                    onStart = viewModel::startWorkout,
                     onPause = viewModel::pauseWorkout,
                     onResume = viewModel::resumeWorkout,
                     onEnd = { showEndConfirm = true },
                     onReset = { showResetConfirm = true },
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                 )
+
+                if (!notifState.granted) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            painter = KenkoIcons.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.label_notification_rationale),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f),
+                        )
+                        TextButton(onClick = notifState.request) {
+                            Text(stringResource(R.string.label_enable))
+                        }
+                    }
+                }
 
                 when (state.trainingState) {
                     is TrainingSessionState.Idle,
@@ -264,6 +283,11 @@ fun Home(
                             todayExercises = state.todayExercises,
                             onSelectPlanClick = onSelectPlanClick,
                             onSwitchTrainingDay = { showTrainingDayPicker = true },
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        WeeklySummaryCard(
+                            summary = weeklySummary,
+                            onRecordsClick = onExploreSessionsClick,
                         )
                     }
                     is TrainingSessionState.Active -> {
@@ -392,6 +416,61 @@ private fun InlineTrainingContent(
 }
 
 @Composable
+private fun WeeklySummaryCard(
+    summary: HomeWeekSummary,
+    onRecordsClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.label_stat_week),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(onClick = onRecordsClick) {
+                    Text(stringResource(R.string.label_records))
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+                Column {
+                    Text(
+                        text = stringResource(R.string.label_week_sessions),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = summary.sessions.toString(),
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                }
+                Column {
+                    Text(
+                        text = stringResource(R.string.label_duration_summary),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = TimerService.formatTime(summary.durationSeconds),
+                        style = MaterialTheme.typography.titleLarge.numbers(),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun PlanInfoCard(
     isPlanSelected: Boolean,
     planName: String?,
@@ -466,8 +545,15 @@ private fun PlanInfoCard(
             if (!isRestDay) {
                 var menuExpanded by remember { mutableStateOf(false) }
                 Box {
-                    IconButton(onClick = { menuExpanded = true }, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.MoreVert, contentDescription = null, modifier = Modifier.size(16.dp))
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.label_more_options),
+                        onClick = { menuExpanded = true },
+                    ) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = stringResource(R.string.label_more_options),
+                            modifier = Modifier.size(16.dp),
+                        )
                     }
                     DropdownMenu(
                         expanded = menuExpanded,

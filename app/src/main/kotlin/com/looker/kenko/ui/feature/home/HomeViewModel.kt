@@ -43,7 +43,10 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -58,6 +61,22 @@ class HomeViewModel @Inject constructor(
     private val planStream = planRepo.current
     val sessionStream = sessionRepo.streamByDate(today())
     private val sessionsStream = sessionRepo.stream
+
+    /** This week's completed records, counted from Monday through today. */
+    val weeklySummary: StateFlow<HomeWeekSummary> = sessionsStream
+        .map { sessions ->
+            val currentDate = today()
+            val monday = currentDate.minus(currentDate.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
+            val weekSessions = sessions.filter { session ->
+                session.date >= monday &&
+                    (session.sets.isNotEmpty() || (session.durationSeconds ?: 0L) > 0L)
+            }
+            HomeWeekSummary(
+                sessions = weekSessions.size,
+                durationSeconds = weekSessions.sumOf { it.durationSeconds ?: 0L },
+            )
+        }
+        .asStateFlow(HomeWeekSummary(), started = SharingStarted.Eagerly)
 
     private val planItemStream = combine(
         sessionStream,
@@ -128,7 +147,7 @@ class HomeViewModel @Inject constructor(
     val sessionSets: StateFlow<List<TrainingExercise>> =
         combine(sessionStream, planItemStream, extraExercises) { session, planItems, extra ->
             orderTrainingExercises(
-                planned = (planItems.map { it.exercise } + extra).distinct(),
+                planned = (planItems.map { it.exercise } + extra).distinctBy { it.id },
                 sets = session?.sets ?: emptyList(),
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -259,6 +278,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 }
+
+@Immutable
+data class HomeWeekSummary(
+    val sessions: Int = 0,
+    val durationSeconds: Long = 0L,
+)
 
 @Immutable
 data class HomeUiData(

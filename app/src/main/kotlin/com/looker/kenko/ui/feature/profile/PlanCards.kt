@@ -89,7 +89,10 @@ fun CurrentPlanCard(
                 )
                 Spacer(modifier = Modifier.weight(1F))
                 FilledIconButton(onClick = onPlanClick) {
-                    Icon(painter = KenkoIcons.Rename, contentDescription = null)
+                    Icon(
+                        painter = KenkoIcons.Rename,
+                        contentDescription = stringResource(R.string.label_edit_plan),
+                    )
                 }
             }
             HorizontalDivider(

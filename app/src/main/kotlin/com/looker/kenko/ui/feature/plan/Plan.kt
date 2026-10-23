@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,6 +53,7 @@ import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.ErrorSnackbar
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.ConfirmDialog
+import com.looker.kenko.ui.component.TooltipIconButton
 import com.looker.kenko.ui.component.endItem
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.KenkoAddButton
@@ -166,8 +166,14 @@ private fun Plan(
                 title = { Text(text = stringResource(R.string.label_plans_title)) },
                 actions = {
                     var menuExpanded by remember { mutableStateOf(false) }
-                    IconButton(onClick = { menuExpanded = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = null)
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.label_more_options),
+                        onClick = { menuExpanded = true },
+                    ) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = stringResource(R.string.label_more_options),
+                        )
                     }
                     DropdownMenu(
                         expanded = menuExpanded,
@@ -191,7 +197,6 @@ private fun Plan(
                 },
             )
         },
-        floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = { KenkoAddButton(onClick = { onPlanClick(-1) }) },
         containerColor = MaterialTheme.colorScheme.surface,
     ) {

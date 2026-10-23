@@ -59,7 +59,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -98,6 +97,7 @@ import com.looker.kenko.domain.model.ExercisesPreviewParameter
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.component.ErrorSnackbar
+import com.looker.kenko.ui.component.TooltipIconButton
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.SelectExercise
@@ -208,15 +208,20 @@ private fun FullEdit(
                 ErrorSnackbar(data = it)
             }
         },
-        floatingActionButtonPosition = FabPosition.Center,
         topBar = {
             CenterAlignedTopAppBar(
                 title = title,
                 navigationIcon = { BackButton(onBackPress) },
                 actions = {
                     if (stage == PlanEditStage.PlanEdit) {
-                        androidx.compose.material3.IconButton(onClick = onAddExercise) {
-                            Icon(painter = KenkoIcons.Add, contentDescription = stringResource(R.string.label_add))
+                        TooltipIconButton(
+                            tooltip = stringResource(R.string.label_add_exercise),
+                            onClick = onAddExercise,
+                        ) {
+                            Icon(
+                                painter = KenkoIcons.Add,
+                                contentDescription = stringResource(R.string.label_add_exercise),
+                            )
                         }
                     }
                 },
@@ -466,10 +471,14 @@ private fun ExerciseItemActions(
         FilledTonalIconButton(
             onClick = onRemove,
             colors = IconButtonDefaults.filledTonalIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             ),
         ) {
-            Icon(painter = KenkoIcons.Remove, contentDescription = null)
+            Icon(
+                painter = KenkoIcons.Remove,
+                contentDescription = stringResource(R.string.label_remove),
+            )
         }
         Spacer(modifier = Modifier.width(12.dp))
         Text(

@@ -65,7 +65,7 @@ fun KenkoTheme(
                 rememberDynamicColorScheme(
                     seedColor = MaterialBaselineSeed,
                     isDark = isDarkTheme,
-                    style = PaletteStyle.Expressive,
+                    style = PaletteStyle.TonalSpot,
                 )
             }
 
@@ -73,7 +73,7 @@ fun KenkoTheme(
             rememberDynamicColorScheme(
                 seedColor = Color(requireNotNull(palette.seedArgb)),
                 isDark = isDarkTheme,
-                style = PaletteStyle.Expressive,
+                style = PaletteStyle.TonalSpot,
             )
     }
     val localView = LocalView.current

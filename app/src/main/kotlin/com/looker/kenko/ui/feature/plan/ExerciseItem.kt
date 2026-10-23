@@ -17,15 +17,11 @@ package com.looker.kenko.ui.feature.plan.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
@@ -103,24 +99,22 @@ fun ExerciseItem(
 }
 
 @Composable
-fun KenkoAddButton(onClick: () -> Unit) {
-    Button(
+fun KenkoAddButton(
+    onClick: () -> Unit,
+    label: String? = null,
+) {
+    ExtendedFloatingActionButton(
         onClick = onClick,
-        contentPadding = PaddingValues(
-            top = 20.dp,
-            bottom = 20.dp,
-            start = 32.dp,
-            end = 40.dp,
-        ),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
-    ) {
-        Icon(painter = KenkoIcons.Add, contentDescription = null)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = stringResource(R.string.label_add))
-    }
+        icon = {
+            Icon(
+                painter = KenkoIcons.Add,
+                contentDescription = null,
+            )
+        },
+        text = {
+            Text(label ?: stringResource(R.string.label_add))
+        },
+    )
 }
 
 @Preview(showBackground = true)
@@ -139,7 +133,6 @@ private fun ExerciseItemPreview(
 @Composable
 private fun ExerciseButtonPreview() {
     KenkoTheme {
-        KenkoAddButton {
-        }
+        KenkoAddButton(onClick = {})
     }
 }

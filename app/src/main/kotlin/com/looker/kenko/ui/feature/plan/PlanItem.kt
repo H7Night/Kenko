@@ -17,19 +17,13 @@ package com.looker.kenko.ui.feature.plan.components
 
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.updateTransition
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.ui.draw.clip
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedIconToggleButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,6 +34,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -48,7 +44,6 @@ import com.looker.kenko.domain.model.Plan
 import com.looker.kenko.domain.model.PlanPreviewParameters
 import com.looker.kenko.ui.component.DeleteIconButton
 import com.looker.kenko.ui.extension.normalizeInt
-import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 
 @Composable
@@ -60,6 +55,8 @@ fun PlanItem(
     onDelete: (() -> Unit)? = null,
 ) {
     val transition = updateTransition(targetState = plan.isActive, label = null)
+    val currentPlanLabel = stringResource(R.string.label_current_plan)
+    val setCurrentPlanLabel = stringResource(R.string.label_set_current_plan)
     val borderColor by transition.animateColor(label = "border") {
         if (it) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
         else MaterialTheme.colorScheme.outlineVariant
@@ -85,29 +82,31 @@ fun PlanItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                // Status dot
-                androidx.compose.foundation.layout.Box(
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .size(6.dp)
-                        .clip(androidx.compose.foundation.shape.CircleShape)
-                        .background(
-                            if (plan.isActive) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.outline
-                        )
-                )
                 Text(
                     modifier = Modifier.weight(1F),
                     text = plan.name,
                     maxLines = 1,
                     style = MaterialTheme.typography.titleSmall,
                 )
-                OutlinedIconToggleButton(
-                    checked = plan.isActive,
-                    onCheckedChange = onActiveChange,
-                ) {
-                    Icon(painter = KenkoIcons.Done, contentDescription = null, modifier = Modifier.size(16.dp))
+                if (plan.isActive) {
+                    Text(
+                        text = stringResource(R.string.label_current),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                    )
                 }
+                RadioButton(
+                    selected = plan.isActive,
+                    onClick = { if (!plan.isActive) onActiveChange(true) },
+                    modifier = Modifier.semantics {
+                        contentDescription = if (plan.isActive) {
+                            currentPlanLabel
+                        } else {
+                            setCurrentPlanLabel
+                        }
+                    },
+                )
                 if (onDelete != null) {
                     DeleteIconButton(onClick = onDelete)
                 }

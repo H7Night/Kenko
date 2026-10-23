@@ -27,6 +27,7 @@ import com.looker.kenko.domain.model.PlanItem
 import com.looker.kenko.domain.model.Session
 import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.domain.model.orderTrainingExercises
+import com.looker.kenko.domain.model.recordedOnly
 import com.looker.kenko.domain.model.today
 import com.looker.kenko.data.repository.ExerciseRepo
 import com.looker.kenko.data.repository.PlanRepo
@@ -251,11 +252,18 @@ class SessionDetailViewModel @Inject constructor(
                 planned = exercises,
                 sets = currentSession.sets,
             )
+            // 历史记录只展示真正练过的动作;未练的计划动作仅在该记录的编辑态出现。
+            val visibleSets = if (isTodaySession || isEditMode) {
+                sets
+            } else {
+                sets.recordedOnly()
+            }
 
             SessionDetailState.Success(
                 SessionUiData(
                     date = currentSession.date,
-                    sets = sets,
+                    sets = visibleSets,
+                    durationSeconds = currentSession.durationSeconds,
                     isToday = isTodaySession,
                     isEditMode = isEditMode,
                     dayTitle = dayTitle,
@@ -340,6 +348,7 @@ class SessionDetailViewModel @Inject constructor(
 data class SessionUiData(
     val date: LocalDate,
     val sets: List<TrainingExercise>,
+    val durationSeconds: Long? = null,
     val isToday: Boolean = false,
     val isEditMode: Boolean = false,
     val dayTitle: String? = null,

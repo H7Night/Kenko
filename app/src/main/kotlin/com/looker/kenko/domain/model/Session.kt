@@ -50,4 +50,11 @@ data class SessionSummary(
     val exerciseNames: List<String> = emptyList(),
     val setCount: Int = 0,
     val id: Int? = null,
-)
+) {
+    /**
+     * 是否为一条真正完成的训练记录。除有组数的训练外,只计时、未记录组的训练
+     * (例如纯有氧)在结束时也会保留时长([shouldKeepSession]),同样应出现在记录/日历中。
+     */
+    val hasRecordedWorkout: Boolean
+        get() = setCount > 0 || (durationSeconds ?: 0L) > 0L
+}

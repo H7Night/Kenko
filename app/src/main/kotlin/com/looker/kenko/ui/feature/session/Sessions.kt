@@ -15,7 +15,6 @@
 
 package com.looker.kenko.ui.feature.session
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,17 +26,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -61,8 +57,9 @@ import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.TrainingDayMatch
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.DeleteIconButton
+import com.looker.kenko.ui.component.KenkoDatePickerDialog
+import com.looker.kenko.ui.component.TooltipIconButton
 import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.component.timer.TimerService
@@ -80,8 +77,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Timer
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -94,15 +93,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.scale
 import com.looker.kenko.ui.component.KenkoBorderWidth
+import com.looker.kenko.ui.theme.numbers
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun Sessions(
     viewModel: SessionsViewModel,
     onSessionClick: (LocalDate?) -> Unit,
-    onBackPress: () -> Unit,
     onCalendarClick: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -127,19 +125,17 @@ fun Sessions(
         state = state,
         onSessionClick = onSessionClick,
         onRemoveSession = viewModel::removeSession,
-        onBackPress = onBackPress,
         onAddClick = { showAddHistoryDialog = true },
         onCalendarClick = onCalendarClick,
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Sessions(
     state: SessionsUiData,
     onSessionClick: (LocalDate?) -> Unit,
     onRemoveSession: (SessionSummary) -> Unit,
-    onBackPress: () -> Unit,
     onAddClick: () -> Unit,
     onCalendarClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -151,7 +147,7 @@ private fun Sessions(
     var selectedDay by remember { mutableStateOf<Int?>(null) }
     val context = LocalContext.current
 
-    val selectedPlanName = selectedPlan?.name ?: stringResource(R.string.label_select_plan_one)
+    val selectedPlanName = selectedPlan?.name ?: stringResource(R.string.label_all_plans)
     val selectedDayName = selectedDay?.let { day -> selectedPlan?.titlesMap?.get(day) ?: stringResource(R.string.label_day_n, day) } ?: stringResource(R.string.label_select_day)
     val availableDays: Map<Int, String> = remember(selectedPlan) {
         selectedPlan?.titlesMap ?: emptyMap()
@@ -195,20 +191,23 @@ private fun Sessions(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                navigationIcon = {
-                    BackButton(onClick = onBackPress)
-                },
                 title = {
-                    Text(text = stringResource(id = R.string.label_sessions_title))
+                    Text(text = stringResource(id = R.string.label_records))
                 },
                 actions = {
-                    IconButton(onClick = onCalendarClick) {
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.label_calendar),
+                        onClick = onCalendarClick,
+                    ) {
                         Icon(
                             imageVector = Icons.Rounded.CalendarMonth,
                             contentDescription = stringResource(R.string.label_calendar),
                         )
                     }
-                    IconButton(onClick = onAddClick) {
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.label_add_history),
+                        onClick = onAddClick,
+                    ) {
                         Icon(
                             painter = KenkoIcons.Add,
                             contentDescription = stringResource(R.string.label_add_history)
@@ -227,114 +226,139 @@ private fun Sessions(
             EmptyState(
                 icon = Icons.Rounded.History,
                 text = stringResource(id = R.string.label_no_sessions),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
             )
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = padding + PaddingValues(start = 12.dp, end = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 12.dp),
             ) {
-                item {
-                        // Filter row: plan + day dropdowns
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            ExposedDropdownMenuBox(
-                                expanded = planExpanded,
-                                onExpandedChange = { planExpanded = it },
-                                modifier = Modifier.weight(1f),
-                            ) {
-                                OutlinedTextField(
-                                    value = selectedPlanName,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    label = { Text(stringResource(R.string.label_plan)) },
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = planExpanded) },
-                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                    singleLine = true,
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box {
+                        FilterChip(
+                            selected = selectedPlan != null,
+                            onClick = { planExpanded = true },
+                            label = { Text(selectedPlanName) },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
                                 )
-                                ExposedDropdownMenu(
-                                    expanded = planExpanded,
-                                    onDismissRequest = { planExpanded = false },
-                                ) {
+                            },
+                        )
+                        DropdownMenu(
+                            expanded = planExpanded,
+                            onDismissRequest = { planExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.label_all_plans)) },
+                                onClick = {
+                                    selectedPlan = null
+                                    selectedDay = null
+                                    planExpanded = false
+                                },
+                            )
+                            state.plans.forEach { plan ->
+                                DropdownMenuItem(
+                                    text = { Text(plan.name) },
+                                    onClick = {
+                                        selectedPlan = plan
+                                        selectedDay = null
+                                        planExpanded = false
+                                    },
+                                )
+                            }
+                        }
+                    }
+                    if (selectedPlan != null) {
+                        Box {
+                            FilterChip(
+                                selected = selectedDay != null,
+                                onClick = { dayExpanded = true },
+                                label = { Text(selectedDayName) },
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = null,
+                                    )
+                                },
+                            )
+                            DropdownMenu(
+                                expanded = dayExpanded,
+                                onDismissRequest = { dayExpanded = false },
+                            ) {
+                                availableDays.forEach { (day, title) ->
                                     DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.label_all_muscle_groups)) },
+                                        text = { Text(title) },
                                         onClick = {
-                                            selectedPlan = null
-                                            selectedDay = null
-                                            planExpanded = false
+                                            selectedDay = day
+                                            dayExpanded = false
                                         },
                                     )
-                                    state.plans.forEach { plan ->
-                                        DropdownMenuItem(
-                                            text = { Text(plan.name) },
-                                            onClick = {
-                                                selectedPlan = plan
-                                                selectedDay = null
-                                                planExpanded = false
-                                            },
-                                        )
-                                    }
-                                }
-                            }
-                            // Day dropdown — shown when a plan is selected
-                            if (selectedPlan != null) {
-                                ExposedDropdownMenuBox(
-                                    expanded = dayExpanded,
-                                    onExpandedChange = { dayExpanded = it },
-                                    modifier = Modifier.weight(1f),
-                                ) {
-                                    OutlinedTextField(
-                                        value = selectedDayName,
-                                        onValueChange = {},
-                                        readOnly = true,
-                                        label = { Text(stringResource(R.string.label_day)) },
-                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dayExpanded) },
-                                        modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                        singleLine = true,
-                                    )
-                                    ExposedDropdownMenu(
-                                        expanded = dayExpanded,
-                                        onDismissRequest = { dayExpanded = false },
-                                    ) {
-                                        availableDays.forEach { (day, title) ->
-                                            DropdownMenuItem(
-                                                text = { Text(title) },
-                                                onClick = {
-                                                    selectedDay = day
-                                                    dayExpanded = false
-                                                },
-                                            )
-                                        }
-                                    }
                                 }
                             }
                         }
+                    }
                 }
                 if (filteredSessions.isEmpty()) {
-                    item {
-                        EmptyState(
-                            icon = Icons.Rounded.History,
-                            text = stringResource(R.string.label_no_sessions),
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                        )
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(bottom = 48.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            EmptyState(
+                                icon = Icons.Rounded.History,
+                                text = stringResource(R.string.label_no_sessions),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 24.dp),
+                            )
+                            if (selectedPlan != null || selectedDay != null) {
+                                TextButton(
+                                    onClick = {
+                                        selectedPlan = null
+                                        selectedDay = null
+                                    },
+                                ) {
+                                    Text(stringResource(R.string.label_clear_filters))
+                                }
+                            }
+                        }
                     }
                 } else {
-                    items(
-                        items = filteredSessions,
-                        key = { it.id ?: it.hashCode() },
-                    ) { session ->
-                        SessionCard(
-                            modifier = Modifier.animateItem(),
-                            session = session,
-                            onClick = { onSessionClick(session.date) },
-                            dayTitles = state.dayTitles,
-                            planDayExerciseNames = state.planDayExerciseNames,
-                            onDelete = { sessionToDelete = session },
-                        )
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentPadding = PaddingValues(vertical = 6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        items(
+                            items = filteredSessions,
+                            key = { it.id ?: it.hashCode() },
+                        ) { session ->
+                            SessionCard(
+                                modifier = Modifier.animateItem(),
+                                session = session,
+                                onClick = { onSessionClick(session.date) },
+                                dayTitles = state.dayTitles,
+                                planDayExerciseNames = state.planDayExerciseNames,
+                                onDelete = { sessionToDelete = session },
+                            )
+                        }
                     }
                 }
             }
@@ -432,33 +456,30 @@ private fun DateSelectionRow(
     date: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
 ) {
-    val context = LocalContext.current
+    var showDatePicker by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(text = label, style = MaterialTheme.typography.bodyLarge)
-        TextButton(
-            onClick = {
-                val datePicker = android.app.DatePickerDialog(
-                    context,
-                    { _, year, month, dayOfMonth ->
-                        onDateSelected(LocalDate(year, month + 1, dayOfMonth))
-                    },
-                    date.year,
-                    date.monthNumber - 1,
-                    date.dayOfMonth
-                )
-                datePicker.show()
-            }
-        ) {
+        TextButton(onClick = { showDatePicker = true }) {
             Text(
                 text = formatDate(date, DateFormat.YearMonthDay),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold
             )
         }
+    }
+    if (showDatePicker) {
+        KenkoDatePickerDialog(
+            initialDate = date,
+            onDismiss = { showDatePicker = false },
+            onConfirm = { selected ->
+                selected?.let(onDateSelected)
+                showDatePicker = false
+            },
+        )
     }
 }
 
@@ -483,23 +504,11 @@ fun SessionCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
+                .padding(start = 16.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.Top,
         ) {
-            // Linear status dot
-            androidx.compose.foundation.layout.Box(
-                modifier = Modifier
-                    .padding(top = 6.dp, end = 8.dp)
-                    .size(6.dp)
-                    .clip(androidx.compose.foundation.shape.CircleShape)
-                    .background(
-                        if (isToday) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.outline
-                    )
-            )
             Column(modifier = Modifier.weight(1f)) {
             val titleStyle = MaterialTheme.typography.titleSmall
-            val onContainer = MaterialTheme.colorScheme.onSurface
             val secondaryEmphasis = MaterialTheme.colorScheme.onSurfaceVariant
             val effectiveDay = session.dayIndexOverride
             // 无 dayIndexOverride 的老记录:按动作名反查所属训练日,还原训练日名称
@@ -532,14 +541,25 @@ fun SessionCard(
             }
             Text(text = string)
 
-            // Duration — mono, subtle (labelSmall + onSurfaceVariant per三档规范)
+            // Duration — mono, subtle
             if (session.durationSeconds != null && session.durationSeconds > 0) {
-                val durationText = TimerService.formatTime(session.durationSeconds)
-                Text(
-                    text = durationText,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 2.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Timer,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = TimerService.formatTime(session.durationSeconds),
+                        style = MaterialTheme.typography.labelMedium.numbers(),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
 
             val exerciseNames = remember(session.exerciseNames) {
@@ -547,15 +567,15 @@ fun SessionCard(
             }
             Text(
                 text = exerciseNames,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
                 maxLines = 2,
             )
             }
             if (onDelete != null) {
                 DeleteIconButton(
                     onClick = onDelete,
-                    buttonSize = 32.dp,
                     iconSize = 18.dp,
                     tintAlpha = 0.7f,
                 )
@@ -595,7 +615,6 @@ private fun SessionsPreview() {
                 isCurrentSessionActive = false,
                 hasAnySessions = true,
             ),
-            onBackPress = {},
             onSessionClick = {},
             onRemoveSession = {},
             onAddClick = {},

@@ -15,7 +15,6 @@
 
 package com.looker.kenko.ui.feature.statistics.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,17 +26,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.DirectionsRun
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,18 +45,6 @@ import androidx.compose.ui.unit.dp
 import com.looker.kenko.R
 import com.looker.kenko.domain.statistics.CARDIO_PART
 import com.looker.kenko.ui.theme.KenkoTheme
-
-// 力量部位配色按部位在统计列表中的顺序分配（顺序由 DB 顶层标签 sortOrder 决定）。
-private val StrengthPartPalette = listOf(
-    Color(0xFF5E6AD2),
-    Color(0xFF10B981),
-    Color(0xFFF59E0B),
-    Color(0xFF8B5CF6),
-    Color(0xFFEF4444),
-    Color(0xFF06B6D4),
-)
-
-private val CardioPartColor = Color(0xFF9CA3AF)
 
 @Composable
 fun BalanceRingCard(
@@ -70,11 +58,19 @@ fun BalanceRingCard(
     val values = strengthParts.associateWith { monthlyCounts[it] ?: 0 }
     val total = values.values.sum()
     val outlineVariant = MaterialTheme.colorScheme.outlineVariant
-    val partColors = remember(strengthParts) {
-        strengthParts.withIndex().associate { (index, part) ->
-            part to StrengthPartPalette[index % StrengthPartPalette.size]
-        }
+    val colorScheme = MaterialTheme.colorScheme
+    val palette = listOf(
+        colorScheme.primary,
+        colorScheme.tertiary,
+        colorScheme.secondary,
+        colorScheme.primaryContainer,
+        colorScheme.tertiaryContainer,
+        colorScheme.secondaryContainer,
+    )
+    val partColors = strengthParts.withIndex().associate { (index, part) ->
+        part to palette[index % palette.size]
     }
+    val visibleParts = strengthParts.filter { (values[it] ?: 0) > 0 }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -123,39 +119,52 @@ fun BalanceRingCard(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     // Donut canvas — six strength parts only
-                    Canvas(modifier = Modifier.size(128.dp)) {
-                        val stroke = 18.dp.toPx()
-                        val diameter = size.minDimension - stroke
-                        val topLeft = Offset((size.width - diameter) / 2, (size.height - diameter) / 2)
-                        val arcSize = Size(diameter, diameter)
-                        var startAngle = -90f
-                        for (part in strengthParts) {
-                            val v = values[part] ?: 0
-                            if (v == 0) continue
-                            val sweep = 360f * v.toFloat() / total
-                            val color = partColors[part] ?: CardioPartColor
-                            drawArc(
-                                color = color,
-                                startAngle = startAngle,
-                                sweepAngle = sweep,
-                                useCenter = false,
-                                style = Stroke(width = stroke),
-                                topLeft = topLeft,
-                                size = arcSize,
+                    Box(contentAlignment = Alignment.Center) {
+                        Canvas(modifier = Modifier.size(128.dp)) {
+                            val stroke = 18.dp.toPx()
+                            val diameter = size.minDimension - stroke
+                            val topLeft = Offset((size.width - diameter) / 2, (size.height - diameter) / 2)
+                            val arcSize = Size(diameter, diameter)
+                            var startAngle = -90f
+                            for (part in strengthParts) {
+                                val v = values[part] ?: 0
+                                if (v == 0) continue
+                                val sweep = 360f * v.toFloat() / total
+                                val color = partColors[part] ?: outlineVariant
+                                drawArc(
+                                    color = color,
+                                    startAngle = startAngle,
+                                    sweepAngle = sweep,
+                                    useCenter = false,
+                                    style = Stroke(width = stroke),
+                                    topLeft = topLeft,
+                                    size = arcSize,
+                                )
+                                startAngle += sweep
+                            }
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = total.toString(),
+                                style = MaterialTheme.typography.titleLarge,
                             )
-                            startAngle += sweep
+                            Text(
+                                text = stringResource(R.string.label_session_count_unit),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
                     }
 
-                    // Legend — six strength parts
+                    // Legend — only parts that were trained this month
                     Column(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
-                        strengthParts.forEach { part ->
+                        visibleParts.forEach { part ->
                             val v = values[part] ?: 0
                             val pct = if (total == 0) 0f else v.toFloat() / total
-                            val color = partColors[part] ?: CardioPartColor
+                            val color = partColors[part] ?: outlineVariant
                             val pctText = stringResource(R.string.label_percent, (pct * 100).toInt())
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -190,26 +199,29 @@ fun BalanceRingCard(
             }
 
             // 有氧单独一行：有氧 X 分钟
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .background(CardioPartColor, RoundedCornerShape(2.dp)),
-                )
-                Text(
-                    text = CARDIO_PART,
-                    modifier = Modifier.width(36.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                )
-                Text(
-                    text = stringResource(R.string.label_count_minutes, cardioMonthly),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            if (cardioMonthly > 0) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.DirectionsRun,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Text(
+                        text = CARDIO_PART,
+                        modifier = Modifier.width(36.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                    Text(
+                        text = stringResource(R.string.label_count_minutes, cardioMonthly),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }

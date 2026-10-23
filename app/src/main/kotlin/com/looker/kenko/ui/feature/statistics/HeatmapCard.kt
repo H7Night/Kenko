@@ -42,7 +42,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,15 +78,16 @@ fun HeatmapCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 12.dp, bottom = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             // Simple header for 90d window — no year navigation
             Text(
                 text = stringResource(R.string.label_heatmap_activity),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
             )
 
             // Last 120 days, fitted to the card width (no horizontal scroll)
@@ -100,7 +100,48 @@ fun HeatmapCard(
                     data = data,
                 )
             }
+            HeatmapLegend(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+            )
         }
+    }
+}
+
+@Composable
+private fun HeatmapLegend(modifier: Modifier = Modifier) {
+    val primary = MaterialTheme.colorScheme.primary
+    val levels = listOf(
+        primary.copy(alpha = 0.25f),
+        primary.copy(alpha = 0.5f),
+        primary.copy(alpha = 0.75f),
+        primary,
+    )
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.label_heatmap_less),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        levels.forEach { color ->
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 1.dp)
+                    .size(10.dp)
+                    .clip(MaterialTheme.shapes.extraSmall)
+                    .background(color),
+            )
+        }
+        Text(
+            text = stringResource(R.string.label_heatmap_more),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -188,15 +229,18 @@ private fun HeatmapGrid(
                 modifier = Modifier.width(labelWidth),
                 verticalArrangement = Arrangement.spacedBy(cellGap)
             ) {
-                listOf(0, 2, 4).forEach { idx ->
+                repeat(7) { idx ->
                     Box(modifier = Modifier.size(cellSize)) {
-                        Text(
-                            text = weekdays[idx],
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
+                        // Only show Mon/Wed/Fri, but keep seven rows so labels align with the grid.
+                        if (idx == 0 || idx == 2 || idx == 4) {
+                            Text(
+                                text = weekdays[idx],
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }

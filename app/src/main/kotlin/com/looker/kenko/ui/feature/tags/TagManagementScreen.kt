@@ -57,6 +57,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.ui.component.TooltipIconButton
 import com.looker.kenko.ui.theme.KenkoTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -214,14 +215,34 @@ private fun ParentTagCard(
                 style = MaterialTheme.typography.titleMedium,
             )
             Row {
-                IconButton(onClick = onAddChild) {
-                    Icon(Icons.Default.Label, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                TooltipIconButton(
+                    tooltip = stringResource(R.string.label_add_tag),
+                    onClick = onAddChild,
+                ) {
+                    Icon(
+                        Icons.Default.Label,
+                        contentDescription = stringResource(R.string.label_add_tag),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
                 }
-                IconButton(onClick = { onEdit(parent) }) {
-                    Icon(Icons.Default.Edit, contentDescription = null)
+                TooltipIconButton(
+                    tooltip = stringResource(R.string.label_edit_tag),
+                    onClick = { onEdit(parent) },
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.label_edit_tag),
+                    )
                 }
-                IconButton(onClick = { onDelete(parent) }) {
-                    Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                TooltipIconButton(
+                    tooltip = stringResource(R.string.label_delete_tag),
+                    onClick = { onDelete(parent) },
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.label_delete_tag),
+                        tint = MaterialTheme.colorScheme.error,
+                    )
                 }
             }
         }
@@ -254,11 +275,26 @@ private fun ChildTagRow(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Row {
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.height(20.dp))
+            TooltipIconButton(
+                tooltip = stringResource(R.string.label_edit_tag),
+                onClick = onEdit,
+            ) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = stringResource(R.string.label_edit_tag),
+                    modifier = Modifier.height(20.dp),
+                )
             }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.height(20.dp), tint = MaterialTheme.colorScheme.error)
+            TooltipIconButton(
+                tooltip = stringResource(R.string.label_delete_tag),
+                onClick = onDelete,
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.label_delete_tag),
+                    modifier = Modifier.height(20.dp),
+                    tint = MaterialTheme.colorScheme.error,
+                )
             }
         }
     }

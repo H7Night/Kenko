@@ -32,8 +32,9 @@
     <string name="label_current_plan_home">Current\nPlan</string>
 
     <!--Sessions-->
-    <string name="label_sessions_title">History</string>
     <string name="label_records">Records</string>
+    <string name="label_all_plans">All plans</string>
+    <string name="label_clear_filters">Clear filters</string>
     <string name="label_delete_session_title">Delete Session?</string>
     <string name="label_delete_session_message">This will permanently delete this session and all its sets.</string>
     <string name="label_deleted">Deleted</string>
@@ -135,6 +136,13 @@
 
     <!--Exercises-->
     <string name="label_browse_exercises">Browse Exercises</string>
+    <string name="label_search_exercises">Search exercises</string>
+    <string name="label_clear_search">Clear search</string>
+    <string name="label_all_parts">All parts</string>
+    <string name="label_all_muscles">All muscles</string>
+    <string name="label_all_equipment">All equipment</string>
+    <string name="label_no_exercises">No exercises yet</string>
+    <string name="label_no_matching_exercises">No matching exercises</string>
     <string name="label_all_muscle_groups">All</string>
     <string name="label_create_exercise">Create</string>
     <string name="label_create_exercise_name">Create \"%s\"</string>
@@ -186,17 +194,27 @@
     <string name="label_delete">Delete</string>
     <string name="label_yes">Yes</string>
     <string name="label_no">No</string>
+    <string name="label_back">Back</string>
+    <string name="label_more_options">More options</string>
+    <string name="label_set_current_plan">Set as current plan</string>
+    <string name="label_current">Current</string>
+    <string name="label_remove">Remove</string>
+    <string name="label_previous_session">Previous session</string>
+    <string name="label_edit_record">Edit record</string>
 
     <!--Project Specific-->
     <string name="label_session">Session</string>
     <string name="label_exercise">Exercise</string>
     <string name="label_reps">reps</string>
     <string name="label_duration">duration</string>
+    <string name="label_duration_summary">Duration</string>
     <string name="label_weight">weight</string>
     <string name="label_bodyweight">BW</string>
     <string name="label_bodyweight_display">Body Weight</string>
     <string name="label_use_bodyweight">Use Body Weight</string>
     <string name="label_sets">sets</string>
+    <string name="label_add_set">Add set</string>
+    <string name="label_no_sets_recorded">No sets recorded</string>
     <string name="label_sets_count">%1$s sets</string>
     <string name="label_check_mark" translatable="false">✓</string>
     <string name="label_coming_soon">Coming Soon</string>
@@ -205,7 +223,7 @@
     <string name="label_home">Home</string>
     <string name="label_performance">Performance</string>
     <string name="label_statistics">Statistics</string>
-    <string name="label_profile">You</string>
+    <string name="label_profile">Profile</string>
 
     <!--Statistics-->
     <string name="label_heatmap_activity">Activity</string>
@@ -220,6 +238,10 @@
     <string name="label_trend_12w">12-Week Trend</string>
     <string name="label_weekly_count">Sessions per week</string>
     <string name="label_total_times">Total %1$d sessions</string>
+    <string name="label_session_count_unit">sessions</string>
+    <string name="label_week_sessions">Sessions</string>
+    <string name="label_heatmap_less">Less</string>
+    <string name="label_heatmap_more">More</string>
     <string name="label_max_week">Peak %1$d/week</string>
 
     <string-array name="month_short">
@@ -280,6 +302,7 @@
     <string name="label_health_connect_synced">Synced %1$d sessions</string>
 
     <string name="label_backup">Backup &amp; Restore</string>
+    <string name="label_backup_folder">Folder: %1$s</string>
     <string name="label_backup_location">Backup Location</string>
     <string name="label_backup_location_not_set">Not set</string>
     <string name="label_backup_interval">Backup Frequency</string>
@@ -344,6 +367,8 @@
     <string name="label_timer_channel">Workout Timer</string>
     <string name="label_timer_channel_desc">Timer notification for active workouts</string>
     <string name="label_timer_running">Workout in progress</string>
+    <string name="label_notification_rationale">Allow notifications to keep the workout timer visible in the background</string>
+    <string name="label_enable">Enable</string>
     <string name="label_start_workout">Start Workout</string>
     <string name="label_pause">Pause</string>
     <string name="label_resume">Resume</string>
@@ -389,6 +414,8 @@
     <string name="label_start_session_heading">Start today\'s session</string>
     <string name="label_continue_session_heading">Continue today\'s session</string>
     <string name="label_next">Next</string>
+    <string name="label_previous_month">Previous month</string>
+    <string name="label_next_month">Next month</string>
     <string name="label_boarding_quote">Your next transformation starts here.</string>
     <string name="label_no_sessions">No sessions performed</string>
     <string-array name="label_features">

@@ -68,6 +68,7 @@ import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.KenkoDatePickerDialog
 import com.looker.kenko.ui.component.OutlineBorder
 import com.looker.kenko.ui.component.SecondaryBorder
+import com.looker.kenko.ui.component.TooltipIconButton
 import com.looker.kenko.ui.component.WeightLineChart
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.extension.plus
@@ -180,8 +181,14 @@ private fun Profile(
                 title = { Text(text = stringResource(R.string.label_profile)) },
                 navigationIcon = { if (showBackButton) BackButton(onBackPress) },
                 actions = {
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(painter = KenkoIcons.Settings, contentDescription = null)
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.label_settings),
+                        onClick = onSettingsClick,
+                    ) {
+                        Icon(
+                            painter = KenkoIcons.Settings,
+                            contentDescription = stringResource(R.string.label_settings),
+                        )
                     }
                 },
             )
@@ -350,9 +357,9 @@ private fun WeightCard(
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                IconButton(
+                TooltipIconButton(
+                    tooltip = stringResource(R.string.label_add),
                     onClick = onAddClick,
-                    modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
                         painter = KenkoIcons.Add,
@@ -368,14 +375,14 @@ private fun WeightCard(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconButton(
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.label_previous_month),
                         onClick = onPrevMonth,
                         enabled = canGoPrev,
-                        modifier = Modifier.size(28.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowLeft,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.label_previous_month),
                             modifier = Modifier.size(20.dp),
                         )
                     }
@@ -384,14 +391,14 @@ private fun WeightCard(
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.padding(horizontal = 2.dp),
                     )
-                    IconButton(
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.label_next_month),
                         onClick = onNextMonth,
                         enabled = canGoNext,
-                        modifier = Modifier.size(28.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowRight,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.label_next_month),
                             modifier = Modifier.size(20.dp),
                         )
                     }

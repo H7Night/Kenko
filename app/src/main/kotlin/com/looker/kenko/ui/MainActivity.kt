@@ -22,6 +22,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -207,6 +208,9 @@ fun Kenko(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         bottomBar = { bottomBar() },
+        // 只负责底部导航栏占位;顶部/底部系统栏由各页自己的 TopAppBar/Scaffold 处理,
+        // 避免状态栏 inset 被外层和内层各算一次(顶部多出约 50dp 空白)。
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { innerPadding ->
         content(innerPadding)
     }

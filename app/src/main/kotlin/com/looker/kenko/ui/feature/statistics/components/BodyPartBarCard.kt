@@ -94,6 +94,7 @@ fun BodyPartBarCard(
                             .height(8.dp),
                         color = MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        drawStopIndicator = {},
                     )
                     Text(
                         text = label,
