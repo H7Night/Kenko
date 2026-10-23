@@ -456,7 +456,7 @@ private fun WeeklySummaryCard(
                 }
                 Column {
                     Text(
-                        text = stringResource(R.string.label_duration),
+                        text = stringResource(R.string.label_duration_summary),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

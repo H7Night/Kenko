@@ -207,6 +207,7 @@
     <string name="label_exercise">Exercise</string>
     <string name="label_reps">reps</string>
     <string name="label_duration">duration</string>
+    <string name="label_duration_summary">Duration</string>
     <string name="label_weight">weight</string>
     <string name="label_bodyweight">BW</string>
     <string name="label_bodyweight_display">Body Weight</string>

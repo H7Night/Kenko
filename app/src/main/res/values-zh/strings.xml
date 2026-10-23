@@ -204,6 +204,7 @@
     <string name="label_exercise">动作</string>
     <string name="label_reps">次数</string>
     <string name="label_duration">时长</string>
+    <string name="label_duration_summary">时长</string>
     <string name="label_weight">重量</string>
     <string name="label_bodyweight">自重</string>
     <string name="label_bodyweight_display">自重</string>
