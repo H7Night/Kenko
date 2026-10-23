@@ -100,7 +100,48 @@ fun HeatmapCard(
                     data = data,
                 )
             }
+            HeatmapLegend(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+            )
         }
+    }
+}
+
+@Composable
+private fun HeatmapLegend(modifier: Modifier = Modifier) {
+    val primary = MaterialTheme.colorScheme.primary
+    val levels = listOf(
+        primary.copy(alpha = 0.25f),
+        primary.copy(alpha = 0.5f),
+        primary.copy(alpha = 0.75f),
+        primary,
+    )
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.label_heatmap_less),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        levels.forEach { color ->
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 1.dp)
+                    .size(10.dp)
+                    .clip(MaterialTheme.shapes.extraSmall)
+                    .background(color),
+            )
+        }
+        Text(
+            text = stringResource(R.string.label_heatmap_more),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -243,33 +284,6 @@ private fun HeatmapGrid(
                         }
                     }
                 }
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp, end = 4.dp),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(R.string.label_heatmap_less),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                levels.drop(1).forEach { color ->
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 1.dp)
-                            .size(10.dp)
-                            .clip(MaterialTheme.shapes.extraSmall)
-                            .background(color),
-                    )
-                }
-                Text(
-                    text = stringResource(R.string.label_heatmap_more),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
     }

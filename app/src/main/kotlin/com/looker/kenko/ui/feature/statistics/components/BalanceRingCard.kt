@@ -26,8 +26,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.DirectionsRun
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -67,7 +70,6 @@ fun BalanceRingCard(
     val partColors = strengthParts.withIndex().associate { (index, part) ->
         part to palette[index % palette.size]
     }
-    val cardioColor = colorScheme.tertiary
     val visibleParts = strengthParts.filter { (values[it] ?: 0) > 0 }
 
     Card(
@@ -203,10 +205,11 @@ fun BalanceRingCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .background(cardioColor, RoundedCornerShape(2.dp)),
+                    Icon(
+                        imageVector = Icons.Rounded.DirectionsRun,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp),
                     )
                     Text(
                         text = CARDIO_PART,
