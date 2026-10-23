@@ -17,6 +17,7 @@ package com.looker.kenko.ui.feature.exercise
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -33,28 +34,34 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.FitnessCenter
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.ShowChart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,9 +79,6 @@ import com.looker.kenko.domain.model.labelRes
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.component.ErrorSnackbar
-import com.looker.kenko.ui.component.KenkoBorder
-import com.looker.kenko.ui.component.KenkoBorderStrong
-import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.ConfirmDialog
 import com.looker.kenko.ui.component.DeleteIconButton
 import com.looker.kenko.ui.extension.plus
@@ -140,7 +144,31 @@ private fun Exercises(
     modifier: Modifier = Modifier,
 ) {
     var exerciseToDelete by remember { mutableStateOf<Int?>(null) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    var parentExpanded by remember { mutableStateOf(false) }
+    var childExpanded by remember { mutableStateOf(false) }
+    var equipmentExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    val childTags = remember(allTags, selectedParent) {
+        if (selectedParent == null) emptyList()
+        else allTags.filter { it.parentId == selectedParent }
+    }
+    val query = searchQuery.trim()
+    val visibleExercises = remember(state, query) {
+        if (query.isEmpty()) state
+        else state.filter { it.name.contains(query, ignoreCase = true) }
+    }
+    val hasActiveFilters = selectedParent != null ||
+        selectedChild != null ||
+        selectedEquipment != null ||
+        query.isNotEmpty()
+    val selectedParentName = parentTags.firstOrNull { it.id == selectedParent }?.name
+        ?: stringResource(R.string.label_all_parts)
+    val selectedChildName = allTags.firstOrNull { it.id == selectedChild }?.name
+        ?: stringResource(R.string.label_all_muscles)
+    val selectedEquipmentName = selectedEquipment?.let { stringResource(it.labelRes) }
+        ?: stringResource(R.string.label_all_equipment)
 
     Scaffold(
         modifier = modifier.fillMaxWidth(),
@@ -165,103 +193,149 @@ private fun Exercises(
                         BackButton(onClick = onBackPress)
                     }
                 )
-                HorizontalDivider(thickness = KenkoBorderWidth)
-
-                // Task 2: Two-level FilterChip rows — reuse Tag grouping, KenkoBorder/KenkoBorderStrong
-                val childTags = remember(allTags, selectedParent) {
-                    if (selectedParent == null) emptyList()
-                    else allTags.filter { it.parentId == selectedParent }
-                }
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    placeholder = { Text(stringResource(R.string.label_search_exercises)) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Rounded.Search,
+                            contentDescription = null,
+                        )
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Close,
+                                    contentDescription = stringResource(R.string.label_clear_search),
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.extraLarge,
+                )
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    FilterChip(
-                        selected = selectedParent == null,
-                        onClick = { onSelectParent(null) },
-                        label = { Text(stringResource(R.string.label_all_muscle_groups)) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                            selectedLabelColor = MaterialTheme.colorScheme.primary,
-                        ),
-                        border = if (selectedParent == null) KenkoBorderStrong else KenkoBorder,
-                    )
-                    parentTags.forEach { parent ->
-                        val isSelected = parent.id == selectedParent
+                    Box {
                         FilterChip(
-                            selected = isSelected,
-                            onClick = { onSelectParent(parent.id) },
-                            label = { Text(parent.name) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                selectedLabelColor = MaterialTheme.colorScheme.primary,
-                            ),
-                            border = if (isSelected) KenkoBorderStrong else KenkoBorder,
+                            selected = selectedParent != null,
+                            onClick = { parentExpanded = true },
+                            label = { Text(selectedParentName) },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                )
+                            },
                         )
-                    }
-                }
-                if (selectedParent != null) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .padding(horizontal = 12.dp, vertical = 2.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        FilterChip(
-                            selected = selectedChild == null,
-                            onClick = { onSelectChild(null) },
-                            label = { Text(stringResource(R.string.label_all_muscle_groups)) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                selectedLabelColor = MaterialTheme.colorScheme.primary,
-                            ),
-                            border = if (selectedChild == null) KenkoBorderStrong else KenkoBorder,
-                        )
-                        childTags.forEach { muscle ->
-                            val isSelected = muscle.id == selectedChild
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { onSelectChild(muscle.id) },
-                                label = { Text(muscle.name) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                    selectedLabelColor = MaterialTheme.colorScheme.primary,
-                                ),
-                                border = if (isSelected) KenkoBorderStrong else KenkoBorder,
+                        DropdownMenu(
+                            expanded = parentExpanded,
+                            onDismissRequest = { parentExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.label_all_parts)) },
+                                onClick = {
+                                    onSelectParent(null)
+                                    parentExpanded = false
+                                },
                             )
+                            parentTags.forEach { parent ->
+                                DropdownMenuItem(
+                                    text = { Text(parent.name) },
+                                    onClick = {
+                                        onSelectParent(parent.id)
+                                        parentExpanded = false
+                                    },
+                                )
+                            }
                         }
                     }
-                }
-                // 器械筛选
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 12.dp, vertical = 2.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    com.looker.kenko.domain.model.ExerciseEquipment.entries.forEach { equipment ->
-                        val isSelected = equipment == selectedEquipment
+                    if (selectedParent != null) {
+                        Box {
+                            FilterChip(
+                                selected = selectedChild != null,
+                                onClick = { childExpanded = true },
+                                label = { Text(selectedChildName) },
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = null,
+                                    )
+                                },
+                            )
+                            DropdownMenu(
+                                expanded = childExpanded,
+                                onDismissRequest = { childExpanded = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.label_all_muscles)) },
+                                    onClick = {
+                                        onSelectChild(null)
+                                        childExpanded = false
+                                    },
+                                )
+                                childTags.forEach { muscle ->
+                                    DropdownMenuItem(
+                                        text = { Text(muscle.name) },
+                                        onClick = {
+                                            onSelectChild(muscle.id)
+                                            childExpanded = false
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Box {
                         FilterChip(
-                            selected = isSelected,
-                            onClick = { onSelectEquipment(if (isSelected) null else equipment) },
-                            label = { Text(stringResource(equipment.labelRes)) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                selectedLabelColor = MaterialTheme.colorScheme.primary,
-                            ),
-                            border = if (isSelected) KenkoBorderStrong else KenkoBorder,
+                            selected = selectedEquipment != null,
+                            onClick = { equipmentExpanded = true },
+                            label = { Text(selectedEquipmentName) },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                )
+                            },
                         )
+                        DropdownMenu(
+                            expanded = equipmentExpanded,
+                            onDismissRequest = { equipmentExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.label_all_equipment)) },
+                                onClick = {
+                                    onSelectEquipment(null)
+                                    equipmentExpanded = false
+                                },
+                            )
+                            com.looker.kenko.domain.model.ExerciseEquipment.entries.forEach { equipment ->
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(equipment.labelRes)) },
+                                    onClick = {
+                                        onSelectEquipment(equipment)
+                                        equipmentExpanded = false
+                                    },
+                                )
+                            }
+                        }
                     }
                 }
             }
         },
     ) { innerPadding ->
-        if (state.isEmpty()) {
+        if (visibleExercises.isEmpty()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -272,25 +346,41 @@ private fun Exercises(
             ) {
                 EmptyState(
                     icon = Icons.Rounded.FitnessCenter,
-                    text = stringResource(R.string.label_no_exercise_today),
+                    text = stringResource(
+                        if (hasActiveFilters) R.string.label_no_matching_exercises
+                        else R.string.label_no_exercises,
+                    ),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = onCreateClick,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
-                ) {
-                    Icon(painter = KenkoIcons.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.label_create_exercise))
+                if (hasActiveFilters) {
+                    TextButton(
+                        onClick = {
+                            searchQuery = ""
+                            onSelectParent(null)
+                            onSelectChild(null)
+                            onSelectEquipment(null)
+                        },
+                    ) {
+                        Text(stringResource(R.string.label_clear_filters))
+                    }
+                } else {
+                    Button(
+                        onClick = onCreateClick,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                    ) {
+                        Icon(painter = KenkoIcons.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.label_create_exercise))
+                    }
                 }
             }
         } else {
             ExercisesList(
-                exercises = state,
+                exercises = visibleExercises,
                 contentPadding = innerPadding + PaddingValues(bottom = 80.dp),
                 onExerciseClick = onExerciseClick,
                 onReferenceClick = onReferenceClick,

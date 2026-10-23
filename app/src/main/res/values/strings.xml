@@ -136,6 +136,13 @@
 
     <!--Exercises-->
     <string name="label_browse_exercises">Browse Exercises</string>
+    <string name="label_search_exercises">Search exercises</string>
+    <string name="label_clear_search">Clear search</string>
+    <string name="label_all_parts">All parts</string>
+    <string name="label_all_muscles">All muscles</string>
+    <string name="label_all_equipment">All equipment</string>
+    <string name="label_no_exercises">No exercises yet</string>
+    <string name="label_no_matching_exercises">No matching exercises</string>
     <string name="label_all_muscle_groups">All</string>
     <string name="label_create_exercise">Create</string>
     <string name="label_create_exercise_name">Create \"%s\"</string>
