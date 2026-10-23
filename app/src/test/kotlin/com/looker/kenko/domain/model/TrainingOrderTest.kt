@@ -110,8 +110,18 @@ class TrainingOrderTest {
     }
 
     @Test
-    fun deletingAllSetsOfOneExerciseRenumbersRemaining() {
+    fun recordedOnlyKeepsExercisesWithSets() {
         val pullDown = exercise("高位下拉", 1)
+        val raise = exercise("侧平举", 2)
+        val ordered = orderTrainingExercises(
+            planned = listOf(pullDown, raise),
+            sets = listOf(setOf(pullDown, 0)),
+        )
+        assertEquals(listOf("高位下拉"), ordered.recordedOnly().map { it.exercise.name })
+    }
+
+    @Test
+    fun deletingAllSetsOfOneExerciseRenumbersRemaining() {        val pullDown = exercise("高位下拉", 1)
         val raise = exercise("侧平举", 2)
         val squat = exercise("深蹲", 3)
         val planned = listOf(pullDown, raise, squat)

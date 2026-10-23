@@ -52,3 +52,7 @@ fun orderTrainingExercises(
 
     return notStarted + started
 }
+
+/** 历史记录视图:只保留真正练过(至少有一组)的动作。 */
+fun List<TrainingExercise>.recordedOnly(): List<TrainingExercise> =
+    filter { it.sets.isNotEmpty() }

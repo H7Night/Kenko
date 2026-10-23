@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -72,70 +73,104 @@ fun SetItem(
     isEditMode: Boolean = false,
     onRepsUpdate: (Int) -> Unit = {},
     onWeightUpdate: (Float) -> Unit = {},
+    showContainer: Boolean = true,
+    title: @Composable () -> Unit,
+) {
+    if (showContainer) {
+        Surface(
+            modifier = Modifier
+                .widthIn(200.dp, 420.dp)
+                .then(modifier),
+            shape = MaterialTheme.shapes.small,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ) {
+            SetItemRow(
+                set = set,
+                isEditMode = isEditMode,
+                onRepsUpdate = onRepsUpdate,
+                onWeightUpdate = onWeightUpdate,
+                title = title,
+            )
+        }
+    } else {
+        SetItemRow(
+            set = set,
+            modifier = modifier.fillMaxWidth(),
+            isEditMode = isEditMode,
+            onRepsUpdate = onRepsUpdate,
+            onWeightUpdate = onWeightUpdate,
+            title = title,
+        )
+    }
+}
+
+@Composable
+private fun SetItemRow(
+    set: Set,
+    modifier: Modifier = Modifier,
+    isEditMode: Boolean = false,
+    onRepsUpdate: (Int) -> Unit = {},
+    onWeightUpdate: (Float) -> Unit = {},
     title: @Composable () -> Unit,
 ) {
     val isCardio = set.exercise.countType == CountType.MINUTES
-    val containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-    val containerShape = MaterialTheme.shapes.small
-    Surface(
-        modifier = Modifier
-            .widthIn(200.dp, 420.dp)
-            .then(modifier),
-        shape = containerShape,
-        color = containerColor,
+    Row(
+        modifier = modifier
+            .heightIn(44.dp)
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier
-                .heightIn(44.dp)
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        CompositionLocalProvider(
+            LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
+            LocalTextStyle provides MaterialTheme.typography.titleMedium.numbers(),
         ) {
-            CompositionLocalProvider(
-                LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
-                LocalTextStyle provides MaterialTheme.typography.titleMedium.numbers(),
-            ) {
-                Box(modifier = Modifier.padding(end = 12.dp)) {
-                    title()
-                }
+            Box(modifier = Modifier.padding(end = 12.dp)) {
+                title()
             }
-            Row(
-                modifier = Modifier.weight(1F),
-                horizontalArrangement = Arrangement.SpaceAround,
-            ) {
-                PerformedItem(
-                    title = stringResource(set.exercise.repDurationStringRes),
-                    performance = if (isCardio) "${set.repsOrDuration} ${stringResource(R.string.label_min)}" else "${set.repsOrDuration}",
-                    isEditMode = isEditMode,
-                    keyboardType = KeyboardType.Number,
-                    onValueUpdate = { onRepsUpdate(it.toIntOrNull() ?: set.repsOrDuration) },
-                )
-                if (!isCardio) {
-                    // 自重动作: 重量为 0 表示纯自重(显示"自重"); 非 0 表示附加重量,显示数值。
-                    if (set.exercise.isBodyweight && set.weight <= 0F) {
-                        Column(
-                            modifier = Modifier,
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            Text(
-                                text = stringResource(R.string.label_weight).uppercase(),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Text(
-                                text = stringResource(R.string.label_bodyweight_display),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    } else {
-                        PerformedItem(
-                            title = stringResource(R.string.label_weight),
-                            performance = "${set.weight} KG",
-                            isEditMode = isEditMode,
-                            keyboardType = KeyboardType.Decimal,
-                            onValueUpdate = { onWeightUpdate(it.toFloatOrNull() ?: set.weight) },
+        }
+        Row(
+            modifier = Modifier.weight(1F),
+            horizontalArrangement = Arrangement.SpaceAround,
+        ) {
+            PerformedItem(
+                title = stringResource(set.exercise.repDurationStringRes),
+                performance = if (isCardio) {
+                    "${set.repsOrDuration} ${stringResource(R.string.label_min)}"
+                } else {
+                    "${set.repsOrDuration}"
+                },
+                initialEditValue = set.repsOrDuration.toString(),
+                isEditMode = isEditMode,
+                keyboardType = KeyboardType.Number,
+                onValueUpdate = { onRepsUpdate(it.toIntOrNull() ?: set.repsOrDuration) },
+            )
+            if (!isCardio) {
+                // 自重动作: 重量为 0 表示纯自重(显示"自重"); 非 0 表示附加重量,显示数值。
+                if (set.exercise.isBodyweight && set.weight <= 0F) {
+                    Column(
+                        modifier = Modifier,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.label_weight),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            text = stringResource(R.string.label_bodyweight_display),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
+                } else {
+                    PerformedItem(
+                        title = stringResource(R.string.label_weight),
+                        performance = "${set.weight} ${stringResource(R.string.label_weight_unit)}",
+                        initialEditValue = set.weight.toString(),
+                        isEditMode = isEditMode,
+                        keyboardType = KeyboardType.Decimal,
+                        onValueUpdate = { onWeightUpdate(it.toFloatOrNull() ?: set.weight) },
+                    )
                 }
             }
         }
@@ -147,18 +182,18 @@ fun SetItem(
 private fun PerformedItem(
     title: String,
     performance: String,
+    initialEditValue: String = performance,
     isEditMode: Boolean,
     keyboardType: KeyboardType,
     onValueUpdate: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var isEditing by remember { mutableStateOf(false) }
-    val initialValue = performance.replace(" KG", "")
-    var textValue by remember(performance) {
+    var textValue by remember(initialEditValue) {
         mutableStateOf(
             TextFieldValue(
-                text = initialValue,
-                selection = TextRange(initialValue.length),
+                text = initialEditValue,
+                selection = TextRange(initialEditValue.length),
             ),
         )
     }
@@ -174,7 +209,7 @@ private fun PerformedItem(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = title.uppercase(),
+            text = title,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

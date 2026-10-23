@@ -38,7 +38,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -46,6 +45,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -91,15 +91,19 @@ import com.looker.kenko.domain.model.TrainingExercise
 import com.looker.kenko.ui.feature.session.AddSet
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.BodyPartMuscleFilter
+import com.looker.kenko.ui.component.DeleteIconButton
+import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.StickyHeader
-import com.looker.kenko.ui.component.DeletableSetItem
 import com.looker.kenko.ui.component.SetDeleteDialog
 import com.looker.kenko.ui.component.SetItem
+import com.looker.kenko.ui.component.timer.TimerService
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
+import com.looker.kenko.ui.theme.numbers
+import com.looker.kenko.ui.theme.numbers
 import com.looker.kenko.utils.DateFormat
 import com.looker.kenko.utils.formatDate
 import java.util.*
@@ -279,6 +283,7 @@ private fun SessionDetail(
             SetsList(
                 date = data.date,
                 exerciseSets = data.sets,
+                durationSeconds = data.durationSeconds,
                 isToday = data.isToday,
                 isEditMode = data.isEditMode,
                 previousSessionDate = data.previousSessionDate,
@@ -311,6 +316,7 @@ private fun SessionDetail(
 private fun SetsList(
     date: LocalDate,
     exerciseSets: List<TrainingExercise>,
+    durationSeconds: Long?,
     isToday: Boolean,
     isEditMode: Boolean,
     previousSessionDate: LocalDate?,
@@ -427,6 +433,7 @@ private fun SetsList(
                 performedOn = date,
                 dayTitle = dayTitle,
                 dayIndexOverride = dayIndexOverride,
+                durationSeconds = durationSeconds,
                 onBackPress = onBackPress,
                 showBackButton = showBackButton,
                 actions = {
@@ -434,13 +441,13 @@ private fun SetsList(
                         IconButton(onClick = { showAddExerciseDialog = true }) {
                             Icon(
                                 imageVector = Icons.Default.Add,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.label_add_exercise),
                             )
                         }
                         IconButton(onClick = { showImportDialog = true }) {
                             Icon(
                                 imageVector = Icons.Rounded.SwapHoriz,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.label_change_plan),
                             )
                         }
                     } else if (isEditMode) {
@@ -448,7 +455,7 @@ private fun SetsList(
                         IconButton(onClick = { showAddExerciseDialog = true }) {
                             Icon(
                                 imageVector = Icons.Default.Add,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.label_add_exercise),
                             )
                         }
                     }
@@ -457,7 +464,7 @@ private fun SetsList(
                         IconButton(onClick = onHistoryClick) {
                             Icon(
                                 painter = KenkoIcons.History,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.label_previous_session),
                             )
                         }
                     }
@@ -466,12 +473,26 @@ private fun SetsList(
                         IconButton(onClick = onEditToggle) {
                             Icon(
                                 painter = if (isEditMode) KenkoIcons.Done else KenkoIcons.Rename,
-                                contentDescription = null,
+                                contentDescription = stringResource(
+                                    if (isEditMode) R.string.label_confirm
+                                    else R.string.label_edit_record,
+                                ),
                             )
                         }
                     }
                 },
             )
+        }
+        if (exerciseSets.isEmpty()) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                EmptyState(
+                    icon = Icons.Rounded.History,
+                    text = stringResource(R.string.label_no_sets_recorded),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                )
+            }
         }
         exerciseSets.forEach { row ->
             val exercise = row.exercise
@@ -497,7 +518,10 @@ private fun SetsList(
                         // 手动添加的动作可移除
                         if (exercise.id in extraExerciseIds && (isToday || isEditMode)) {
                             IconButton(onClick = { onRemoveExtraExercise(exercise) }) {
-                                Icon(painter = KenkoIcons.Remove, contentDescription = null)
+                                Icon(
+                                    painter = KenkoIcons.Remove,
+                                    contentDescription = stringResource(R.string.label_remove),
+                                )
                             }
                         }
                         if (isEditMode) {
@@ -508,28 +532,60 @@ private fun SetsList(
                                 ),
                                 onClick = { onSelectBottomSheet(exercise) },
                             ) {
-                                Icon(painter = KenkoIcons.Add, contentDescription = null)
+                                Icon(
+                                    painter = KenkoIcons.Add,
+                                    contentDescription = stringResource(R.string.label_add_set),
+                                )
                             }
                         }
                     }
                 }
             }
-            if (!isCollapsed) {
-                itemsIndexed(items = sets) { index, set ->
-                    DeletableSetItem(
-                        modifier = Modifier
-                            .animateItem()
-                            .padding(horizontal = 16.dp, vertical = 6.dp),
-                        set = set,
-                        isToday = isToday,
-                        isEditMode = isEditMode,
-                        onRepsUpdate = { onUpdateSet(set.id, it, set.weight) },
-                        onWeightUpdate = { onUpdateSet(set.id, set.repsOrDuration, it) },
-                        onDelete = if (isEditMode) { { setToDelete = set.id } } else null,
-                        title = {
-                            Text(normalizeInt(index + 1))
-                        },
-                    )
+            if (!isCollapsed && sets.isNotEmpty()) {
+                item(
+                    key = "sets-${exercise.id ?: exercise.name}",
+                    span = { GridItemSpan(maxLineSpan) },
+                ) {
+                    // 同一动作的组放在一张卡片里,行间用细分隔线,避免每组一张大卡。
+                    Surface(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ) {
+                        Column {
+                            sets.forEachIndexed { index, set ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    SetItem(
+                                        set = set,
+                                        showContainer = false,
+                                        modifier = Modifier.weight(1f),
+                                        isToday = isToday,
+                                        isEditMode = isEditMode,
+                                        onRepsUpdate = { onUpdateSet(set.id, it, set.weight) },
+                                        onWeightUpdate = { onUpdateSet(set.id, set.repsOrDuration, it) },
+                                        title = {
+                                            Text(normalizeInt(index + 1))
+                                        },
+                                    )
+                                    if (isEditMode) {
+                                        DeleteIconButton(
+                                            onClick = { set.id?.let { setToDelete = it } },
+                                        )
+                                    }
+                                }
+                                if (index != sets.lastIndex) {
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(start = 48.dp, end = 12.dp),
+                                        thickness = 1.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -549,6 +605,7 @@ private fun Header(
     performedOn: LocalDate,
     dayTitle: String?,
     dayIndexOverride: Int?,
+    durationSeconds: Long?,
     onBackPress: () -> Unit,
     modifier: Modifier = Modifier,
     showBackButton: Boolean = true,
@@ -570,11 +627,21 @@ private fun Header(
                     text = dayText,
                     style = MaterialTheme.typography.titleSmall,
                 )
-                Text(
-                    text = date,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = date,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (durationSeconds != null && durationSeconds > 0) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = TimerService.formatTime(durationSeconds),
+                            style = MaterialTheme.typography.labelSmall.numbers(),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         },
 

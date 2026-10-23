@@ -356,7 +356,7 @@ private fun AddSetHeader(
     ) {
         Column(modifier = Modifier.weight(1F)) {
             Text(
-                text = stringResource(R.string.label_add_set_for).uppercase(),
+                text = stringResource(R.string.label_add_set_for),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
