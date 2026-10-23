@@ -95,6 +95,7 @@ import com.looker.kenko.ui.component.DeleteIconButton
 import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.StickyHeader
+import com.looker.kenko.ui.component.TooltipIconButton
 import com.looker.kenko.ui.component.SetDeleteDialog
 import com.looker.kenko.ui.component.SetItem
 import com.looker.kenko.ui.component.timer.TimerService
@@ -438,13 +439,19 @@ private fun SetsList(
                 showBackButton = showBackButton,
                 actions = {
                     if (isToday) {
-                        IconButton(onClick = { showAddExerciseDialog = true }) {
+                        TooltipIconButton(
+                            tooltip = stringResource(R.string.label_add_exercise),
+                            onClick = { showAddExerciseDialog = true },
+                        ) {
                             Icon(
                                 imageVector = Icons.Rounded.FitnessCenter,
                                 contentDescription = stringResource(R.string.label_add_exercise),
                             )
                         }
-                        IconButton(onClick = { showImportDialog = true }) {
+                        TooltipIconButton(
+                            tooltip = stringResource(R.string.label_change_plan),
+                            onClick = { showImportDialog = true },
+                        ) {
                             Icon(
                                 imageVector = Icons.Rounded.SwapHoriz,
                                 contentDescription = stringResource(R.string.label_change_plan),
@@ -452,7 +459,10 @@ private fun SetsList(
                         }
                     } else if (isEditMode) {
                         // 历史记录:进入编辑模式后也可添加动作(含计划里没有的动作)
-                        IconButton(onClick = { showAddExerciseDialog = true }) {
+                        TooltipIconButton(
+                            tooltip = stringResource(R.string.label_add_exercise),
+                            onClick = { showAddExerciseDialog = true },
+                        ) {
                             Icon(
                                 imageVector = Icons.Rounded.FitnessCenter,
                                 contentDescription = stringResource(R.string.label_add_exercise),
@@ -461,7 +471,10 @@ private fun SetsList(
                     }
 
                     if (isToday && previousSessionDate != null) {
-                        IconButton(onClick = onHistoryClick) {
+                        TooltipIconButton(
+                            tooltip = stringResource(R.string.label_previous_session),
+                            onClick = onHistoryClick,
+                        ) {
                             Icon(
                                 painter = KenkoIcons.History,
                                 contentDescription = stringResource(R.string.label_previous_session),
@@ -470,13 +483,17 @@ private fun SetsList(
                     }
 
                     if (!isToday) {
-                        IconButton(onClick = onEditToggle) {
+                        val editLabel = stringResource(
+                            if (isEditMode) R.string.label_confirm
+                            else R.string.label_edit_record,
+                        )
+                        TooltipIconButton(
+                            tooltip = editLabel,
+                            onClick = onEditToggle,
+                        ) {
                             Icon(
                                 painter = if (isEditMode) KenkoIcons.Done else KenkoIcons.Rename,
-                                contentDescription = stringResource(
-                                    if (isEditMode) R.string.label_confirm
-                                    else R.string.label_edit_record,
-                                ),
+                                contentDescription = editLabel,
                             )
                         }
                     }
@@ -517,7 +534,10 @@ private fun SetsList(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         // 手动添加的动作可移除
                         if (exercise.id in extraExerciseIds && (isToday || isEditMode)) {
-                            IconButton(onClick = { onRemoveExtraExercise(exercise) }) {
+                            TooltipIconButton(
+                                tooltip = stringResource(R.string.label_remove),
+                                onClick = { onRemoveExtraExercise(exercise) },
+                            ) {
                                 Icon(
                                     painter = KenkoIcons.Remove,
                                     contentDescription = stringResource(R.string.label_remove),

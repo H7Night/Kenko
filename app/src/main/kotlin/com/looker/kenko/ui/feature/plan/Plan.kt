@@ -53,6 +53,7 @@ import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.ErrorSnackbar
 import com.looker.kenko.ui.component.KenkoBorderWidth
 import com.looker.kenko.ui.component.ConfirmDialog
+import com.looker.kenko.ui.component.TooltipIconButton
 import com.looker.kenko.ui.component.endItem
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.KenkoAddButton
@@ -165,7 +166,10 @@ private fun Plan(
                 title = { Text(text = stringResource(R.string.label_plans_title)) },
                 actions = {
                     var menuExpanded by remember { mutableStateOf(false) }
-                    IconButton(onClick = { menuExpanded = true }) {
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.label_more_options),
+                        onClick = { menuExpanded = true },
+                    ) {
                         Icon(
                             Icons.Default.MoreVert,
                             contentDescription = stringResource(R.string.label_more_options),

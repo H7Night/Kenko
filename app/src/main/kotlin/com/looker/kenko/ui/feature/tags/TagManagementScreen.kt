@@ -57,6 +57,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.looker.kenko.R
 import com.looker.kenko.domain.model.Tag
 import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.ui.component.TooltipIconButton
 import com.looker.kenko.ui.theme.KenkoTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -214,20 +215,29 @@ private fun ParentTagCard(
                 style = MaterialTheme.typography.titleMedium,
             )
             Row {
-                IconButton(onClick = onAddChild) {
+                TooltipIconButton(
+                    tooltip = stringResource(R.string.label_add_tag),
+                    onClick = onAddChild,
+                ) {
                     Icon(
                         Icons.Default.Label,
                         contentDescription = stringResource(R.string.label_add_tag),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
-                IconButton(onClick = { onEdit(parent) }) {
+                TooltipIconButton(
+                    tooltip = stringResource(R.string.label_edit_tag),
+                    onClick = { onEdit(parent) },
+                ) {
                     Icon(
                         Icons.Default.Edit,
                         contentDescription = stringResource(R.string.label_edit_tag),
                     )
                 }
-                IconButton(onClick = { onDelete(parent) }) {
+                TooltipIconButton(
+                    tooltip = stringResource(R.string.label_delete_tag),
+                    onClick = { onDelete(parent) },
+                ) {
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = stringResource(R.string.label_delete_tag),
@@ -265,14 +275,20 @@ private fun ChildTagRow(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Row {
-            IconButton(onClick = onEdit) {
+            TooltipIconButton(
+                tooltip = stringResource(R.string.label_edit_tag),
+                onClick = onEdit,
+            ) {
                 Icon(
                     Icons.Default.Edit,
                     contentDescription = stringResource(R.string.label_edit_tag),
                     modifier = Modifier.height(20.dp),
                 )
             }
-            IconButton(onClick = onDelete) {
+            TooltipIconButton(
+                tooltip = stringResource(R.string.label_delete_tag),
+                onClick = onDelete,
+            ) {
                 Icon(
                     Icons.Default.Delete,
                     contentDescription = stringResource(R.string.label_delete_tag),

@@ -97,6 +97,7 @@ import com.looker.kenko.domain.model.ExercisesPreviewParameter
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.component.ErrorSnackbar
+import com.looker.kenko.ui.component.TooltipIconButton
 import com.looker.kenko.ui.extension.normalizeInt
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.SelectExercise
@@ -213,8 +214,14 @@ private fun FullEdit(
                 navigationIcon = { BackButton(onBackPress) },
                 actions = {
                     if (stage == PlanEditStage.PlanEdit) {
-                        androidx.compose.material3.IconButton(onClick = onAddExercise) {
-                            Icon(painter = KenkoIcons.Add, contentDescription = stringResource(R.string.label_add))
+                        TooltipIconButton(
+                            tooltip = stringResource(R.string.label_add_exercise),
+                            onClick = onAddExercise,
+                        ) {
+                            Icon(
+                                painter = KenkoIcons.Add,
+                                contentDescription = stringResource(R.string.label_add_exercise),
+                            )
                         }
                     }
                 },

@@ -81,6 +81,7 @@ import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.component.ErrorSnackbar
 import com.looker.kenko.ui.component.ConfirmDialog
 import com.looker.kenko.ui.component.DeleteIconButton
+import com.looker.kenko.ui.component.TooltipIconButton
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.feature.plan.components.KenkoAddButton
 import com.looker.kenko.ui.theme.KenkoIcons
@@ -208,7 +209,10 @@ private fun Exercises(
                     },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
+                            TooltipIconButton(
+                                tooltip = stringResource(R.string.label_clear_search),
+                                onClick = { searchQuery = "" },
+                            ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Close,
                                     contentDescription = stringResource(R.string.label_clear_search),
@@ -463,7 +467,10 @@ private fun ExercisesList(
                         }
                     }
                     exerciseId?.let { id ->
-                        IconButton(onClick = { onProgressClick(id) }) {
+                        TooltipIconButton(
+                            tooltip = stringResource(R.string.label_exercise_progress),
+                            onClick = { onProgressClick(id) },
+                        ) {
                             Icon(
                                 imageVector = Icons.Rounded.ShowChart,
                                 contentDescription = stringResource(R.string.label_exercise_progress),

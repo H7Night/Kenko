@@ -59,6 +59,7 @@ import com.looker.kenko.domain.model.TrainingDayMatch
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.ui.component.DeleteIconButton
 import com.looker.kenko.ui.component.KenkoDatePickerDialog
+import com.looker.kenko.ui.component.TooltipIconButton
 import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.component.timer.TimerService
@@ -194,13 +195,19 @@ private fun Sessions(
                     Text(text = stringResource(id = R.string.label_records))
                 },
                 actions = {
-                    IconButton(onClick = onCalendarClick) {
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.label_calendar),
+                        onClick = onCalendarClick,
+                    ) {
                         Icon(
                             imageVector = Icons.Rounded.CalendarMonth,
                             contentDescription = stringResource(R.string.label_calendar),
                         )
                     }
-                    IconButton(onClick = onAddClick) {
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.label_add_history),
+                        onClick = onAddClick,
+                    ) {
                         Icon(
                             painter = KenkoIcons.Add,
                             contentDescription = stringResource(R.string.label_add_history)
