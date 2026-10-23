@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bodyweight exercises now count toward progress correctly: pure bodyweight sets use the body weight recorded nearest to that session, weighted sets add the extra weight, and legacy sets logged before the bodyweight option existed are corrected on upgrade
 - Adding an exercise during a workout no longer shows it twice (one row with sets and one empty row at its original position)
 - Completed timer-only workouts without sets (e.g. cardio) are no longer missing from Records and the calendar
+- The status-bar inset is no longer applied twice, removing the extra gap at the top of every screen
+- Records now matches its bottom-navigation name and no longer shows a back arrow
+- Starting a workout is no longer blocked when notification permission is denied
+- Past records hide unperformed plan exercises, group each exercise's sets into one compact card, and show the session duration; icon-only actions now have accessibility labels
+- Set labels are no longer forced uppercase and the weight unit follows the app language instead of a hard-coded `KG`
 
 ## [1.9.0] - 2026-10-12
 
