@@ -81,7 +81,14 @@ fun KenkoNavHost(
                 navController.navigateToPlans(navOptions = singleTopNavOptions)
             },
             onExploreSessionsClick = {
-                navController.navigateToSessions(navOptions = singleTopNavOptions)
+                navController.navigateToSessions(
+                    weekOnly = true,
+                    navOptions = navOptions {
+                        popUpTo(HomeRoute) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = false
+                    },
+                )
             },
             onStartSessionClick = {
                 navController.navigateToSessionDetail(

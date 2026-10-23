@@ -15,6 +15,7 @@
 
 package com.looker.kenko.ui.feature.session
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,6 +43,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
@@ -69,7 +72,10 @@ import com.looker.kenko.utils.DateFormat
 import com.looker.kenko.utils.formatDate
 import com.looker.kenko.utils.isToday
 import com.looker.kenko.utils.toast
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -102,6 +108,7 @@ fun Sessions(
     viewModel: SessionsViewModel,
     onSessionClick: (LocalDate?) -> Unit,
     onCalendarClick: () -> Unit,
+    initialWeekOnly: Boolean = false,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -127,6 +134,7 @@ fun Sessions(
         onRemoveSession = viewModel::removeSession,
         onAddClick = { showAddHistoryDialog = true },
         onCalendarClick = onCalendarClick,
+        initialWeekOnly = initialWeekOnly,
     )
 }
 
@@ -138,6 +146,7 @@ private fun Sessions(
     onRemoveSession: (SessionSummary) -> Unit,
     onAddClick: () -> Unit,
     onCalendarClick: () -> Unit,
+    initialWeekOnly: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     var sessionToDelete by remember { mutableStateOf<SessionSummary?>(null) }
@@ -145,6 +154,7 @@ private fun Sessions(
     var dayExpanded by remember { mutableStateOf(false) }
     var selectedPlan by remember { mutableStateOf<Plan?>(null) }
     var selectedDay by remember { mutableStateOf<Int?>(null) }
+    var weekOnly by rememberSaveable(initialWeekOnly) { mutableStateOf(initialWeekOnly) }
     val context = LocalContext.current
 
     val selectedPlanName = selectedPlan?.name ?: stringResource(R.string.label_all_plans)
@@ -152,13 +162,16 @@ private fun Sessions(
     val availableDays: Map<Int, String> = remember(selectedPlan) {
         selectedPlan?.titlesMap ?: emptyMap()
     }
+    val currentDate = today()
+    val weekStart = currentDate.minus(currentDate.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
 
-    val filteredSessions = remember(state.sessions, selectedPlan, selectedDay) {
+    val filteredSessions = remember(state.sessions, selectedPlan, selectedDay, weekOnly, currentDate) {
         val planId = selectedPlan?.id
         state.sessions.filter { session ->
             val planMatch = planId == null || session.planId == planId
             val dayMatch = selectedDay == null || session.dayIndexOverride == selectedDay
-            planMatch && dayMatch
+            val weekMatch = !weekOnly || (session.date >= weekStart && session.date <= currentDate)
+            planMatch && dayMatch && weekMatch
         }
     }
 
@@ -240,6 +253,7 @@ private fun Sessions(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
                         .padding(vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -280,6 +294,11 @@ private fun Sessions(
                             }
                         }
                     }
+                    FilterChip(
+                        selected = weekOnly,
+                        onClick = { weekOnly = !weekOnly },
+                        label = { Text(stringResource(R.string.label_stat_week)) },
+                    )
                     if (selectedPlan != null) {
                         Box {
                             FilterChip(
@@ -326,11 +345,12 @@ private fun Sessions(
                                     .fillMaxWidth()
                                     .padding(vertical = 24.dp),
                             )
-                            if (selectedPlan != null || selectedDay != null) {
+                            if (selectedPlan != null || selectedDay != null || weekOnly) {
                                 TextButton(
                                     onClick = {
                                         selectedPlan = null
                                         selectedDay = null
+                                        weekOnly = false
                                     },
                                 ) {
                                     Text(stringResource(R.string.label_clear_filters))

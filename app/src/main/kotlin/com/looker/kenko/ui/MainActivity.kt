@@ -147,20 +147,21 @@ class MainActivity : AppCompatActivity() {
                             KenkoBottomBar(
                                 currentRouteName = currentRouteName,
                                 onHomeClick = {
-                                    navController.navigateToHome(
-                                        navOptions = navOptions {
-                                            popUpTo(HomeRoute) { saveState = true }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
-                                    )
+                                    if (!navController.popBackStack(HomeRoute, inclusive = false)) {
+                                        navController.navigateToHome(
+                                            navOptions = navOptions {
+                                                launchSingleTop = true
+                                            }
+                                        )
+                                    }
                                 },
                                 onHistoryClick = {
                                     navController.navigateToSessions(
+                                        weekOnly = false,
                                         navOptions = navOptions {
                                             popUpTo(HomeRoute) { saveState = true }
                                             launchSingleTop = true
-                                            restoreState = true
+                                            restoreState = false
                                         }
                                     )
                                 },
