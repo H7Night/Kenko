@@ -65,7 +65,7 @@ fun DraggableTextField(
             .draggable(
                 orientation = Orientation.Horizontal,
                 state = dragState.state,
-                startDragImmediately = true,
+                startDragImmediately = false,
                 onDragStopped = { dragState.onDragStop(it) },
             )
             .clip(CircleShape)

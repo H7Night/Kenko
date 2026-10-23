@@ -229,15 +229,18 @@ private fun HeatmapGrid(
                 modifier = Modifier.width(labelWidth),
                 verticalArrangement = Arrangement.spacedBy(cellGap)
             ) {
-                listOf(0, 2, 4).forEach { idx ->
+                repeat(7) { idx ->
                     Box(modifier = Modifier.size(cellSize)) {
-                        Text(
-                            text = weekdays[idx],
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
+                        // Only show Mon/Wed/Fri, but keep seven rows so labels align with the grid.
+                        if (idx == 0 || idx == 2 || idx == 4) {
+                            Text(
+                                text = weekdays[idx],
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }
