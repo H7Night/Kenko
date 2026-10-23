@@ -106,7 +106,14 @@ fun PlanItem(
                     checked = plan.isActive,
                     onCheckedChange = onActiveChange,
                 ) {
-                    Icon(painter = KenkoIcons.Done, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(
+                        painter = KenkoIcons.Done,
+                        contentDescription = stringResource(
+                            if (plan.isActive) R.string.label_current_plan
+                            else R.string.label_set_current_plan,
+                        ),
+                        modifier = Modifier.size(16.dp),
+                    )
                 }
                 if (onDelete != null) {
                     DeleteIconButton(onClick = onDelete)

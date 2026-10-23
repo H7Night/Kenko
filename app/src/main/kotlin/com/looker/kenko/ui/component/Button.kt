@@ -29,7 +29,9 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.looker.kenko.R
 import com.looker.kenko.ui.theme.KenkoIcons
 
 @Composable
@@ -116,6 +118,9 @@ fun BackButton(
         colors = colors,
         onClick = onClick,
     ) {
-        Icon(painter = KenkoIcons.ArrowBack, contentDescription = null)
+        Icon(
+            painter = KenkoIcons.ArrowBack,
+            contentDescription = stringResource(R.string.label_back),
+        )
     }
 }

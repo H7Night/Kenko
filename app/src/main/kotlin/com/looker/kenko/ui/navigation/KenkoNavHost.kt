@@ -102,7 +102,6 @@ fun KenkoNavHost(
                     navOptions = singleTopNavOptions
                 )
             },
-            onBackPress = navController::popBackStackOnResume,
             onCalendarClick = {
                 navController.navigateToCalendar(navOptions = singleTopNavOptions)
             },

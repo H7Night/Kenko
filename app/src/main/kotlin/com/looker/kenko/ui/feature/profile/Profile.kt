@@ -181,7 +181,10 @@ private fun Profile(
                 navigationIcon = { if (showBackButton) BackButton(onBackPress) },
                 actions = {
                     IconButton(onClick = onSettingsClick) {
-                        Icon(painter = KenkoIcons.Settings, contentDescription = null)
+                        Icon(
+                            painter = KenkoIcons.Settings,
+                            contentDescription = stringResource(R.string.label_settings),
+                        )
                     }
                 },
             )
@@ -375,7 +378,7 @@ private fun WeightCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowLeft,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.label_previous_month),
                             modifier = Modifier.size(20.dp),
                         )
                     }
@@ -391,7 +394,7 @@ private fun WeightCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowRight,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.label_next_month),
                             modifier = Modifier.size(20.dp),
                         )
                     }

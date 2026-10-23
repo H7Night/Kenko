@@ -215,13 +215,24 @@ private fun ParentTagCard(
             )
             Row {
                 IconButton(onClick = onAddChild) {
-                    Icon(Icons.Default.Label, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(
+                        Icons.Default.Label,
+                        contentDescription = stringResource(R.string.label_add_tag),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
                 }
                 IconButton(onClick = { onEdit(parent) }) {
-                    Icon(Icons.Default.Edit, contentDescription = null)
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.label_edit_tag),
+                    )
                 }
                 IconButton(onClick = { onDelete(parent) }) {
-                    Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.label_delete_tag),
+                        tint = MaterialTheme.colorScheme.error,
+                    )
                 }
             }
         }
@@ -255,10 +266,19 @@ private fun ChildTagRow(
         )
         Row {
             IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.height(20.dp))
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = stringResource(R.string.label_edit_tag),
+                    modifier = Modifier.height(20.dp),
+                )
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.height(20.dp), tint = MaterialTheme.colorScheme.error)
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.label_delete_tag),
+                    modifier = Modifier.height(20.dp),
+                    tint = MaterialTheme.colorScheme.error,
+                )
             }
         }
     }

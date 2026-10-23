@@ -469,7 +469,10 @@ private fun ExerciseItemActions(
                 containerColor = MaterialTheme.colorScheme.errorContainer,
             ),
         ) {
-            Icon(painter = KenkoIcons.Remove, contentDescription = null)
+            Icon(
+                painter = KenkoIcons.Remove,
+                contentDescription = stringResource(R.string.label_remove),
+            )
         }
         Spacer(modifier = Modifier.width(12.dp))
         Text(

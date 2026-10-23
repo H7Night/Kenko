@@ -22,11 +22,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -219,7 +221,9 @@ fun Home(
         )
     }
 
-    Scaffold { innerPadding ->
+    Scaffold(
+        contentWindowInsets = WindowInsets.statusBars,
+    ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -233,17 +237,10 @@ fun Home(
                 TimerCard(
                     timerState = state.timerState,
                     elapsedSeconds = timerSeconds,
-                    notificationGranted = notifState.granted,
                     hasAccumulatedTime = state.timerState == TimerState.IDLE && timerSeconds > 0,
                     hasSets = state.isSessionStarted,
                     showStart = !state.isTodayEmpty,
-                    onStart = {
-                        if (!notifState.granted) {
-                            notifState.request()
-                        } else {
-                            viewModel.startWorkout()
-                        }
-                    },
+                    onStart = viewModel::startWorkout,
                     onPause = viewModel::pauseWorkout,
                     onResume = viewModel::resumeWorkout,
                     onEnd = { showEndConfirm = true },
@@ -467,7 +464,11 @@ private fun PlanInfoCard(
                 var menuExpanded by remember { mutableStateOf(false) }
                 Box {
                     IconButton(onClick = { menuExpanded = true }, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.MoreVert, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = stringResource(R.string.label_more_options),
+                            modifier = Modifier.size(16.dp),
+                        )
                     }
                     DropdownMenu(
                         expanded = menuExpanded,

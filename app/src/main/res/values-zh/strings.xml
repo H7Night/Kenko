@@ -28,7 +28,6 @@
     <string name="label_session_history_home">训练\n历史</string>
 
     <!--Sessions-->
-    <string name="label_sessions_title">训练记录</string>
     <string name="label_records">记录</string>
     <string name="label_delete_session_title">删除记录？</string>
     <string name="label_delete_session_message">这将永久删除此条训练记录及其所有组数信息。</string>
@@ -183,6 +182,12 @@
     <string name="label_delete">删除</string>
     <string name="label_yes">是</string>
     <string name="label_no">否</string>
+    <string name="label_back">返回</string>
+    <string name="label_more_options">更多选项</string>
+    <string name="label_set_current_plan">设为当前计划</string>
+    <string name="label_remove">移除</string>
+    <string name="label_previous_session">上次训练</string>
+    <string name="label_edit_record">编辑记录</string>
 
     <!--Project Specific-->
     <string name="label_session">训练</string>
@@ -194,6 +199,8 @@
     <string name="label_bodyweight_display">自重</string>
     <string name="label_use_bodyweight">是否使用自重</string>
     <string name="label_sets">组数</string>
+    <string name="label_add_set">添加组</string>
+    <string name="label_no_sets_recorded">未记录训练组</string>
     <string name="label_sets_count">%1$s 组</string>
     <string name="label_coming_soon">敬请期待</string>
 
@@ -386,6 +393,8 @@
     <string name="label_start_session_heading">开始今天的训练</string>
     <string name="label_continue_session_heading">继续今天的训练</string>
     <string name="label_next">下一步</string>
+    <string name="label_previous_month">上个月</string>
+    <string name="label_next_month">下个月</string>
     <string name="label_boarding_quote">你的下一次蜕变从这里开始。</string>
     <string name="label_no_sessions">暂无训练记录</string>
 

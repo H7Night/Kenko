@@ -167,7 +167,10 @@ private fun Plan(
                 actions = {
                     var menuExpanded by remember { mutableStateOf(false) }
                     IconButton(onClick = { menuExpanded = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = null)
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = stringResource(R.string.label_more_options),
+                        )
                     }
                     DropdownMenu(
                         expanded = menuExpanded,

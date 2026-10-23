@@ -61,7 +61,6 @@ import com.looker.kenko.domain.model.today
 import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.TrainingDayMatch
 import com.looker.kenko.domain.model.Exercise
-import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.DeleteIconButton
 import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.extension.plus
@@ -102,7 +101,6 @@ import androidx.compose.ui.platform.LocalContext
 fun Sessions(
     viewModel: SessionsViewModel,
     onSessionClick: (LocalDate?) -> Unit,
-    onBackPress: () -> Unit,
     onCalendarClick: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -127,7 +125,6 @@ fun Sessions(
         state = state,
         onSessionClick = onSessionClick,
         onRemoveSession = viewModel::removeSession,
-        onBackPress = onBackPress,
         onAddClick = { showAddHistoryDialog = true },
         onCalendarClick = onCalendarClick,
     )
@@ -139,7 +136,6 @@ private fun Sessions(
     state: SessionsUiData,
     onSessionClick: (LocalDate?) -> Unit,
     onRemoveSession: (SessionSummary) -> Unit,
-    onBackPress: () -> Unit,
     onAddClick: () -> Unit,
     onCalendarClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -195,11 +191,8 @@ private fun Sessions(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                navigationIcon = {
-                    BackButton(onClick = onBackPress)
-                },
                 title = {
-                    Text(text = stringResource(id = R.string.label_sessions_title))
+                    Text(text = stringResource(id = R.string.label_records))
                 },
                 actions = {
                     IconButton(onClick = onCalendarClick) {
@@ -595,7 +588,6 @@ private fun SessionsPreview() {
                 isCurrentSessionActive = false,
                 hasAnySessions = true,
             ),
-            onBackPress = {},
             onSessionClick = {},
             onRemoveSession = {},
             onAddClick = {},

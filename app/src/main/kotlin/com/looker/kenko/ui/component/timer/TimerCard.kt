@@ -78,7 +78,6 @@ import com.looker.kenko.R
 fun TimerCard(
     timerState: TimerState,
     elapsedSeconds: Long,
-    notificationGranted: Boolean,
     hasAccumulatedTime: Boolean = false,
     hasSets: Boolean = false,
     showStart: Boolean = true,
@@ -178,7 +177,6 @@ fun TimerCard(
                 }
 
                 if (showPrimary) {
-                    val primaryEnabled = !isIdle || notificationGranted
                     ToggleButton(
                         checked = false,
                         onCheckedChange = {
@@ -188,7 +186,6 @@ fun TimerCard(
                                 TimerState.PAUSED -> onResume()
                             }
                         },
-                        enabled = primaryEnabled,
                         shapes = connectedToggleShapes(index, buttonCount),
                         colors = ToggleButtonDefaults.toggleButtonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
