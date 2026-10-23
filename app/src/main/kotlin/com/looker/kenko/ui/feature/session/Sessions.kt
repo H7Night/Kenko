@@ -548,7 +548,6 @@ fun SessionCard(
             if (onDelete != null) {
                 DeleteIconButton(
                     onClick = onDelete,
-                    buttonSize = 32.dp,
                     iconSize = 18.dp,
                     tintAlpha = 0.7f,
                 )

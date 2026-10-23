@@ -463,7 +463,7 @@ private fun PlanInfoCard(
             if (!isRestDay) {
                 var menuExpanded by remember { mutableStateOf(false) }
                 Box {
-                    IconButton(onClick = { menuExpanded = true }, modifier = Modifier.size(28.dp)) {
+                    IconButton(onClick = { menuExpanded = true }) {
                         Icon(
                             Icons.Default.MoreVert,
                             contentDescription = stringResource(R.string.label_more_options),

@@ -43,8 +43,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.FitnessCenter
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.AlertDialog
@@ -440,7 +440,7 @@ private fun SetsList(
                     if (isToday) {
                         IconButton(onClick = { showAddExerciseDialog = true }) {
                             Icon(
-                                imageVector = Icons.Default.Add,
+                                imageVector = Icons.Rounded.FitnessCenter,
                                 contentDescription = stringResource(R.string.label_add_exercise),
                             )
                         }
@@ -454,7 +454,7 @@ private fun SetsList(
                         // 历史记录:进入编辑模式后也可添加动作(含计划里没有的动作)
                         IconButton(onClick = { showAddExerciseDialog = true }) {
                             Icon(
-                                imageVector = Icons.Default.Add,
+                                imageVector = Icons.Rounded.FitnessCenter,
                                 contentDescription = stringResource(R.string.label_add_exercise),
                             )
                         }

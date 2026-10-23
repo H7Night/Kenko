@@ -104,7 +104,6 @@ fun TrainingDayBar(
             }
             IconButton(
                 onClick = onAddDay,
-                modifier = Modifier.size(28.dp),
             ) {
                 Icon(
                     Icons.Default.Add,

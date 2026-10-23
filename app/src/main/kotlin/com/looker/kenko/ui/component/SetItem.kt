@@ -204,7 +204,7 @@ private fun PerformedItem(
             .combinedClickable(
                 enabled = isEditMode,
                 onDoubleClick = { isEditing = true },
-                onClick = {},
+                onClick = { isEditing = true },
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

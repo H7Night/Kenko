@@ -374,7 +374,6 @@ private fun WeightCard(
                     IconButton(
                         onClick = onPrevMonth,
                         enabled = canGoPrev,
-                        modifier = Modifier.size(28.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowLeft,
@@ -390,7 +389,6 @@ private fun WeightCard(
                     IconButton(
                         onClick = onNextMonth,
                         enabled = canGoNext,
-                        modifier = Modifier.size(28.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowRight,

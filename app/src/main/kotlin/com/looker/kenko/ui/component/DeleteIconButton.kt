@@ -31,20 +31,18 @@ import com.looker.kenko.R
 /**
  * Standard destructive action button used across list rows.
  *
- * Sizes default to the compact list-row variant; callers with wider rows can
- * override [buttonSize], [iconSize] and [tintAlpha].
+ * The icon stays compact while the touch target keeps Material's 48dp minimum.
  */
 @Composable
 fun DeleteIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    buttonSize: Dp = 28.dp,
     iconSize: Dp = 16.dp,
     tintAlpha: Float = 0.6f,
 ) {
     IconButton(
         onClick = onClick,
-        modifier = modifier.size(buttonSize),
+        modifier = modifier,
     ) {
         Icon(
             imageVector = Icons.Rounded.Delete,
