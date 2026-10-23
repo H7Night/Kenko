@@ -36,9 +36,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -72,7 +71,6 @@ import com.looker.kenko.ui.feature.session.AddSetViewModel.FloatTransformation
 import com.looker.kenko.ui.feature.session.AddSetViewModel.IntTransformation
 import com.looker.kenko.ui.feature.session.components.DraggableTextField
 import com.looker.kenko.ui.feature.session.components.rememberDraggableTextFieldState
-import com.looker.kenko.ui.theme.KenkoIcons
 import kotlinx.datetime.LocalDate
 
 private val incrementButtonModifier = Modifier
@@ -200,10 +198,6 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
         AddSetHeader(
             modifier = Modifier.fillMaxWidth(),
             exerciseName = exercise.name,
-            onClick = {
-                viewModel.addSet()
-                onDone()
-            },
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -339,40 +333,38 @@ fun AddSet(exercise: Exercise, date: LocalDate? = null, onDone: () -> Unit) {
                 }
             }
         }
-        Spacer(modifier = Modifier.height(36.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = {
+                viewModel.addSet()
+                onDone()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+        ) {
+            Text(stringResource(R.string.label_add_set))
+        }
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
 @Composable
 private fun AddSetHeader(
     exerciseName: String,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1F)) {
-            Text(
-                text = stringResource(R.string.label_add_set_for),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = exerciseName,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        }
-        FilledTonalIconButton(onClick = onClick) {
-            Icon(
-                painter = KenkoIcons.Done,
-                contentDescription = stringResource(R.string.label_confirm),
-                modifier = Modifier.size(16.dp),
-            )
-        }
+    Column(modifier = modifier) {
+        Text(
+            text = stringResource(R.string.label_add_set_for),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = exerciseName,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
 

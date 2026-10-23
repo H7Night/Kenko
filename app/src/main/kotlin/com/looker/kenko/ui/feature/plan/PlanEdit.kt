@@ -59,7 +59,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -208,7 +207,6 @@ private fun FullEdit(
                 ErrorSnackbar(data = it)
             }
         },
-        floatingActionButtonPosition = FabPosition.Center,
         topBar = {
             CenterAlignedTopAppBar(
                 title = title,
@@ -466,7 +464,8 @@ private fun ExerciseItemActions(
         FilledTonalIconButton(
             onClick = onRemove,
             colors = IconButtonDefaults.filledTonalIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             ),
         ) {
             Icon(

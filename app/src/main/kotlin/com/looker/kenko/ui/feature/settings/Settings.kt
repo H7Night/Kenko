@@ -54,6 +54,7 @@ import com.looker.kenko.domain.model.settings.ColorPalette
 import com.looker.kenko.domain.model.settings.Language
 import com.looker.kenko.domain.model.settings.Theme
 import com.looker.kenko.ui.component.BackButton
+import com.looker.kenko.utils.toFormat
 import com.looker.kenko.ui.component.SelectionDialog
 import com.looker.kenko.ui.component.SettingsGroup
 import com.looker.kenko.ui.component.SettingsRow
@@ -258,9 +259,20 @@ private fun Settings(
                     SettingsRow(
                         icon = { Icon(painter = KenkoIcons.Save, contentDescription = null) },
                         title = stringResource(R.string.label_backup),
-                        subtitle = state.backupUri?.let {
-                            stringResource(R.string.label_backup_folder, extractFolderName(it))
-                        } ?: stringResource(R.string.label_backup_location_not_set),
+                        subtitle = when {
+                            state.isBackingUp -> stringResource(R.string.label_backup_in_progress)
+                            state.lastBackupTime != null -> stringResource(
+                                R.string.label_last_backup,
+                                state.lastBackupTime.toFormat(),
+                            )
+
+                            state.backupUri != null -> stringResource(
+                                R.string.label_backup_folder,
+                                extractFolderName(state.backupUri),
+                            )
+
+                            else -> stringResource(R.string.label_backup_location_not_set)
+                        },
                         onClick = onBackupClick,
                     )
                 }

@@ -52,7 +52,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -103,12 +102,6 @@ fun Home(
     val availablePlanDays by viewModel.availablePlanDays.collectAsStateWithLifecycle()
     val planDayTitles by viewModel.planDayTitles.collectAsStateWithLifecycle()
     val notifState = rememberNotificationPermissionState()
-
-    LaunchedEffect(Unit) {
-        if (!notifState.granted) {
-            notifState.request()
-        }
-    }
 
     var showEndConfirm by remember { mutableStateOf(false) }
     var showResetConfirm by remember { mutableStateOf(false) }
@@ -247,6 +240,32 @@ fun Home(
                     onReset = { showResetConfirm = true },
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                 )
+
+                if (!notifState.granted) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            painter = KenkoIcons.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.label_notification_rationale),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f),
+                        )
+                        TextButton(onClick = notifState.request) {
+                            Text(stringResource(R.string.label_enable))
+                        }
+                    }
+                }
 
                 when (state.trainingState) {
                     is TrainingSessionState.Idle,

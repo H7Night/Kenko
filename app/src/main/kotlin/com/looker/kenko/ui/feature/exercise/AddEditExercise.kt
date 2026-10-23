@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -39,11 +38,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -55,12 +53,10 @@ import com.looker.kenko.R
 import com.looker.kenko.domain.model.CountType
 import com.looker.kenko.ui.component.BackButton
 import com.looker.kenko.ui.component.ErrorSnackbar
-import com.looker.kenko.ui.component.KenkoButton
 import androidx.compose.material3.FilterChip
 import com.looker.kenko.domain.model.ExerciseEquipment
 import com.looker.kenko.domain.model.labelRes
 import com.looker.kenko.ui.component.TagSelector
-import com.looker.kenko.ui.component.kenkoTextFieldColor
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
@@ -145,7 +141,17 @@ private fun AddEditExercise(
                             }
                         ),
                     )
-                }
+                },
+                actions = {
+                    TextButton(
+                        onClick = {
+                            focusManager.clearFocus()
+                            onDone()
+                        },
+                    ) {
+                        Text(stringResource(R.string.label_save))
+                    }
+                },
             )
         },
         snackbarHost = {
@@ -283,31 +289,6 @@ private fun AddEditExercise(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            // Save button
-            KenkoButton(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .navigationBarsPadding(),
-                onClick = {
-                    focusManager.clearFocus()
-                    onDone()
-                },
-                label = {
-                    Icon(
-                        painter = KenkoIcons.Save,
-                        contentDescription = null,
-                    )
-                },
-                icon = {
-                    Text(stringResource(R.string.label_save))
-                }
-            )
-            Spacer(
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .padding(bottom = 8.dp)
-            )
         }
     }
 }
@@ -319,11 +300,10 @@ private fun ExerciseTextField(
     onNameChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    TextField(
+    OutlinedTextField(
         modifier = modifier,
         value = exerciseName,
         onValueChange = onNameChange,
-        colors = kenkoTextFieldColor(),
         shape = MaterialTheme.shapes.large,
         label = {
             Text(text = stringResource(R.string.label_name))

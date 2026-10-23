@@ -58,6 +58,7 @@ import com.looker.kenko.domain.model.titlesMap
 import com.looker.kenko.domain.model.TrainingDayMatch
 import com.looker.kenko.domain.model.Exercise
 import com.looker.kenko.ui.component.DeleteIconButton
+import com.looker.kenko.ui.component.KenkoDatePickerDialog
 import com.looker.kenko.ui.component.EmptyState
 import com.looker.kenko.ui.extension.plus
 import com.looker.kenko.ui.component.timer.TimerService
@@ -448,33 +449,30 @@ private fun DateSelectionRow(
     date: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
 ) {
-    val context = LocalContext.current
+    var showDatePicker by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(text = label, style = MaterialTheme.typography.bodyLarge)
-        TextButton(
-            onClick = {
-                val datePicker = android.app.DatePickerDialog(
-                    context,
-                    { _, year, month, dayOfMonth ->
-                        onDateSelected(LocalDate(year, month + 1, dayOfMonth))
-                    },
-                    date.year,
-                    date.monthNumber - 1,
-                    date.dayOfMonth
-                )
-                datePicker.show()
-            }
-        ) {
+        TextButton(onClick = { showDatePicker = true }) {
             Text(
                 text = formatDate(date, DateFormat.YearMonthDay),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold
             )
         }
+    }
+    if (showDatePicker) {
+        KenkoDatePickerDialog(
+            initialDate = date,
+            onDismiss = { showDatePicker = false },
+            onConfirm = { selected ->
+                selected?.let(onDateSelected)
+                showDatePicker = false
+            },
+        )
     }
 }
 

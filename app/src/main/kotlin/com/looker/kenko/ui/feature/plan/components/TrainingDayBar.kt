@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
@@ -39,7 +40,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -114,7 +114,7 @@ fun TrainingDayBar(
             }
         }
 
-        // 选中天可移动时,显示"移到前/后"操作条 — Linear ghost
+        // 选中天可移动时,显示"移到前/后"操作条 — MD3 assist chips
         val canMoveBackward = selectedDay > 1
         val canMoveForward = selectedDay < dayCount
         if (canMoveBackward || canMoveForward) {
@@ -122,29 +122,34 @@ fun TrainingDayBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 2.dp),
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (canMoveBackward) {
-                    OutlinedButton(
+                    AssistChip(
                         onClick = { onMoveDay(selectedDay, selectedDay - 1) },
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    ) {
-                        Icon(Icons.Default.KeyboardArrowLeft, contentDescription = null, modifier = Modifier.size(14.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.label_move_day_backward), style = MaterialTheme.typography.labelSmall)
-                    }
+                        label = { Text(stringResource(R.string.label_move_day_backward)) },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.KeyboardArrowLeft,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        },
+                    )
                 }
                 if (canMoveForward) {
-                    OutlinedButton(
+                    AssistChip(
                         onClick = { onMoveDay(selectedDay, selectedDay + 1) },
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    ) {
-                        Text(stringResource(R.string.label_move_day_forward), style = MaterialTheme.typography.labelSmall)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(14.dp))
-                    }
+                        label = { Text(stringResource(R.string.label_move_day_forward)) },
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.KeyboardArrowRight,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        },
+                    )
                 }
             }
         }
