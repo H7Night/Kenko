@@ -25,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plans use a radio button with a "Current" badge for the active plan; Settings uses a compact top app bar and a palette icon for the color style
 - Records uses pinned compact filter chips for plan/day, drops the decorative status dot, and shows duration with a timer icon while exercise names use the body text scale
 - The exercise library adds a name search field and collapses the body-part, muscle and equipment rows into one compact filter-chip row with menus; filtered-out results offer a clear-filters action
+- Statistics uses theme-derived body-part colours, hides untrained parts from the ring legend, shows the monthly total inside the ring, and adds a Less/More heatmap legend
+- Plan editing moves days with Material 3 assist chips; Add Set ends with a full-width primary button; the Records history date picker uses the app's Material 3 dialog
+- Typography uses a larger Material 3 scale for app bars, titles and body text
 
 ### Fixed
 - Bodyweight exercises now count toward progress correctly: pure bodyweight sets use the body weight recorded nearest to that session, weighted sets add the extra weight, and legacy sets logged before the bodyweight option existed are corrected on upgrade
@@ -36,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Past records hide unperformed plan exercises, group each exercise's sets into one compact card, and show the session duration; icon-only actions now have accessibility labels
 - Set labels are no longer forced uppercase and the weight unit follows the app language instead of a hard-coded `KG`
 - Set values in edit mode are editable with a single tap, icon-only actions meet the 48dp touch target, and adding an exercise uses a distinct dumbbell icon
+- Home no longer prompts for notification permission on every visit; it shows an inline rationale with an Enable action
+- Settings shows the last backup time when available instead of only the folder name
 
 ## [1.9.0] - 2026-10-12
 
