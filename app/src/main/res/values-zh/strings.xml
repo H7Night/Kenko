@@ -234,6 +234,7 @@
     <string name="label_weekly_count">每周训练次数</string>
     <string name="label_total_times">总计 %1$d 次</string>
     <string name="label_session_count_unit">次训练</string>
+    <string name="label_week_sessions">训练次数</string>
     <string name="label_heatmap_less">少</string>
     <string name="label_heatmap_more">多</string>
     <string name="label_max_week">最高 %1$d 次/周</string>

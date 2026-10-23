@@ -222,7 +222,7 @@
     <string name="label_home">Home</string>
     <string name="label_performance">Performance</string>
     <string name="label_statistics">Statistics</string>
-    <string name="label_profile">You</string>
+    <string name="label_profile">Profile</string>
 
     <!--Statistics-->
     <string name="label_heatmap_activity">Activity</string>
@@ -238,6 +238,7 @@
     <string name="label_weekly_count">Sessions per week</string>
     <string name="label_total_times">Total %1$d sessions</string>
     <string name="label_session_count_unit">sessions</string>
+    <string name="label_week_sessions">Sessions</string>
     <string name="label_heatmap_less">Less</string>
     <string name="label_heatmap_more">More</string>
     <string name="label_max_week">Peak %1$d/week</string>

@@ -73,7 +73,9 @@ import com.looker.kenko.ui.component.DeletableSetItem
 import com.looker.kenko.ui.component.DeleteIconButton
 import com.looker.kenko.ui.component.SetDeleteDialog
 import com.looker.kenko.ui.component.StickyHeader
+import com.looker.kenko.ui.component.TooltipIconButton
 import com.looker.kenko.ui.component.timer.TimerCard
+import com.looker.kenko.ui.component.timer.TimerService
 import com.looker.kenko.ui.component.timer.TimerState
 import com.looker.kenko.ui.component.timer.TrainingSessionState
 import com.looker.kenko.ui.component.timer.rememberNotificationPermissionState
@@ -101,6 +103,7 @@ fun Home(
     val allExercises by viewModel.allExercises.collectAsStateWithLifecycle()
     val availablePlanDays by viewModel.availablePlanDays.collectAsStateWithLifecycle()
     val planDayTitles by viewModel.planDayTitles.collectAsStateWithLifecycle()
+    val weeklySummary by viewModel.weeklySummary.collectAsStateWithLifecycle()
     val notifState = rememberNotificationPermissionState()
 
     var showEndConfirm by remember { mutableStateOf(false) }
@@ -281,6 +284,11 @@ fun Home(
                             onSelectPlanClick = onSelectPlanClick,
                             onSwitchTrainingDay = { showTrainingDayPicker = true },
                         )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        WeeklySummaryCard(
+                            summary = weeklySummary,
+                            onRecordsClick = onExploreSessionsClick,
+                        )
                     }
                     is TrainingSessionState.Active -> {
                         TrainingActionBar(
@@ -408,6 +416,61 @@ private fun InlineTrainingContent(
 }
 
 @Composable
+private fun WeeklySummaryCard(
+    summary: HomeWeekSummary,
+    onRecordsClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.label_stat_week),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(onClick = onRecordsClick) {
+                    Text(stringResource(R.string.label_records))
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+                Column {
+                    Text(
+                        text = stringResource(R.string.label_week_sessions),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = summary.sessions.toString(),
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                }
+                Column {
+                    Text(
+                        text = stringResource(R.string.label_duration),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = TimerService.formatTime(summary.durationSeconds),
+                        style = MaterialTheme.typography.titleLarge.numbers(),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun PlanInfoCard(
     isPlanSelected: Boolean,
     planName: String?,
@@ -482,7 +545,10 @@ private fun PlanInfoCard(
             if (!isRestDay) {
                 var menuExpanded by remember { mutableStateOf(false) }
                 Box {
-                    IconButton(onClick = { menuExpanded = true }) {
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.label_more_options),
+                        onClick = { menuExpanded = true },
+                    ) {
                         Icon(
                             Icons.Default.MoreVert,
                             contentDescription = stringResource(R.string.label_more_options),
