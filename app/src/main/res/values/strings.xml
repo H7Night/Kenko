@@ -188,6 +188,7 @@
     <string name="label_back">Back</string>
     <string name="label_more_options">More options</string>
     <string name="label_set_current_plan">Set as current plan</string>
+    <string name="label_current">Current</string>
     <string name="label_remove">Remove</string>
     <string name="label_previous_session">Previous session</string>
     <string name="label_edit_record">Edit record</string>
@@ -287,6 +288,7 @@
     <string name="label_health_connect_synced">Synced %1$d sessions</string>
 
     <string name="label_backup">Backup &amp; Restore</string>
+    <string name="label_backup_folder">Folder: %1$s</string>
     <string name="label_backup_location">Backup Location</string>
     <string name="label_backup_location_not_set">Not set</string>
     <string name="label_backup_interval">Backup Frequency</string>

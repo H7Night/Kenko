@@ -38,7 +38,6 @@ import androidx.compose.material.icons.rounded.ShowChart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -76,10 +75,10 @@ import com.looker.kenko.ui.component.ErrorSnackbar
 import com.looker.kenko.ui.component.KenkoBorder
 import com.looker.kenko.ui.component.KenkoBorderStrong
 import com.looker.kenko.ui.component.KenkoBorderWidth
-import com.looker.kenko.ui.component.SecondaryKenkoButton
 import com.looker.kenko.ui.component.ConfirmDialog
 import com.looker.kenko.ui.component.DeleteIconButton
 import com.looker.kenko.ui.extension.plus
+import com.looker.kenko.ui.feature.plan.components.KenkoAddButton
 import com.looker.kenko.ui.theme.KenkoIcons
 import com.looker.kenko.ui.theme.KenkoTheme
 import com.looker.kenko.utils.toast
@@ -146,20 +145,11 @@ private fun Exercises(
     Scaffold(
         modifier = modifier.fillMaxWidth(),
         floatingActionButton = {
-            SecondaryKenkoButton(
+            KenkoAddButton(
                 onClick = onCreateClick,
-                label = {
-                    Icon(
-                        painter = KenkoIcons.Add,
-                        contentDescription = null,
-                    )
-                },
-                icon = {
-                    Text(stringResource(R.string.label_create_exercise))
-                }
+                label = stringResource(R.string.label_create_exercise),
             )
         },
-        floatingActionButtonPosition = FabPosition.Center,
         snackbarHost = {
             SnackbarHost(hostState = snackbarState) {
                 ErrorSnackbar(data = it)

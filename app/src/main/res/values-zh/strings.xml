@@ -185,6 +185,7 @@
     <string name="label_back">返回</string>
     <string name="label_more_options">更多选项</string>
     <string name="label_set_current_plan">设为当前计划</string>
+    <string name="label_current">当前</string>
     <string name="label_remove">移除</string>
     <string name="label_previous_session">上次训练</string>
     <string name="label_edit_record">编辑记录</string>
@@ -284,6 +285,7 @@
 
     <!--Backup-->
     <string name="label_backup">备份与恢复</string>
+    <string name="label_backup_folder">文件夹：%1$s</string>
     <string name="label_backup_location">备份位置</string>
     <string name="label_backup_location_not_set">未设置</string>
     <string name="label_backup_interval">备份频率</string>
