@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bottom navigation now uses Material 3 icon and label sizing with the default indicator color, and add actions are extended floating action buttons at the bottom end
 - Plans use a radio button with a "Current" badge for the active plan; Settings uses a compact top app bar and a palette icon for the color style
 - Records uses pinned compact filter chips for plan/day, drops the decorative status dot, and shows duration with a timer icon while exercise names use the body text scale
+- The exercise library adds a name search field and collapses the body-part, muscle and equipment rows into one compact filter-chip row with menus; filtered-out results offer a clear-filters action
 
 ### Fixed
 - Bodyweight exercises now count toward progress correctly: pure bodyweight sets use the body weight recorded nearest to that session, weighted sets add the extra weight, and legacy sets logged before the bodyweight option existed are corrected on upgrade
