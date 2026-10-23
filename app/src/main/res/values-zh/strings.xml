@@ -233,6 +233,9 @@
     <string name="label_trend_12w">近12周趋势</string>
     <string name="label_weekly_count">每周训练次数</string>
     <string name="label_total_times">总计 %1$d 次</string>
+    <string name="label_session_count_unit">次训练</string>
+    <string name="label_heatmap_less">少</string>
+    <string name="label_heatmap_more">多</string>
     <string name="label_max_week">最高 %1$d 次/周</string>
 
     <string-array name="month_short">
@@ -359,6 +362,8 @@
     <string name="label_timer_channel">训练计时器</string>
     <string name="label_timer_channel_desc">训练进行中的计时通知</string>
     <string name="label_timer_running">训练进行中</string>
+    <string name="label_notification_rationale">允许通知，以便在后台显示训练计时</string>
+    <string name="label_enable">开启</string>
     <string name="label_start_workout">开始训练</string>
     <string name="label_pause">暂停</string>
     <string name="label_resume">继续</string>
