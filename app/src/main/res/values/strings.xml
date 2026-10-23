@@ -33,6 +33,8 @@
 
     <!--Sessions-->
     <string name="label_records">Records</string>
+    <string name="label_all_plans">All plans</string>
+    <string name="label_clear_filters">Clear filters</string>
     <string name="label_delete_session_title">Delete Session?</string>
     <string name="label_delete_session_message">This will permanently delete this session and all its sets.</string>
     <string name="label_deleted">Deleted</string>

@@ -29,6 +29,8 @@
 
     <!--Sessions-->
     <string name="label_records">记录</string>
+    <string name="label_all_plans">全部计划</string>
+    <string name="label_clear_filters">清除筛选</string>
     <string name="label_delete_session_title">删除记录？</string>
     <string name="label_delete_session_message">这将永久删除此条训练记录及其所有组数信息。</string>
     <string name="label_deleted">已删除</string>
