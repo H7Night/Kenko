@@ -23,12 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adopted standard Material 3 shapes (4–28dp) and tonal surfaces for cards, settings groups, lists, and the navigation bar, replacing the hairline-bordered flat look for a more Material appearance
 - Bottom navigation now uses Material 3 icon and label sizing with the default indicator color, and add actions are extended floating action buttons at the bottom end
 - Plans use a radio button with a "Current" badge for the active plan; Settings uses a compact top app bar and a palette icon for the color style
-- Records uses pinned compact filter chips for plan/day, drops the decorative status dot, and shows duration with a timer icon while exercise names use the body text scale
+- Records uses pinned compact filter chips for plan/day plus a This Week toggle, drops the decorative status dot, and shows duration with a timer icon while exercise names use the body text scale
 - The exercise library adds a name search field and collapses the body-part, muscle and equipment rows into one compact filter-chip row with menus; filtered-out results offer a clear-filters action
 - Statistics uses theme-derived body-part colours, hides untrained parts from the ring legend, shows the monthly total inside the ring, and adds a Less/More heatmap legend
 - Plan editing moves days with Material 3 assist chips; Add Set ends with a full-width primary button; the Records history date picker uses the app's Material 3 dialog
 - Typography uses a larger Material 3 scale for app bars, titles and body text
-- Home shows a compact This Week summary (session count and duration) under the plan card
+- Home shows a compact This Week summary (session count and duration) under the plan card; its Records shortcut opens Records filtered to the current week
 - The Profile tab is now labelled Profile, and icon-only actions show Material 3 long-press tooltips
 
 ### Fixed
@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Heatmap weekday labels now align with their actual grid rows
 - Color style presets keep the selected hue, so switches, checks and buttons use the chosen color instead of a rotated one (e.g. Green no longer produced a brown primary)
 - Tapping a value in Add Set opens the keyboard normally while horizontal drag still works
+- Tapping Home in the bottom navigation now reliably returns from Records and other tabs instead of requiring the back button
 
 ## [1.9.0] - 2026-10-12
 
