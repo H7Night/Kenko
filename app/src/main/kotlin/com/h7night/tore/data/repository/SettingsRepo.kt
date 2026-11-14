@@ -1,0 +1,44 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.h7night.tore.data.repository
+
+import com.h7night.tore.domain.model.settings.BackupInterval
+import com.h7night.tore.domain.model.settings.Language
+import com.h7night.tore.domain.model.settings.Settings
+import com.h7night.tore.domain.model.settings.Theme
+import kotlin.time.Instant
+import kotlinx.coroutines.flow.Flow
+
+interface SettingsRepo {
+
+    val stream: Flow<Settings>
+
+    fun <T> get(block: Settings.() -> T): Flow<T>
+
+    suspend fun setOnboardingDone()
+
+    suspend fun setTheme(theme: Theme)
+
+    suspend fun setLastSetTime(instant: Instant?)
+
+    suspend fun setBackupUri(uri: String?)
+
+    suspend fun setBackupInterval(interval: BackupInterval)
+
+    suspend fun setLastBackupTime(instant: Instant?)
+
+    suspend fun setLanguage(language: Language)
+}

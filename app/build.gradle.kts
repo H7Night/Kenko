@@ -30,7 +30,7 @@ plugins {
 }
 
 android {
-    namespace = "com.looker.kenko"
+    namespace = "com.h7night.tore"
     compileSdk = 36
 
     // 签名文件位于本地 keystore/ 目录（已被 .gitignore 忽略，不入库）。
@@ -43,7 +43,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.looker.kenko"
+        applicationId = "com.h7night.tore"
         minSdk = 26
         targetSdk = 36
         versionName = "2.0.1"
@@ -51,7 +51,7 @@ android {
 
         buildConfigField("String", "GITHUB_REPO_URL", "\"https://github.com/H7Night/Kenko\"")
 
-        testInstrumentationRunner = "com.looker.kenko.KenkoTestRunner"
+        testInstrumentationRunner = "com.h7night.tore.KenkoTestRunner"
     }
 
     room {

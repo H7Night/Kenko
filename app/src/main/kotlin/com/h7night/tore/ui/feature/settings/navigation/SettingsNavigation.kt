@@ -1,0 +1,51 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.h7night.tore.ui.feature.settings.navigation
+
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavOptions
+import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
+import com.h7night.tore.ui.feature.settings.Settings
+import kotlinx.serialization.Serializable
+
+@Serializable
+object SettingsRoute
+
+fun NavController.navigateToSettings(navOptions: NavOptions? = null) {
+    navigate(SettingsRoute, navOptions)
+}
+
+fun NavGraphBuilder.settings(
+    onBackPress: () -> Unit,
+    onTagManagementClick: () -> Unit,
+    onBackupClick: () -> Unit,
+    onAboutClick: () -> Unit,
+) {
+    composable<SettingsRoute>(
+        deepLinks = listOf(navDeepLink { uriPattern = "kenko://settings" }),
+    ) {
+        Settings(
+            onBackPress = onBackPress,
+            onTagManagementClick = onTagManagementClick,
+            onBackupClick = onBackupClick,
+            onAboutClick = onAboutClick,
+            viewModel = hiltViewModel(),
+        )
+    }
+}

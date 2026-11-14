@@ -1,0 +1,119 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.h7night.tore.ui.feature.statistics
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.h7night.tore.R
+import com.h7night.tore.ui.extension.plus
+import com.h7night.tore.ui.feature.statistics.components.BalanceRingCard
+import com.h7night.tore.ui.feature.statistics.components.BodyPartBarCard
+import com.h7night.tore.ui.feature.statistics.components.StatisticsSkeleton
+import com.h7night.tore.ui.feature.statistics.components.TrendCard
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Statistics(
+    viewModel: StatisticsViewModel,
+    modifier: Modifier = Modifier,
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            TopAppBar(
+                title = { Text(text = stringResource(R.string.label_statistics)) },
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+    ) { innerPadding ->
+        val content = state
+        if (content == null) {
+            StatisticsSkeleton(modifier = Modifier.padding(innerPadding))
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                item {
+                    HeatmapCard(
+                        sessionDates = content.sessionDates,
+                        today = content.today,
+                        countByDate = content.countByDate,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                item {
+                    BalanceRingCard(
+                        monthlyCounts = content.monthlyCounts,
+                        cardioMonthly = content.cardioMonthly,
+                        bodyParts = content.bodyParts,
+                    )
+                }
+                item {
+                    BodyPartBarCard(
+                        title = stringResource(R.string.label_stat_week),
+                        counts = content.weeklyCounts,
+                        cardioMinutes = content.cardioWeekly,
+                        bodyParts = content.bodyParts,
+                    )
+                }
+                item {
+                    BodyPartBarCard(
+                        title = stringResource(R.string.label_stat_month),
+                        counts = content.monthlyCounts,
+                        cardioMinutes = content.cardioMonthly,
+                        bodyParts = content.bodyParts,
+                    )
+                }
+                item {
+                    BodyPartBarCard(
+                        title = stringResource(R.string.label_stat_plan),
+                        counts = content.planCounts,
+                        cardioMinutes = content.cardioPlan,
+                        bodyParts = content.bodyParts,
+                    )
+                }
+                item {
+                    TrendCard(
+                        weeklyTrend = content.weeklyTrend,
+                    )
+                }
+            }
+        }
+    }
+}

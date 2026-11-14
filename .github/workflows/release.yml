@@ -84,7 +84,7 @@ jobs:
       - name: Publish to Play Store
         uses: r0adkll/upload-google-play@v1
         with:
-          packageName: com.looker.kenko
+          packageName: com.h7night.tore
           track: production
           releaseName: ${{ steps.extract_version.outputs.tag }}
           releaseFiles: ${{steps.sign_aab.outputs.signedReleaseFile}}

@@ -1,0 +1,238 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.h7night.tore.ui.feature.home
+
+import androidx.compose.runtime.Immutable
+import androidx.lifecycle.viewModelScope
+import com.h7night.tore.data.repository.ExerciseRepo
+import com.h7night.tore.data.repository.PlanRepo
+import com.h7night.tore.data.repository.SessionRepo
+import com.h7night.tore.domain.model.TrainingExercise
+import com.h7night.tore.domain.model.orderTrainingExercises
+import com.h7night.tore.domain.model.today
+import com.h7night.tore.domain.model.titlesMap
+import com.h7night.tore.ui.base.KenkoViewModel
+import com.h7night.tore.ui.component.timer.TimerManager
+import com.h7night.tore.ui.component.timer.TimerState
+import com.h7night.tore.ui.component.timer.TrainingSessionManager
+import com.h7night.tore.ui.component.timer.TrainingSessionState
+import com.h7night.tore.utils.asStateFlow
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.datetime.LocalDate
+
+@HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
+class HomeViewModel @Inject constructor(
+    private val planRepo: PlanRepo,
+    private val sessionRepo: SessionRepo,
+    exerciseRepo: ExerciseRepo,
+    val timerManager: TimerManager,
+    val trainingSessionManager: TrainingSessionManager,
+) : KenkoViewModel() {
+
+    private val planStream = planRepo.current
+    val sessionStream = sessionRepo.streamByDate(today())
+    private val sessionsStream = sessionRepo.stream
+
+    private val planItemStream = combine(
+        sessionStream,
+        planStream,
+        planRepo.planItems
+    ) { session, plan, planItems ->
+        val day = session?.dayIndexOverride ?: plan?.currentDayIndex
+        planItems.filter { day != null && it.dayIndex == day }
+    }
+
+    init {
+        launchCatching {
+            val existingSession = sessionRepo.streamByDate(today()).first()
+            val existingDuration = existingSession?.durationSeconds ?: 0L
+            if (existingDuration > 0 && timerManager.state.value == TimerState.IDLE) {
+                timerManager.setElapsedSeconds(existingDuration)
+            }
+        }
+    }
+
+    val planName: StateFlow<String?> = planStream.map { it?.name }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    val allExercises: StateFlow<List<com.h7night.tore.domain.model.Exercise>> = exerciseRepo.stream
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val availablePlanDays: StateFlow<Map<Int, List<com.h7night.tore.domain.model.PlanItem>>> =
+        planRepo.planItems.map { items ->
+            items.groupBy { it.dayIndex }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
+    val planDayTitles: StateFlow<Map<Int, String>> = planStream.map { plan ->
+        plan?.titlesMap ?: emptyMap()
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
+    val previousSessionDate: StateFlow<LocalDate?> = combine(
+        planStream,
+        sessionStream,
+    ) { plan, session ->
+        val day = session?.dayIndexOverride ?: plan?.currentDayIndex
+        if (day == null) null else sessionRepo.previousSessionDate(today(), plan?.id, day)
+    }.flatMapLatest { it ?: flowOf(null) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    val planExercises: StateFlow<List<com.h7night.tore.domain.model.PlanItem>> = planItemStream
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val sessionSets: StateFlow<List<TrainingExercise>> =
+        combine(sessionStream, planItemStream) { session, planItems ->
+            orderTrainingExercises(
+                planned = planItems.map { it.exercise }.distinct(),
+                sets = session?.sets ?: emptyList(),
+            )
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val state: StateFlow<HomeUiData> = combine(
+        planStream,
+        sessionStream,
+        sessionsStream,
+        planItemStream,
+        timerManager.state,
+        trainingSessionManager.sessionState,
+    ) { array: Array<*> ->
+        val currentPlan = array[0] as? com.h7night.tore.domain.model.Plan
+        val currentSession = array[1] as? com.h7night.tore.domain.model.Session
+        @Suppress("UNCHECKED_CAST")
+        val sessions = array[2] as List<com.h7night.tore.domain.model.Session>
+        @Suppress("UNCHECKED_CAST")
+        val planItems = array[3] as List<com.h7night.tore.domain.model.PlanItem>
+        val timerState = array[4] as TimerState
+        val trainingState = array[5] as TrainingSessionState
+
+        val isFirstSession = sessions.size <= 1 && sessions.firstOrNull()?.date == today()
+        val dayIndex = currentSession?.dayIndexOverride ?: currentPlan?.currentDayIndex
+        val dayCount = currentPlan?.dayCount ?: 7
+        val dayTitle = dayIndex?.let { currentPlan?.titlesMap?.get(it) }
+        val isRestDay = dayIndex != null && planItems.isEmpty()
+        HomeUiData(
+            isPlanSelected = currentPlan != null,
+            isSessionStarted = currentSession != null && currentSession.sets.isNotEmpty(),
+            isTodayEmpty = planItems.isEmpty(),
+            isFirstSession = isFirstSession,
+            currentPlanId = currentPlan?.id,
+            sessionDates = sessions.map { it.date }.toSet(),
+            timerState = timerState,
+            trainingState = trainingState,
+            planName = currentPlan?.name,
+            dayIndex = dayIndex,
+            dayCount = dayCount,
+            isRestDay = isRestDay,
+            dayTitle = dayTitle,
+            todayExercises = planItems.mapNotNull { it.exercise },
+        )
+    }.asStateFlow(
+        HomeUiData(
+            isPlanSelected = true,
+            isSessionStarted = false,
+            isTodayEmpty = false,
+            isFirstSession = false,
+            currentPlanId = null,
+            sessionDates = emptySet(),
+            timerState = TimerState.IDLE,
+            trainingState = TrainingSessionState.Idle,
+            planName = null,
+            todayExercises = emptyList(),
+        ),
+        started = SharingStarted.Eagerly,
+    )
+
+    fun startWorkout() {
+        trainingSessionManager.startTraining()
+    }
+
+    fun pauseWorkout() {
+        timerManager.pause()
+    }
+
+    fun resumeWorkout() {
+        timerManager.resume()
+    }
+
+    fun resetTimer() {
+        trainingSessionManager.endAndReset()
+    }
+
+    fun endWorkout() {
+        trainingSessionManager.endTraining()
+        launchCatching {
+            val plan = planStream.first() ?: return@launchCatching
+            val session = sessionStream.first()
+            if (session?.sets?.isNotEmpty() == true) {
+                val day = session.dayIndexOverride ?: plan.currentDayIndex
+                sessionRepo.updateDayIndex(today(), day)
+                planRepo.advanceDay(requireNotNull(plan.id), day)
+            }
+        }
+    }
+
+    fun dismissEndedSession() {
+        trainingSessionManager.reset()
+    }
+
+    fun selectTrainingDay(dayIndex: Int) {
+        launchCatching {
+            val planId = planStream.first()?.id ?: return@launchCatching
+            sessionRepo.updateDayIndex(today(), dayIndex)
+            planRepo.updateDayIndex(planId, dayIndex)
+        }
+    }
+
+    fun clearTodaySets() {
+        launchCatching {
+            sessionRepo.clearSets(today())
+        }
+    }
+
+    fun removeSet(setId: Int) {
+        launchCatching {
+            sessionRepo.removeSet(setId)
+        }
+    }
+}
+
+@Immutable
+data class HomeUiData(
+    val isPlanSelected: Boolean,
+    val isSessionStarted: Boolean,
+    val isTodayEmpty: Boolean,
+    val isFirstSession: Boolean,
+    val currentPlanId: Int?,
+    val sessionDates: Set<LocalDate>,
+    val timerState: TimerState = TimerState.IDLE,
+    val trainingState: TrainingSessionState = TrainingSessionState.Idle,
+    val planName: String? = null,
+    val dayIndex: Int? = null,
+    val dayCount: Int = 7,
+    val isRestDay: Boolean = false,
+    val dayTitle: String? = null,
+    val todayExercises: List<com.h7night.tore.domain.model.Exercise> = emptyList(),
+)

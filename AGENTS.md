@@ -38,7 +38,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew connectedAndroidTest
 
 # Run a single instrumented test class
-./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.looker.kenko.RepositoryTest
+./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.h7night.tore.RepositoryTest
 
 # Gradle wrapper is checked in — always use ./gradlew, not a system Gradle.
 ```
