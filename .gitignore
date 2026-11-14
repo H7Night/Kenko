@@ -26,8 +26,9 @@ local.properties
 *.db-*
 *.zip
 
-# ============ 文档 ============
-docs/*
+# ============ 文档与本地 Agent 工作区 ============
+/docs/
+/.superpowers/
 
 # ============ 本地个人环境配置============
 /reasonix.toml
