@@ -82,7 +82,7 @@ class CrashHandler @Inject constructor(
 
             PrintWriter(file).use { writer ->
                 // Header
-                writer.println("=== Kenko Crash Report ===")
+                writer.println("=== Tore Crash Report ===")
                 writer.println("Time: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(Date())}")
                 writer.println("Version: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
                 writer.println("Device: ${Build.MANUFACTURER} ${Build.MODEL}")

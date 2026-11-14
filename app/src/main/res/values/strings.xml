@@ -13,13 +13,13 @@
   -->
 
 <resources>
-    <string name="app_name" translatable="false">Kenko</string>
+    <string name="app_name" translatable="false">Tore</string>
 
     <!--Onboarding-->
-    <string name="label_kenko" translatable="false">Kenko</string>
-    <string name="label_kenko_jp" translatable="false">ケンコウ</string>
-    <string name="label_kenko_meaning">○ healthy</string>
-    <string name="label_kenko_meaning_ALT">○ strong</string>
+    <string name="label_kenko" translatable="false">Tore</string>
+    <string name="label_kenko_jp" translatable="false">筋トレ</string>
+    <string name="label_kenko_meaning">○ strength training</string>
+    <string name="label_kenko_meaning_ALT">○ train with intent</string>
     <string name="label_lets_go">Get Started</string>
 
     <!--Home-->
@@ -370,7 +370,7 @@
     <!-- Crash log -->
     <string name="timer_service_subtype" translatable="false">Workout timer foreground service</string>
     <string name="label_crash_dialog_title">App Crashed</string>
-    <string name="label_crash_dialog_message">Kenko encountered an unexpected error. Would you like to save the crash log for debugging?</string>
+    <string name="label_crash_dialog_message">Tore encountered an unexpected error. Would you like to save the crash log for debugging?</string>
     <string name="label_crash_dialog_hint">The log will be saved to your chosen location.</string>
     <string name="label_crash_save">Save Log</string>
     <string name="label_crash_discard">Discard</string>
