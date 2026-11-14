@@ -66,12 +66,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.h7night.tore.R
+import com.h7night.tore.ui.theme.bodyFont
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
 @Composable
@@ -334,7 +334,7 @@ private fun FlipClockText(
     modifier: Modifier = Modifier,
 ) {
     val charStyle = MaterialTheme.typography.displayMedium.copy(
-        fontFamily = FontFamily.Monospace,
+        fontFamily = bodyFont,
         fontWeight = FontWeight.Bold,
         letterSpacing = (-0.02).sp,
         fontFeatureSettings = "tnum",

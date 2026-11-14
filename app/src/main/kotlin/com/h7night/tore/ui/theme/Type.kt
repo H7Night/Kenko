@@ -23,18 +23,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.h7night.tore.R
 
-val FontFamily.Companion.Numbers
-    get() = FontFamily(Font(R.font.maplemono_bold))
-
+/** Fira Sans for Latin text with LXGW Neo XiHei as the CJK fallback. */
 val displayFont = FontFamily(
-    Font(R.font.darkergrotesque_bold, weight = FontWeight.Bold),
-    Font(R.font.darkergrotesque_semibold, weight = FontWeight.SemiBold),
+    Font(R.font.fira_sans_regular, weight = FontWeight.Normal),
+    Font(R.font.fira_sans_medium, weight = FontWeight.Medium),
+    Font(R.font.fira_sans_semibold, weight = FontWeight.SemiBold),
+    Font(R.font.fira_sans_bold, weight = FontWeight.Bold),
+    Font(R.font.lxgw_neo_xihei, weight = FontWeight.Normal),
 )
 
-val bodyFont = FontFamily(
-    Font(R.font.maplemono_bold, weight = FontWeight.Bold),
-    Font(R.font.maplemono_regular, weight = FontWeight.Normal),
-)
+val bodyFont = displayFont
+
+/** Kept for call-site compatibility. Numbers now use Fira Sans, not a mono font. */
+val FontFamily.Companion.Numbers
+    get() = bodyFont
 
 fun Typography.header() = displayLarge.copy(
     fontSize = 28.sp,
@@ -42,7 +44,10 @@ fun Typography.header() = displayLarge.copy(
     letterSpacing = (-0.02).sp,
 )
 
-fun TextStyle.numbers() = copy(fontFamily = FontFamily.Numbers)
+fun TextStyle.numbers() = copy(
+    fontFamily = bodyFont,
+    fontFeatureSettings = "tnum",
+)
 
 /**
  * Oversized decorative style for background slogans/watermarks (larger than the

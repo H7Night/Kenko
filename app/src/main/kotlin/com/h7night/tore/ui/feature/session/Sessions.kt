@@ -526,7 +526,7 @@ fun SessionCard(
             }
             Text(text = string)
 
-            // Duration — mono, subtle (labelSmall + onSurfaceVariant per三档规范)
+            // Duration uses the shared compact label style.
             if (session.durationSeconds != null && session.durationSeconds > 0) {
                 val durationText = TimerService.formatTime(session.durationSeconds)
                 Text(
