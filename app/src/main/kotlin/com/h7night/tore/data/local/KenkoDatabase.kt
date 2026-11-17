@@ -39,7 +39,7 @@ import com.h7night.tore.data.local.model.WeightEntity
 import com.h7night.tore.utils.AppConstants
 
 @Database(
-    version = 15,
+    version = 21,
     entities = [
         SessionDataEntity::class,
         ExerciseEntity::class,
@@ -50,6 +50,7 @@ import com.h7night.tore.utils.AppConstants
         WeightEntity::class,
         TagEntity::class,
         ExerciseTagEntity::class,
+        com.h7night.tore.data.local.model.SessionExerciseEntity::class,
     ],
 )
 abstract class KenkoDatabase : RoomDatabase() {
@@ -85,5 +86,7 @@ fun kenkoDatabase(context: Context) = Room
         MIGRATION_12_13,
         MIGRATION_13_14,
         MIGRATION_14_15,
+        MIGRATION_15_21,
+        MIGRATION_20_21,
     )
     .build()

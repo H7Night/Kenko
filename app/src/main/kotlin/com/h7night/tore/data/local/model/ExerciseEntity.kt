@@ -31,4 +31,6 @@ data class ExerciseEntity(
     val isBodyweight: Boolean = false,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val equipment: String? = null,
+    val primaryTagId: Int? = null,
 )

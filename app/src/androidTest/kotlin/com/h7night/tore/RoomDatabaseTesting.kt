@@ -110,6 +110,7 @@ class RoomDatabaseTesting {
             MIGRATION_12_13,
             MIGRATION_13_14,
             MIGRATION_14_15,
+            com.h7night.tore.data.local.MIGRATION_15_21,
         ).build()
         val exercises = updatedDb.exerciseDao().stream().first()
         val planHistory = updatedDb.historyDao().getCurrent()
@@ -226,6 +227,42 @@ class RoomDatabaseTesting {
     }
 
     @Test
+    fun schemaMigration15To21() {
+        val db = helper.createDatabase(DB_NAME, 15)
+        db.execSQL("INSERT INTO exercises (id, name, countType, isBodyweight) VALUES (1, 'Press', 'REPS', 0)")
+        db.execSQL("INSERT INTO sessions (id, date) VALUES (1, 20000)")
+        db.execSQL("INSERT INTO sets (reps, weight, `order`, sessionId, exerciseId) VALUES (10, 40, 3, 1, 1)")
+        db.close()
+        val migrated = helper.runMigrationsAndValidate(DB_NAME, 21, true, com.h7night.tore.data.local.MIGRATION_15_21)
+        migrated.query("SELECT `order` FROM session_exercises").use {
+            assertTrue(it.moveToFirst())
+            assertEquals(3, it.getInt(0))
+        }
+        migrated.close()
+    }
+
+    @Test
+    fun schemaMigration20To21PreservesData() {
+        val db = helper.createDatabase(DB_NAME, 15)
+        com.h7night.tore.data.local.MIGRATION_15_21.migrate(db)
+        db.execSQL("INSERT INTO exercises (id, name, countType, isBodyweight, equipment, primaryTagId) VALUES (1, 'Press', 'REPS', 0, 'Dumbbell', 4)")
+        db.execSQL("INSERT INTO sessions (id, date, startedAt, endedAt) VALUES (1, 20000, 100, 200)")
+        db.execSQL("INSERT INTO sets (reps, weight, `order`, sessionId, exerciseId) VALUES (10, 40, 0, 1, 1)")
+        db.execSQL("INSERT INTO session_exercises VALUES (1, 1, 0)")
+        db.version = 20
+        db.close()
+        val migrated = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, KenkoDatabase::class.java, DB_NAME)
+            .addMigrations(com.h7night.tore.data.local.MIGRATION_20_21).build()
+        migrated.openHelper.writableDatabase.query("SELECT startedAt, endedAt, (SELECT COUNT(*) FROM sets) FROM sessions").use {
+            assertTrue(it.moveToFirst())
+            assertEquals(100, it.getInt(0))
+            assertEquals(200, it.getInt(1))
+            assertEquals(1, it.getInt(2))
+        }
+        migrated.close()
+    }
+
+    @Test
     fun dataMigration12To13() = runTest {
         val db = helper.createDatabase(DB_NAME, 12)
         db.execSQL("INSERT INTO plans (name, dayTitles) VALUES ('Test Plan', '{\"1\":\"Chest\"}')")
@@ -235,7 +272,7 @@ class RoomDatabaseTesting {
             InstrumentationRegistry.getInstrumentation().targetContext,
             KenkoDatabase::class.java,
             DB_NAME,
-        ).addMigrations(MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15).build()
+        ).addMigrations(MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, com.h7night.tore.data.local.MIGRATION_15_21).build()
         val plan = updatedDb.planDao().getPlanById(1)
         assertEquals(7, plan?.dayCount)
         assertEquals(1, plan?.currentDayIndex)

@@ -629,6 +629,24 @@ val MIGRATION_13_14 = object : Migration(13, 14) {
     }
 }
 
+val MIGRATION_15_21 = object : Migration(15, 21) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE exercises ADD COLUMN equipment TEXT")
+        db.execSQL("ALTER TABLE exercises ADD COLUMN primaryTagId INTEGER")
+        db.execSQL("ALTER TABLE sessions ADD COLUMN startedAt INTEGER")
+        db.execSQL("ALTER TABLE sessions ADD COLUMN endedAt INTEGER")
+        db.execSQL("CREATE TABLE IF NOT EXISTS session_exercises (sessionId INTEGER NOT NULL, exerciseId INTEGER NOT NULL, `order` INTEGER NOT NULL, PRIMARY KEY(sessionId, exerciseId), FOREIGN KEY(sessionId) REFERENCES sessions(id) ON DELETE CASCADE, FOREIGN KEY(exerciseId) REFERENCES exercises(id) ON DELETE CASCADE)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_session_exercises_sessionId ON session_exercises(sessionId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_session_exercises_exerciseId ON session_exercises(exerciseId)")
+        db.execSQL("INSERT INTO session_exercises SELECT sessionId, exerciseId, MIN(`order`) FROM sets GROUP BY sessionId, exerciseId")
+    }
+}
+
+/** Room validates the version 20 backup against the complete version 21 schema. */
+val MIGRATION_20_21 = object : Migration(20, 21) {
+    override fun migrate(db: SupportSQLiteDatabase) = Unit
+}
+
 val MIGRATION_14_15 = object : Migration(14, 15) {
     override fun migrate(db: SupportSQLiteDatabase) {
         // 训练日名称快照列:session 创建/训练日选择时写入当时的训练日名称,

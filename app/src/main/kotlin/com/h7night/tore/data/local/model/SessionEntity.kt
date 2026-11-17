@@ -51,6 +51,8 @@ data class SessionDataEntity(
     val dayIndexOverride: Int? = null,
     val dayTitleOverride: String? = null,
     val durationSeconds: Long? = null,
+    val startedAt: Long? = null,
+    val endedAt: Long? = null,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 )
