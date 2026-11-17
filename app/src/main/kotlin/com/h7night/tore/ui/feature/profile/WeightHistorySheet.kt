@@ -115,7 +115,6 @@ fun WeightHistorySheet(
                                 )
                                 DeleteIconButton(
                                     onClick = { weightToDelete = weight.id },
-                                    buttonSize = 32.dp,
                                     iconSize = 18.dp,
                                     tintAlpha = 0.7f,
                                 )

@@ -23,6 +23,7 @@ import androidx.room.Transaction
 import com.h7night.tore.data.local.model.SessionDataEntity
 import com.h7night.tore.data.local.model.SessionDateEntity
 import com.h7night.tore.data.local.model.SessionEntity
+import com.h7night.tore.data.local.model.SessionExerciseEntity
 import com.h7night.tore.data.local.model.SessionSnapshotEntity
 import com.h7night.tore.data.local.model.SessionSummaryEntity
 import com.h7night.tore.utils.EpochDays
@@ -190,6 +191,34 @@ interface SessionDao {
         """
     )
     fun getPreviousSessionDate(date: Int, planId: Int?, dayIndex: Int): Flow<Int?>
+
+    @Query(
+        """
+        UPDATE sessions
+        SET startedAt = :startedAt
+        WHERE id = :sessionId AND startedAt IS NULL
+        """,
+    )
+    suspend fun setStartedAtIfNull(sessionId: Int, startedAt: Long)
+
+    /** 更新最近一次"结束训练"时刻(继续训练不改开始时间,只在再次结束时更新此值)。 */
+    @Query(
+        """
+        UPDATE sessions
+        SET endedAt = :endedAt
+        WHERE id = :sessionId
+        """,
+    )
+    suspend fun setEndedAt(sessionId: Int, endedAt: Long)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertSessionExercise(item: SessionExerciseEntity)
+
+    @Query("DELETE FROM session_exercises WHERE sessionId = :sessionId AND exerciseId = :exerciseId")
+    suspend fun deleteSessionExercise(sessionId: Int, exerciseId: Int)
+
+    @Query("SELECT exerciseId FROM session_exercises WHERE sessionId = :sessionId ORDER BY `order`")
+    fun streamSessionExerciseIds(sessionId: Int): Flow<List<Int>>
 
     @Query(
         """

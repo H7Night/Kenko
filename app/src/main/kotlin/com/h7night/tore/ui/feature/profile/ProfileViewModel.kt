@@ -23,6 +23,7 @@ import com.h7night.tore.domain.model.today
 import com.h7night.tore.data.repository.ExerciseRepo
 import com.h7night.tore.data.repository.PlanRepo
 import com.h7night.tore.data.repository.SessionRepo
+import com.h7night.tore.data.repository.SettingsRepo
 import com.h7night.tore.data.repository.WeightRepo
 import com.h7night.tore.ui.base.KenkoViewModel
 import com.h7night.tore.utils.asStateFlow
@@ -42,6 +43,7 @@ class ProfileViewModel @Inject constructor(
     planRepo: PlanRepo,
     private val weightRepo: WeightRepo,
     exerciseRepo: ExerciseRepo,
+    private val settingsRepo: SettingsRepo,
 ) : KenkoViewModel() {
 
     private val currentPlan: Flow<Plan?> = planRepo.current
@@ -73,7 +75,8 @@ class ProfileViewModel @Inject constructor(
         },
         _selectedMonth,
         _customRange,
-    ) { bundle, month, range ->
+        settingsRepo.get { bodyWeightEnabled },
+    ) { bundle, month, range, bodyWeightEnabled ->
         val view = computeWeightChartView(bundle.weights, month, range)
         ProfileUiState(
             numberOfExercises = bundle.numberOfExercises,
@@ -89,6 +92,7 @@ class ProfileViewModel @Inject constructor(
             canGoPrev = view.canGoPrev,
             canGoNext = view.canGoNext,
             customRangeActive = range != null,
+            bodyWeightEnabled = bodyWeightEnabled,
         )
     }.asStateFlow(ProfileUiState(), started = SharingStarted.Eagerly)
 
@@ -145,4 +149,5 @@ data class ProfileUiState(
     val canGoPrev: Boolean = false,
     val canGoNext: Boolean = false,
     val customRangeActive: Boolean = false,
+    val bodyWeightEnabled: Boolean = true,
 )

@@ -80,9 +80,10 @@ class SessionsViewModel @Inject constructor(
         planDayExerciseNames,
     ) { sessions, isCurrentSessionActive, available, plans, dayExerciseNames ->
         val planTitlesMap = plans.associate { it.id to it.titlesMap }
+        val records = sessions.filter { it.hasRecordedWorkout }
         SessionsUiData(
-            sessions = sessions.filter { it.setCount > 0 },
-            hasAnySessions = sessions.isNotEmpty(),
+            sessions = records,
+            hasAnySessions = records.isNotEmpty(),
             isCurrentSessionActive = isCurrentSessionActive,
             availablePlanDays = available,
             dayTitles = planTitlesMap,

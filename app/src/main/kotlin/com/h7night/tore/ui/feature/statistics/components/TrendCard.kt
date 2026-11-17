@@ -54,8 +54,7 @@ fun TrendCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),

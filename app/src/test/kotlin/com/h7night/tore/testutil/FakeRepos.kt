@@ -11,12 +11,14 @@ import com.h7night.tore.data.repository.ExerciseRepo
 import com.h7night.tore.data.repository.PlanRepo
 import com.h7night.tore.data.repository.SessionRepo
 import com.h7night.tore.data.repository.TagRepo
+import com.h7night.tore.data.repository.WeightRepo
 import com.h7night.tore.domain.model.Exercise
 import com.h7night.tore.domain.model.Plan
 import com.h7night.tore.domain.model.Session
 import com.h7night.tore.domain.model.SessionSummary
 import com.h7night.tore.domain.model.Set
 import com.h7night.tore.domain.model.Tag
+import com.h7night.tore.domain.model.Weight
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.LocalDate
@@ -39,6 +41,11 @@ internal class FakeSessionRepo(
     override suspend fun clearSets(date: LocalDate) = Unit
     override suspend fun updateDayIndex(date: LocalDate, dayIndex: Int) = Unit
     override suspend fun updateSessionDuration(sessionId: Int, durationSeconds: Long) = Unit
+    override suspend fun ensureSessionStarted(sessionId: Int, startedAtMillis: Long) = Unit
+    override suspend fun updateSessionEnded(sessionId: Int, endedAtMillis: Long) = Unit
+    override fun streamSessionExerciseIds(sessionId: Int): Flow<List<Int>> = MutableStateFlow(emptyList())
+    override suspend fun addSessionExercise(sessionId: Int, exerciseId: Int) = Unit
+    override suspend fun removeSessionExercise(sessionId: Int, exerciseId: Int) = Unit
     override suspend fun getSessionIdOrCreate(date: LocalDate): Int = 1
     override suspend fun snapshotPlanDayTitles(planId: Int) = Unit
     override fun streamByDate(date: LocalDate): Flow<Session?> = MutableStateFlow(null)
@@ -53,6 +60,9 @@ internal class FakeExerciseRepo(exercises: List<Exercise> = emptyList()) : Exerc
     private val _stream = MutableStateFlow(exercises)
     override val stream: Flow<List<Exercise>> = _stream
     override val numberOfExercise: Flow<Int> = MutableStateFlow(0)
+    override fun streamExerciseSets(
+        exerciseId: Int,
+    ): Flow<List<com.h7night.tore.domain.statistics.ExerciseSetRecord>> = MutableStateFlow(emptyList())
     override suspend fun get(id: Int): Exercise? = null
     override suspend fun upsert(exercise: Exercise) = Unit
     override suspend fun remove(id: Int) = Unit
@@ -131,4 +141,16 @@ internal class FakeSetsDao(
         cardioQueryCount++
         return MutableStateFlow(cardio)
     }
+
+    override fun streamSetsForExercise(exerciseId: Int): Flow<List<com.h7night.tore.data.local.model.ExerciseSetRow>> =
+        MutableStateFlow(emptyList())
+}
+
+internal class FakeWeightRepo : WeightRepo {
+    private val _weights = MutableStateFlow(emptyList<Weight>())
+    override val weights: Flow<List<Weight>> = _weights
+    override val latestWeight: Flow<Weight?> = MutableStateFlow(null)
+    override suspend fun addWeight(weight: Weight) { _weights.value = _weights.value + weight }
+    override suspend fun updateWeight(weight: Weight) = Unit
+    override suspend fun deleteWeight(id: Int) = Unit
 }

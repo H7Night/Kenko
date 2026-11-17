@@ -16,6 +16,7 @@
 package com.h7night.tore.data.repository
 
 import com.h7night.tore.domain.model.settings.BackupInterval
+import com.h7night.tore.domain.model.settings.ColorPalette
 import com.h7night.tore.domain.model.settings.Language
 import com.h7night.tore.domain.model.settings.Settings
 import com.h7night.tore.domain.model.settings.Theme
@@ -41,4 +42,10 @@ interface SettingsRepo {
     suspend fun setLastBackupTime(instant: Instant?)
 
     suspend fun setLanguage(language: Language)
+
+    suspend fun setBodyWeightEnabled(enabled: Boolean)
+
+    suspend fun setHealthConnectEnabled(enabled: Boolean)
+
+    suspend fun setColorPalette(palette: ColorPalette)
 }

@@ -17,6 +17,7 @@ package com.h7night.tore.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.h7night.tore.domain.model.settings.ColorPalette
 import com.h7night.tore.domain.model.settings.Language
 import com.h7night.tore.domain.model.settings.Theme
 import com.h7night.tore.domain.model.today
@@ -49,6 +50,9 @@ class MainViewModel @Inject constructor(
 
     val language: StateFlow<Language> = repo.get { language }
         .asStateFlow(Language.System)
+
+    val palette: StateFlow<ColorPalette> = repo.get { colorPalette }
+        .asStateFlow(ColorPalette.Material)
 
     val isExerciseVisible: StateFlow<Boolean> = sessionRepo.streamByDate(today())
         .map { it != null && it.sets.isNotEmpty() }

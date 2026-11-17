@@ -66,19 +66,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.h7night.tore.R
-import com.h7night.tore.ui.theme.bodyFont
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun TimerCard(
     timerState: TimerState,
     elapsedSeconds: Long,
-    notificationGranted: Boolean,
     hasAccumulatedTime: Boolean = false,
     hasSets: Boolean = false,
     showStart: Boolean = true,
@@ -116,12 +115,8 @@ fun TimerCard(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(
-            1.dp,
-            if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-            else MaterialTheme.colorScheme.outlineVariant
-        ),
+        color = if (isActive) MaterialTheme.colorScheme.surfaceContainerHigh
+        else MaterialTheme.colorScheme.surfaceContainerLow,
         tonalElevation = 0.dp,
     ) {
         Column(
@@ -182,7 +177,6 @@ fun TimerCard(
                 }
 
                 if (showPrimary) {
-                    val primaryEnabled = !isIdle || notificationGranted
                     ToggleButton(
                         checked = false,
                         onCheckedChange = {
@@ -192,7 +186,6 @@ fun TimerCard(
                                 TimerState.PAUSED -> onResume()
                             }
                         },
-                        enabled = primaryEnabled,
                         shapes = connectedToggleShapes(index, buttonCount),
                         colors = ToggleButtonDefaults.toggleButtonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
@@ -334,7 +327,7 @@ private fun FlipClockText(
     modifier: Modifier = Modifier,
 ) {
     val charStyle = MaterialTheme.typography.displayMedium.copy(
-        fontFamily = bodyFont,
+        fontFamily = com.h7night.tore.ui.theme.bodyFont,
         fontWeight = FontWeight.Bold,
         letterSpacing = (-0.02).sp,
         fontFeatureSettings = "tnum",

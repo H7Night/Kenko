@@ -15,44 +15,50 @@
 
 package com.h7night.tore.ui.feature.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.h7night.tore.R
 import com.h7night.tore.domain.model.settings.BackupInterval
+import com.h7night.tore.domain.model.settings.ColorPalette
 import com.h7night.tore.domain.model.settings.Language
 import com.h7night.tore.domain.model.settings.Theme
 import com.h7night.tore.ui.component.BackButton
+import com.h7night.tore.utils.toFormat
 import com.h7night.tore.ui.component.SelectionDialog
 import com.h7night.tore.ui.component.SettingsGroup
 import com.h7night.tore.ui.component.SettingsRow
+import com.h7night.tore.ui.component.SwitchSettingsRow
 import com.h7night.tore.ui.theme.KenkoIcons
 import com.h7night.tore.ui.theme.KenkoTheme
 
@@ -69,6 +75,11 @@ fun Settings(
         state = state,
         onSelectLanguage = viewModel::updateLanguage,
         onSelectTheme = viewModel::updateTheme,
+        onSelectColorPalette = viewModel::updateColorPalette,
+        onToggleBodyWeight = viewModel::updateBodyWeightEnabled,
+        onToggleHealthConnect = viewModel::updateHealthConnectEnabled,
+        onHealthPermissionsResult = viewModel::onHealthPermissionsResult,
+        onSyncHealthConnect = viewModel::syncHealthConnect,
         onBackPress = onBackPress,
         onTagManagementClick = onTagManagementClick,
         onBackupClick = onBackupClick,
@@ -76,12 +87,17 @@ fun Settings(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Settings(
     state: SettingsUiData,
     onSelectLanguage: (Language) -> Unit,
     onSelectTheme: (Theme) -> Unit,
+    onSelectColorPalette: (ColorPalette) -> Unit,
+    onToggleBodyWeight: (Boolean) -> Unit,
+    onToggleHealthConnect: (Boolean) -> Unit,
+    onHealthPermissionsResult: (Boolean) -> Unit,
+    onSyncHealthConnect: () -> Unit,
     onBackPress: () -> Unit,
     onTagManagementClick: () -> Unit,
     onBackupClick: () -> Unit,
@@ -90,9 +106,13 @@ private fun Settings(
 ) {
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showColorStyleDialog by remember { mutableStateOf(false) }
 
-    val scrollBehavior =
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val healthPermissionLauncher = rememberLauncherForActivityResult(
+        PermissionController.createRequestPermissionResultContract(),
+    ) { granted ->
+        onHealthPermissionsResult(granted.containsAll(state.healthConnectPermissions))
+    }
 
     if (showLanguageDialog) {
         SelectionDialog(
@@ -122,14 +142,28 @@ private fun Settings(
         )
     }
 
+    if (showColorStyleDialog) {
+        SelectionDialog(
+            title = stringResource(R.string.label_color_style),
+            items = ColorPalette.entries,
+            selected = state.colorPalette,
+            label = { stringResource(it.nameRes) },
+            onSelect = { palette ->
+                onSelectColorPalette(palette)
+                showColorStyleDialog = false
+            },
+            onDismiss = { showColorStyleDialog = false },
+        )
+    }
+
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            LargeFlexibleTopAppBar(
+            TopAppBar(
                 title = { Text(text = stringResource(R.string.label_settings)) },
                 navigationIcon = { BackButton(onClick = onBackPress) },
-                scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface,
@@ -141,7 +175,6 @@ private fun Settings(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -163,6 +196,55 @@ private fun Settings(
                         onClick = { showThemeDialog = true },
                     )
                 }
+                item {
+                    SettingsRow(
+                        icon = { Icon(imageVector = Icons.Outlined.Palette, contentDescription = null) },
+                        title = stringResource(R.string.label_color_style),
+                        value = stringResource(state.colorPalette.nameRes),
+                        onClick = { showColorStyleDialog = true },
+                    )
+                }
+            }
+
+            SettingsGroup(title = stringResource(R.string.label_settings_system)) {
+                item {
+                    SwitchSettingsRow(
+                        icon = { Icon(painter = KenkoIcons.Person, contentDescription = null) },
+                        title = stringResource(R.string.label_body_weight_toggle),
+                        subtitle = stringResource(R.string.label_body_weight_toggle_subtitle),
+                        checked = state.bodyWeightEnabled,
+                        onCheckedChange = onToggleBodyWeight,
+                    )
+                }
+                if (state.healthConnectAvailable) {
+                    item {
+                        SwitchSettingsRow(
+                            icon = { Icon(imageVector = Icons.Default.Favorite, contentDescription = null) },
+                            title = stringResource(R.string.label_health_connect),
+                            subtitle = stringResource(R.string.label_health_connect_sync),
+                            checked = state.healthConnectEnabled,
+                            onCheckedChange = { checked ->
+                                if (checked) {
+                                    healthPermissionLauncher.launch(state.healthConnectPermissions)
+                                } else {
+                                    onToggleHealthConnect(false)
+                                }
+                            },
+                        )
+                    }
+                    if (state.healthConnectEnabled) {
+                        item {
+                            SettingsRow(
+                                icon = { Icon(imageVector = Icons.Default.Refresh, contentDescription = null) },
+                                title = stringResource(R.string.label_health_connect_sync_now),
+                                value = state.healthConnectSyncCount?.let {
+                                    stringResource(R.string.label_health_connect_synced, it)
+                                },
+                                onClick = onSyncHealthConnect,
+                            )
+                        }
+                    }
+                }
             }
 
             SettingsGroup(title = stringResource(R.string.label_settings_data)) {
@@ -177,8 +259,20 @@ private fun Settings(
                     SettingsRow(
                         icon = { Icon(painter = KenkoIcons.Save, contentDescription = null) },
                         title = stringResource(R.string.label_backup),
-                        subtitle = state.backupUri?.let { extractFolderName(it) }
-                            ?: stringResource(R.string.label_backup_location_not_set),
+                        subtitle = when {
+                            state.isBackingUp -> stringResource(R.string.label_backup_in_progress)
+                            state.lastBackupTime != null -> stringResource(
+                                R.string.label_last_backup,
+                                state.lastBackupTime.toFormat(),
+                            )
+
+                            state.backupUri != null -> stringResource(
+                                R.string.label_backup_folder,
+                                extractFolderName(state.backupUri),
+                            )
+
+                            else -> stringResource(R.string.label_backup_location_not_set)
+                        },
                         onClick = onBackupClick,
                     )
                 }
@@ -212,10 +306,21 @@ private fun SettingsPreview() {
                 isExporting = false,
                 backupMessage = null,
                 language = Language.System,
+                bodyWeightEnabled = true,
+                healthConnectEnabled = false,
+                healthConnectAvailable = false,
+                healthConnectPermissions = emptySet(),
+                healthConnectSyncCount = null,
+                colorPalette = ColorPalette.Material,
                 earliestSessionDate = null,
             ),
             onSelectLanguage = {},
             onSelectTheme = {},
+            onSelectColorPalette = {},
+            onToggleBodyWeight = {},
+            onToggleHealthConnect = {},
+            onHealthPermissionsResult = {},
+            onSyncHealthConnect = {},
             onBackPress = {},
             onTagManagementClick = {},
             onBackupClick = {},

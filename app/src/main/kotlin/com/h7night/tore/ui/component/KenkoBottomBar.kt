@@ -15,14 +15,12 @@
 
 package com.h7night.tore.ui.component
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -47,19 +45,9 @@ fun KenkoBottomBar(
     // 固定底部导航栏(非悬浮):作为 Scaffold 的 bottomBar 全宽贴合屏幕底部,
     // 圆角/阴影/悬浮间距由 Scaffold 的 innerPadding 保证内容不被遮挡。
     NavigationBar(
-        modifier = modifier
-            .fillMaxWidth()
-            .border(width = 1.dp, color = MaterialTheme.colorScheme.outlineVariant),
-        containerColor = MaterialTheme.colorScheme.surface,
+        modifier = modifier.fillMaxWidth(),
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) {
-        val itemColors = NavigationBarItemDefaults.colors(
-            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-            selectedIconColor = MaterialTheme.colorScheme.primary,
-            selectedTextColor = MaterialTheme.colorScheme.primary,
-            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-        )
-
         NavigationBarItem(
             selected = currentRouteName == HomeRoute::class.qualifiedName,
             onClick = onHomeClick,
@@ -67,16 +55,15 @@ fun KenkoBottomBar(
                 Icon(
                     painter = KenkoIcons.Home,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             },
             label = {
                 Text(
                     text = stringResource(R.string.label_home),
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelMedium,
                 )
             },
-            colors = itemColors,
             alwaysShowLabel = true,
         )
         NavigationBarItem(
@@ -86,16 +73,15 @@ fun KenkoBottomBar(
                 Icon(
                     painter = KenkoIcons.History,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             },
             label = {
                 Text(
                     text = stringResource(R.string.label_records),
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelMedium,
                 )
             },
-            colors = itemColors,
             alwaysShowLabel = true,
         )
         NavigationBarItem(
@@ -105,16 +91,15 @@ fun KenkoBottomBar(
                 Icon(
                     painter = KenkoIcons.Performance,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             },
             label = {
                 Text(
                     text = stringResource(R.string.label_statistics),
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelMedium,
                 )
             },
-            colors = itemColors,
             alwaysShowLabel = true,
         )
         NavigationBarItem(
@@ -124,16 +109,15 @@ fun KenkoBottomBar(
                 Icon(
                     painter = KenkoIcons.Person,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             },
             label = {
                 Text(
                     text = stringResource(R.string.label_profile),
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelMedium,
                 )
             },
-            colors = itemColors,
             alwaysShowLabel = true,
         )
     }

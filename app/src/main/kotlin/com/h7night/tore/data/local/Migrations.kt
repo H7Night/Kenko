@@ -29,6 +29,15 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.json.Json
 
+/** Preserve the complete v20 schema while unifying the Tore database lineage. */
+val MIGRATION_20_22 = object : Migration(20, 22) {
+    override fun migrate(db: SupportSQLiteDatabase) = Unit
+}
+
+val MIGRATION_21_22 = object : Migration(21, 22) {
+    override fun migrate(db: SupportSQLiteDatabase) = Unit
+}
+
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.migrateExercises()
@@ -629,28 +638,73 @@ val MIGRATION_13_14 = object : Migration(13, 14) {
     }
 }
 
-val MIGRATION_15_21 = object : Migration(15, 21) {
-    override fun migrate(db: SupportSQLiteDatabase) {
-        db.execSQL("ALTER TABLE exercises ADD COLUMN equipment TEXT")
-        db.execSQL("ALTER TABLE exercises ADD COLUMN primaryTagId INTEGER")
-        db.execSQL("ALTER TABLE sessions ADD COLUMN startedAt INTEGER")
-        db.execSQL("ALTER TABLE sessions ADD COLUMN endedAt INTEGER")
-        db.execSQL("CREATE TABLE IF NOT EXISTS session_exercises (sessionId INTEGER NOT NULL, exerciseId INTEGER NOT NULL, `order` INTEGER NOT NULL, PRIMARY KEY(sessionId, exerciseId), FOREIGN KEY(sessionId) REFERENCES sessions(id) ON DELETE CASCADE, FOREIGN KEY(exerciseId) REFERENCES exercises(id) ON DELETE CASCADE)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS index_session_exercises_sessionId ON session_exercises(sessionId)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS index_session_exercises_exerciseId ON session_exercises(exerciseId)")
-        db.execSQL("INSERT INTO session_exercises SELECT sessionId, exerciseId, MIN(`order`) FROM sets GROUP BY sessionId, exerciseId")
-    }
-}
-
-/** Room validates the version 20 backup against the complete version 21 schema. */
-val MIGRATION_20_21 = object : Migration(20, 21) {
-    override fun migrate(db: SupportSQLiteDatabase) = Unit
-}
-
 val MIGRATION_14_15 = object : Migration(14, 15) {
     override fun migrate(db: SupportSQLiteDatabase) {
         // 训练日名称快照列:session 创建/训练日选择时写入当时的训练日名称,
         // 之后修改计划的训练日名称不再影响历史记录显示。
         db.execSQL("ALTER TABLE `sessions` ADD COLUMN `dayTitleOverride` TEXT")
+    }
+}
+
+val MIGRATION_15_16 = object : Migration(15, 16) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // 自重动作的"自重"选项于 2026-07-02 才引入；在此之前用户只能手动填写重量
+        // (通常填的是自身体重),这些值会被"单动作进步"当作附加重量(体重+该值)而虚高。
+        // 把该日期之前、自重动作的数值重量清零,使其改按"当时体重"计算。
+        // 2026-07-02 的 epoch day = 20636。
+        db.execSQL(
+            """
+            UPDATE `sets`
+            SET `weight` = 0
+            WHERE `weight` > 0
+              AND `sessionId` IN (SELECT `id` FROM `sessions` WHERE `date` < 20636)
+              AND `exerciseId` IN (SELECT `id` FROM `exercises` WHERE `isBodyweight` = 1)
+            """.trimIndent(),
+        )
+    }
+}
+
+val MIGRATION_16_17 = object : Migration(16, 17) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // "开始训练"时刻(epoch millis):随 session 生命周期存亡——重置删除空白会话时随之消失。
+        db.execSQL("ALTER TABLE `sessions` ADD COLUMN `startedAt` INTEGER")
+    }
+}
+
+val MIGRATION_17_18 = object : Migration(17, 18) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // "结束训练"时刻(epoch millis):继续训练不改开始时间,只在再次结束时更新此值。
+        db.execSQL("ALTER TABLE `sessions` ADD COLUMN `endedAt` INTEGER")
+    }
+}
+
+val MIGRATION_18_19 = object : Migration(18, 19) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // 本次训练显式添加的动作(计划外的、或暂无组也需显示的动作),随 session 级联删除。
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `session_exercises` (
+            `sessionId` INTEGER NOT NULL,
+            `exerciseId` INTEGER NOT NULL,
+            `order` INTEGER NOT NULL,
+            PRIMARY KEY(`sessionId`, `exerciseId`),
+            FOREIGN KEY(`sessionId`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+            FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)
+            """.trimIndent(),
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_session_exercises_sessionId` ON `session_exercises` (`sessionId`)",
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_session_exercises_exerciseId` ON `session_exercises` (`exerciseId`)",
+        )
+    }
+}
+
+val MIGRATION_19_20 = object : Migration(19, 20) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // 动作级器械与主肌群(其余 tags 视为次肌群)。
+        db.execSQL("ALTER TABLE `exercises` ADD COLUMN `equipment` TEXT")
+        db.execSQL("ALTER TABLE `exercises` ADD COLUMN `primaryTagId` INTEGER")
     }
 }

@@ -58,8 +58,7 @@ fun BodyPartBarCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -95,6 +94,7 @@ fun BodyPartBarCard(
                             .height(8.dp),
                         color = MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        drawStopIndicator = {},
                     )
                     Text(
                         text = label,

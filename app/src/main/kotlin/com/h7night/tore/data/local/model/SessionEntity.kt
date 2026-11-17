@@ -19,6 +19,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.h7night.tore.utils.EpochDays
@@ -51,10 +52,41 @@ data class SessionDataEntity(
     val dayIndexOverride: Int? = null,
     val dayTitleOverride: String? = null,
     val durationSeconds: Long? = null,
+    /** 开始训练时刻(epoch millis)；仅在该 session 首次"开始训练"时写入,随 session 生命周期存亡。 */
     val startedAt: Long? = null,
+    /** 最近一次"结束训练"时刻(epoch millis)；继续训练不改开始时间,只在再次结束时更新此值。 */
     val endedAt: Long? = null,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+)
+
+/**
+ * 本次训练"显式添加"的动作（计划里没有的、或暂时没有组也要显示的）。
+ * 随 session 级联删除;动作删除时级联删除。
+ */
+@Entity(
+    "session_exercises",
+    primaryKeys = ["sessionId", "exerciseId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = SessionDataEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["sessionId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+        ForeignKey(
+            entity = ExerciseEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["exerciseId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index("sessionId"), Index("exerciseId")],
+)
+data class SessionExerciseEntity(
+    val sessionId: Int,
+    val exerciseId: Int,
+    val order: Int = 0,
 )
 
 /** 轻量投影：仅 date + planId（供计划训练日期区间计算，不加载 sets）。 */

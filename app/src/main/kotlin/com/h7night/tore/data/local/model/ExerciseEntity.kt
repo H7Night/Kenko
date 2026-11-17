@@ -29,8 +29,9 @@ data class ExerciseEntity(
     val countType: CountType = CountType.REPS,
     val reference: String? = null,
     val isBodyweight: Boolean = false,
+    val equipment: com.h7night.tore.domain.model.ExerciseEquipment? = null,
+    /** 主肌群 tag id；其余 tags 视为次肌群。 */
+    val primaryTagId: Int? = null,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val equipment: String? = null,
-    val primaryTagId: Int? = null,
 )

@@ -25,4 +25,7 @@ data class Settings(
     val backupInterval: BackupInterval,
     val lastBackupTime: Instant?,
     val language: Language,
+    val bodyWeightEnabled: Boolean,
+    val healthConnectEnabled: Boolean,
+    val colorPalette: ColorPalette,
 )

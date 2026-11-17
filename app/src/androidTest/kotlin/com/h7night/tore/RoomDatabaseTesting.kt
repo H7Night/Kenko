@@ -35,6 +35,11 @@ import com.h7night.tore.data.local.MIGRATION_11_12
 import com.h7night.tore.data.local.MIGRATION_12_13
 import com.h7night.tore.data.local.MIGRATION_13_14
 import com.h7night.tore.data.local.MIGRATION_14_15
+import com.h7night.tore.data.local.MIGRATION_15_16
+import com.h7night.tore.data.local.MIGRATION_16_17
+import com.h7night.tore.data.local.MIGRATION_17_18
+import com.h7night.tore.data.local.MIGRATION_18_19
+import com.h7night.tore.data.local.MIGRATION_19_20
 import com.h7night.tore.data.local.dao.ExerciseDao
 import com.h7night.tore.data.local.dao.PlanDao
 import com.h7night.tore.data.local.model.ExerciseEntity
@@ -110,7 +115,13 @@ class RoomDatabaseTesting {
             MIGRATION_12_13,
             MIGRATION_13_14,
             MIGRATION_14_15,
-            com.h7night.tore.data.local.MIGRATION_15_21,
+            MIGRATION_15_16,
+            MIGRATION_16_17,
+            MIGRATION_17_18,
+            MIGRATION_18_19,
+            MIGRATION_19_20,
+            com.h7night.tore.data.local.MIGRATION_20_22,
+            com.h7night.tore.data.local.MIGRATION_21_22,
         ).build()
         val exercises = updatedDb.exerciseDao().stream().first()
         val planHistory = updatedDb.historyDao().getCurrent()
@@ -227,39 +238,83 @@ class RoomDatabaseTesting {
     }
 
     @Test
-    fun schemaMigration15To21() {
+    fun schemaMigration15To16() = runTest {
         val db = helper.createDatabase(DB_NAME, 15)
-        db.execSQL("INSERT INTO exercises (id, name, countType, isBodyweight) VALUES (1, 'Press', 'REPS', 0)")
-        db.execSQL("INSERT INTO sessions (id, date) VALUES (1, 20000)")
-        db.execSQL("INSERT INTO sets (reps, weight, `order`, sessionId, exerciseId) VALUES (10, 40, 3, 1, 1)")
-        db.close()
-        val migrated = helper.runMigrationsAndValidate(DB_NAME, 21, true, com.h7night.tore.data.local.MIGRATION_15_21)
-        migrated.query("SELECT `order` FROM session_exercises").use {
-            assertTrue(it.moveToFirst())
-            assertEquals(3, it.getInt(0))
+        db.execSQL("INSERT INTO exercises (name, countType, reference, isBodyweight) VALUES ('Dips', 'REPS', NULL, 1)")
+        db.execSQL("INSERT INTO exercises (name, countType, reference, isBodyweight) VALUES ('Bench', 'REPS', NULL, 0)")
+        db.execSQL("INSERT INTO sessions (date, planId) VALUES (20000, NULL)")
+        // legacy bodyweight value (pre 2026-07-02) should be zeroed
+        db.execSQL("INSERT INTO sets (reps, weight, \"order\", sessionId, exerciseId) VALUES (10, 65.0, 0, 1, 1)")
+        // non-bodyweight set must be untouched
+        db.execSQL("INSERT INTO sets (reps, weight, \"order\", sessionId, exerciseId) VALUES (10, 70.0, 0, 1, 2)")
+        val migrated = helper.runMigrationsAndValidate(DB_NAME, 16, true, MIGRATION_15_16)
+        migrated.query("SELECT weight FROM sets WHERE exerciseId = 1").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals(0f, cursor.getFloat(0))
         }
-        migrated.close()
+        migrated.query("SELECT weight FROM sets WHERE exerciseId = 2").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals(70f, cursor.getFloat(0))
+        }
     }
 
     @Test
-    fun schemaMigration20To21PreservesData() {
-        val db = helper.createDatabase(DB_NAME, 15)
-        com.h7night.tore.data.local.MIGRATION_15_21.migrate(db)
-        db.execSQL("INSERT INTO exercises (id, name, countType, isBodyweight, equipment, primaryTagId) VALUES (1, 'Press', 'REPS', 0, 'Dumbbell', 4)")
-        db.execSQL("INSERT INTO sessions (id, date, startedAt, endedAt) VALUES (1, 20000, 100, 200)")
-        db.execSQL("INSERT INTO sets (reps, weight, `order`, sessionId, exerciseId) VALUES (10, 40, 0, 1, 1)")
-        db.execSQL("INSERT INTO session_exercises VALUES (1, 1, 0)")
-        db.version = 20
-        db.close()
-        val migrated = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, KenkoDatabase::class.java, DB_NAME)
-            .addMigrations(com.h7night.tore.data.local.MIGRATION_20_21).build()
-        migrated.openHelper.writableDatabase.query("SELECT startedAt, endedAt, (SELECT COUNT(*) FROM sets) FROM sessions").use {
-            assertTrue(it.moveToFirst())
-            assertEquals(100, it.getInt(0))
-            assertEquals(200, it.getInt(1))
-            assertEquals(1, it.getInt(2))
+    fun schemaMigration16To17() = runTest {
+        val db = helper.createDatabase(DB_NAME, 16)
+        db.execSQL("INSERT INTO plans (name, dayTitles) VALUES ('Test Plan', '{\"1\":\"Chest\"}')")
+        db.execSQL("INSERT INTO plan_day (planId, exerciseId, dayIndex, sortOrder) VALUES (1, 1, 3, 0)")
+        db.execSQL("INSERT INTO sessions (date, planId, dayIndexOverride) VALUES (20000, 1, 5)")
+        helper.runMigrationsAndValidate(DB_NAME, 17, true, MIGRATION_16_17)
+    }
+
+    @Test
+    fun schemaMigration17To18() = runTest {
+        val db = helper.createDatabase(DB_NAME, 17)
+        db.execSQL("INSERT INTO plans (name, dayTitles) VALUES ('Test Plan', '{\"1\":\"Chest\"}')")
+        db.execSQL("INSERT INTO plan_day (planId, exerciseId, dayIndex, sortOrder) VALUES (1, 1, 3, 0)")
+        db.execSQL("INSERT INTO sessions (date, planId, dayIndexOverride) VALUES (20000, 1, 5)")
+        helper.runMigrationsAndValidate(DB_NAME, 18, true, MIGRATION_17_18)
+    }
+
+    @Test
+    fun schemaMigration18To19() = runTest {
+        val db = helper.createDatabase(DB_NAME, 18)
+        db.execSQL("INSERT INTO plans (name, dayTitles) VALUES ('Test Plan', '{\"1\":\"Chest\"}')")
+        db.execSQL("INSERT INTO plan_day (planId, exerciseId, dayIndex, sortOrder) VALUES (1, 1, 3, 0)")
+        db.execSQL("INSERT INTO sessions (date, planId, dayIndexOverride) VALUES (20000, 1, 5)")
+        helper.runMigrationsAndValidate(DB_NAME, 19, true, MIGRATION_18_19)
+    }
+
+    @Test
+    fun schemaMigration19To20() = runTest {
+        val db = helper.createDatabase(DB_NAME, 19)
+        db.execSQL("INSERT INTO exercises (name, countType, reference, isBodyweight) VALUES ('Dips', 'REPS', NULL, 1)")
+        helper.runMigrationsAndValidate(DB_NAME, 20, true, MIGRATION_19_20)
+    }
+
+    @Test
+    fun schemaMigration20To22() = verifyToreMigration(20, com.h7night.tore.data.local.MIGRATION_20_22)
+
+    @Test
+    fun schemaMigration21To22() = verifyToreMigration(21, com.h7night.tore.data.local.MIGRATION_21_22)
+
+    private fun verifyToreMigration(version: Int, migration: androidx.room.migration.Migration) {
+        helper.createDatabase(DB_NAME, version).apply {
+            execSQL("INSERT INTO exercises (id, name, countType, isBodyweight, equipment, primaryTagId) VALUES (1, 'Press', 'REPS', 0, NULL, NULL)")
+            execSQL("INSERT INTO sessions (id, date, startedAt, endedAt) VALUES (1, 20000, 100, 200)")
+            execSQL("INSERT INTO sets (reps, weight, `order`, sessionId, exerciseId) VALUES (10, 40, 0, 1, 1)")
+            execSQL("INSERT INTO session_exercises VALUES (1, 1, 0)")
+            close()
         }
-        migrated.close()
+        helper.runMigrationsAndValidate(DB_NAME, 22, true, migration).use { db ->
+            db.query("SELECT startedAt, endedAt, (SELECT COUNT(*) FROM sets), (SELECT COUNT(*) FROM session_exercises) FROM sessions").use {
+                assertTrue(it.moveToFirst())
+                assertEquals(100, it.getInt(0))
+                assertEquals(200, it.getInt(1))
+                assertEquals(1, it.getInt(2))
+                assertEquals(1, it.getInt(3))
+            }
+        }
     }
 
     @Test
@@ -272,7 +327,18 @@ class RoomDatabaseTesting {
             InstrumentationRegistry.getInstrumentation().targetContext,
             KenkoDatabase::class.java,
             DB_NAME,
-        ).addMigrations(MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, com.h7night.tore.data.local.MIGRATION_15_21).build()
+        ).addMigrations(
+            MIGRATION_12_13,
+            MIGRATION_13_14,
+            MIGRATION_14_15,
+            MIGRATION_15_16,
+            MIGRATION_16_17,
+            MIGRATION_17_18,
+            MIGRATION_18_19,
+            MIGRATION_19_20,
+            com.h7night.tore.data.local.MIGRATION_20_22,
+            com.h7night.tore.data.local.MIGRATION_21_22,
+        ).build()
         val plan = updatedDb.planDao().getPlanById(1)
         assertEquals(7, plan?.dayCount)
         assertEquals(1, plan?.currentDayIndex)

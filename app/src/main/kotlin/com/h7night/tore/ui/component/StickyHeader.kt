@@ -50,9 +50,8 @@ fun StickyHeader(
 ) {
     Surface(
         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shape = MaterialTheme.shapes.small,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(
             modifier = Modifier

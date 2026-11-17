@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -39,11 +38,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -55,9 +53,10 @@ import com.h7night.tore.R
 import com.h7night.tore.domain.model.CountType
 import com.h7night.tore.ui.component.BackButton
 import com.h7night.tore.ui.component.ErrorSnackbar
-import com.h7night.tore.ui.component.KenkoButton
+import androidx.compose.material3.FilterChip
+import com.h7night.tore.domain.model.ExerciseEquipment
+import com.h7night.tore.domain.model.labelRes
 import com.h7night.tore.ui.component.TagSelector
-import com.h7night.tore.ui.component.kenkoTextFieldColor
 import com.h7night.tore.ui.extension.plus
 import com.h7night.tore.ui.theme.KenkoIcons
 import com.h7night.tore.ui.theme.KenkoTheme
@@ -102,6 +101,8 @@ fun AddEditExercise(
         onRemoveTag = viewModel::removeTag,
         onSetCountType = viewModel::setCountType,
         onBodyweightChange = { viewModel.isBodyweightFlow.value = it },
+        onSetEquipment = viewModel::setEquipment,
+        onSetPrimaryTag = viewModel::setPrimaryTag,
         onNameChange = viewModel::setName,
         onBackPress = onBackPress,
         onDone = { viewModel.saveExercise(onDone) },
@@ -119,6 +120,8 @@ private fun AddEditExercise(
     onRemoveTag: (com.h7night.tore.domain.model.Tag) -> Unit,
     onSetCountType: (CountType) -> Unit,
     onBodyweightChange: (Boolean) -> Unit,
+    onSetEquipment: (com.h7night.tore.domain.model.ExerciseEquipment?) -> Unit = {},
+    onSetPrimaryTag: (Int?) -> Unit = {},
     onNameChange: (String) -> Unit,
     onDone: () -> Unit,
     onBackPress: () -> Unit,
@@ -138,7 +141,17 @@ private fun AddEditExercise(
                             }
                         ),
                     )
-                }
+                },
+                actions = {
+                    TextButton(
+                        onClick = {
+                            focusManager.clearFocus()
+                            onDone()
+                        },
+                    ) {
+                        Text(stringResource(R.string.label_save))
+                    }
+                },
             )
         },
         snackbarHost = {
@@ -221,32 +234,61 @@ private fun AddEditExercise(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Save button
-            KenkoButton(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .navigationBarsPadding(),
-                onClick = {
-                    focusManager.clearFocus()
-                    onDone()
-                },
-                label = {
-                    Icon(
-                        painter = KenkoIcons.Save,
-                        contentDescription = null,
+            // Equipment selector (动作级器械)
+            Text(
+                text = stringResource(R.string.label_equipment),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            androidx.compose.foundation.layout.FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                com.h7night.tore.domain.model.ExerciseEquipment.entries.forEach { equipment ->
+                    FilterChip(
+                        selected = state.equipment == equipment,
+                        onClick = {
+                            focusManager.clearFocus()
+                            onSetEquipment(if (state.equipment == equipment) null else equipment)
+                        },
+                        label = { Text(stringResource(equipment.labelRes)) },
                     )
-                },
-                icon = {
-                    Text(stringResource(R.string.label_save))
                 }
-            )
-            Spacer(
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .padding(bottom = 8.dp)
-            )
+            }
+
+            if (state.selectedTags.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.label_primary_muscle),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    state.selectedTags.forEach { tag ->
+                        val isPrimary = state.primaryTagId == tag.id ||
+                            (state.primaryTagId == null && tag == state.selectedTags.first())
+                        FilterChip(
+                            selected = isPrimary,
+                            onClick = {
+                                focusManager.clearFocus()
+                                onSetPrimaryTag(if (state.primaryTagId == tag.id) null else tag.id)
+                            },
+                            label = { Text(tag.name) },
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
@@ -258,11 +300,10 @@ private fun ExerciseTextField(
     onNameChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    TextField(
+    OutlinedTextField(
         modifier = modifier,
         value = exerciseName,
         onValueChange = onNameChange,
-        colors = kenkoTextFieldColor(),
         shape = MaterialTheme.shapes.large,
         label = {
             Text(text = stringResource(R.string.label_name))

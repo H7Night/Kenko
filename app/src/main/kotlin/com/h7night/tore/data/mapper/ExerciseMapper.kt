@@ -27,6 +27,8 @@ fun ExerciseEntity.toExternal(
     countType = countType,
     reference = reference,
     isBodyweight = isBodyweight,
+    equipment = equipment,
+    primaryTagId = primaryTagId,
 )
 
 fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
@@ -35,4 +37,6 @@ fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
     countType = countType,
     reference = reference,
     isBodyweight = isBodyweight,
+    equipment = equipment,
+    primaryTagId = primaryTagId,
 )

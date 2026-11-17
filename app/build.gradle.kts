@@ -49,7 +49,7 @@ android {
         versionName = "2.0.1"
         versionCode = versionCodeFor(versionName)
 
-        buildConfigField("String", "GITHUB_REPO_URL", "\"https://github.com/H7Night/Kenko\"")
+        buildConfigField("String", "GITHUB_REPO_URL", "\"https://github.com/H7Night/Tore\"")
 
         testInstrumentationRunner = "com.h7night.tore.KenkoTestRunner"
     }
@@ -163,12 +163,14 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
 
     implementation(libs.savedstate)
+    implementation(libs.health.connect.client)
 
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.bundles.coroutines)
 
     implementation(libs.bundles.compose)
+    implementation(libs.material.kolor)
     debugImplementation(libs.bundles.compose.debug)
 
     implementation(libs.hilt.android)

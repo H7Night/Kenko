@@ -33,13 +33,14 @@ import com.h7night.tore.data.local.model.PlanDayEntity
 import com.h7night.tore.data.local.model.PlanEntity
 import com.h7night.tore.data.local.model.PlanHistoryEntity
 import com.h7night.tore.data.local.model.SessionDataEntity
+import com.h7night.tore.data.local.model.SessionExerciseEntity
 import com.h7night.tore.data.local.model.SetEntity
 import com.h7night.tore.data.local.model.TagEntity
 import com.h7night.tore.data.local.model.WeightEntity
 import com.h7night.tore.utils.AppConstants
 
 @Database(
-    version = 21,
+    version = 22,
     entities = [
         SessionDataEntity::class,
         ExerciseEntity::class,
@@ -47,10 +48,10 @@ import com.h7night.tore.utils.AppConstants
         PlanHistoryEntity::class,
         PlanDayEntity::class,
         SetEntity::class,
+        SessionExerciseEntity::class,
         WeightEntity::class,
         TagEntity::class,
         ExerciseTagEntity::class,
-        com.h7night.tore.data.local.model.SessionExerciseEntity::class,
     ],
 )
 abstract class KenkoDatabase : RoomDatabase() {
@@ -86,7 +87,12 @@ fun kenkoDatabase(context: Context) = Room
         MIGRATION_12_13,
         MIGRATION_13_14,
         MIGRATION_14_15,
-        MIGRATION_15_21,
-        MIGRATION_20_21,
+        MIGRATION_15_16,
+        MIGRATION_16_17,
+        MIGRATION_17_18,
+        MIGRATION_18_19,
+        MIGRATION_19_20,
+        MIGRATION_20_22,
+        MIGRATION_21_22,
     )
     .build()

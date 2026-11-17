@@ -21,6 +21,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
+import androidx.navigation.toRoute
 import com.h7night.tore.ui.feature.session.Sessions
 import com.h7night.tore.ui.navigation.tabEnter
 import com.h7night.tore.ui.navigation.tabExit
@@ -30,15 +31,18 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 
 @Serializable
-object SessionRoute
+data class SessionRoute(val weekOnly: Boolean = false)
 
-fun NavController.navigateToSessions(navOptions: NavOptions? = null) {
-    navigate(SessionRoute, navOptions = navOptions)
+fun NavController.navigateToSessions(
+    weekOnly: Boolean = false,
+    navOptions: NavOptions? = null,
+) {
+    navigate(SessionRoute(weekOnly = weekOnly), navOptions = navOptions)
 }
 
 fun NavGraphBuilder.sessions(
     onSessionClick: (LocalDate?) -> Unit,
-    onBackPress: () -> Unit,
+    onCalendarClick: () -> Unit,
 ) {
     composable<SessionRoute>(
         enterTransition = { tabEnter() },
@@ -46,10 +50,11 @@ fun NavGraphBuilder.sessions(
         popEnterTransition = { tabPopEnter() },
         popExitTransition = { tabPopExit() },
         deepLinks = listOf(navDeepLink { uriPattern = "kenko://sessions" }),
-    ) {
+    ) { entry ->
         Sessions(
             onSessionClick = onSessionClick,
-            onBackPress = onBackPress,
+            onCalendarClick = onCalendarClick,
+            initialWeekOnly = entry.toRoute<SessionRoute>().weekOnly,
             viewModel = hiltViewModel(),
         )
     }

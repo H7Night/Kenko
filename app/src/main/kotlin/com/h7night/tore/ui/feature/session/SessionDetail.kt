@@ -38,14 +38,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.FitnessCenter
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -72,6 +72,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -90,15 +91,20 @@ import com.h7night.tore.domain.model.TrainingExercise
 import com.h7night.tore.ui.feature.session.AddSet
 import com.h7night.tore.ui.component.BackButton
 import com.h7night.tore.ui.component.BodyPartMuscleFilter
+import com.h7night.tore.ui.component.DeleteIconButton
+import com.h7night.tore.ui.component.EmptyState
 import com.h7night.tore.ui.component.KenkoBorderWidth
 import com.h7night.tore.ui.component.StickyHeader
-import com.h7night.tore.ui.component.DeletableSetItem
+import com.h7night.tore.ui.component.TooltipIconButton
 import com.h7night.tore.ui.component.SetDeleteDialog
 import com.h7night.tore.ui.component.SetItem
+import com.h7night.tore.ui.component.timer.TimerService
 import com.h7night.tore.ui.extension.normalizeInt
 import com.h7night.tore.ui.extension.plus
 import com.h7night.tore.ui.theme.KenkoIcons
 import com.h7night.tore.ui.theme.KenkoTheme
+import com.h7night.tore.ui.theme.numbers
+import com.h7night.tore.ui.theme.numbers
 import com.h7night.tore.utils.DateFormat
 import com.h7night.tore.utils.formatDate
 import java.util.*
@@ -120,10 +126,12 @@ fun SessionDetails(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val allExercises by viewModel.allExercises.collectAsStateWithLifecycle()
+    val extraExerciseIds by viewModel.extraExerciseIds.collectAsStateWithLifecycle()
     val previousSessionDate = (state as? SessionDetailState.Success)?.data?.previousSessionDate
     SessionDetail(
         state = state,
         allExercises = allExercises,
+        extraExerciseIds = extraExerciseIds,
         onBackPress = onBackPress,
         onRemoveSet = viewModel::removeSet,
         onUpdateSet = viewModel::updateSet,
@@ -134,6 +142,8 @@ fun SessionDetails(
         onClearSets = viewModel::clearTodaySets,
         showBackButton = showBackButton,
         onAddExerciseClick = onAddExerciseClick,
+        onAddExercises = viewModel::addExercises,
+        onRemoveExtraExercise = viewModel::removeExtraExercise,
     )
     val exercise by viewModel.current.collectAsStateWithLifecycle()
     if (exercise != null) {
@@ -150,6 +160,9 @@ fun SessionDetails(
 private fun SessionDetail(
     state: SessionDetailState,
     allExercises: List<Exercise> = emptyList(),
+    extraExerciseIds: List<Int> = emptyList(),
+    onAddExercises: (List<Exercise>) -> Unit = {},
+    onRemoveExtraExercise: (Exercise) -> Unit = {},
     onBackPress: () -> Unit = {},
     onRemoveSet: (Int?) -> Unit = {},
     onUpdateSet: (Int?, Int, Float) -> Unit = { _, _, _ -> },
@@ -271,6 +284,7 @@ private fun SessionDetail(
             SetsList(
                 date = data.date,
                 exerciseSets = data.sets,
+                durationSeconds = data.durationSeconds,
                 isToday = data.isToday,
                 isEditMode = data.isEditMode,
                 previousSessionDate = data.previousSessionDate,
@@ -279,6 +293,7 @@ private fun SessionDetail(
                 availablePlanDays = data.availablePlanDays,
                 dayTitles = data.dayTitles,
                 allExercises = allExercises,
+                extraExerciseIds = extraExerciseIds,
                 onBackPress = onBackPress,
                 onRemoveSet = onRemoveSet,
                 onUpdateSet = onUpdateSet,
@@ -289,6 +304,8 @@ private fun SessionDetail(
                 onClearSets = onClearSets,
                 showBackButton = showBackButton,
                 onAddExerciseClick = onAddExerciseClick,
+                onAddExercises = onAddExercises,
+                onRemoveExtraExercise = onRemoveExtraExercise,
             )
         }
         }
@@ -300,6 +317,7 @@ private fun SessionDetail(
 private fun SetsList(
     date: LocalDate,
     exerciseSets: List<TrainingExercise>,
+    durationSeconds: Long?,
     isToday: Boolean,
     isEditMode: Boolean,
     previousSessionDate: LocalDate?,
@@ -308,6 +326,7 @@ private fun SetsList(
     availablePlanDays: Map<Int, List<Exercise>>,
     dayTitles: Map<Int, String>,
     allExercises: List<Exercise> = emptyList(),
+    extraExerciseIds: List<Int> = emptyList(),
     onBackPress: () -> Unit,
     onRemoveSet: (Int?) -> Unit,
     onUpdateSet: (Int?, Int, Float) -> Unit,
@@ -318,6 +337,8 @@ private fun SetsList(
     onClearSets: () -> Unit,
     showBackButton: Boolean = true,
     onAddExerciseClick: (String) -> Unit = {},
+    onAddExercises: (List<Exercise>) -> Unit = {},
+    onRemoveExtraExercise: (Exercise) -> Unit = {},
 ) {
     var collapsedExercises by rememberSaveable { mutableStateOf(emptySet<Int>()) }
     var showImportDialog by remember { mutableStateOf(false) }
@@ -388,9 +409,9 @@ private fun SetsList(
     if (showAddExerciseDialog) {
         ExerciseSearchDialog(
             exercises = allExercises,
-            onExerciseSelected = { exercise ->
+            onExercisesSelected = { exercises ->
                 showAddExerciseDialog = false
-                onSelectBottomSheet(exercise)
+                onAddExercises(exercises)
             },
             onCreateNew = { name ->
                 showAddExerciseDialog = false
@@ -413,43 +434,82 @@ private fun SetsList(
                 performedOn = date,
                 dayTitle = dayTitle,
                 dayIndexOverride = dayIndexOverride,
+                durationSeconds = durationSeconds,
                 onBackPress = onBackPress,
                 showBackButton = showBackButton,
                 actions = {
                     if (isToday) {
-                        IconButton(onClick = { showAddExerciseDialog = true }) {
+                        TooltipIconButton(
+                            tooltip = stringResource(R.string.label_add_exercise),
+                            onClick = { showAddExerciseDialog = true },
+                        ) {
                             Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = null,
+                                imageVector = Icons.Rounded.FitnessCenter,
+                                contentDescription = stringResource(R.string.label_add_exercise),
                             )
                         }
-                        IconButton(onClick = { showImportDialog = true }) {
+                        TooltipIconButton(
+                            tooltip = stringResource(R.string.label_change_plan),
+                            onClick = { showImportDialog = true },
+                        ) {
                             Icon(
                                 imageVector = Icons.Rounded.SwapHoriz,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.label_change_plan),
+                            )
+                        }
+                    } else if (isEditMode) {
+                        // 历史记录:进入编辑模式后也可添加动作(含计划里没有的动作)
+                        TooltipIconButton(
+                            tooltip = stringResource(R.string.label_add_exercise),
+                            onClick = { showAddExerciseDialog = true },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.FitnessCenter,
+                                contentDescription = stringResource(R.string.label_add_exercise),
                             )
                         }
                     }
 
                     if (isToday && previousSessionDate != null) {
-                        IconButton(onClick = onHistoryClick) {
+                        TooltipIconButton(
+                            tooltip = stringResource(R.string.label_previous_session),
+                            onClick = onHistoryClick,
+                        ) {
                             Icon(
                                 painter = KenkoIcons.History,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.label_previous_session),
                             )
                         }
                     }
 
                     if (!isToday) {
-                        IconButton(onClick = onEditToggle) {
+                        val editLabel = stringResource(
+                            if (isEditMode) R.string.label_confirm
+                            else R.string.label_edit_record,
+                        )
+                        TooltipIconButton(
+                            tooltip = editLabel,
+                            onClick = onEditToggle,
+                        ) {
                             Icon(
                                 painter = if (isEditMode) KenkoIcons.Done else KenkoIcons.Rename,
-                                contentDescription = null,
+                                contentDescription = editLabel,
                             )
                         }
                     }
                 },
             )
+        }
+        if (exerciseSets.isEmpty()) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                EmptyState(
+                    icon = Icons.Rounded.History,
+                    text = stringResource(R.string.label_no_sets_recorded),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                )
+            }
         }
         exerciseSets.forEach { row ->
             val exercise = row.exercise
@@ -471,35 +531,81 @@ private fun SetsList(
                         }
                     }
                 ) {
-                    if (isEditMode) {
-                        FilledTonalIconButton(
-                            shapes = IconButtonShapes(
-                                shape = MaterialShapes.Circle.toShape(),
-                                pressedShape = MaterialShapes.Cookie6Sided.toShape(),
-                            ),
-                            onClick = { onSelectBottomSheet(exercise) },
-                        ) {
-                            Icon(painter = KenkoIcons.Add, contentDescription = null)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // 手动添加的动作可移除
+                        if (exercise.id in extraExerciseIds && (isToday || isEditMode)) {
+                            TooltipIconButton(
+                                tooltip = stringResource(R.string.label_remove),
+                                onClick = { onRemoveExtraExercise(exercise) },
+                            ) {
+                                Icon(
+                                    painter = KenkoIcons.Remove,
+                                    contentDescription = stringResource(R.string.label_remove),
+                                )
+                            }
+                        }
+                        if (isEditMode) {
+                            FilledTonalIconButton(
+                                shapes = IconButtonShapes(
+                                    shape = MaterialShapes.Circle.toShape(),
+                                    pressedShape = MaterialShapes.Cookie6Sided.toShape(),
+                                ),
+                                onClick = { onSelectBottomSheet(exercise) },
+                            ) {
+                                Icon(
+                                    painter = KenkoIcons.Add,
+                                    contentDescription = stringResource(R.string.label_add_set),
+                                )
+                            }
                         }
                     }
                 }
             }
-            if (!isCollapsed) {
-                itemsIndexed(items = sets) { index, set ->
-                    DeletableSetItem(
-                        modifier = Modifier
-                            .animateItem()
-                            .padding(horizontal = 16.dp, vertical = 6.dp),
-                        set = set,
-                        isToday = isToday,
-                        isEditMode = isEditMode,
-                        onRepsUpdate = { onUpdateSet(set.id, it, set.weight) },
-                        onWeightUpdate = { onUpdateSet(set.id, set.repsOrDuration, it) },
-                        onDelete = if (isEditMode) { { setToDelete = set.id } } else null,
-                        title = {
-                            Text(normalizeInt(index + 1))
-                        },
-                    )
+            if (!isCollapsed && sets.isNotEmpty()) {
+                item(
+                    key = "sets-${exercise.id ?: exercise.name}",
+                    span = { GridItemSpan(maxLineSpan) },
+                ) {
+                    // 同一动作的组放在一张卡片里,行间用细分隔线,避免每组一张大卡。
+                    Surface(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ) {
+                        Column {
+                            sets.forEachIndexed { index, set ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    SetItem(
+                                        set = set,
+                                        showContainer = false,
+                                        modifier = Modifier.weight(1f),
+                                        isToday = isToday,
+                                        isEditMode = isEditMode,
+                                        onRepsUpdate = { onUpdateSet(set.id, it, set.weight) },
+                                        onWeightUpdate = { onUpdateSet(set.id, set.repsOrDuration, it) },
+                                        title = {
+                                            Text(normalizeInt(index + 1))
+                                        },
+                                    )
+                                    if (isEditMode) {
+                                        DeleteIconButton(
+                                            onClick = { set.id?.let { setToDelete = it } },
+                                        )
+                                    }
+                                }
+                                if (index != sets.lastIndex) {
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(start = 48.dp, end = 12.dp),
+                                        thickness = 1.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -519,6 +625,7 @@ private fun Header(
     performedOn: LocalDate,
     dayTitle: String?,
     dayIndexOverride: Int?,
+    durationSeconds: Long?,
     onBackPress: () -> Unit,
     modifier: Modifier = Modifier,
     showBackButton: Boolean = true,
@@ -540,11 +647,21 @@ private fun Header(
                     text = dayText,
                     style = MaterialTheme.typography.titleSmall,
                 )
-                Text(
-                    text = date,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = date,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (durationSeconds != null && durationSeconds > 0) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = TimerService.formatTime(durationSeconds),
+                            style = MaterialTheme.typography.labelSmall.numbers(),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         },
 
@@ -577,7 +694,7 @@ private fun SessionError(
 @Composable
 fun ExerciseSearchDialog(
     exercises: List<Exercise>,
-    onExerciseSelected: (Exercise) -> Unit,
+    onExercisesSelected: (List<Exercise>) -> Unit,
     onCreateNew: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -585,7 +702,8 @@ fun ExerciseSearchDialog(
     val parentTags by viewModel.parentTags.collectAsStateWithLifecycle()
     val allTags by viewModel.allTags.collectAsStateWithLifecycle()
 
-    var selectedExercise by remember { mutableStateOf<Exercise?>(null) }
+    // 多选：一次可添加多个动作(含计划外)。添加后没有组,需手动"添加组"。
+    val selectedExercises = remember { mutableStateListOf<Exercise>() }
     var selectedParentId by remember { mutableStateOf<Int?>(null) }
     var selectedChildId by remember { mutableStateOf<Int?>(null) }
 
@@ -603,11 +721,6 @@ fun ExerciseSearchDialog(
             }
         }
         filtered
-    }
-
-    // Clear the pending selection when the visible result set changes
-    LaunchedEffect(selectedParentId, selectedChildId) {
-        selectedExercise = null
     }
 
     AlertDialog(
@@ -633,10 +746,14 @@ fun ExerciseSearchDialog(
                     modifier = Modifier.height(300.dp),
                 ) {
                     items(filteredExercises, key = { it.id ?: it.name }) { exercise ->
+                        val isSelected = exercise in selectedExercises
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { selectedExercise = exercise }
+                                .clickable {
+                                    if (isSelected) selectedExercises.remove(exercise)
+                                    else selectedExercises.add(exercise)
+                                }
                                 .padding(vertical = 10.dp, horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
@@ -645,7 +762,7 @@ fun ExerciseSearchDialog(
                                 style = MaterialTheme.typography.bodyLarge,
                                 modifier = Modifier.weight(1f),
                             )
-                            if (exercise == selectedExercise) {
+                            if (isSelected) {
                                 Text(
                                     text = stringResource(R.string.label_check_mark),
                                     color = MaterialTheme.colorScheme.primary,
@@ -660,9 +777,9 @@ fun ExerciseSearchDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    selectedExercise?.let(onExerciseSelected)
+                    onExercisesSelected(selectedExercises.toList())
                 },
-                enabled = selectedExercise != null,
+                enabled = selectedExercises.isNotEmpty(),
             ) {
                 Text(stringResource(R.string.label_confirm))
             }

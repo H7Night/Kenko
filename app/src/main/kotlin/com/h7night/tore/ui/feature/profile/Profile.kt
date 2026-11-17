@@ -68,6 +68,7 @@ import com.h7night.tore.ui.component.BackButton
 import com.h7night.tore.ui.component.KenkoDatePickerDialog
 import com.h7night.tore.ui.component.OutlineBorder
 import com.h7night.tore.ui.component.SecondaryBorder
+import com.h7night.tore.ui.component.TooltipIconButton
 import com.h7night.tore.ui.component.WeightLineChart
 import com.h7night.tore.ui.extension.normalizeInt
 import com.h7night.tore.ui.extension.plus
@@ -134,6 +135,7 @@ private fun Profile(
     var weightDialog by remember { mutableStateOf<WeightDialogState>(WeightDialogState.Hidden) }
     var showWeightHistory by remember { mutableStateOf(false) }
 
+    if (state.bodyWeightEnabled) {
     when (val dialog = weightDialog) {
         is WeightDialogState.Add -> {
             WeightDialog(
@@ -171,6 +173,7 @@ private fun Profile(
             onDelete = onDeleteWeight
         )
     }
+    }
 
     Scaffold(
         topBar = {
@@ -178,8 +181,14 @@ private fun Profile(
                 title = { Text(text = stringResource(R.string.label_profile)) },
                 navigationIcon = { if (showBackButton) BackButton(onBackPress) },
                 actions = {
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(painter = KenkoIcons.Settings, contentDescription = null)
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.label_settings),
+                        onClick = onSettingsClick,
+                    ) {
+                        Icon(
+                            painter = KenkoIcons.Settings,
+                            contentDescription = stringResource(R.string.label_settings),
+                        )
                     }
                 },
             )
@@ -224,20 +233,22 @@ private fun Profile(
                 onExercisesClick = onExercisesClick,
             )
             Spacer(modifier = Modifier.height(12.dp))
-            WeightCard(
-                weights = state.weights,
-                filteredWeights = state.filteredWeights,
-                selectedMonthLabel = state.selectedMonthLabel,
-                canGoPrev = state.canGoPrev,
-                canGoNext = state.canGoNext,
-                customRangeActive = state.customRangeActive,
-                onPrevMonth = onPrevMonth,
-                onNextMonth = onNextMonth,
-                onSetCustomRange = onSetCustomRange,
-                onClearCustomRange = onClearCustomRange,
-                onAddClick = { weightDialog = WeightDialogState.Add(state.weights.lastOrNull()?.value ?: 60f) },
-                onHistoryClick = { showWeightHistory = true }
-            )
+            if (state.bodyWeightEnabled) {
+                WeightCard(
+                    weights = state.weights,
+                    filteredWeights = state.filteredWeights,
+                    selectedMonthLabel = state.selectedMonthLabel,
+                    canGoPrev = state.canGoPrev,
+                    canGoNext = state.canGoNext,
+                    customRangeActive = state.customRangeActive,
+                    onPrevMonth = onPrevMonth,
+                    onNextMonth = onNextMonth,
+                    onSetCustomRange = onSetCustomRange,
+                    onClearCustomRange = onClearCustomRange,
+                    onAddClick = { weightDialog = WeightDialogState.Add(state.weights.lastOrNull()?.value ?: 60f) },
+                    onHistoryClick = { showWeightHistory = true },
+                )
+            }
         }
     }
 }
@@ -261,8 +272,7 @@ private fun ExerciseCard(
         Surface(
             modifier = Modifier.weight(1.5F),
             shape = surfaceShape,
-            color = MaterialTheme.colorScheme.surface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
             onClick = onExercisesClick,
         ) {
             Column(Modifier.padding(16.dp)) {
@@ -332,8 +342,7 @@ private fun WeightCard(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surface,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -348,9 +357,9 @@ private fun WeightCard(
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                IconButton(
+                TooltipIconButton(
+                    tooltip = stringResource(R.string.label_add),
                     onClick = onAddClick,
-                    modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
                         painter = KenkoIcons.Add,
@@ -366,14 +375,14 @@ private fun WeightCard(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconButton(
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.label_previous_month),
                         onClick = onPrevMonth,
                         enabled = canGoPrev,
-                        modifier = Modifier.size(28.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowLeft,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.label_previous_month),
                             modifier = Modifier.size(20.dp),
                         )
                     }
@@ -382,14 +391,14 @@ private fun WeightCard(
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.padding(horizontal = 2.dp),
                     )
-                    IconButton(
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.label_next_month),
                         onClick = onNextMonth,
                         enabled = canGoNext,
-                        modifier = Modifier.size(28.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowRight,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.label_next_month),
                             modifier = Modifier.size(20.dp),
                         )
                     }

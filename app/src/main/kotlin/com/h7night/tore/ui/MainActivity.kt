@@ -22,6 +22,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -105,6 +106,7 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val theme by viewModel.theme.collectAsStateWithLifecycle()
             val language by viewModel.language.collectAsStateWithLifecycle()
+            val palette by viewModel.palette.collectAsStateWithLifecycle()
 
             LaunchedEffect(language) {
                 val appLocale: LocaleListCompat = if (language.code != null) {
@@ -119,6 +121,7 @@ class MainActivity : AppCompatActivity() {
 
             KenkoTheme(
                 theme = theme,
+                palette = palette,
             ) {
                 val navController = rememberNavController()
                 val backStackEntry by navController.currentBackStackEntryAsState()
@@ -144,20 +147,21 @@ class MainActivity : AppCompatActivity() {
                             KenkoBottomBar(
                                 currentRouteName = currentRouteName,
                                 onHomeClick = {
-                                    navController.navigateToHome(
-                                        navOptions = navOptions {
-                                            popUpTo(HomeRoute) { saveState = true }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
-                                    )
+                                    if (!navController.popBackStack(HomeRoute, inclusive = false)) {
+                                        navController.navigateToHome(
+                                            navOptions = navOptions {
+                                                launchSingleTop = true
+                                            }
+                                        )
+                                    }
                                 },
                                 onHistoryClick = {
                                     navController.navigateToSessions(
+                                        weekOnly = false,
                                         navOptions = navOptions {
                                             popUpTo(HomeRoute) { saveState = true }
                                             launchSingleTop = true
-                                            restoreState = true
+                                            restoreState = false
                                         }
                                     )
                                 },
@@ -205,6 +209,9 @@ fun Kenko(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         bottomBar = { bottomBar() },
+        // 只负责底部导航栏占位;顶部/底部系统栏由各页自己的 TopAppBar/Scaffold 处理,
+        // 避免状态栏 inset 被外层和内层各算一次(顶部多出约 50dp 空白)。
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { innerPadding ->
         content(innerPadding)
     }

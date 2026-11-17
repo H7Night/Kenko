@@ -28,6 +28,8 @@ import com.h7night.tore.ui.feature.backup.navigation.backup
 import com.h7night.tore.ui.feature.backup.navigation.navigateToBackup
 import com.h7night.tore.ui.feature.exercise.navigation.addEditExercise
 import com.h7night.tore.ui.feature.exercise.navigation.navigateToAddEditExercise
+import com.h7night.tore.ui.feature.exercise.navigation.exerciseProgress
+import com.h7night.tore.ui.feature.exercise.navigation.navigateToExerciseProgress
 import com.h7night.tore.ui.feature.exercise.navigation.exercises
 import com.h7night.tore.ui.feature.exercise.navigation.navigateToExercises
 import com.h7night.tore.ui.feature.home.navigation.HomeRoute
@@ -40,6 +42,8 @@ import com.h7night.tore.ui.feature.plan.navigation.navigateToPlans
 import com.h7night.tore.ui.feature.plan.navigation.plans
 import com.h7night.tore.ui.feature.profile.navigation.navigateToProfile
 import com.h7night.tore.ui.feature.profile.navigation.profile
+import com.h7night.tore.ui.feature.session.navigation.calendar
+import com.h7night.tore.ui.feature.session.navigation.navigateToCalendar
 import com.h7night.tore.ui.feature.session.navigation.navigateToSessionDetail
 import com.h7night.tore.ui.feature.session.navigation.sessionDetail
 import com.h7night.tore.ui.feature.session.navigation.navigateToSessions
@@ -77,7 +81,14 @@ fun KenkoNavHost(
                 navController.navigateToPlans(navOptions = singleTopNavOptions)
             },
             onExploreSessionsClick = {
-                navController.navigateToSessions(navOptions = singleTopNavOptions)
+                navController.navigateToSessions(
+                    weekOnly = true,
+                    navOptions = navOptions {
+                        popUpTo(HomeRoute) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = false
+                    },
+                )
             },
             onStartSessionClick = {
                 navController.navigateToSessionDetail(
@@ -98,7 +109,16 @@ fun KenkoNavHost(
                     navOptions = singleTopNavOptions
                 )
             },
-            onBackPress = navController::popBackStackOnResume
+            onCalendarClick = {
+                navController.navigateToCalendar(navOptions = singleTopNavOptions)
+            },
+        )
+
+        calendar(
+            onBackPress = navController::popBackStackOnResume,
+            onSessionClick = { date ->
+                navController.navigateToSessionDetail(date = date, navOptions = singleTopNavOptions)
+            },
         )
 
         plans(
@@ -154,7 +174,10 @@ fun KenkoNavHost(
                     navOptions = singleTopNavOptions
                 )
             },
-            onBackPress = navController::popBackStackOnResume
+            onBackPress = navController::popBackStackOnResume,
+            onProgressClick = { id ->
+                navController.navigateToExerciseProgress(id, navOptions = singleTopNavOptions)
+            },
         )
 
         planEdit(navController::popBackStackOnResume) { name ->
@@ -176,6 +199,13 @@ fun KenkoNavHost(
         )
 
         addEditExercise(navController::popBackStackOnResume)
+
+        exerciseProgress(
+            onBackPress = navController::popBackStackOnResume,
+            onSessionClick = { date ->
+                navController.navigateToSessionDetail(date = date, navOptions = singleTopNavOptions)
+            },
+        )
 
         tagManagement(navController::popBackStackOnResume)
 

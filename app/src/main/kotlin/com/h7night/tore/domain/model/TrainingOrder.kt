@@ -32,18 +32,27 @@ fun orderTrainingExercises(
     planned: List<Exercise>,
     sets: List<Set>,
 ): List<TrainingExercise> {
-    val setsByExercise: Map<Exercise, List<Set>> =
-        sets.sortedBy { it.order }.groupBy { it.exercise }
+    // 按 id 归并,不能用整个 Exercise 对象:计划/额外动作来自 ExerciseRepo(带 tags),
+    // 而 session 的组来自 SessionRepo(不带 tags),对象不相等但仍是同一个动作。
+    val setsByExerciseId: Map<Int?, List<Set>> =
+        sets.sortedBy { it.order }.groupBy { it.exercise.id }
 
-    val started = setsByExercise.entries
+    val started = setsByExerciseId.entries
         .sortedBy { (_, list) -> list.minOf { it.order } }
-        .mapIndexed { index, (exercise, list) ->
+        .mapIndexed { index, (exerciseId, list) ->
+            val exercise = planned.firstOrNull { it.id != null && it.id == exerciseId }
+                ?: list.first().exercise
             TrainingExercise(exercise, list, index + 1)
         }
 
+    val startedIds = setsByExerciseId.keys
     val notStarted = planned
-        .filter { it !in setsByExercise }
+        .filter { it.id == null || it.id !in startedIds }
         .map { TrainingExercise(it, emptyList(), null) }
 
     return notStarted + started
 }
+
+/** 历史记录视图:只保留真正练过(至少有一组)的动作。 */
+fun List<TrainingExercise>.recordedOnly(): List<TrainingExercise> =
+    filter { it.sets.isNotEmpty() }

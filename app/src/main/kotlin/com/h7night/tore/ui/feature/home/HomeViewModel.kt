@@ -20,6 +20,7 @@ import androidx.lifecycle.viewModelScope
 import com.h7night.tore.data.repository.ExerciseRepo
 import com.h7night.tore.data.repository.PlanRepo
 import com.h7night.tore.data.repository.SessionRepo
+import com.h7night.tore.domain.model.Exercise
 import com.h7night.tore.domain.model.TrainingExercise
 import com.h7night.tore.domain.model.orderTrainingExercises
 import com.h7night.tore.domain.model.today
@@ -33,6 +34,7 @@ import com.h7night.tore.utils.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -41,14 +43,17 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel @Inject constructor(
     private val planRepo: PlanRepo,
     private val sessionRepo: SessionRepo,
-    exerciseRepo: ExerciseRepo,
+    private val exerciseRepo: ExerciseRepo,
     val timerManager: TimerManager,
     val trainingSessionManager: TrainingSessionManager,
 ) : KenkoViewModel() {
@@ -56,6 +61,22 @@ class HomeViewModel @Inject constructor(
     private val planStream = planRepo.current
     val sessionStream = sessionRepo.streamByDate(today())
     private val sessionsStream = sessionRepo.stream
+
+    /** This week's completed records, counted from Monday through today. */
+    val weeklySummary: StateFlow<HomeWeekSummary> = sessionsStream
+        .map { sessions ->
+            val currentDate = today()
+            val monday = currentDate.minus(currentDate.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
+            val weekSessions = sessions.filter { session ->
+                session.date >= monday &&
+                    (session.sets.isNotEmpty() || (session.durationSeconds ?: 0L) > 0L)
+            }
+            HomeWeekSummary(
+                sessions = weekSessions.size,
+                durationSeconds = weekSessions.sumOf { it.durationSeconds ?: 0L },
+            )
+        }
+        .asStateFlow(HomeWeekSummary(), started = SharingStarted.Eagerly)
 
     private val planItemStream = combine(
         sessionStream,
@@ -79,8 +100,28 @@ class HomeViewModel @Inject constructor(
     val planName: StateFlow<String?> = planStream.map { it?.name }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val allExercises: StateFlow<List<com.h7night.tore.domain.model.Exercise>> = exerciseRepo.stream
+    val allExercises: StateFlow<List<Exercise>> = exerciseRepo.stream
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** 本次训练显式添加的动作(计划外、或暂无组也要显示的"空动作")。 */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val extraExercises: Flow<List<Exercise>> = sessionStream.flatMapLatest { session ->
+        val id = session?.id
+        if (id == null) {
+            flowOf(emptyList())
+        } else {
+            combine(sessionRepo.streamSessionExerciseIds(id), allExercises) { ids, all ->
+                ids.mapNotNull { eid -> all.find { it.id == eid } }
+            }
+        }
+    }
+
+    /** 供 UI 判断哪些动作是"手动添加的",以便显示移除入口。 */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val extraExerciseIds: StateFlow<List<Int>> = sessionStream.flatMapLatest { session ->
+        val id = session?.id
+        if (id == null) flowOf(emptyList()) else sessionRepo.streamSessionExerciseIds(id)
+    }.asStateFlow(emptyList(), started = SharingStarted.Eagerly)
 
     val availablePlanDays: StateFlow<Map<Int, List<com.h7night.tore.domain.model.PlanItem>>> =
         planRepo.planItems.map { items ->
@@ -104,9 +145,9 @@ class HomeViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val sessionSets: StateFlow<List<TrainingExercise>> =
-        combine(sessionStream, planItemStream) { session, planItems ->
+        combine(sessionStream, planItemStream, extraExercises) { session, planItems, extra ->
             orderTrainingExercises(
-                planned = planItems.map { it.exercise }.distinct(),
+                planned = (planItems.map { it.exercise } + extra).distinctBy { it.id },
                 sets = session?.sets ?: emptyList(),
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -217,7 +258,32 @@ class HomeViewModel @Inject constructor(
             sessionRepo.removeSet(setId)
         }
     }
+
+    /** 多选添加动作(计划外/空动作也算入本次训练)。 */
+    fun addExercises(exercises: List<Exercise>) {
+        launchCatching {
+            val sessionId = sessionRepo.getSessionIdOrCreate(today())
+            exercises.forEach { exercise ->
+                exercise.id?.let { sessionRepo.addSessionExercise(sessionId, it) }
+            }
+        }
+    }
+
+    /** 移除手动添加的动作。 */
+    fun removeExtraExercise(exercise: Exercise) {
+        launchCatching {
+            val exerciseId = exercise.id ?: return@launchCatching
+            val sessionId = sessionRepo.streamByDate(today()).first()?.id ?: return@launchCatching
+            sessionRepo.removeSessionExercise(sessionId, exerciseId)
+        }
+    }
 }
+
+@Immutable
+data class HomeWeekSummary(
+    val sessions: Int = 0,
+    val durationSeconds: Long = 0L,
+)
 
 @Immutable
 data class HomeUiData(

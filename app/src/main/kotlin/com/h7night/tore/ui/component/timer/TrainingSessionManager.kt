@@ -15,8 +15,13 @@
 
 package com.h7night.tore.ui.component.timer
 
+import com.h7night.tore.data.health.HealthConnectManager
 import com.h7night.tore.data.repository.SessionRepo
+import com.h7night.tore.data.repository.SettingsRepo
+import com.h7night.tore.domain.health.toHealthExerciseSession
+import com.h7night.tore.domain.model.shouldKeepSession
 import com.h7night.tore.domain.model.today
+import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +41,8 @@ sealed interface TrainingSessionState {
 class TrainingSessionManager @Inject constructor(
     private val sessionRepo: SessionRepo,
     private val timerManager: TimerManager,
+    private val settingsRepo: SettingsRepo,
+    private val healthConnectManager: HealthConnectManager,
     @com.h7night.tore.di.ApplicationScope private val scope: CoroutineScope,
 ) {
 
@@ -46,6 +53,8 @@ class TrainingSessionManager @Inject constructor(
         if (_sessionState.value is TrainingSessionState.Active) return
         scope.launch {
             val sessionId = sessionRepo.getSessionIdOrCreate(today())
+            // 首次"开始训练"即记录开始时刻;已存在(继续训练)则保留原值。
+            sessionRepo.ensureSessionStarted(sessionId, Clock.System.now().toEpochMilliseconds())
             _sessionState.value = TrainingSessionState.Active(sessionId)
             // Continue from existing duration if any
             val existingSession = sessionRepo.streamByDate(today()).first()
@@ -68,13 +77,18 @@ class TrainingSessionManager @Inject constructor(
             timerManager.setElapsedSeconds(elapsed)
 
             if (sessionId != null) {
+                // 记录本次结束时刻;开始时间保持不变(继续训练后再次结束会更新此值)。
+                sessionRepo.updateSessionEnded(sessionId, Clock.System.now().toEpochMilliseconds())
+
                 // Save duration to session
                 if (elapsed > 0) {
                     sessionRepo.updateSessionDuration(sessionId, elapsed)
                 }
 
                 val sets = sessionRepo.getSets(sessionId)
-                if (sets.isEmpty() && elapsed < 60) {
+                if (shouldKeepSession(sets.size, elapsed)) {
+                    syncSessionToHealth()
+                } else {
                     sessionRepo.deleteSession(
                         com.h7night.tore.domain.model.Session(
                             date = today(),
@@ -125,5 +139,13 @@ class TrainingSessionManager @Inject constructor(
     fun reset() {
         timerManager.forceStop()
         _sessionState.value = TrainingSessionState.Idle
+    }
+
+    /** Best-effort write of a just-ended session to Health Connect. Never throws. */
+    private suspend fun syncSessionToHealth() {
+        if (!settingsRepo.get { healthConnectEnabled }.first()) return
+        val session = sessionRepo.streamByDate(today()).first() ?: return
+        val names = session.performExercises.map { it.name }
+        session.toHealthExerciseSession(names)?.let { healthConnectManager.write(it) }
     }
 }
