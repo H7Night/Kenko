@@ -1,0 +1,372 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.h7night.tore.ui.feature.exercise
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.h7night.tore.R
+import com.h7night.tore.domain.model.CountType
+import com.h7night.tore.ui.component.BackButton
+import com.h7night.tore.ui.component.ErrorSnackbar
+import androidx.compose.material3.FilterChip
+import com.h7night.tore.domain.model.ExerciseEquipment
+import com.h7night.tore.domain.model.labelRes
+import com.h7night.tore.ui.component.TagSelector
+import com.h7night.tore.ui.extension.plus
+import com.h7night.tore.ui.theme.KenkoIcons
+import com.h7night.tore.ui.theme.KenkoTheme
+
+@Composable
+fun AddEditExercise(
+    onDone: () -> Unit,
+    onBackPress: () -> Unit,
+) {
+    val viewModel: AddEditExerciseViewModel = hiltViewModel()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val tagSelectorState by viewModel.tagState.collectAsStateWithLifecycle()
+
+    if (state.showRenameConfirmation) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissRenameConfirmation,
+            title = {
+                Text(stringResource(R.string.label_rename_exercise))
+            },
+            text = {
+                Text(stringResource(R.string.label_rename_exercise_description))
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.confirmRename(onDone) }) {
+                    Text(stringResource(R.string.label_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissRenameConfirmation) {
+                    Text(stringResource(R.string.label_cancel))
+                }
+            },
+        )
+    }
+
+    AddEditExercise(
+        exerciseName = state.exerciseName,
+        state = state,
+        tagSelectorState = tagSelectorState,
+        snackbarState = viewModel.snackbarState,
+        onAddTag = viewModel::addTag,
+        onRemoveTag = viewModel::removeTag,
+        onSetCountType = viewModel::setCountType,
+        onBodyweightChange = { viewModel.isBodyweightFlow.value = it },
+        onSetEquipment = viewModel::setEquipment,
+        onSetPrimaryTag = viewModel::setPrimaryTag,
+        onNameChange = viewModel::setName,
+        onBackPress = onBackPress,
+        onDone = { viewModel.saveExercise(onDone) },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddEditExercise(
+    exerciseName: String,
+    state: AddEditExerciseUiState,
+    tagSelectorState: TagSelectorState,
+    snackbarState: SnackbarHostState,
+    onAddTag: (com.h7night.tore.domain.model.Tag) -> Unit,
+    onRemoveTag: (com.h7night.tore.domain.model.Tag) -> Unit,
+    onSetCountType: (CountType) -> Unit,
+    onBodyweightChange: (Boolean) -> Unit,
+    onSetEquipment: (com.h7night.tore.domain.model.ExerciseEquipment?) -> Unit = {},
+    onSetPrimaryTag: (Int?) -> Unit = {},
+    onNameChange: (String) -> Unit,
+    onDone: () -> Unit,
+    onBackPress: () -> Unit,
+) {
+    val focusManager = LocalFocusManager.current
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                navigationIcon = { BackButton(onBackPress) },
+                title = {
+                    Text(
+                        text = stringResource(
+                            if (exerciseName.isBlank()) {
+                                R.string.label_new_exercise
+                            } else {
+                                R.string.label_edit_exercise
+                            }
+                        ),
+                    )
+                },
+                actions = {
+                    TextButton(
+                        onClick = {
+                            focusManager.clearFocus()
+                            onDone()
+                        },
+                    ) {
+                        Text(stringResource(R.string.label_save))
+                    }
+                },
+            )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarState) {
+                ErrorSnackbar(data = it)
+            }
+        },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(PaddingValues(horizontal = 16.dp) + innerPadding),
+        ) {
+            ExerciseTextField(
+                exerciseName = exerciseName,
+                onNameChange = onNameChange,
+                isError = state.isError,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Tag selector (two-level)
+            TagSelector(
+                parents = tagSelectorState.parents,
+                children = tagSelectorState.children,
+                selectedTags = state.selectedTags,
+                onAddTag = onAddTag,
+                onRemoveTag = onRemoveTag,
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Body weight switch
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.label_use_bodyweight),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Switch(
+                    checked = state.isBodyweight,
+                    onCheckedChange = {
+                        focusManager.clearFocus()
+                        onBodyweightChange(it)
+                    },
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Count type selector
+            Text(
+                text = stringResource(R.string.label_count_type),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                CountType.entries.forEachIndexed { index, type ->
+                    SegmentedButton(
+                        selected = state.countType == type,
+                        onClick = {
+                            focusManager.clearFocus()
+                            onSetCountType(type)
+                        },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = CountType.entries.size,
+                        ),
+                    ) {
+                        Text(stringResource(type.labelRes))
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Equipment selector (动作级器械)
+            Text(
+                text = stringResource(R.string.label_equipment),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            androidx.compose.foundation.layout.FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                com.h7night.tore.domain.model.ExerciseEquipment.entries.forEach { equipment ->
+                    FilterChip(
+                        selected = state.equipment == equipment,
+                        onClick = {
+                            focusManager.clearFocus()
+                            onSetEquipment(if (state.equipment == equipment) null else equipment)
+                        },
+                        label = { Text(stringResource(equipment.labelRes)) },
+                    )
+                }
+            }
+
+            if (state.selectedTags.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.label_primary_muscle),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    state.selectedTags.forEach { tag ->
+                        val isPrimary = state.primaryTagId == tag.id ||
+                            (state.primaryTagId == null && tag == state.selectedTags.first())
+                        FilterChip(
+                            selected = isPrimary,
+                            onClick = {
+                                focusManager.clearFocus()
+                                onSetPrimaryTag(if (state.primaryTagId == tag.id) null else tag.id)
+                            },
+                            label = { Text(tag.name) },
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun ExerciseTextField(
+    exerciseName: String,
+    isError: Boolean,
+    onNameChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedTextField(
+        modifier = modifier,
+        value = exerciseName,
+        onValueChange = onNameChange,
+        shape = MaterialTheme.shapes.large,
+        label = {
+            Text(text = stringResource(R.string.label_name))
+        },
+        isError = isError,
+        leadingIcon = {
+            Icon(painter = KenkoIcons.Rename, contentDescription = null)
+        },
+        supportingText = {
+            if (isError) {
+                Text(text = stringResource(R.string.label_exercise_exists))
+            }
+        }
+    )
+}
+
+@Preview(name = "Exercise Name Field")
+@Composable
+private fun NameTextFieldPreview() {
+    KenkoTheme {
+        ExerciseTextField(
+            exerciseName = "Bench Press",
+            onNameChange = {},
+            isError = false,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Preview(name = "Exercise Name Field - Error")
+@Composable
+private fun ErrorNameTextFieldPreview() {
+    KenkoTheme {
+        ExerciseTextField(
+            exerciseName = "Bench Press",
+            onNameChange = {},
+            isError = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AddEditPreview() {
+    KenkoTheme {
+        AddEditExercise(
+            exerciseName = "BenchPress",
+            state = AddEditExerciseUiState(
+                isError = false,
+                isBodyweight = false,
+                countType = CountType.REPS,
+                selectedTags = emptyList(),
+            ),
+            tagSelectorState = TagSelectorState(),
+            snackbarState = SnackbarHostState(),
+            onAddTag = {},
+            onRemoveTag = {},
+            onSetCountType = {},
+            onBodyweightChange = {},
+            onNameChange = {},
+            onDone = {},
+            onBackPress = {}
+        )
+    }
+}

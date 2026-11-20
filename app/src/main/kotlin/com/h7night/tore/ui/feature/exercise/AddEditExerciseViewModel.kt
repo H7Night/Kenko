@@ -1,0 +1,227 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.h7night.tore.ui.feature.exercise
+
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.Stable
+import androidx.lifecycle.SavedStateHandle
+import androidx.navigation.toRoute
+import com.h7night.tore.R
+import com.h7night.tore.data.StringHandler
+import com.h7night.tore.data.repository.ExerciseRepo
+import com.h7night.tore.data.repository.TagRepo
+import com.h7night.tore.domain.model.CountType
+import com.h7night.tore.domain.model.Exercise
+import com.h7night.tore.domain.model.ExerciseEquipment
+import com.h7night.tore.domain.model.Tag
+import com.h7night.tore.ui.base.KenkoViewModel
+import com.h7night.tore.ui.feature.exercise.navigation.AddEditExerciseRoute
+import com.h7night.tore.utils.AppConstants
+import com.h7night.tore.utils.asStateFlow
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.mapLatest
+
+@HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+class AddEditExerciseViewModel @Inject constructor(
+    private val repo: ExerciseRepo,
+    private val tagRepo: TagRepo,
+    private val stringHandler: StringHandler,
+    savedStateHandle: SavedStateHandle,
+) : KenkoViewModel() {
+
+    private val routeData: AddEditExerciseRoute = savedStateHandle.toRoute()
+
+    private val exerciseId: Int? = routeData.id
+
+    private val exerciseName = MutableStateFlow("")
+
+    val isBodyweightFlow = MutableStateFlow(false)
+
+    val countTypeFlow = MutableStateFlow(CountType.REPS)
+
+    val equipmentFlow = MutableStateFlow<ExerciseEquipment?>(null)
+
+    val primaryTagIdFlow = MutableStateFlow<Int?>(null)
+
+    val selectedTags = MutableStateFlow<List<Tag>>(emptyList())
+
+    private var originalName: String = ""
+
+    val showRenameConfirmation = MutableStateFlow(false)
+
+    val snackbarState = SnackbarHostState()
+
+    val tagState = combine(
+        tagRepo.streamParents,
+        tagRepo.stream,
+    ) { parents, all ->
+        val children = all.filter { it.parentId != null }
+        TagSelectorState(parents = parents, children = children)
+    }.asStateFlow(TagSelectorState())
+
+    private val exerciseAlreadyExistError = exerciseName
+        .debounce(AppConstants.DEBOUNCE_SHORT_MILLIS.milliseconds)
+        .mapLatest { repo.isExerciseAvailable(it) && it != originalName }
+
+    val state = combine(
+        exerciseAlreadyExistError,
+        isBodyweightFlow,
+        countTypeFlow,
+        selectedTags,
+        exerciseName,
+        showRenameConfirmation,
+        equipmentFlow,
+        primaryTagIdFlow,
+    ) { array: Array<*> ->
+        AddEditExerciseUiState(
+            isError = array[0] as Boolean,
+            isBodyweight = array[1] as Boolean,
+            countType = array[2] as CountType,
+            selectedTags = @Suppress("UNCHECKED_CAST") array[3] as List<Tag>,
+            exerciseName = array[4] as String,
+            showRenameConfirmation = array[5] as Boolean,
+            equipment = array[6] as ExerciseEquipment?,
+            primaryTagId = array[7] as Int?,
+        )
+    }.asStateFlow(
+        AddEditExerciseUiState(
+            isError = false,
+            isBodyweight = false,
+            countType = CountType.REPS,
+            selectedTags = emptyList(),
+            exerciseName = "",
+            showRenameConfirmation = false,
+        ),
+    )
+
+    fun setName(value: String) {
+        exerciseName.value = value
+    }
+
+    fun addTag(tag: Tag) {
+        val current = selectedTags.value.toMutableList()
+        if (current.none { it.id == tag.id }) {
+            current.add(tag)
+            selectedTags.value = current
+        }
+    }
+
+    fun removeTag(tag: Tag) {
+        selectedTags.value = selectedTags.value.filter { it.id != tag.id }
+    }
+
+    fun setCountType(type: CountType) {
+        countTypeFlow.value = type
+    }
+
+    fun setEquipment(equipment: ExerciseEquipment?) {
+        equipmentFlow.value = equipment
+    }
+
+    fun setPrimaryTag(tagId: Int?) {
+        primaryTagIdFlow.value = tagId
+    }
+
+    fun dismissRenameConfirmation() {
+        showRenameConfirmation.value = false
+    }
+
+    fun saveExercise(onDone: () -> Unit) {
+        launchCatching {
+            val name = exerciseName.value
+            if (name.isBlank()) {
+                snackbarState.showSnackbar(stringHandler.getString(R.string.error_exercise_name_empty))
+                return@launchCatching
+            }
+            if (selectedTags.value.isEmpty()) {
+                snackbarState.showSnackbar(stringHandler.getString(R.string.label_at_least_one_tag))
+                return@launchCatching
+            }
+            if (exerciseId != null && name != originalName && repo.hasHistory(exerciseId)) {
+                showRenameConfirmation.value = true
+                return@launchCatching
+            }
+            commitSave(onDone)
+        }
+    }
+
+    fun confirmRename(onDone: () -> Unit) {
+        launchCatching {
+            showRenameConfirmation.value = false
+            commitSave(onDone)
+        }
+    }
+
+    private suspend fun commitSave(onDone: () -> Unit) {
+        val name = exerciseName.value
+        repo.upsert(
+            Exercise(
+                name = name,
+                tags = selectedTags.value,
+                countType = countTypeFlow.value,
+                isBodyweight = isBodyweightFlow.value,
+                equipment = equipmentFlow.value,
+                primaryTagId = primaryTagIdFlow.value,
+                id = exerciseId,
+            ),
+        )
+        onDone()
+    }
+
+    init {
+        launchCatching {
+            if (exerciseId != null) {
+                val exercise = repo.get(exerciseId)
+                exercise?.let {
+                    originalName = it.name
+                    exerciseName.value = it.name
+                    isBodyweightFlow.value = it.isBodyweight
+                    countTypeFlow.value = it.countType
+                    selectedTags.value = it.tags
+                    equipmentFlow.value = it.equipment
+                    primaryTagIdFlow.value = it.primaryTagId
+                }
+            } else {
+                if (routeData.name != null) exerciseName.value = routeData.name
+            }
+        }
+    }
+}
+
+@Stable
+data class AddEditExerciseUiState(
+    val isError: Boolean,
+    val isBodyweight: Boolean,
+    val countType: CountType = CountType.REPS,
+    val selectedTags: List<Tag> = emptyList(),
+    val exerciseName: String = "",
+    val showRenameConfirmation: Boolean = false,
+    val equipment: ExerciseEquipment? = null,
+    val primaryTagId: Int? = null,
+)
+
+data class TagSelectorState(
+    val parents: List<Tag> = emptyList(),
+    val children: List<Tag> = emptyList(),
+)

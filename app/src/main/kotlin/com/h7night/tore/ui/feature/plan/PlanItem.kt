@@ -1,0 +1,145 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.h7night.tore.ui.feature.plan.components
+
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.unit.dp
+import com.h7night.tore.R
+import com.h7night.tore.domain.model.Plan
+import com.h7night.tore.domain.model.PlanPreviewParameters
+import com.h7night.tore.ui.component.DeleteIconButton
+import com.h7night.tore.ui.extension.normalizeInt
+import com.h7night.tore.ui.theme.KenkoTheme
+
+@Composable
+fun PlanItem(
+    plan: Plan,
+    onActiveChange: (Boolean) -> Unit,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    onDelete: (() -> Unit)? = null,
+) {
+    val transition = updateTransition(targetState = plan.isActive, label = null)
+    val currentPlanLabel = stringResource(R.string.label_current_plan)
+    val setCurrentPlanLabel = stringResource(R.string.label_set_current_plan)
+    val borderColor by transition.animateColor(label = "border") {
+        if (it) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+        else MaterialTheme.colorScheme.outlineVariant
+    }
+    val containerColor by transition.animateColor(label = "container") {
+        if (it) MaterialTheme.colorScheme.primaryContainer
+        else MaterialTheme.colorScheme.surface
+    }
+
+    Surface(
+        modifier = modifier,
+        onClick = onClick,
+        color = containerColor,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        shape = MaterialTheme.shapes.medium,
+        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    modifier = Modifier.weight(1F),
+                    text = plan.name,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                if (plan.isActive) {
+                    Text(
+                        text = stringResource(R.string.label_current),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                    )
+                }
+                RadioButton(
+                    selected = plan.isActive,
+                    onClick = { if (!plan.isActive) onActiveChange(true) },
+                    modifier = Modifier.semantics {
+                        contentDescription = if (plan.isActive) {
+                            currentPlanLabel
+                        } else {
+                            setCurrentPlanLabel
+                        }
+                    },
+                )
+                if (onDelete != null) {
+                    DeleteIconButton(onClick = onDelete)
+                }
+            }
+            val stats = remember(plan) { plan.stat }
+            Text(
+                text = stringResource(
+                    R.string.label_plan_description,
+                    stats.exercises,
+                    normalizeInt(stats.workDays),
+                    normalizeInt((plan.dayCount - stats.workDays).coerceAtLeast(0)),
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun PlanItemPreview(@PreviewParameter(PlanPreviewParameters::class) plans: List<Plan>) {
+    KenkoTheme {
+        var plan by remember { mutableStateOf(plans.first()) }
+        PlanItem(plan = plan, { plan = plan.copy(isActive = it) }, {})
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun PlanItemInActivePreview(@PreviewParameter(PlanPreviewParameters::class) plans: List<Plan>) {
+    KenkoTheme {
+        PlanItem(plan = plans.first(), {}, {})
+    }
+}

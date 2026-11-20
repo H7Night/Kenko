@@ -1,0 +1,261 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.h7night.tore.data.repository.local
+
+import com.h7night.tore.data.local.dao.ExerciseDao
+import com.h7night.tore.data.local.dao.PlanDao
+import com.h7night.tore.data.local.dao.PlanHistoryDao
+import com.h7night.tore.data.local.dao.SessionDao
+import com.h7night.tore.data.local.dao.SetsDao
+import com.h7night.tore.data.local.model.SessionDataEntity
+import com.h7night.tore.data.local.model.SetEntity
+import com.h7night.tore.data.local.model.dayTitlesMap
+import com.h7night.tore.data.mapper.mapSetEntities
+import com.h7night.tore.data.mapper.toEntity
+import com.h7night.tore.data.mapper.toExternal
+import com.h7night.tore.domain.model.Session
+import com.h7night.tore.domain.model.SessionSummary
+import com.h7night.tore.domain.model.Set
+import com.h7night.tore.domain.model.TrainingDayMatch
+import com.h7night.tore.data.repository.SessionRepo
+import com.h7night.tore.utils.toLocalEpochDays
+import javax.inject.Inject
+import kotlin.time.Clock
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+
+class LocalSessionRepo @Inject constructor(
+    private val dao: SessionDao,
+    private val setsDao: SetsDao,
+    private val historyDao: PlanHistoryDao,
+    private val exerciseDao: ExerciseDao,
+    private val planDao: PlanDao,
+) : SessionRepo {
+
+    private val mutex = Mutex()
+
+    override val stream: Flow<List<Session>> =
+        dao.stream().map {
+            it.map { session ->
+                session.toExternal(session.sets.toExternal())
+            }
+        }
+
+    override val planDateRanges: Flow<Map<Int, Pair<LocalDate, LocalDate>>> =
+        historyDao.stream().map { history ->
+            history.filter { it.planId != null }
+                .groupBy { it.planId!! }
+                .mapValues { (_, rows) ->
+                    val start = LocalDate.fromEpochDays(
+                        rows.minOf { it.start.value }.toLong(),
+                    )
+                    // 激活中（end==null）视为到今天为止
+                    val todayEpoch = Clock.System.now()
+                        .toLocalDateTime(TimeZone.currentSystemDefault())
+                        .date
+                        .toLocalEpochDays()
+                        .value
+                    val endEpoch = rows.mapNotNull { it.end?.value }.maxOrNull() ?: todayEpoch
+                    start to LocalDate.fromEpochDays(endEpoch.toLong())
+                }
+        }
+
+    override val streamSummaries: Flow<List<SessionSummary>> =
+        dao.streamSummaries().map { list ->
+            list.map { entity ->
+                SessionSummary(
+                    date = LocalDate.fromEpochDays(entity.date.value.toLong()),
+                    planId = entity.planId,
+                    dayIndexOverride = entity.dayIndexOverride,
+                    dayTitleOverride = entity.dayTitleOverride,
+                    durationSeconds = entity.durationSeconds,
+                    exerciseNames = entity.exerciseNames
+                        ?.split(",")
+                        ?.filter { it.isNotBlank() }
+                        ?: emptyList(),
+                    setCount = entity.setCount,
+                    id = entity.id,
+                )
+            }
+        }
+    override val setsCount: Flow<Int> =
+        setsDao.totalSetCount()
+
+    override val earliestSessionDate: Flow<LocalDate?> = flow {
+        emit(dao.earliestSessionDate()?.let { LocalDate.fromEpochDays(it.value) })
+    }
+
+    override suspend fun addSet(sessionId: Int, set: Set) = mutex.withLock {
+        setsDao.insert(
+            set.toEntity(
+                sessionId,
+                setsDao.getSetsCountBySessionId(sessionId) ?: 0,
+            ),
+        )
+    }
+
+    override suspend fun addSet(
+        sessionId: Int,
+        exerciseId: Int,
+        weight: Float,
+        reps: Int,
+    ) = mutex.withLock {
+        setsDao.insert(
+            SetEntity(
+                repsOrDuration = reps,
+                weight = weight,
+                exerciseId = exerciseId,
+                sessionId = sessionId,
+                order = setsDao.getSetsCountBySessionId(sessionId) ?: 0,
+            ),
+        )
+    }
+
+    override suspend fun updateSet(setId: Int, reps: Int, weight: Float) {
+        setsDao.update(setId, reps, weight)
+    }
+
+    override suspend fun removeSet(setId: Int) {
+        setsDao.delete(setId)
+    }
+
+    override suspend fun clearSets(date: LocalDate) {
+        val sessionId = dao.getSessionId(date.toLocalEpochDays()) ?: return
+        setsDao.deleteBySessionId(sessionId)
+    }
+
+    override suspend fun updateDayIndex(date: LocalDate, dayIndex: Int) {
+        getSessionIdOrCreate(date)
+        dao.updateDayIndexOverride(date.toLocalEpochDays(), dayIndex)
+        // 同步写入训练日名称快照,保证历史记录不随计划名称修改而变化。
+        updateDayTitleSnapshot(date, dayIndex)
+    }
+
+    private suspend fun updateDayTitleSnapshot(date: LocalDate, dayIndex: Int) {
+        val sessionId = dao.getSessionId(date.toLocalEpochDays()) ?: return
+        val planId = dao.getSessionPlanId(sessionId) ?: return
+        val title = planDao.getPlanById(planId)?.dayTitlesMap()?.get(dayIndex)
+        dao.updateDayTitleOverride(sessionId, title)
+    }
+
+    override suspend fun snapshotPlanDayTitles(planId: Int) {
+        val plan = planDao.getPlanById(planId) ?: return
+        val titles = plan.dayTitlesMap()
+        if (titles.isEmpty()) return
+
+        // 修改计划前的训练日 → 动作名集合,用于无 dayIndexOverride 的老记录反查
+        val planDayExerciseNames = planDao.getPlanItemsByPlanId(planId)
+            .groupBy { it.dayIndex }
+            .mapValues { (_, items) -> items.mapNotNull { exerciseDao.get(it.exerciseId)?.name }.toSet() }
+
+        dao.getSessionsByPlan(planId).forEach { session ->
+            if (session.dayTitleOverride != null) return@forEach // 已有快照不再覆盖
+            val day = session.dayIndexOverride ?: TrainingDayMatch.matchDayIndex(
+                session.exerciseNames?.split(",")?.filter { it.isNotBlank() }?.toSet() ?: emptySet(),
+                planDayExerciseNames,
+            ) ?: return@forEach
+            val title = titles[day] ?: return@forEach
+            dao.updateDayTitleOverride(session.id, title)
+        }
+    }
+
+    override suspend fun updateSessionDuration(sessionId: Int, durationSeconds: Long) {
+        dao.updateDuration(sessionId, durationSeconds)
+    }
+
+    override suspend fun ensureSessionStarted(sessionId: Int, startedAtMillis: Long) {
+        dao.setStartedAtIfNull(sessionId, startedAtMillis)
+    }
+
+    override suspend fun updateSessionEnded(sessionId: Int, endedAtMillis: Long) {
+        dao.setEndedAt(sessionId, endedAtMillis)
+    }
+
+    override fun streamSessionExerciseIds(sessionId: Int): Flow<List<Int>> =
+        dao.streamSessionExerciseIds(sessionId)
+
+    override suspend fun addSessionExercise(sessionId: Int, exerciseId: Int) {
+        dao.insertSessionExercise(
+            com.h7night.tore.data.local.model.SessionExerciseEntity(
+                sessionId = sessionId,
+                exerciseId = exerciseId,
+            ),
+        )
+    }
+
+    override suspend fun removeSessionExercise(sessionId: Int, exerciseId: Int) {
+        dao.deleteSessionExercise(sessionId, exerciseId)
+    }
+
+    override suspend fun getSessionIdOrCreate(date: LocalDate): Int = mutex.withLock {
+        val currentPlanId = requireNotNull(historyDao.getCurrentId()) { "No plan active" }
+        val existingId = dao.getSessionId(date.toLocalEpochDays())
+        if (existingId != null) {
+            return@withLock existingId
+        }
+        // 新建当天训练 session 时即写入当前计划训练日序号(dayIndexOverride)与
+        // 训练日名称快照(dayTitleOverride):
+        // - 否则 Records 列表页只能靠动作名反查,反查失败时训练日名称不显示;
+        // - 快照使之后修改计划的训练日名称不影响历史记录。
+        val plan = planDao.getPlanById(currentPlanId)
+        val dayIndex = plan?.currentDayIndex
+        return@withLock dao.insert(
+            SessionDataEntity(
+                date = date.toLocalEpochDays(),
+                planId = currentPlanId,
+                dayIndexOverride = dayIndex,
+                dayTitleOverride = dayIndex?.let { plan.dayTitlesMap()[it] },
+            ),
+        ).toInt()
+    }
+
+    override fun streamByDate(date: LocalDate): Flow<Session?> {
+        return dao
+            .session(date.toLocalEpochDays())
+            .map { session ->
+                if (session == null) return@map null
+                session.toExternal(session.sets.toExternal())
+            }
+    }
+
+    override fun previousSessionDate(date: LocalDate, planId: Int?, dayIndex: Int): Flow<LocalDate?> {
+        return dao.getPreviousSessionDate(date.toLocalEpochDays().value, planId, dayIndex)
+            .map { it?.let(LocalDate::fromEpochDays) }
+    }
+
+    override suspend fun getSets(sessionId: Int): List<Set> =
+        setsDao.getSetsBySessionId(sessionId).toExternal()
+
+    override suspend fun deleteSession(session: Session) {
+        val sessionId = session.id ?: return
+        setsDao.deleteBySessionId(sessionId)
+        dao.delete(sessionId)
+    }
+
+    override suspend fun deleteSessionById(id: Int) {
+        setsDao.deleteBySessionId(id)
+        dao.delete(id)
+    }
+
+    private suspend fun List<SetEntity>.toExternal(): List<Set> =
+        mapSetEntities(this) { ids -> exerciseDao.getByIds(ids) }
+}

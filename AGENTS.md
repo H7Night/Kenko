@@ -38,7 +38,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew connectedAndroidTest
 
 # Run a single instrumented test class
-./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.looker.kenko.RepositoryTest
+./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.h7night.tore.RepositoryTest
 
 # Gradle wrapper is checked in — always use ./gradlew, not a system Gradle.
 ```
@@ -47,6 +47,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Unit tests: use JUnit 5 (JUnit Platform) in `app/src/test/`
 - Instrumented tests: in `app/src/androidTest/`, run with a custom `KenkoTestRunner` that uses `HiltTestApplication`
 - Room schema files live in `app/schemas/` and are sourced into the `androidTest` assets for migration tests
+
+**测试数据安全（重要，真机）:**
+- 风险：`connectedAndroidTest` 跑完后 AGP 默认会**卸载 App（连同数据一起清空）**；且其中的 instrumented 测试会读写生产库。二者都会导致真机数据丢失。
+- 真机执行流程（必须遵守）：
+  1. **执行前**：先导出一份备份，把**备份文件名与日期**告知用户；
+  2. **取得用户明确确认后**才开始执行 `connectedAndroidTest`；
+  3. **执行后**：用该备份**恢复数据**（`kenko_database` + `-wal` + `files/datastore/settings.preferences_pb`，丢弃旧 `-shm`），并确认记录完好。
+- 仍建议优先在模拟器 / CI 上跑。
+- 单元测试（`./gradlew test`）在 JVM 运行，不接触设备数据，安全。
 
 ## Documentation Maintenance（文档维护）
 
@@ -109,12 +118,18 @@ The top-level nav graph is assembled in `ui/navigation/KenkoNavHost.kt`. Bottom-
 - **Kotlin context parameters**: enabled via `-Xcontext-parameters` compiler flag. `asStateFlow()` is a context-parameter function.
 - **ViewModel base** (`ui/base/KenkoViewModel.kt`): feature ViewModels extend `KenkoViewModel`, which owns the `snackbar` `SharedFlow` and a `launchCatching { }` helper (try/catch → snackbar emit). Do not declare a per-ViewModel `_snackbar`; use `launchCatching` (or `emitSnackbar`) instead. ViewModels already exposing `SnackbarHostState` (e.g. Plan, Exercises) keep using `snackbarState`.
 - **`kotlinx.datetime.LocalDate`** is the canonical date type throughout the codebase, stored as epoch days in Room.
-- **Room database** is pre-populated from `app/src/main/assets/kenko.db` and uses incremental migrations (currently at version 12). When changing `@Entity` classes, bump the version in `KenkoDatabase.kt`, add a migration in `data/local/Migrations.kt` that matches the generated schema (`app/schemas/…/NN.json` is exported on compile), and add a `schemaMigrationXToY` test in `androidTest/.../RoomDatabaseTesting.kt`.
+- **Room database** is pre-populated from `app/src/main/assets/kenko.db` and uses incremental migrations (currently at version 22). When changing `@Entity` classes, bump the version in `KenkoDatabase.kt`, add a migration in `data/local/Migrations.kt` that matches the generated schema (`app/schemas/…/NN.json` is exported on compile), and add a `schemaMigrationXToY` test in `androidTest/.../RoomDatabaseTesting.kt`.
+- **Color styles**: preset palettes (`ColorPalette`) use `PaletteStyle.TonalSpot` so the chosen seed hue survives; do not switch them to `Expressive`, which hue-rotates the seed (Green produced a brown primary). `ColorPalette.Material` keeps Android dynamic color.
+- **Icon-only actions**: wrap them in `TooltipIconButton` (`ui/component/TooltipIconButton.kt`) with a tooltip string; it provides the long-press Material tooltip and doubles as the accessible label.
+- **Tab navigation**: the Home bottom item uses `popBackStack(HomeRoute, inclusive = false)` (falling back to a single-top navigate) so it returns from any tab. The Home This Week card passes `SessionRoute(weekOnly = true)` with `restoreState = false` so the week filter applies; the Records tab passes `weekOnly = false` so it resets.
+- **Window insets**: the outer `Kenko` Scaffold in `MainActivity.kt` is bottom-bar-only with `contentWindowInsets = WindowInsets(0, 0, 0, 0)`; each screen owns its top inset via its `TopAppBar`/`Scaffold` (Home uses `WindowInsets.statusBars`). Never let the outer and inner layers both apply system bars.
+- **Session detail**: past records hide plan exercises without sets (`recordedOnly()`); each exercise's sets render in one compact surface with dividers; a timer-only record shows its duration (or the "No sets recorded" empty state).
 - **Destructive actions** (deleting exercises, plans, sets, weight records, sessions) use an explicit `DeleteIconButton` (`ui/component/DeleteIconButton.kt`) + `ConfirmDialog` (in `ui/component/ConfirmDialog.kt`) — never swipe-to-delete. Show feedback via `Context.toast()` (`utils/Toast.kt`) with `R.string.label_deleted`. Deleting a set from Home/Session detail goes through the shared `SetDeleteDialog`.
 - **Shared UI components**: `ConfirmDialog` (confirmation dialogs), `SetDeleteDialog` (set deletion confirm + toast), `DeleteIconButton`, `SelectionDialog` (single-choice dialogs), `KenkoDatePickerDialog`, `EmptyState` (empty list placeholder), `Toast.kt` (`Context.toast` helper). All user-facing strings go through `res/values/strings.xml` + `values-zh/` — no hardcoded text in composables.
 - **Backup** has two modes: DB backup (ZIP, restore-capable, WorkManager-scheduled) and JSON export (selective data with date range). The backup UI lives in `ui/feature/backup/BackupScreen.kt` + `ui/feature/settings/BackupSection.kt`.
 - **Statistics page** (`ui/feature/statistics/`): bottom-nav "Statistics" tab. 90-day heatmap (`HeatmapCard.kt`, `WeeksToShow=13`) + body-part frequency bars (`BodyPartBarCard.kt`, weekly/monthly/plan) + balance ring (`BalanceRingCard.kt`) + 12-week trend (`TrendCard.kt`) + adherence (`AdherenceCard.kt`). Aggregation is pure in `domain/statistics/Aggregation.kt` (`aggregateByBodyPart`, `aggregateCardioMinutes`, `buildTagDict`, `bodyPartByName`, `CARDIO_PART`). Body-part display order is **derived from DB top-level tags** (`parentId==null`, sorted by `sortOrder`, cardio last) in `StatisticsViewModel.buildBodyParts` — never hardcode part names. `buildTagDict` returns `Pair<String?, CountType>`: resolve parent via `parentId` against the full tag list (`Tag.parentName` is never populated by `TagMapper`); `parentName == CARDIO_PART` → cardio, null/unknown → excluded (no part ≠ cardio). Balance ring covers **six strength parts only**; cardio is a separate "有氧 X 分钟" row. Cardio minutes come from `CountType.MINUTES`, strength from session counts.
-- **Fixed typography** (`ui/theme/Type.kt`): a single tuned `Typography` (10–28sp gradient), no user font-size setting and no `Typography.scaled()`. `sp` naturally follows the system accessibility font scale. `KenkoTheme(theme, content)` takes no fontSize param.
+- **Theme & color** (`ui/theme/`): `KenkoTheme(theme, palette, content)` wraps `MaterialExpressiveTheme`. `theme` = System/Light/Dark. `palette` = `ColorPalette`: `Material` (default; Android dynamic/Monet, with a MaterialKolor baseline fallback below API 31) · `Blue`/`Green`/`Amber`/`Pink`/`Monochrome` (seed schemes via MaterialKolor `rememberDynamicColorScheme(style = PaletteStyle.Expressive)`). Shapes are standard Material 3 (4/8/12/16/28dp). Surfaces layer with tonal `surfaceContainer*` rather than hairline borders.
+- **Fixed typography** (`ui/theme/Type.kt`): a single tuned `Typography` (11–28sp gradient, Fira Sans + LXGW Neo XiHei), no user font-size setting and no `Typography.scaled()`. `sp` naturally follows the system accessibility font scale.
 - **Home timer** (`ui/component/timer/TimerManager.kt` + `TimerCard.kt`): `TimerState` IDLE/RUNNING/PAUSED with a singleton `TimerManager`; `stop()` resets to 0. `TimerCard` exposes `onReset` (Replay button, shown while active or with accumulated time) wired to a confirm dialog in `Home.kt` → `HomeViewModel.resetTimer()`.
 - **Bodyweight display**: the "自重" label must NOT use the mono `.numbers()` font (it has no CJK glyphs → vertical wrap). `SetItem.kt` renders bodyweight as read-only `labelMedium` text; `AddSet.kt` bodyweight placeholder uses `width(72.dp)` + `maxLines=1`. A bodyweight exercise has no numeric weight editor.
 - **Profile weight chart** (`ui/feature/profile/`): no plan filter. `computeWeightChartView(weights, selectedMonth, customRange)` — month paging by default; when a `customRange: Pair<LocalDate,LocalDate>?` is set, shows all records in range (no month paging, `currentMonth=null`). Range picked via `WeightRangeDialog` (Material3 `DatePickerDialog`).

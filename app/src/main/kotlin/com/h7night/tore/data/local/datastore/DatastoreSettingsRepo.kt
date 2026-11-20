@@ -1,0 +1,160 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.h7night.tore.data.local.datastore
+
+import androidx.datastore.core.DataStore
+import androidx.datastore.core.IOException
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.h7night.tore.BuildConfig
+import com.h7night.tore.domain.model.settings.BackupInterval
+import com.h7night.tore.domain.model.settings.ColorPalette
+import com.h7night.tore.domain.model.settings.Language
+import com.h7night.tore.domain.model.settings.Settings
+import com.h7night.tore.domain.model.settings.Theme
+import com.h7night.tore.data.repository.SettingsRepo
+import javax.inject.Inject
+import kotlin.time.Instant
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+
+class DatastoreSettingsRepo @Inject constructor(
+    private val dataStore: DataStore<Preferences>,
+) : SettingsRepo {
+
+    override val stream: Flow<Settings>
+        get() = dataStore.data
+            .catch { if (it is IOException) error("Error reading datastore") }
+            .map(::mapSettings)
+
+    override fun <T> get(block: Settings.() -> T): Flow<T> {
+        return stream.map { it.block() }
+    }
+
+    override suspend fun setOnboardingDone() {
+        if (!BuildConfig.DEBUG) {
+            ONBOARDING_DONE.update(true)
+        }
+    }
+
+    override suspend fun setTheme(theme: Theme) {
+        THEME.update(theme.name)
+    }
+
+    override suspend fun setLastSetTime(instant: Instant?) {
+        dataStore.edit { preference ->
+            if (instant != null) {
+                preference[LAST_SET_TIME_SECONDS] = instant.epochSeconds
+            } else {
+                preference.remove(LAST_SET_TIME_SECONDS)
+            }
+        }
+    }
+
+    override suspend fun setBackupUri(uri: String?) {
+        dataStore.edit { preference ->
+            if (uri != null) {
+                preference[BACKUP_URI] = uri
+            } else {
+                preference.remove(BACKUP_URI)
+            }
+        }
+    }
+
+    override suspend fun setBackupInterval(interval: BackupInterval) {
+        BACKUP_INTERVAL.update(interval.name)
+    }
+
+    override suspend fun setLastBackupTime(instant: Instant?) {
+        dataStore.edit { preference ->
+            if (instant != null) {
+                preference[LAST_BACKUP_TIME_SECONDS] = instant.epochSeconds
+            } else {
+                preference.remove(LAST_BACKUP_TIME_SECONDS)
+            }
+        }
+    }
+
+    override suspend fun setLanguage(language: Language) {
+        LANGUAGE.update(language.name)
+    }
+
+    override suspend fun setBodyWeightEnabled(enabled: Boolean) {
+        BODY_WEIGHT_ENABLED.update(enabled)
+    }
+
+    override suspend fun setHealthConnectEnabled(enabled: Boolean) {
+        HEALTH_CONNECT_ENABLED.update(enabled)
+    }
+
+    override suspend fun setColorPalette(palette: ColorPalette) {
+        COLOR_PALETTE.update(palette.name)
+    }
+
+    private suspend inline fun <T> Preferences.Key<T>.update(value: T) {
+        dataStore.edit { preference ->
+            preference[this] = value
+        }
+    }
+
+    private fun mapSettings(preferences: Preferences): Settings {
+        val isOnboardingDone = preferences[ONBOARDING_DONE] ?: false
+        val theme = preferences[THEME] ?: Theme.System.name
+        val lastSetTime = preferences[LAST_SET_TIME_SECONDS]
+        val backupUri = preferences[BACKUP_URI]
+        val backupInterval = preferences[BACKUP_INTERVAL] ?: BackupInterval.Off.name
+        val lastBackupTime = preferences[LAST_BACKUP_TIME_SECONDS]
+        val language = preferences[LANGUAGE] ?: Language.System.name
+        val bodyWeightEnabled = preferences[BODY_WEIGHT_ENABLED] ?: true
+        val healthConnectEnabled = preferences[HEALTH_CONNECT_ENABLED] ?: false
+        val colorPalette = preferences[COLOR_PALETTE]
+            ?.let { runCatching { ColorPalette.valueOf(it) }.getOrNull() }
+            ?: ColorPalette.Material
+        return Settings(
+            isOnboardingDone = isOnboardingDone,
+            theme = Theme.valueOf(theme),
+            lastSetTime = lastSetTime?.let { Instant.fromEpochSeconds(it) },
+            backupUri = backupUri,
+            backupInterval = BackupInterval.valueOf(backupInterval),
+            lastBackupTime = lastBackupTime?.let { Instant.fromEpochSeconds(it) },
+            language = Language.valueOf(language),
+            bodyWeightEnabled = bodyWeightEnabled,
+            healthConnectEnabled = healthConnectEnabled,
+            colorPalette = colorPalette,
+        )
+    }
+
+    private companion object Keys {
+        val ONBOARDING_DONE: Preferences.Key<Boolean> = booleanPreferencesKey("onboarding_done")
+        val THEME: Preferences.Key<String> = stringPreferencesKey("theme")
+        val LAST_SET_TIME_SECONDS: Preferences.Key<Long> =
+            longPreferencesKey("last_set_time_seconds")
+        val BACKUP_URI: Preferences.Key<String> = stringPreferencesKey("backup_uri")
+        val BACKUP_INTERVAL: Preferences.Key<String> = stringPreferencesKey("backup_interval")
+        val LAST_BACKUP_TIME_SECONDS: Preferences.Key<Long> =
+            longPreferencesKey("last_backup_time_seconds")
+        val LANGUAGE: Preferences.Key<String> = stringPreferencesKey("language")
+        val BODY_WEIGHT_ENABLED: Preferences.Key<Boolean> =
+            booleanPreferencesKey("body_weight_enabled")
+        val HEALTH_CONNECT_ENABLED: Preferences.Key<Boolean> =
+            booleanPreferencesKey("health_connect_enabled")
+        val COLOR_PALETTE: Preferences.Key<String> = stringPreferencesKey("color_palette")
+    }
+}

@@ -1,0 +1,151 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.h7night.tore.ui.component.timer
+
+import com.h7night.tore.data.health.HealthConnectManager
+import com.h7night.tore.data.repository.SessionRepo
+import com.h7night.tore.data.repository.SettingsRepo
+import com.h7night.tore.domain.health.toHealthExerciseSession
+import com.h7night.tore.domain.model.shouldKeepSession
+import com.h7night.tore.domain.model.today
+import kotlin.time.Clock
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Singleton
+
+sealed interface TrainingSessionState {
+    data object Idle : TrainingSessionState
+    data class Active(val sessionId: Int) : TrainingSessionState
+    data object Ended : TrainingSessionState
+}
+
+@Singleton
+class TrainingSessionManager @Inject constructor(
+    private val sessionRepo: SessionRepo,
+    private val timerManager: TimerManager,
+    private val settingsRepo: SettingsRepo,
+    private val healthConnectManager: HealthConnectManager,
+    @com.h7night.tore.di.ApplicationScope private val scope: CoroutineScope,
+) {
+
+    private val _sessionState = MutableStateFlow<TrainingSessionState>(TrainingSessionState.Idle)
+    val sessionState: StateFlow<TrainingSessionState> = _sessionState.asStateFlow()
+
+    fun startTraining() {
+        if (_sessionState.value is TrainingSessionState.Active) return
+        scope.launch {
+            val sessionId = sessionRepo.getSessionIdOrCreate(today())
+            // 首次"开始训练"即记录开始时刻;已存在(继续训练)则保留原值。
+            sessionRepo.ensureSessionStarted(sessionId, Clock.System.now().toEpochMilliseconds())
+            _sessionState.value = TrainingSessionState.Active(sessionId)
+            // Continue from existing duration if any
+            val existingSession = sessionRepo.streamByDate(today()).first()
+            val existingDuration = existingSession?.durationSeconds ?: 0L
+            if (existingDuration > 0) {
+                timerManager.startWithDuration(existingDuration)
+            } else {
+                timerManager.start()
+            }
+        }
+    }
+
+    fun endTraining(onEmptySessionDeleted: () -> Unit = {}) {
+        scope.launch {
+            val elapsed = timerManager.elapsedSeconds.value
+            val sessionId = (_sessionState.value as? TrainingSessionState.Active)?.sessionId
+
+            timerManager.stop()
+            // Keep the accumulated time visible so the user can continue training
+            timerManager.setElapsedSeconds(elapsed)
+
+            if (sessionId != null) {
+                // 记录本次结束时刻;开始时间保持不变(继续训练后再次结束会更新此值)。
+                sessionRepo.updateSessionEnded(sessionId, Clock.System.now().toEpochMilliseconds())
+
+                // Save duration to session
+                if (elapsed > 0) {
+                    sessionRepo.updateSessionDuration(sessionId, elapsed)
+                }
+
+                val sets = sessionRepo.getSets(sessionId)
+                if (shouldKeepSession(sets.size, elapsed)) {
+                    syncSessionToHealth()
+                } else {
+                    sessionRepo.deleteSession(
+                        com.h7night.tore.domain.model.Session(
+                            date = today(),
+                            sets = emptyList(),
+                            planId = null,
+                            id = sessionId,
+                        )
+                    )
+                    onEmptySessionDeleted()
+                    // Empty session deleted: nothing to continue, reset the display
+                    timerManager.setElapsedSeconds(0L)
+                }
+            }
+
+            _sessionState.value = TrainingSessionState.Ended
+        }
+    }
+
+    /**
+     * Aborts a blank workout: discards the set-less session, zeroes the timer and
+     * returns to idle. The reset button is only offered while no set was recorded,
+     * so this never throws away logged sets.
+     */
+    fun endAndReset() {
+        scope.launch {
+            val sessionId = (_sessionState.value as? TrainingSessionState.Active)?.sessionId
+
+            timerManager.stop()
+
+            if (sessionId != null) {
+                val sets = sessionRepo.getSets(sessionId)
+                if (sets.isEmpty()) {
+                    sessionRepo.deleteSession(
+                        com.h7night.tore.domain.model.Session(
+                            date = today(),
+                            sets = emptyList(),
+                            planId = null,
+                            id = sessionId,
+                        )
+                    )
+                }
+            }
+
+            _sessionState.value = TrainingSessionState.Idle
+        }
+    }
+
+    fun reset() {
+        timerManager.forceStop()
+        _sessionState.value = TrainingSessionState.Idle
+    }
+
+    /** Best-effort write of a just-ended session to Health Connect. Never throws. */
+    private suspend fun syncSessionToHealth() {
+        if (!settingsRepo.get { healthConnectEnabled }.first()) return
+        val session = sessionRepo.streamByDate(today()).first() ?: return
+        val names = session.performExercises.map { it.name }
+        session.toHealthExerciseSession(names)?.let { healthConnectManager.write(it) }
+    }
+}

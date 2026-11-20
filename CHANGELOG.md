@@ -7,7 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-11-14
+
+### Fixed
+- Restore the complete v2.0.0 feature branch in Tore, including calendar, exercise progress, multi-select exercises, weekly summaries, palettes and Health Connect.
+- Preserve existing Kenko v20 and Tore v21 databases when upgrading to schema v22.
+- Keep the Kenko launcher icon and Fira Sans / LXGW Neo XiHei typography; remove the redundant Home page title.
+
 ## [2.0.0] - 2026-11-14
+### Added
+- Exercise progress page: open any exercise from the browse list to see its heaviest weight, estimated 1RM (Epley), best set, and total volume over time, with a per-session history
+- Calendar view of training history: days with a workout are highlighted and open the session detail
+- Editing a past workout record now lets you add exercises that are not part of the plan
+- Adding exercises now supports multi-select; exercises not in the plan can be added to a workout and appear even before any set is logged
+- Exercises now carry equipment and a primary muscle (the remaining tags are secondary); equipment can be used to filter the exercise library and both are set in the exercise editor
+- A body-weight module toggle (Settings → System): turning it off hides the Profile weight card, entry, and history while keeping all recorded data
+- Health Connect sync (Settings → System, opt-in): completed workouts are written as exercise sessions, with a one-time backfill and an idempotent re-sync
+- A color style setting (Settings → Appearance): `Material 3` (default; dynamic color / Monet on Android 12+), plus `Blue`, `Green`, `Amber`, `Pink`, and `Monochrome` seed presets, alongside the light/dark theme
+- When today has a training plan, the Home page lists today's exercises in order beneath "Today's Plan"
+
+### Changed
+- Home no longer shows the "Stick to the plan / Not your mood." slogan watermark
+- Adopted standard Material 3 shapes (4–28dp) and tonal surfaces for cards, settings groups, lists, and the navigation bar, replacing the hairline-bordered flat look for a more Material appearance
+- Bottom navigation now uses Material 3 icon and label sizing with the default indicator color, and add actions are extended floating action buttons at the bottom end
+- Plans use a radio button with a "Current" badge for the active plan; Settings uses a compact top app bar and a palette icon for the color style
+- Records uses pinned compact filter chips for plan/day plus a This Week toggle, drops the decorative status dot, and shows duration with a timer icon while exercise names use the body text scale
+- The exercise library adds a name search field and collapses the body-part, muscle and equipment rows into one compact filter-chip row with menus; filtered-out results offer a clear-filters action
+- Statistics uses theme-derived body-part colours, hides untrained parts from the ring legend, shows the monthly total inside the ring, and adds a Less/More heatmap legend
+- Plan editing moves days with Material 3 assist chips; Add Set ends with a full-width primary button; the Records history date picker uses the app's Material 3 dialog
+- Typography uses a larger Material 3 scale for app bars, titles and body text
+- Home shows a compact This Week summary (session count and duration) under the plan card; its Records shortcut opens Records filtered to the current week
+- The Profile tab is now labelled Profile, and icon-only actions show Material 3 long-press tooltips
+
+### Fixed
+- Bodyweight exercises now count toward progress correctly: pure bodyweight sets use the body weight recorded nearest to that session, weighted sets add the extra weight, and legacy sets logged before the bodyweight option existed are corrected on upgrade
+- Adding an exercise during a workout no longer shows it twice (one row with sets and one empty row at its original position)
+- Completed timer-only workouts without sets (e.g. cardio) are no longer missing from Records and the calendar
+- The status-bar inset is no longer applied twice, removing the extra gap at the top of every screen
+- Records now matches its bottom-navigation name and no longer shows a back arrow
+- Starting a workout is no longer blocked when notification permission is denied
+- Past records hide unperformed plan exercises, group each exercise's sets into one compact card, and show the session duration; icon-only actions now have accessibility labels
+- Set labels are no longer forced uppercase and the weight unit follows the app language instead of a hard-coded `KG`
+- Set values in edit mode are editable with a single tap, icon-only actions meet the 48dp touch target, and adding an exercise uses a distinct dumbbell icon
+- Home no longer prompts for notification permission on every visit; it shows an inline rationale with an Enable action
+- Settings shows the last backup time when available instead of only the folder name
+- Heatmap weekday labels now align with their actual grid rows
+- Color style presets keep the selected hue, so switches, checks and buttons use the chosen color instead of a rotated one (e.g. Green no longer produced a brown primary)
+- Tapping a value in Add Set opens the keyboard normally while horizontal drag still works
+- Tapping Home in the bottom navigation now reliably returns from Records and other tabs instead of requiring the back button
 
 ## [1.9.0] - 2026-10-12
 

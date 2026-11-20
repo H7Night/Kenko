@@ -1,0 +1,98 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.h7night.tore.data.local
+
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import com.h7night.tore.data.local.dao.ExerciseDao
+import com.h7night.tore.data.local.dao.PerformanceDao
+import com.h7night.tore.data.local.dao.PlanDao
+import com.h7night.tore.data.local.dao.PlanHistoryDao
+import com.h7night.tore.data.local.dao.SessionDao
+import com.h7night.tore.data.local.dao.SetsDao
+import com.h7night.tore.data.local.dao.TagDao
+import com.h7night.tore.data.local.dao.WeightDao
+import com.h7night.tore.data.local.model.ExerciseEntity
+import com.h7night.tore.data.local.model.ExerciseTagEntity
+import com.h7night.tore.data.local.model.PlanDayEntity
+import com.h7night.tore.data.local.model.PlanEntity
+import com.h7night.tore.data.local.model.PlanHistoryEntity
+import com.h7night.tore.data.local.model.SessionDataEntity
+import com.h7night.tore.data.local.model.SessionExerciseEntity
+import com.h7night.tore.data.local.model.SetEntity
+import com.h7night.tore.data.local.model.TagEntity
+import com.h7night.tore.data.local.model.WeightEntity
+import com.h7night.tore.utils.AppConstants
+
+@Database(
+    version = 22,
+    entities = [
+        SessionDataEntity::class,
+        ExerciseEntity::class,
+        PlanEntity::class,
+        PlanHistoryEntity::class,
+        PlanDayEntity::class,
+        SetEntity::class,
+        SessionExerciseEntity::class,
+        WeightEntity::class,
+        TagEntity::class,
+        ExerciseTagEntity::class,
+    ],
+)
+abstract class KenkoDatabase : RoomDatabase() {
+    abstract fun sessionDao(): SessionDao
+    abstract fun exerciseDao(): ExerciseDao
+    abstract fun planDao(): PlanDao
+    abstract fun setsDao(): SetsDao
+    abstract fun historyDao(): PlanHistoryDao
+    abstract fun performanceDao(): PerformanceDao
+    abstract fun weightDao(): WeightDao
+    abstract fun tagDao(): TagDao
+}
+
+fun kenkoDatabase(context: Context) = Room
+    .databaseBuilder(
+        context = context,
+        klass = KenkoDatabase::class.java,
+        name = AppConstants.DATABASE_NAME,
+    )
+    .createFromAsset(AppConstants.DATABASE_ASSET)
+    .addMigrations(
+        MIGRATION_1_2,
+        MIGRATION_2_3,
+        MIGRATION_3_4,
+        MIGRATION_4_5,
+        MIGRATION_5_6,
+        MIGRATION_6_7,
+        MIGRATION_7_8,
+        MIGRATION_8_9,
+        MIGRATION_9_10,
+        MIGRATION_10_11,
+        MIGRATION_11_12,
+        MIGRATION_12_13,
+        MIGRATION_13_14,
+        MIGRATION_14_15,
+        MIGRATION_15_16,
+        MIGRATION_16_17,
+        MIGRATION_17_18,
+        MIGRATION_18_19,
+        MIGRATION_19_20,
+        MIGRATION_20_22,
+        MIGRATION_21_22,
+    )
+    .build()

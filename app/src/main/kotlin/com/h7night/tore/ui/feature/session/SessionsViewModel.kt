@@ -1,0 +1,121 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.h7night.tore.ui.feature.session
+
+import androidx.compose.runtime.Stable
+import com.h7night.tore.domain.model.Session
+import com.h7night.tore.domain.model.today
+import com.h7night.tore.data.repository.SessionRepo
+import com.h7night.tore.data.repository.PlanRepo
+import com.h7night.tore.domain.model.Exercise
+import com.h7night.tore.domain.model.Plan
+import com.h7night.tore.domain.model.SessionSummary
+import com.h7night.tore.domain.model.titlesMap
+import com.h7night.tore.ui.base.KenkoViewModel
+import com.h7night.tore.utils.asStateFlow
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.datetime.LocalDate
+
+@HiltViewModel
+class SessionsViewModel @Inject constructor(
+    private val repo: SessionRepo,
+    private val planRepo: PlanRepo,
+) : KenkoViewModel() {
+    private val sessionsStream = repo.streamSummaries
+    private val isCurrentSessionActive = repo.streamByDate(today()).map { it != null }
+
+    private val availablePlanItems = planRepo.planItems
+        .map { items ->
+            items.groupBy { it.dayIndex }
+                .mapValues { entry -> entry.value.map { it.exercise } }
+        }
+
+    /** 每个计划的训练日 → 动作名集合,用于无 dayIndexOverride 的历史记录反查训练日。 */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val planDayExerciseNames: StateFlow<Map<Int, Map<Int, kotlin.collections.Set<String>>>> =
+        planRepo.plans
+            .flatMapLatest { plans ->
+                val flows = plans.map { plan ->
+                    planRepo.planItems(requireNotNull(plan.id)).map { items ->
+                        plan.id to items.groupBy({ it.dayIndex }, { it.exercise.name })
+                            .mapValues { it.value.toSet() }
+                    }
+                }
+                if (flows.isEmpty()) flowOf(emptyMap())
+                else combine(flows) { array ->
+                    @Suppress("UNCHECKED_CAST")
+                    array.map { it as Pair<Int, Map<Int, kotlin.collections.Set<String>>> }.toMap()
+                }
+            }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
+    val state: StateFlow<SessionsUiData> = combine(
+        sessionsStream,
+        isCurrentSessionActive,
+        availablePlanItems,
+        planRepo.plans,
+        planDayExerciseNames,
+    ) { sessions, isCurrentSessionActive, available, plans, dayExerciseNames ->
+        val planTitlesMap = plans.associate { it.id to it.titlesMap }
+        val records = sessions.filter { it.hasRecordedWorkout }
+        SessionsUiData(
+            sessions = records,
+            hasAnySessions = records.isNotEmpty(),
+            isCurrentSessionActive = isCurrentSessionActive,
+            availablePlanDays = available,
+            dayTitles = planTitlesMap,
+            plans = plans.filter { it.isActive || plans.indexOf(it) < 5 },
+            planDayExerciseNames = dayExerciseNames,
+        )
+    }.asStateFlow(SessionsUiData(emptyList(), false), started = SharingStarted.Eagerly)
+
+    fun addSession(date: LocalDate, dayIndex: Int, onComplete: () -> Unit) {
+        launchCatching {
+            repo.updateDayIndex(date, dayIndex)
+            onComplete()
+        }
+    }
+
+    fun removeSession(session: SessionSummary) {
+        launchCatching {
+            val id = session.id ?: return@launchCatching
+            repo.deleteSessionById(id)
+        }
+    }
+}
+
+@Stable
+data class SessionsUiData(
+    val sessions: List<SessionSummary>,
+    val isCurrentSessionActive: Boolean,
+    val hasAnySessions: Boolean = false,
+    val availablePlanDays: Map<Int, List<Exercise>> = emptyMap(),
+    val dayTitles: Map<Int?, Map<Int, String>> = emptyMap(),
+    val plans: List<Plan> = emptyList(),
+    val planDayExerciseNames: Map<Int, Map<Int, kotlin.collections.Set<String>>> = emptyMap(),
+) {
+    val sessionDates: Set<LocalDate> get() = sessions.map { it.date }.toSet()
+}

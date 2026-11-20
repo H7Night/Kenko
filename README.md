@@ -1,94 +1,66 @@
-[简体中文 (Simplified Chinese)](README_cn.md) | [English](README.md)
+[简体中文](README_cn.md)
 
-<div align="center">
+# Tore
 
-<img width="" src="metadata/en-US/images/featureGraphic.png" alt="Kenko" align="center">
+Tore is a focused workout journal for strength training and cardio.
 
-Kenko is a workout journal which will provide you with appropriate progressive-overload and well
-thought-out plans
-
-</div>
-
-<div align="left">
+The name comes from the Japanese term `筋トレ`, short for `筋肉トレーニング`, meaning strength training。 Tore helps you build a repeatable routine, record each session, and see whether your training is balanced over time。
 
 ## Features
 
-- **Workout Journal**: Track your training sessions (Resistance and Cardio) with ease.
-- **Inline Training Timer**: Start, pause, resume, and end workouts directly from the Home page with a foreground service timer and notification.
-- **Custom Plans**: Create and manage your own workout plans with custom names, per-day titles, rest days, and an adjustable training-day cycle (add/delete/reorder days). Editing a plan later (day titles, exercises, day order) never rewrites previously saved workout records.
-- **Plan Import & Export**: Export one or more selected plans to a single JSON file, and import plans from JSON — duplicate names are allowed and missing exercises are auto-created.
-- **Two-Level Exercise Tags**: Classify exercises by body part → specific muscle groups. Multi-tag support with tag management in Settings.
-- **Statistics Dashboard**: A dedicated Statistics page showing a 90-day GitHub-style activity heatmap, body-part training frequency (this week / this month / current plan), a monthly balance ring that flags weak parts, a 12-week trend line, and plan adherence.
-- **Interactive Heatmap**: View your training consistency with a scrollable 90-day heatmap and day-of-week labels on the Statistics page.
-- **Progressive Overload**: Monitor your progress over time with detailed session history and performance insights.
-- **Body Weight Tracking**: Record your body weight and view progress on interactive line charts. Selecting a plan shows weight records across its activation window.
-- **Safe Deletion**: Delete exercises, plans, sets, weight records, and sessions via explicit delete buttons with confirmation dialogs.
-- **Modern Navigation**: Effortlessly switch between Home, Records, Statistics, and Profile using the fixed bottom navigation bar.
-- **Material Design 3**: Fully rounded and unified UI components following the latest MD3 guidelines, with dynamic color on Android 12+.
-- **Backup & Export**: Full app backup (ZIP, auto-scheduled via WorkManager) and selective training data export (JSON, with date range filtering).
-- **Multi-language**: Support for English and Chinese (Simplified).
-- **Adjustable Font Size**: Scale the entire app typography (Small / Medium / Large) from Settings, applied immediately.
+- Log resistance and cardio sessions
+- Build plans with training days, rest days, and custom day titles
+- Import and export plans as JSON
+- Organize exercises with body-part and muscle-group tags
+- Track consistency with heatmaps, trends, balance, and adherence statistics
+- Record body weight and review progress over time
+- Use an inline workout timer with pause and resume
+- Delete data through explicit confirmation dialogs
+- Back up the complete database or export selected training data
+- English and Simplified Chinese localization
 
-## Tech Stack
+## Tech stack
 
-- **Language**: Kotlin 2.2.x
-- **UI**: Jetpack Compose (BOM 2025.11.00), Material 3 Expressive
-- **DI**: Hilt 2.57
-- **Persistence**: Room 2.8 (with KSP), pre-populated database, incremental migrations
-- **Background**: WorkManager with Hilt integration (scheduled backups, foreground timer service)
-- **Navigation**: Navigation Compose with type-safe `@Serializable` routes
-- **Other**: kotlinx-datetime, kotlinx-serialization, DataStore Preferences
+- Kotlin 2.2.x
+- Jetpack Compose and Material 3 Expressive
+- Hilt for dependency injection
+- Room and KSP for local persistence
+- WorkManager for scheduled backups
+- Navigation Compose with serializable routes
 
-## Building
+## Build
 
 ```bash
-# Build debug APK
+# Build a debug APK
 ./gradlew assembleDebug
 
-# Build and install debug APK to a connected device/emulator
+# Build and install on a connected device or emulator
 ./gradlew installDebug
 
-# Run unit tests (JUnit 5 / JUnit Platform)
+# Run unit tests
 ./gradlew test
 
-# Run instrumented tests (requires device/emulator)
+# Run instrumented tests on a connected device or emulator
 ./gradlew connectedAndroidTest
 ```
 
-Convenience scripts are available in [`scripts/`](scripts/) (`build_debug`, `install_debug`, `build_and_install`) for Windows (`.bat`/`.ps1`) and Unix (`.sh`). Use `scripts/changelog.sh <version>` to print the changelog section for a given version (e.g. `Unreleased`).
+The `scripts/` directory contains non-interactive wrappers for common Windows and Unix build commands.
 
 ## Release
 
-Releases are managed via GitHub Actions (`.github/workflows/prep_release.yml` + `release.yml`):
-
-1. Manually run the **Prepare Release** workflow with a version number (e.g. `1.7.0`) — it updates `versionName`, adds the CHANGELOG section and the Fastlane changelog, and opens a PR on a `release/<version>` branch.
-2. Merging that PR into `main` triggers the **Release** workflow, which builds and signs the release APK/AAB, creates a GitHub Release (draft), and publishes to the Play Store.
+Release preparation is managed by GitHub Actions. The preparation workflow updates the version, changelog, and Fastlane metadata. Merging the release pull request into `main` starts the signed release build and publishing workflow.
 
 ## Screenshots
 
-<img src="metadata/en-US/images/phoneScreenshots/1.png" width="25%" /><img src="metadata/en-US/images/phoneScreenshots/2.png" width="25%" /><img src="metadata/en-US/images/phoneScreenshots/3.png" width="25%" /><img src="metadata/en-US/images/phoneScreenshots/4.png" width="25%" />
+Screenshots will be added after the Tore redesign is installed on a connected device.
 
-## CHANGELOGS
+## License
 
-- Full changelog: [here](https://github.com/H7Night/Kenko/blob/main/CHANGELOG.md)
-- Unreleased changes: [here](https://github.com/H7Night/Kenko/blob/main/CHANGELOG.md#unreleased)
+Tore is free software licensed under the GNU General Public License, version 3 or later.
 
-## LICENSE
+See [LICENSE](LICENSE) for the full license text.
 
-```
-Kenko
+## Changelog
 
-Copyright (C) 2025 LooKeR & Contributors
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-```
-
-</div>
+- [Full changelog](CHANGELOG.md)
+- [Unreleased changes](CHANGELOG.md#unreleased)

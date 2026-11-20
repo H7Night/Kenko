@@ -1,0 +1,162 @@
+/*
+ * Copyright (C) 2025 LooKeR & Contributors
+ * Copyright (C) 2026 H7Night <h7night@gmail.com>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.h7night.tore.data.local.dao
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Update
+import com.h7night.tore.data.local.model.CardioMinutesByDate
+import com.h7night.tore.data.local.model.ExerciseSetRow
+import com.h7night.tore.data.local.model.SetEntity
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface SetsDao {
+
+    @Query(
+        """
+        SELECT *
+        FROM sets
+        WHERE sessionId = :sessionId
+        ORDER BY `order`
+        """,
+    )
+    fun setsBySessionId(sessionId: Int): Flow<List<SetEntity>>
+
+    @Query(
+        """
+        SELECT *
+        FROM sets
+        WHERE sessionId = :sessionId
+        ORDER BY `order`
+        """,
+    )
+    suspend fun getSetsBySessionId(sessionId: Int): List<SetEntity>
+
+    @Query(
+        """
+        SELECT COUNT(*)
+        FROM sets
+        WHERE sessionId = :sessionId
+        """,
+    )
+    suspend fun getSetsCountBySessionId(sessionId: Int): Int?
+
+    @Query(
+        """
+        SELECT *
+        FROM sets
+        WHERE (:exerciseId IS NULL OR exerciseId = :exerciseId)
+        AND sessionId IN (
+            SELECT id
+            FROM sessions
+            WHERE (:planId IS NULL OR planId = :planId)
+        )
+        ORDER BY `order`
+        """,
+    )
+    fun setsByExerciseIdPerPlan(exerciseId: Int? = null, planId: Int? = null): Flow<List<SetEntity>>
+
+    @Query(
+        """
+        SELECT *
+        FROM sets
+        WHERE (:exerciseId IS NULL OR exerciseId = :exerciseId)
+        AND sessionId IN (
+            SELECT id
+            FROM sessions
+            WHERE (:planId IS NULL OR planId = :planId)
+        )
+        ORDER BY `order`
+        """,
+    )
+    suspend fun getSetsByExerciseIdPerPlan(
+        exerciseId: Int? = null,
+        planId: Int? = null,
+    ): List<SetEntity>
+
+    @Query(
+        """
+        SELECT COUNT (*)
+        FROM sets
+        """,
+    )
+    fun totalSetCount(): Flow<Int>
+
+    @Query(
+        """
+        SELECT s.date AS date, st.weight AS weight, st.reps AS reps
+        FROM sets st
+        JOIN sessions s ON s.id = st.sessionId
+        WHERE st.exerciseId = :exerciseId
+        ORDER BY s.date ASC, st.`order` ASC
+        """,
+    )
+    fun streamSetsForExercise(exerciseId: Int): Flow<List<ExerciseSetRow>>
+
+    @Query(
+        """
+        SELECT s.date AS date, COALESCE(SUM(st.reps), 0) AS minutes
+        FROM sets st
+        JOIN sessions s ON s.id = st.sessionId
+        WHERE st.exerciseId IN (:exerciseIds)
+        GROUP BY s.date
+        """,
+    )
+    fun streamCardioMinutesByDate(exerciseIds: List<Int>): Flow<List<CardioMinutesByDate>>
+
+    @Insert
+    suspend fun insert(set: SetEntity)
+
+    @Update
+    suspend fun update(set: SetEntity)
+
+    @Query(
+        """
+        UPDATE sets
+        SET reps = :reps, weight = :weight
+        WHERE id = :setId
+        """,
+    )
+    suspend fun update(setId: Int, reps: Int, weight: Float)
+
+    @Query(
+        """
+        DELETE
+        FROM sets
+        WHERE id = :setId
+        """,
+    )
+    suspend fun delete(setId: Int)
+
+    @Query(
+        """
+        DELETE FROM sets
+        WHERE sessionId = :sessionId
+        """,
+    )
+    suspend fun deleteBySessionId(sessionId: Int)
+
+    @Query(
+        """
+        SELECT COUNT(*) > 0
+        FROM sets
+        WHERE exerciseId = :exerciseId
+        """,
+    )
+    suspend fun hasSetsForExercise(exerciseId: Int): Boolean
+}
