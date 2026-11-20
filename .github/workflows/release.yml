@@ -81,13 +81,3 @@ jobs:
             ${{steps.sign_apk.outputs.signedReleaseFile}}
             ${{steps.sign_aab.outputs.signedReleaseFile}}
 
-      - name: Publish to Play Store
-        uses: r0adkll/upload-google-play@v1
-        with:
-          packageName: com.h7night.tore
-          track: production
-          releaseName: ${{ steps.extract_version.outputs.tag }}
-          releaseFiles: ${{steps.sign_aab.outputs.signedReleaseFile}}
-          mappingFile: app/build/outputs/mapping/release/mapping.txt
-          debugSymbols: app/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib
-          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
